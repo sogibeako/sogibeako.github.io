@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>パパユー - Tarot Trick Taking</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <section class="topbar">
+      <div>
+        <p class="eyebrow">Tarot trick-taking game</p>
+        <h1>パパユー</h1>
+      </div>
+      <div class="actions">
+        <button id="newGameBtn" class="primary">新しく遊ぶ</button>
+        <button id="autoBtn">CPUに任せる</button>
+      </div>
+    </section>
+
+    <section class="board">
+      <aside class="players" id="players"></aside>
+
+      <section class="table-area">
+        <div class="statusline" id="statusLine"></div>
+        <div class="trick" id="trick"></div>
+        <div class="controls" id="controls"></div>
+        <div class="hand" id="hand"></div>
+      </section>
+
+      <aside class="sidepanel">
+        <div class="panel">
+          <h2>ラウンド</h2>
+          <div id="roundInfo" class="statgrid"></div>
+        </div>
+        <div class="panel">
+          <h2>危険札</h2>
+          <div id="dangerInfo" class="danger-list"></div>
+        </div>
+        <div class="panel logpanel">
+          <h2>ログ</h2>
+          <div id="log" class="log"></div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

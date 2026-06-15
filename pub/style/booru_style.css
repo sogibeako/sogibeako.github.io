@@ -1,0 +1,73 @@
+    .booru-item {
+      border-top: 1px dashed #609aa0;
+      padding: 0.6em 0;
+    }
+
+    .booru-item:first-child {
+      border-top: none;
+    }
+
+    .booru-meta {
+      font-size: 0.9em;
+      color: #444;
+      margin-bottom: 0.2em;
+    }
+
+    .booru-site {
+      font-weight: bold;
+      margin-right: 0.5em;
+    }
+
+    .booru-artist {
+      margin-right: 0.8em;
+    }
+
+    .booru-date {
+      color: #666;
+    }
+
+    .booru-link a {
+      color: #204a6b;
+      text-decoration: none;
+    }
+
+    .booru-link a:hover {
+      text-decoration: underline;
+    }
+
+    .booru-meta-line {
+      font-size: 0.9em;
+      color: #444;
+      margin-bottom: 0.5em;
+    }
+
+    .booru-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .booru-thumb {
+      flex: 0 0 auto;
+    }
+
+    .booru-thumb img {
+      width: 72px;
+      height: 72px;
+      object-fit: cover;
+      display: block;
+      border: 1px solid #609aa0;
+      background: #e3e8f1;
+    }
+
+    .booru-main {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    @media screen and (max-width: 600px) {
+      .booru-thumb img {
+        width: 56px;
+        height: 56px;
+      }
+    }
