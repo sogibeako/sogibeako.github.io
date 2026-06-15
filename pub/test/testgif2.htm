@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>GIF Binary Lab</title>
+    <style>
+        :root {
+            --bg: #202124;
+            --panel: #2b2d31;
+            --panel2: #1b1c1f;
+            --text: #e8eaed;
+            --muted: #9aa0a6;
+            --accent: #8ab4f8;
+            --danger: #ff8a80;
+            --ok: #a5d6a7;
+            --grid: #3c4043;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: Consolas, "Courier New", monospace;
+        }
+
+        header {
+            padding: 14px 18px;
+            background: #111214;
+            border-bottom: 1px solid var(--grid);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 18px;
+            letter-spacing: 0.04em;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 1fr 1.25fr;
+            gap: 14px;
+            padding: 14px;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--grid);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .previewArea {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        #preview {
+            width: 160px;
+            height: 160px;
+            image-rendering: pixelated;
+            background: #999999;
+            border: 1px solid #777;
+        }
+
+        .info {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        textarea {
+            width: 100%;
+            height: 420px;
+            box-sizing: border-box;
+            resize: vertical;
+            background: var(--panel2);
+            color: var(--text);
+            border: 1px solid var(--grid);
+            border-radius: 6px;
+            padding: 10px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        button {
+            background: #3c4043;
+            color: var(--text);
+            border: 1px solid #5f6368;
+            border-radius: 5px;
+            padding: 7px 10px;
+            margin: 4px 4px 4px 0;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        button:hover {
+            background: #4b4f54;
+        }
+
+        .danger {
+            color: var(--danger);
+        }
+
+        .ok {
+            color: var(--ok);
+        }
+
+        .hexView {
+            background: var(--panel2);
+            border: 1px solid var(--grid);
+            border-radius: 6px;
+            padding: 10px;
+            overflow: auto;
+            height: 520px;
+            font-size: 14px;
+            line-height: 1.55;
+            white-space: pre;
+        }
+
+        .offset {
+            color: var(--accent);
+        }
+
+        .ascii {
+            color: #fdd663;
+        }
+
+        .byte {
+            color: var(--text);
+        }
+
+        .label {
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .legend {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+
+<body>
+<header>
+    <h1>GIF Binary Lab // Tiny Animation Inspector</h1>
+</header>
+
+<main>
+    <section class="panel">
+        <div class="previewArea">
+            <img id="preview" alt="GIF preview">
+            <div id="status" class="info"></div>
+        </div>
+
+        <div>
+            <button onclick="renderGif()">再描画</button>
+            <button onclick="resetHex()">元に戻す</button>
+            <button onclick="setAllDelays(0x05, 0x00)">delay 0.05秒</button>
+            <button onclick="setAllDelays(0x14, 0x00)">delay 0.20秒</button>
+            <button onclick="setAllDelays(0x64, 0x00)">delay 1.00秒</button>
+            <button onclick="invertPaletteWhite()">白を反転</button>
+            <button onclick="flipRandomDataByte()">データ部を1バイト反転</button>
+        </div>
+
+        <p class="label">HEX入力欄：空白・改行は無視されます。</p>
+        <textarea id="hexInput" spellcheck="false"></textarea>
+
+        <div class="legend">
+            ※ `47 49 46 38 39 61` = GIF89a<br>
+            ※ `21 F9 04` = Graphic Control Extension<br>
+            ※ `2C` = Image Descriptor<br>
+            ※ `3B` = GIF終端
+        </div>
+    </section>
+
+    <section class="panel">
+        <p class="label">Binary Editor風ビュー：左から オフセット / HEX / ASCII</p>
+        <div id="hexView" class="hexView"></div>
+    </section>
+</main>
+
+<script>
+    const originalHex = `
+47494638396102000200810000000000
+FFFFFF00000000000021FF0B4E455453
+43415045322E30030100000021F90409
+140000002C0000000002000200000807
+000104080020200021F9040914000000
+2C000000000200020081000000FFFFFF
+00000000000008070003000010202000
+3B
+`.trim();
+
+    let currentUrl = null;
+
+    const hexInput = document.getElementById("hexInput");
+    hexInput.value = originalHex;
+
+    function cleanHexString(text) {
+        return text.replace(/\s+/g, "").toUpperCase();
+    }
+
+    function hexToBytes(hex) {
+        if (hex.length % 2 !== 0) {
+            throw new Error("16進文字列の長さが奇数です。");
+        }
+
+        if (!/^[0-9A-F]*$/.test(hex)) {
+            throw new Error("16進文字列に不正な文字があります。");
+        }
+
+        const bytes = new Uint8Array(hex.length / 2);
+
+        for (let i = 0; i < bytes.length; i++) {
+            bytes[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+        }
+
+        return bytes;
+    }
+
+    function bytesToHex(bytes) {
+        return Array.from(bytes)
+            .map(b => b.toString(16).padStart(2, "0").toUpperCase())
+            .join("");
+    }
+
+    function formatHex(bytes, bytesPerLine = 16) {
+        const lines = [];
+
+        for (let offset = 0; offset < bytes.length; offset += bytesPerLine) {
+            const chunk = bytes.slice(offset, offset + bytesPerLine);
+
+            const offsetText = offset.toString(16).padStart(8, "0").toUpperCase();
+
+            const hexPart = Array.from(chunk)
+                .map(b => b.toString(16).padStart(2, "0").toUpperCase())
+                .join(" ")
+                .padEnd(bytesPerLine * 3 - 1, " ");
+
+            const asciiPart = Array.from(chunk)
+                .map(b => {
+                    if (b >= 0x20 && b <= 0x7E) {
+                        return String.fromCharCode(b);
+                    }
+                    return ".";
+                })
+                .join("");
+
+            lines.push(
+                `<span class="offset">${offsetText}</span>  ` +
+                `<span class="byte">${hexPart}</span>  ` +
+                `<span class="ascii">|${escapeHtml(asciiPart)}|</span>`
+            );
+        }
+
+        return lines.join("\n");
+    }
+
+    function escapeHtml(text) {
+        return text
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;");
+    }
+
+    function renderGif() {
+        const status = document.getElementById("status");
+        const img = document.getElementById("preview");
+        const hexView = document.getElementById("hexView");
+
+        try {
+            const clean = cleanHexString(hexInput.value);
+            const bytes = hexToBytes(clean);
+
+            const blob = new Blob([bytes], { type: "image/gif" });
+
+            if (currentUrl) {
+                URL.revokeObjectURL(currentUrl);
+            }
+
+            currentUrl = URL.createObjectURL(blob);
+            img.src = currentUrl;
+
+            hexView.innerHTML = formatHex(bytes);
+
+            status.innerHTML =
+                `<span class="ok">OK</span>\n` +
+                `bytes: ${bytes.length}\n` +
+                `blob: ${currentUrl}`;
+
+        } catch (error) {
+            status.innerHTML = `<span class="danger">ERROR</span>\n${escapeHtml(error.message)}`;
+        }
+    }
+
+    function resetHex() {
+        hexInput.value = originalHex;
+        renderGif();
+    }
+
+    function getBytesFromInput() {
+        return hexToBytes(cleanHexString(hexInput.value));
+    }
+
+    function setInputFromBytes(bytes) {
+        const hex = bytesToHex(bytes);
+
+        // 16バイトごとに改行する
+        const lines = [];
+        for (let i = 0; i < hex.length; i += 32) {
+            lines.push(hex.slice(i, i + 32));
+        }
+
+        hexInput.value = lines.join("\n");
+    }
+
+    function setAllDelays(low, high) {
+        const bytes = getBytesFromInput();
+
+        // Graphic Control Extension:
+        // 21 F9 04 [packed] [delay low] [delay high] [transparent index] 00
+        for (let i = 0; i < bytes.length - 7; i++) {
+            if (bytes[i] === 0x21 && bytes[i + 1] === 0xF9 && bytes[i + 2] === 0x04) {
+                bytes[i + 4] = low;
+                bytes[i + 5] = high;
+            }
+        }
+
+        setInputFromBytes(bytes);
+        renderGif();
+    }
+
+    function invertPaletteWhite() {
+        const bytes = getBytesFromInput();
+
+        // このtiny GIFでは、先頭のGlobal Color Tableに FF FF FF がある。
+        // そこを FF 00 FF にして、白をマゼンタ寄りにする。
+        for (let i = 0; i < bytes.length - 2; i++) {
+            if (bytes[i] === 0xFF && bytes[i + 1] === 0xFF && bytes[i + 2] === 0xFF) {
+                bytes[i] = 0xFF;
+                bytes[i + 1] = 0x00;
+                bytes[i + 2] = 0xFF;
+                break;
+            }
+        }
+
+        setInputFromBytes(bytes);
+        renderGif();
+    }
+
+    function flipRandomDataByte() {
+        const bytes = getBytesFromInput();
+
+        // 雑に安全寄り：
+        // 先頭40バイト程度は避け、最後の3Bも避ける。
+        // 本格的には「サブブロック長」などを避けてパースする必要あり。
+        const start = 40;
+        const end = bytes.length - 2;
+
+        if (end <= start) {
+            return;
+        }
+
+        const index = Math.floor(Math.random() * (end - start)) + start;
+        bytes[index] ^= 0xFF;
+
+        setInputFromBytes(bytes);
+        renderGif();
+    }
+
+    renderGif();
+</script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JI Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+  <h1>JI Explorer (純正音程n次元可視化・音階語生成)</h1>
+  
+  <div class="layout-grid">
+    <!-- 左ペイン: 入力・設定 -->
+    <div class="left-pane">
+        <!-- 音程列入力 -->
+        <div class="panel">
+            <h2>純正音程列の入力</h2>
+            <div class="form-group">
+                <label for="input_intervals">純正音程列 (比, 整数, 又はMonzo記法 [-1 1 0>)</label>
+                <textarea id="input_intervals" placeholder="例:&#10;3/2, 5/4, 45/32&#10;[-1 1 0>&#10;[0 1 -1>"></textarea>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-col">
+                    <label for="prime_limit">Prime-limit 指定</label>
+                    <select id="prime_limit">
+                        <option value="3">3-limit (2,3)</option>
+                        <option value="5" selected>5-limit (2,3,5)</option>
+                        <option value="7">7-limit (2..7)</option>
+                        <option value="11">11-limit (2..11)</option>
+                        <option value="13">13-limit (2..13)</option>
+                        <option value="17">17-limit (2..17)</option>
+                        <option value="19">19-limit (2..19)</option>
+                        <option value="23">23-limit (2..23)</option>
+                        <option value="29">29-limit (2..29)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row" style="margin-top: 1rem;">
+                <div class="form-col">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="octave_normalize" checked>
+                        <label for="octave_normalize">オクターブ正規化 [1, 2) を行う (抽出・生成時)</label>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="auto_close_octave" checked>
+                        <label for="auto_close_octave">末尾に 2/1 を自動補完する (音階語生成時)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button onclick="ui_analyzeAndSort('raw')">解析 & 生比ソート</button>
+                <button onclick="ui_analyzeAndSort('normalized')" class="action">正規化してソート</button>
+                <button onclick="ui_showReduced()" class="secondary">Reduced座標表示</button>
+                <button onclick="ui_generateScaleWord()" class="secondary">音階語・Step抽出</button>
+            </div>
+        </div>
+
+        <!-- 凸包領域抽出 -->
+        <div class="panel">
+            <h2>凸領域からの純正音程抽出</h2>
+            <div class="form-group">
+                <label for="input_convex">端点群 (比またはMonzo)</label>
+                <textarea id="input_convex" placeholder="例:&#10;[4 -2 0> または 16/9&#10;[-3 2 0> または 9/8&#10;[5 0 -2> または 32/25&#10;[-4 0 2> または 25/16"></textarea>
+            </div>
+            <div class="btn-group">
+                <button onclick="ui_extractConvex()">内部格子点を抽出</button>
+                <button onclick="ui_addConvexToInput()" class="secondary">現在の入力列へ追加</button>
+            </div>
+        </div>
+
+        <!-- コンソール -->
+        <div class="panel" style="padding-top: 1rem;">
+            <h2>内部コンソール</h2>
+            <div id="console_output" class="console-container"></div>
+        </div>
+    </div>
+
+    <!-- 右ペイン: 出力・可視化 -->
+    <div class="right-pane">
+
+        <!-- 解析・ソート結果 -->
+        <div id="section_table" class="panel result-section visible">
+            <h2>解析結果 (ソート済)</h2>
+            <div style="overflow-x: auto;">
+                <table id="result_table">
+                    <thead>
+                        <tr>
+                            <th>元入力</th>
+                            <th>(正規化比)</th>
+                            <th>Monzo</th>
+                            <th>Reduced</th>
+                            <th>Cents</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 音階語生成結果 -->
+        <div id="section_scaleword" class="panel result-section">
+            <h2>音階語生成結果</h2>
+            <div class="form-group">
+                <label>Step 同一視誤差 (Cents)</label>
+                <input type="number" id="step_tolerance" value="0.01" step="0.001" style="max-width: 150px;">
+            </div>
+            <p>音階語:</p>
+            <div id="out_scaleword" class="output-box"></div>
+            
+            <h3 style="margin-top: 1.5rem;">ステップ一覧</h3>
+            <div style="overflow-x: auto;">
+                <table id="step_table">
+                    <thead>
+                        <tr>
+                            <th>記号</th>
+                            <th>代表比</th>
+                            <th>Cents</th>
+                            <th>出現数</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 可視化 (2D投影) -->
+        <div id="section_canvas" class="panel result-section">
+            <h2>Reduced 空間 2D投影 (3-Limit / 5-Limit 軸)</h2>
+            <div class="canvas-container">
+                <canvas id="plot_canvas" width="400" height="400"></canvas>
+            </div>
+        </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- モジュールの順次読み込み -->
+<script src="js/monzo.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/normalize.js"></script>
+<script src="js/sort.js"></script>
+<script src="js/convex.js"></script>
+<script src="js/scaleword.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>

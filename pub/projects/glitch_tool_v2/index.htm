@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glitch Image Design Tool v2</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar Controls -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>Glitch Tool <span>v2</span></h1>
+            </div>
+
+            <div class="control-group">
+                <h3>Images</h3>
+                <div class="file-input-wrapper">
+                    <label for="mainImageInput" class="btn btn-secondary">Load Main Image</label>
+                    <input type="file" id="mainImageInput" accept="image/*">
+                </div>
+                <div class="file-input-wrapper">
+                    <label for="overlayImageInput" class="btn btn-secondary">Load Overlay Image</label>
+                    <input type="file" id="overlayImageInput" accept="image/*">
+                </div>
+
+                <div class="setting-row">
+                    <label>Tile Size</label>
+                    <select id="tileSizeSelect">
+                        <option value="8">8 px</option>
+                        <option value="16" selected>16 px</option>
+                        <option value="32">32 px</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>Glitch Mode</h3>
+                <div class="toggle-group">
+                    <label class="radio-label">
+                        <input type="radio" name="glitchMode" value="global" checked>
+                        <span>Global</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="glitchMode" value="inpaint">
+                        <span>Inpaint</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>Effects Probability</h3>
+                <div class="slider-row" title="Randomly replaces tiles with other tiles from the image"><label>P1:
+                        Random Replace</label><input type="range" id="p1" min="0" max="1" step="0.01" value="0.05">
+                </div>
+                <div class="slider-row" title="Copies the tile to the left (smear effect)"><label>P2: Neighbor Copy
+                        (L→R)</label><input type="range" id="p2" min="0" max="1" step="0.01" value="0.06"></div>
+                <div class="slider-row" title="Randomly shifts hue, saturation, and value"><label>P3: Color
+                        Shift</label><input type="range" id="p3" min="0" max="1" step="0.01" value="0.08"></div>
+                <div class="slider-row" title="Randomly rotates the tile (90/180/270)"><label>P4: Rotate</label><input
+                        type="range" id="p4" min="0" max="1" step="0.01" value="0.03"></div>
+                <div class="slider-row" title="Replaces tile with one from the Overlay image"><label>P5: Overlay
+                        Replace</label><input type="range" id="p5" min="0" max="1" step="0.01" value="0.03"></div>
+                <div class="slider-row" title="Overlay replacement + Color Shift"><label>P6: Overlay +
+                        Color</label><input type="range" id="p6" min="0" max="1" step="0.01" value="0.02"></div>
+                <div class="slider-row" title="Overlay replacement + Rotation"><label>P7: Overlay + Rotate</label><input
+                        type="range" id="p7" min="0" max="1" step="0.01" value="0.02"></div>
+            </div>
+
+            <div class="control-group">
+                <h3>Color Reduction</h3>
+                <div class="btn-group">
+                    <button id="btnQuantize8" class="btn btn-secondary">8 Colors</button>
+                    <button id="btnQuantize16" class="btn btn-secondary">16 Colors</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>Influence Filters</h3>
+                <div class="btn-group">
+                    <button id="btnBlur" class="btn btn-secondary">Blur</button>
+                    <button id="btnSharpen" class="btn btn-secondary">Sharpen</button>
+                </div>
+                <button id="btnReGlitchInfluence" class="btn btn-secondary" style="margin-top: 10px;">Re-Glitch
+                    Influence</button>
+            </div>
+
+            <div class="control-group">
+                <h3>Settings</h3>
+                <div class="slider-row"><label>Color Amount</label><input type="range" id="colorAmount" min="0" max="1"
+                        step="0.01" value="0.35"></div>
+                <div class="slider-row"><label>Iterations</label><input type="range" id="iterations" min="1" max="50"
+                        step="1" value="5"></div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="btnApply" class="btn btn-primary">Apply</button>
+                <div class="btn-group">
+                    <button id="btnUndo" class="btn btn-icon" disabled title="Undo">↶</button>
+                    <button id="btnRedo" class="btn btn-icon" disabled title="Redo">↷</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>Export</h3>
+                <button id="btnExport" class="btn btn-success">Save PNG</button>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="workspace">
+            <div class="toolbar">
+                <div class="tool-select">
+                    <button class="tool-btn active" data-tool="pen" title="Paint Influence (Red)">Pen</button>
+                    <button class="tool-btn" data-tool="eraser"
+                        title="Restore Original Image & Remove Influence">Eraser</button>
+                    <button class="tool-btn" data-tool="unmask" title="Remove Influence & Protect (Keep Image)">Mask
+                        Eraser</button>
+                    <button class="tool-btn" data-tool="protect" title="Protect Area (Blue)">Protect</button>
+                </div>
+                <div class="tool-settings">
+                    <label>Size: <input type="range" id="brushSize" min="1" max="10" value="2"></label>
+                    <label>Strength: <input type="range" id="brushStrength" min="0" max="1" step="0.1"
+                            value="0.6"></label>
+                </div>
+                <div class="overlay-toggle">
+                    <label><input type="checkbox" id="showInfluence" checked> Show Influence</label>
+                </div>
+            </div>
+
+            <div class="canvas-wrapper" id="canvasWrapper">
+                <canvas id="mainCanvas"></canvas>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modules -->
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>

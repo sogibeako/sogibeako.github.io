@@ -1,0 +1,1070 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Canon Forge Prototype</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111316;
+      --panel: #1a1d22;
+      --panel-2: #20242b;
+      --line: #343a44;
+      --text: #ece9e1;
+      --muted: #a8adb7;
+      --accent: #62c6b8;
+      --accent-2: #e1b95e;
+      --bad: #e36c6c;
+      --warn: #dba54d;
+      --good: #75c887;
+      --leader: #6fb7ff;
+      --follower: #d98ce8;
+      --shadow: rgba(0, 0, 0, .28);
+      font-family: "Segoe UI", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, .035), transparent 260px),
+        var(--bg);
+      color: var(--text);
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      min-height: 36px;
+      padding: 0 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover { border-color: var(--accent); }
+    button.primary {
+      background: #1f5f58;
+      border-color: #3a9e92;
+    }
+
+    button.icon {
+      width: 38px;
+      padding: 0;
+      display: inline-grid;
+      place-items: center;
+      font-size: 17px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #11151a;
+      color: var(--text);
+      border-radius: 6px;
+      padding: 9px 10px;
+      outline: none;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(98, 198, 184, .16);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 146px;
+      line-height: 1.45;
+      font-family: "Cascadia Mono", Consolas, monospace;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(17, 19, 22, .88);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      backdrop-filter: blur(10px);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(120px, 1fr)) auto;
+      gap: 10px;
+      padding: 12px 22px;
+      border-bottom: 1px solid var(--line);
+      background: #15181d;
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: minmax(320px, 390px) minmax(420px, 1fr) minmax(300px, 370px);
+      min-height: 0;
+    }
+
+    .pane {
+      padding: 16px;
+      border-right: 1px solid var(--line);
+      min-width: 0;
+      overflow: auto;
+    }
+
+    .pane:last-child { border-right: 0; }
+
+    .section {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .section:last-child {
+      border-bottom: 0;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+      margin: 8px 0 0;
+    }
+
+    .roll-wrap {
+      display: grid;
+      gap: 12px;
+      min-height: 100%;
+    }
+
+    .roll-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .swatch {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .swatch::before {
+      content: "";
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      background: var(--c);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, .2) inset;
+    }
+
+    .roll-stage {
+      min-height: 420px;
+      border: 1px solid var(--line);
+      background: #0f1216;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px var(--shadow);
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 420px;
+    }
+
+    .candidate-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .candidate {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .candidate.selected {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(98, 198, 184, .12);
+    }
+
+    .candidate-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .score {
+      font-size: 28px;
+      line-height: 1;
+      font-weight: 800;
+      color: var(--accent-2);
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      border: 1px solid var(--line);
+      color: var(--muted);
+      padding: 3px 7px;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    .candidate-actions {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .rule {
+      display: grid;
+      grid-template-columns: auto 1fr 72px;
+      gap: 9px;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, .06);
+    }
+
+    .rule:last-child { border-bottom: 0; }
+
+    .rule input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
+    .rule strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .rule span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .rule input[type="number"] {
+      padding: 7px;
+    }
+
+    .detail-list {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      max-height: 230px;
+      overflow: auto;
+    }
+
+    .detail-list div {
+      border-left: 3px solid var(--line);
+      padding-left: 8px;
+    }
+
+    .detail-list .bad { border-color: var(--bad); color: #ffd1d1; }
+    .detail-list .good { border-color: var(--good); color: #d7ffdf; }
+
+    footer {
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+      padding: 9px 22px;
+      background: #15181d;
+    }
+
+    .file-input {
+      display: none;
+    }
+
+    @media (max-width: 1180px) {
+      .toolbar { grid-template-columns: repeat(3, minmax(120px, 1fr)); }
+      .main { grid-template-columns: 1fr; }
+      .pane {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .pane:last-child { border-bottom: 0; }
+    }
+
+    @media (max-width: 620px) {
+      header {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 14px;
+      }
+      .header-actions { justify-content: flex-start; }
+      .toolbar {
+        grid-template-columns: 1fr 1fr;
+        padding: 12px 14px;
+      }
+      .main .pane { padding: 14px; }
+      .grid-2 { grid-template-columns: 1fr; }
+      h1 { font-size: 19px; }
+      .roll-stage, svg { min-height: 340px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>Canon Forge</h1>
+        <div class="subtitle">カノン候補生成と交換可能な対位法ルールの最小試作</div>
+      </div>
+      <div class="header-actions">
+        <button class="icon" id="saveBtn" title="ブラウザに保存">S</button>
+        <button class="icon" id="loadBtn" title="ブラウザ保存から読み込み">L</button>
+        <button class="icon" id="exportBtn" title="JSONを書き出し">{}</button>
+        <button class="icon" id="importBtn" title="JSONを読み込み">I</button>
+        <input class="file-input" id="fileInput" type="file" accept="application/json">
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <label>Tempo
+        <input id="tempo" type="number" min="40" max="240" value="112">
+      </label>
+      <label>Scale
+        <select id="edo">
+          <option value="12">12EDO</option>
+          <option value="20">20EDO</option>
+        </select>
+      </label>
+      <label>Delays
+        <input id="delays" value="1,2,3,4">
+      </label>
+      <label>Transpositions
+        <input id="transpositions" value="-7,-5,0,5,7">
+      </label>
+      <label>Wave
+        <select id="wave">
+          <option>sine</option>
+          <option>triangle</option>
+          <option>sawtooth</option>
+          <option>square</option>
+        </select>
+      </label>
+      <button class="primary" id="generateBtn">探索</button>
+    </div>
+
+    <main class="main">
+      <section class="pane">
+        <div class="section">
+          <h2>旋律入力</h2>
+          <textarea id="melodyInput" spellcheck="false">0:0:1
+2:1:1
+4:2:1
+7:3:1
+5:4:1
+4:5:1
+2:6:1
+0:7:2</textarea>
+          <p class="hint">1行に <code>pitch:start:duration</code>。pitch は音律内の段数、start と duration は拍です。</p>
+        </div>
+
+        <div class="section">
+          <h2>ピアノロール編集</h2>
+          <div class="grid-2">
+            <label>Pitch
+              <input id="notePitch" type="number" value="0">
+            </label>
+            <label>Start
+              <input id="noteStart" type="number" value="8" step="0.25">
+            </label>
+            <label>Duration
+              <input id="noteDuration" type="number" value="1" min="0.25" step="0.25">
+            </label>
+            <button id="addNoteBtn">追加</button>
+          </div>
+          <p class="hint">下のロール上の主声部ノートをクリックすると削除できます。</p>
+        </div>
+
+        <div class="section">
+          <h2>プロジェクト</h2>
+          <div class="grid-2">
+            <button id="playMelodyBtn">主旋律再生</button>
+            <button id="stopBtn">停止</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="pane">
+        <div class="roll-wrap">
+          <div class="roll-head">
+            <h2>候補表示</h2>
+            <div class="legend">
+              <span class="swatch" style="--c: var(--leader)">主声部</span>
+              <span class="swatch" style="--c: var(--follower)">応答声部</span>
+              <span class="swatch" style="--c: var(--bad)">違反</span>
+              <span class="swatch" style="--c: var(--good)">加点</span>
+            </div>
+          </div>
+          <div class="roll-stage" id="rollStage"></div>
+        </div>
+      </section>
+
+      <aside class="pane">
+        <div class="section">
+          <h2>ルール</h2>
+          <div id="rules"></div>
+        </div>
+        <div class="section">
+          <h2>候補ランキング</h2>
+          <div id="candidateList" class="candidate-list"></div>
+        </div>
+      </aside>
+    </main>
+
+    <footer id="status">Ready.</footer>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const state = {
+      candidates: [],
+      selectedId: null,
+      audio: null,
+      stopAt: [],
+      rules: [
+        {
+          id: "consonance",
+          name: "協和音程",
+          description: "1, 3, 5, 6, 8度相当を加点",
+          enabled: true,
+          weight: 8
+        },
+        {
+          id: "dissonance",
+          name: "不協和音程",
+          description: "2, 4, 7度相当を減点",
+          enabled: true,
+          weight: 10
+        },
+        {
+          id: "strongBeat",
+          name: "強拍不協和",
+          description: "小節頭や偶数拍の不協和を強く減点",
+          enabled: true,
+          weight: 14
+        },
+        {
+          id: "parallelPerfect",
+          name: "平行完全音程",
+          description: "完全1/5/8度への平行進行を減点",
+          enabled: true,
+          weight: 18
+        },
+        {
+          id: "contrary",
+          name: "反進行",
+          description: "両声部が逆方向に動く箇所を加点",
+          enabled: true,
+          weight: 6
+        },
+        {
+          id: "cadence",
+          name: "終止協和",
+          description: "最後が1/5/8度相当なら加点",
+          enabled: true,
+          weight: 16
+        }
+      ]
+    };
+
+    function parseNumberList(text, fallback) {
+      const list = text.split(",").map((v) => Number(v.trim())).filter(Number.isFinite);
+      return list.length ? list : fallback;
+    }
+
+    function parseMelody() {
+      const lines = $("melodyInput").value.split(/\r?\n/);
+      const notes = [];
+      for (let i = 0; i < lines.length; i += 1) {
+        const raw = lines[i].trim();
+        if (!raw || raw.startsWith("#")) continue;
+        const parts = raw.split(":").map((v) => Number(v.trim()));
+        if (parts.length !== 3 || parts.some((v) => !Number.isFinite(v))) {
+          throw new Error(`${i + 1}行目を pitch:start:duration で読めません`);
+        }
+        notes.push({
+          id: `n${i + 1}`,
+          pitch: parts[0],
+          start: parts[1],
+          duration: Math.max(.125, parts[2]),
+          velocity: .8
+        });
+      }
+      if (!notes.length) throw new Error("旋律が空です");
+      return notes.sort((a, b) => a.start - b.start || a.pitch - b.pitch);
+    }
+
+    function serializeMelody(notes) {
+      $("melodyInput").value = notes
+        .sort((a, b) => a.start - b.start || a.pitch - b.pitch)
+        .map((n) => `${trim(n.pitch)}:${trim(n.start)}:${trim(n.duration)}`)
+        .join("\n");
+    }
+
+    function trim(value) {
+      return Number(value.toFixed(4)).toString();
+    }
+
+    function mod(value, base) {
+      return ((value % base) + base) % base;
+    }
+
+    function intervalClass(a, b, edo) {
+      const raw = Math.abs(b - a);
+      const folded = Math.min(mod(raw, edo), edo - mod(raw, edo));
+      const twelve = Math.round(folded * 12 / edo);
+      return mod(twelve, 12);
+    }
+
+    function categoryForInterval(interval) {
+      if ([0, 5, 7].includes(interval)) return "perfect";
+      if ([3, 4, 8, 9].includes(interval)) return "imperfect";
+      if ([2, 10].includes(interval)) return "mild";
+      return "strong";
+    }
+
+    function transformVoice(melody, delay, transposition) {
+      return melody.map((note, idx) => ({
+        ...note,
+        id: `f${idx + 1}`,
+        pitch: note.pitch + transposition,
+        start: note.start + delay
+      }));
+    }
+
+    function overlaps(a, b) {
+      return a.start < b.start + b.duration && b.start < a.start + a.duration;
+    }
+
+    function verticalEvents(leader, follower) {
+      const events = [];
+      for (const l of leader) {
+        for (const f of follower) {
+          if (!overlaps(l, f)) continue;
+          const time = Math.max(l.start, f.start);
+          events.push({ time, leader: l, follower: f });
+        }
+      }
+      return events.sort((a, b) => a.time - b.time);
+    }
+
+    function buildMotionEvents(leader, follower, delay) {
+      const events = [];
+      for (let i = 1; i < leader.length; i += 1) {
+        const l0 = leader[i - 1];
+        const l1 = leader[i];
+        const f0 = follower.find((n) => Math.abs(n.start - (l0.start + delay)) < .001);
+        const f1 = follower.find((n) => Math.abs(n.start - (l1.start + delay)) < .001);
+        if (!f0 || !f1) continue;
+        events.push({ l0, l1, f0, f1 });
+      }
+      return events;
+    }
+
+    function evaluateCandidate(leader, follower, transform, edo) {
+      const violations = [];
+      const highlights = [];
+      let score = 70;
+      const events = verticalEvents(leader, follower);
+      const motions = buildMotionEvents(leader, follower, transform.delay);
+      const rules = Object.fromEntries(state.rules.map((r) => [r.id, r]));
+
+      for (const ev of events) {
+        const interval = intervalClass(ev.leader.pitch, ev.follower.pitch, edo);
+        const category = categoryForInterval(interval);
+        const strong = Math.abs(ev.time % 2) < .001;
+        if (rules.consonance.enabled && (category === "perfect" || category === "imperfect")) {
+          const delta = category === "perfect" ? rules.consonance.weight * .65 : rules.consonance.weight;
+          score += delta;
+          highlights.push(mark("consonance", ev.time, `協和 ${intervalName(interval)} +${trim(delta)}`, delta));
+        }
+        if (rules.dissonance.enabled && (category === "mild" || category === "strong")) {
+          const delta = category === "strong" ? -rules.dissonance.weight * 1.4 : -rules.dissonance.weight;
+          score += delta;
+          violations.push(mark("dissonance", ev.time, `不協和 ${intervalName(interval)} ${trim(delta)}`, delta));
+        }
+        if (rules.strongBeat.enabled && strong && (category === "mild" || category === "strong")) {
+          const delta = -rules.strongBeat.weight;
+          score += delta;
+          violations.push(mark("strongBeat", ev.time, `強拍上の不協和 ${intervalName(interval)} ${trim(delta)}`, delta));
+        }
+      }
+
+      for (const ev of motions) {
+        const lMove = Math.sign(ev.l1.pitch - ev.l0.pitch);
+        const fMove = Math.sign(ev.f1.pitch - ev.f0.pitch);
+        const previous = intervalClass(ev.l0.pitch, ev.f0.pitch, edo);
+        const current = intervalClass(ev.l1.pitch, ev.f1.pitch, edo);
+        if (rules.parallelPerfect.enabled && lMove === fMove && lMove !== 0 && previous === current && [0, 7].includes(current)) {
+          const delta = -rules.parallelPerfect.weight;
+          score += delta;
+          violations.push(mark("parallelPerfect", ev.l1.start, `平行完全音程 ${intervalName(current)} ${trim(delta)}`, delta));
+        }
+        if (rules.contrary.enabled && lMove * fMove < 0) {
+          const delta = rules.contrary.weight;
+          score += delta;
+          highlights.push(mark("contrary", ev.l1.start, `反進行 +${trim(delta)}`, delta));
+        }
+      }
+
+      if (rules.cadence.enabled) {
+        const lastLeader = leader.reduce((a, b) => a.start > b.start ? a : b);
+        const lastFollower = follower.reduce((a, b) => a.start > b.start ? a : b);
+        const interval = intervalClass(lastLeader.pitch, lastFollower.pitch, edo);
+        const delta = [0, 7].includes(interval) ? rules.cadence.weight : -rules.cadence.weight * .5;
+        score += delta;
+        const item = mark("cadence", Math.max(lastLeader.start, lastFollower.start), `終止 ${intervalName(interval)} ${delta > 0 ? "+" : ""}${trim(delta)}`, delta);
+        (delta > 0 ? highlights : violations).push(item);
+      }
+
+      const densityPenalty = Math.max(0, events.length - 16) * 1.5;
+      score -= densityPenalty;
+
+      return {
+        id: `${transform.delay}_${transform.transposition}`,
+        leader,
+        follower,
+        transform,
+        score: Math.round(Math.max(0, Math.min(100, score))),
+        violations,
+        highlights
+      };
+    }
+
+    function mark(ruleId, time, message, scoreDelta) {
+      return { ruleId, time, message, scoreDelta };
+    }
+
+    function intervalName(interval) {
+      const names = {
+        0: "1/8度",
+        1: "短2度",
+        2: "長2度",
+        3: "短3度",
+        4: "長3度",
+        5: "4度",
+        6: "三全音",
+        7: "5度",
+        8: "短6度",
+        9: "長6度",
+        10: "短7度",
+        11: "長7度"
+      };
+      return names[interval] || `${interval}`;
+    }
+
+    function generateCandidates() {
+      try {
+        const melody = parseMelody();
+        const edo = Number($("edo").value);
+        const delays = parseNumberList($("delays").value, [1, 2, 3, 4]);
+        const transpositions = parseNumberList($("transpositions").value, [0, 5, 7]);
+        const candidates = [];
+        for (const delay of delays) {
+          for (const transposition of transpositions) {
+            const follower = transformVoice(melody, delay, transposition);
+            candidates.push(evaluateCandidate(melody, follower, { delay, transposition, inversion: false, retrograde: false }, edo));
+          }
+        }
+        state.candidates = candidates.sort((a, b) => b.score - a.score);
+        state.selectedId = state.candidates[0]?.id || null;
+        renderAll();
+        setStatus(`${state.candidates.length}件の候補を生成しました`);
+      } catch (error) {
+        setStatus(error.message);
+      }
+    }
+
+    function selectedCandidate() {
+      return state.candidates.find((c) => c.id === state.selectedId) || state.candidates[0] || null;
+    }
+
+    function renderRules() {
+      $("rules").innerHTML = state.rules.map((rule, index) => `
+        <div class="rule">
+          <input type="checkbox" data-rule="${index}" ${rule.enabled ? "checked" : ""} title="${rule.name}">
+          <div>
+            <strong>${escapeHtml(rule.name)}</strong>
+            <span>${escapeHtml(rule.description)}</span>
+          </div>
+          <input type="number" data-weight="${index}" value="${rule.weight}" min="0" max="99" title="重み">
+        </div>
+      `).join("");
+    }
+
+    function renderCandidates() {
+      if (!state.candidates.length) {
+        $("candidateList").innerHTML = `<p class="hint">探索を押すと候補が並びます。</p>`;
+        return;
+      }
+      $("candidateList").innerHTML = state.candidates.slice(0, 12).map((candidate, index) => `
+        <article class="candidate ${candidate.id === state.selectedId ? "selected" : ""}" data-candidate="${candidate.id}">
+          <div class="candidate-top">
+            <div>
+              <strong>#${index + 1}</strong>
+              <div class="meta">
+                <span class="tag">delay ${trim(candidate.transform.delay)}</span>
+                <span class="tag">transpose ${candidate.transform.transposition >= 0 ? "+" : ""}${trim(candidate.transform.transposition)}</span>
+                <span class="tag">${candidate.violations.length} violations</span>
+              </div>
+            </div>
+            <div class="score">${candidate.score}</div>
+          </div>
+          <div class="candidate-actions">
+            <button data-play="${candidate.id}">再生</button>
+            <button data-apply="${candidate.id}">採用表示</button>
+          </div>
+          <div class="detail-list">
+            ${candidate.violations.slice(0, 4).map((v) => `<div class="bad">${escapeHtml(v.message)} / ${trim(v.time)}拍</div>`).join("")}
+            ${candidate.highlights.slice(0, 3).map((h) => `<div class="good">${escapeHtml(h.message)} / ${trim(h.time)}拍</div>`).join("")}
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function renderRoll() {
+      let melody;
+      try {
+        melody = parseMelody();
+      } catch (_) {
+        $("rollStage").innerHTML = "";
+        return;
+      }
+      const candidate = selectedCandidate();
+      const follower = candidate ? candidate.follower : [];
+      const allNotes = melody.concat(follower);
+      const minPitch = Math.min(...allNotes.map((n) => n.pitch), 0) - 2;
+      const maxPitch = Math.max(...allNotes.map((n) => n.pitch), 9) + 2;
+      const end = Math.max(...allNotes.map((n) => n.start + n.duration), 8) + 1;
+      const width = 920;
+      const height = Math.max(420, (maxPitch - minPitch + 1) * 24 + 34);
+      const left = 46;
+      const top = 18;
+      const rowH = (height - top - 28) / (maxPitch - minPitch + 1);
+      const beatW = (width - left - 20) / end;
+      const x = (beat) => left + beat * beatW;
+      const y = (pitch) => top + (maxPitch - pitch) * rowH;
+      const noteRect = (n, color, extra = "") => `
+        <rect ${extra} x="${x(n.start)}" y="${y(n.pitch) + 3}" width="${Math.max(5, n.duration * beatW - 2)}" height="${Math.max(10, rowH - 6)}" rx="4" fill="${color}" opacity=".92"/>
+      `;
+
+      const grid = [];
+      for (let p = minPitch; p <= maxPitch; p += 1) {
+        const yy = y(p) + rowH;
+        grid.push(`<line x1="${left}" y1="${yy}" x2="${width - 12}" y2="${yy}" stroke="${p % 2 ? "#232831" : "#2b313b"}"/>`);
+        grid.push(`<text x="10" y="${y(p) + rowH * .68}" fill="#8f96a3" font-size="11">${p}</text>`);
+      }
+      for (let beat = 0; beat <= end; beat += 1) {
+        const xx = x(beat);
+        const strong = beat % 4 === 0;
+        grid.push(`<line x1="${xx}" y1="${top}" x2="${xx}" y2="${height - 22}" stroke="${strong ? "#525b68" : "#303743"}" stroke-width="${strong ? 1.4 : 1}"/>`);
+        grid.push(`<text x="${xx + 3}" y="${height - 7}" fill="#8f96a3" font-size="10">${beat}</text>`);
+      }
+
+      const markers = [];
+      if (candidate) {
+        for (const v of candidate.violations.slice(0, 18)) {
+          markers.push(`<circle cx="${x(v.time)}" cy="${top + 10}" r="5" fill="#e36c6c"><title>${escapeHtml(v.message)}</title></circle>`);
+        }
+        for (const h of candidate.highlights.slice(0, 18)) {
+          markers.push(`<circle cx="${x(h.time)}" cy="${top + 25}" r="4" fill="#75c887"><title>${escapeHtml(h.message)}</title></circle>`);
+        }
+      }
+
+      const leaderRects = melody.map((n) => noteRect(n, "#6fb7ff", `data-delete="${n.id}"`)).join("");
+      const followerRects = follower.map((n) => noteRect(n, "#d98ce8")).join("");
+      $("rollStage").innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Canon piano roll">
+          <rect width="${width}" height="${height}" fill="#0f1216"/>
+          ${grid.join("")}
+          ${followerRects}
+          ${leaderRects}
+          ${markers.join("")}
+        </svg>
+      `;
+    }
+
+    function renderAll() {
+      renderRules();
+      renderCandidates();
+      renderRoll();
+    }
+
+    function pitchToFrequency(pitch, edo) {
+      return 261.625565 * Math.pow(2, pitch / edo);
+    }
+
+    function stopAudio() {
+      for (const node of state.stopAt) {
+        try { node.stop(); } catch (_) {}
+      }
+      state.stopAt = [];
+      if (state.audio) {
+        state.audio.close();
+        state.audio = null;
+      }
+    }
+
+    function playNotes(voices) {
+      stopAudio();
+      const context = new (window.AudioContext || window.webkitAudioContext)();
+      state.audio = context;
+      const tempo = Number($("tempo").value) || 112;
+      const beat = 60 / tempo;
+      const edo = Number($("edo").value);
+      const wave = $("wave").value;
+      const now = context.currentTime + .05;
+      for (const voice of voices) {
+        for (const note of voice.notes) {
+          const osc = context.createOscillator();
+          const gain = context.createGain();
+          osc.type = wave;
+          osc.frequency.value = pitchToFrequency(note.pitch, edo);
+          gain.gain.setValueAtTime(0, now + note.start * beat);
+          gain.gain.linearRampToValueAtTime(voice.gain, now + note.start * beat + .015);
+          gain.gain.exponentialRampToValueAtTime(.0001, now + (note.start + note.duration) * beat);
+          osc.connect(gain).connect(context.destination);
+          osc.start(now + note.start * beat);
+          osc.stop(now + (note.start + note.duration) * beat + .04);
+          state.stopAt.push(osc);
+        }
+      }
+    }
+
+    function saveProject() {
+      localStorage.setItem("canonForgePrototype", JSON.stringify(projectData()));
+      setStatus("ブラウザに保存しました");
+    }
+
+    function loadProject(data) {
+      $("melodyInput").value = data.melodyText || $("melodyInput").value;
+      $("tempo").value = data.tempo || 112;
+      $("edo").value = data.edo || 12;
+      $("delays").value = data.delays || "1,2,3,4";
+      $("transpositions").value = data.transpositions || "-7,-5,0,5,7";
+      $("wave").value = data.wave || "sine";
+      if (Array.isArray(data.rules)) {
+        for (const incoming of data.rules) {
+          const rule = state.rules.find((r) => r.id === incoming.id);
+          if (rule) {
+            rule.enabled = Boolean(incoming.enabled);
+            rule.weight = Number(incoming.weight) || rule.weight;
+          }
+        }
+      }
+      generateCandidates();
+    }
+
+    function projectData() {
+      return {
+        version: "0.1-prototype",
+        title: "Canon Forge Prototype",
+        melodyText: $("melodyInput").value,
+        tempo: Number($("tempo").value),
+        edo: Number($("edo").value),
+        delays: $("delays").value,
+        transpositions: $("transpositions").value,
+        wave: $("wave").value,
+        rules: state.rules.map(({ id, enabled, weight }) => ({ id, enabled, weight })),
+        candidates: state.candidates.map((c) => ({
+          id: c.id,
+          score: c.score,
+          transform: c.transform,
+          violations: c.violations,
+          highlights: c.highlights
+        }))
+      };
+    }
+
+    function exportProject() {
+      const blob = new Blob([JSON.stringify(projectData(), null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "canon-forge-project.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (ch) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      })[ch]);
+    }
+
+    function setStatus(text) {
+      $("status").textContent = text;
+    }
+
+    $("generateBtn").addEventListener("click", generateCandidates);
+    $("playMelodyBtn").addEventListener("click", () => {
+      try {
+        playNotes([{ notes: parseMelody(), gain: .09 }]);
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+    $("stopBtn").addEventListener("click", stopAudio);
+    $("addNoteBtn").addEventListener("click", () => {
+      try {
+        const notes = parseMelody();
+        notes.push({
+          id: `n${Date.now()}`,
+          pitch: Number($("notePitch").value),
+          start: Number($("noteStart").value),
+          duration: Math.max(.125, Number($("noteDuration").value)),
+          velocity: .8
+        });
+        serializeMelody(notes);
+        generateCandidates();
+      } catch (error) {
+        setStatus(error.message);
+      }
+    });
+
+    $("rules").addEventListener("change", (event) => {
+      const checkboxIndex = event.target.dataset.rule;
+      const weightIndex = event.target.dataset.weight;
+      if (checkboxIndex !== undefined) state.rules[Number(checkboxIndex)].enabled = event.target.checked;
+      if (weightIndex !== undefined) state.rules[Number(weightIndex)].weight = Number(event.target.value) || 0;
+      generateCandidates();
+    });
+
+    $("candidateList").addEventListener("click", (event) => {
+      const play = event.target.dataset.play;
+      const apply = event.target.dataset.apply;
+      const card = event.target.closest("[data-candidate]");
+      const id = play || apply || card?.dataset.candidate;
+      if (!id) return;
+      state.selectedId = id;
+      renderAll();
+      const candidate = selectedCandidate();
+      if (play && candidate) {
+        playNotes([
+          { notes: candidate.leader, gain: .075 },
+          { notes: candidate.follower, gain: .055 }
+        ]);
+      }
+    });
+
+    $("rollStage").addEventListener("click", (event) => {
+      const id = event.target.getAttribute("data-delete");
+      if (!id) return;
+      const notes = parseMelody().filter((note) => note.id !== id);
+      serializeMelody(notes);
+      generateCandidates();
+    });
+
+    $("saveBtn").addEventListener("click", saveProject);
+    $("loadBtn").addEventListener("click", () => {
+      const raw = localStorage.getItem("canonForgePrototype");
+      if (!raw) return setStatus("保存データがありません");
+      loadProject(JSON.parse(raw));
+      setStatus("ブラウザ保存から読み込みました");
+    });
+    $("exportBtn").addEventListener("click", exportProject);
+    $("importBtn").addEventListener("click", () => $("fileInput").click());
+    $("fileInput").addEventListener("change", async (event) => {
+      const file = event.target.files[0];
+      if (!file) return;
+      loadProject(JSON.parse(await file.text()));
+      setStatus(`${file.name} を読み込みました`);
+    });
+
+    for (const id of ["melodyInput", "tempo", "edo", "delays", "transpositions", "wave"]) {
+      $(id).addEventListener("change", generateCandidates);
+    }
+
+    generateCandidates();
+  </script>
+</body>
+</html>

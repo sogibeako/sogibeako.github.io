@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>『遠足の前日』</title>
+  <style>
+    /* 色は出来るだけ、SB Creative出版『日本の美しい色と言葉』から取っていく。 */
+    /* 当ページはp256『しとしと』 */
+    /* 氷雨 #e3e8f1 */
+    /* 俄雨 #6290b1 */
+    /* 長雨 #afd3e6 */
+    /* 秋雨 #609aa0 */
+    /* 五月雨 #9ec8d1 */
+    body {
+      font-size: 1rem;
+      background-color: #111822;
+      /* 青っぽい背景色 */
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    h1 {
+      background-color: #609aa0;
+      /* 秋雨 */
+      color: black;
+      /* 文字は黒でよい */
+      padding: 0.5em;
+      /* 内側の余白で見た目よく */
+    }
+
+    h2 {
+      background-color: #609aa0;
+      /* 秋雨 */
+      color: black;
+      /* 文字は黒でよい */
+      padding: 0.5em;
+      /* 内側の余白で見た目よく */
+    }
+
+    .p_left {
+      text-align: left;
+    }
+
+    .wrapper {
+      max-width: 700px;
+      width: 80%;
+      margin: 50px auto;
+      padding: 20px;
+      border: 0px solid #111;
+      background-color: #afd3e6;
+      /* 長雨 */
+      font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+    }
+
+    .inner_wrapper {
+      width: 600px;
+      margin: 10px auto;
+      padding: 20px;
+      border: 1px solid #111;
+      background-color: #ffffee;
+      font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", sans-serif;
+    }
+
+    .grid-table {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 2px;
+    }
+
+    .grid-table2 {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 2px;
+    }
+
+    .cell {
+      border: 0px solid #ccc;
+      padding: 4px 8px;
+      line-break: strict;
+      /* 日本語の自然な改行ルールに従う */
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    img.top-image {
+      width: 100%;
+      max-width: 800px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    hr {
+      border-width: 2px 0 0 0;
+      /* 線の太さ */
+      border-style: dashed;
+      /* 線の種類 */
+      border-color: #609aa0
+        /* 線の色 */
+    }
+
+    .br-sp {
+      display: none;
+    }
+
+    /* ── コピーボタン ── */
+    .copy-bar {
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: flex-end;
+      padding: 1rem 0;
+      background: linear-gradient(to bottom, var(--bg) 60%, transparent);
+    }
+
+    .copy-btn {
+      font-family: inherit;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      padding: 0.5em 1.4em;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: #888888;
+      color: #000000;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .copy-btn:hover {
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .copy-btn:active {
+      transform: scale(0.97);
+    }
+
+    .copy-btn.copied {
+      background: #f0f5f0;
+    }
+
+    @media screen and (max-width: 600px) {
+      body {
+        font-size: 0.7rem;
+      }
+
+      h1,
+      h2 {
+        font-size: 1rem;
+      }
+
+      .wrapper,
+      .inner_wrapper {
+        width: 95%;
+        padding: 10px;
+        word-wrap: break-word;
+        box-sizing: border-box;
+      }
+
+      .grid-table,
+      .grid-table2 {
+        grid-template-columns: 1fr;
+      }
+
+      .br-sp {
+        display: inline;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <div class="p_left">現在位置 : <a href="../index.html">ホーム</a> ＞ <a href="index.htm">Novels</a> ＞ <a
+        href="ensoku.htm"><b>『遠足の前日』</b></a></div>
+    <div class="copy-bar">
+      <button class="copy-btn" onclick="copyAll()" id="copyBtn">📋 本文をすべてコピー</button>
+    </div>
+    <div id="novel-content">
+      <h1>『遠足の前日』</h1>
+      遠足の前日のこと。水のページの上で戸惑う指紋。駆ける、ああ「神秘の総量が足りない！」神秘を破産する。迷宮、木目。見えない……声だけが聞こえる。だらだらしていてはいけない。そうした、ここには？
+      瞑想と空想の層、無人の法文死蔵所、聖痕の川。そうかそういうことであった！ 蟻のように這い出る、既知の宅を。<br><br>
+      数理からぼくは滑り落ちる。彷徨い出て闇、世界に爪を立て歩き転がり、落ち跳ね浮遊し、呼吸する無窮製造所を迂回して不可知の運動所、犬。天沢火雷、空き缶、回転運動。眦と瞬膜、草原に乗り遅れていく紙の裏、死番虫パーマネント、風車周波数が合わない。明後日、紙ゴミを出し忘れた。<br><br>
+      三十三匹蟻殺し、背骨。それは私のことだったんじゃないだろうか！？
+      直線、公準車が飛び黒々とした裂け目に召し込まれる。掴むビニール袋の端。ああ引き抜かなくては。世界の根本コモナド、三十三歩上空に浮遊して射影平面を右、無限遠点のどこかで待ち合わせ、回転運動に巻き込まれて世界を失ってしまった。<br><br>
+      養豚、トートロジー寄宿舎、ハンダ付け飼育所、背骨お返しします。髭の感触を確かめて、それは密閉型暖房器への愛を込めて遺贈。穴をつけ忘れた。後悔の行政文書。部署ごとに番号を振る。前層。葉の輪郭。<br>
+    </div>
+  </div>
+  <script>
+    async function copyAll() {
+      const content = document.getElementById('novel-content');
+      const btn = document.getElementById('copyBtn');
+
+      // innerText はブラウザが見た目通りのテキスト（改行・空行含む）を返す
+      const text = content.innerText;
+
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.textContent = '✓ コピーしました！';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = '📋 本文をすべてコピー';
+          btn.classList.remove('copied');
+        }, 2000);
+      } catch (err) {
+        // フォールバック（古いブラウザ・file://プロトコル対策）
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        btn.textContent = '✓ コピーしました！';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = '📋 本文をすべてコピー';
+          btn.classList.remove('copied');
+        }, 2000);
+      }
+    }
+  </script>
+</body>
+
+</html>

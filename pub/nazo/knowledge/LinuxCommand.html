@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Diary</title>
+  <link rel="preload" as="font" href="/seoremium/seoremium41.ttf" type="ttf" crossorigin />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
+  <style>
+    @font-face {
+      font-family: "Seoremium_clg";
+      src: url("../seoremium/seoremium41.ttf") format("truetype");
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Source Code Pro";
+      src: url("../../jssproject/SourceCodePro-VariableFont_wght.ttf");
+      font-display: swap;
+    }
+    body {
+      font-size: 1rem;
+      background-color: #111822;
+      margin: 0; padding: 0; text-align: left; line-height: 1.6;
+    }
+    h1 { background-color: #609aa0; color: black; padding: 0.5em; }
+    h2 { background-color: #6290b1; color: black; padding: 0.2em; }
+    h3 { background-color: #fde5c5; color: black; padding: 0.1em; }
+    .p_left { text-align: left; }
+    .wrapper {
+      max-width: 700px; width: 80%; margin: 50px auto; padding: 20px;
+      border: 0px solid #111; background-color: #afd3e6;
+      font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+    }
+    .inner_wrapper {
+      width: 600px; margin: 10px auto; padding: 20px; border: 1px solid #111;
+      background-color: #ffffee; font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", sans-serif;
+    }
+    img.yokonaga-image { width: 100%; max-width: 800px; height: auto; display: block; margin: 0 auto; }
+    img.tatenaga-image { width: 60%; max-width: 800px; height: auto; display: block; margin: 0 auto; }
+    hr { border-width: 2px 0 0 0; border-style: dashed; border-color: #609aa0; }
+    dt { font-weight: bold; }
+    .seoremium { font-family: "Seoremium_clg"; font-size: 1.0rem; font-weight: normal; }
+    .br-sp { display: none; }
+    pre, pre code { background-color: #bbbbbb; color: #000; padding: 0.5em; display: block; overflow-x: auto; border-radius: 4px; font-family: "Source Code Pro", "Courier New", Courier, monospace; }
+    code { background-color: #bbbbbb; color: #000; padding: 0.1em 0.3em; border-radius: 3px; font-family: "Source Code Pro", "Courier New", Courier, monospace; display: inline-block; line-height: 1.2; }
+    .bold { font-weight: bold; }
+    .del { text-decoration: line-through; text-decoration-color: gray; font-size: 0.75rem; color: gray; }
+    table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+    table th, table td { border: 1px solid #666; padding: 0.4em 0.6em; text-align: left; }
+    ol { font-weight: bold; }
+    .rain-window-btn { position: relative; width: 200px; height: 64px; background: rgba(17, 24, 34, 0.85); border: 2px solid #609aa055; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: border-color 0.4s, box-shadow 0.4s; margin: 0 auto; }
+    .rain-window-btn canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    .rain-window-btn .rw-label { position: relative; z-index: 1; font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 1rem; letter-spacing: 0.2em; color: #e3e8f1; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6); transition: text-shadow 0.4s; }
+    .rain-window-btn:hover { border-color: #9ec8d1; box-shadow: 0 0 24px rgba(158, 200, 209, 0.15); }
+    .rain-window-btn:hover .rw-label { text-shadow: 0 0 10px rgba(158, 200, 209, 0.5), 0 1px 4px rgba(0, 0, 0, 0.6); }
+    @media screen and (max-width: 600px) {
+      body { font-size: 0.7rem; } h1, h2 { font-size: 1rem; } .seoremium { font-size: 1rem; }
+      .wrapper, .inner_wrapper { width: 95%; padding: 10px; word-wrap: break-word; box-sizing: border-box; }
+      .br-sp { display: inline; }
+    }
+      </style>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="p_left">
+      現在位置 : <a href="../../index.html">ホーム</a> ＞ <a href="../nazo.htm">NazoText</a> ＞
+      <a href="index.html">knowledge_index</a> ＞ <b><a href=LinuxCommandd.html">Linuxコマンドメモ</a></b>
+    </div>
+    <hr />
+
+<h1>Linuxで使っているコマンドたち</h1>
+<h2>基本的な仲間たち</h2>
+<table>
+  <thead>
+    <tr>
+      <th>コマンド</th>
+      <th>効果</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>pwd</code></td>
+      <td>カレントディレクトリを確認する</td>
+    </tr>
+    <tr>
+      <td><code>ls</code></td>
+      <td>ディレクトリの中身を見る<br>- <code>ls -a</code> : 隠しファイルまで見る<br>- <code>ls -l</code> : 時刻や権限などをしっかり見る</td>
+    </tr>
+    <tr>
+      <td><code>cd</code></td>
+      <td>ディレクトリを移動する<br>- <code>cd test1</code> : <code>test1</code> に移動する<br>- <code>cd ..</code> : 上のディレクトリへ移動する</td>
+    </tr>
+    <tr>
+      <td><code>touch</code></td>
+      <td>ファイル名を指定して空ファイルを作成する<br>- <code>touch 1.txt</code></td>
+    </tr>
+    <tr>
+      <td><code>cat</code></td>
+      <td>ファイルの内容を表示。<br>- <code>cat -n ~/.bashrc</code> : nで行番号を表示。</td>
+    </tr>
+    <tr>
+      <td><code>head</code></td>
+      <td>ファイルの冒頭を表示する。<br>- <code>head -n 80 script.py</code> 冒頭80行を表示<br>- <code>head -c 80 script.py</code> 冒頭80バイトを表示</td>
+    </tr>
+    <tr>
+      <td><code>tail</code></td>
+      <td>ファイルの末尾を表示する。<br>- <code>tail -n 80 script.py</code> 末尾80行を表示<br>- <code>tail -c 80 script.py</code> 末尾80バイトを表示</td>
+    </tr>
+    <tr>
+      <td><code>mkdir</code></td>
+      <td>ディレクトリを作成する<br>- <code>mkdir test1</code> : ディレクトリtest1を作成。<br>- <code>mkdir -p dir1/dir2/dir3</code> : -pで深く作る</td>
+    </tr>
+    <tr>
+      <td><code>cp</code></td>
+      <td>ファイルやディレクトリをコピーする。<br>- <code>cp 1.txt 2.txt</code> : 1.txtを2.txtにコピー、上書きする<br>- <code>cp -r test1 test2</code> : ディレクトリは<code>-r</code>で</td>
+    </tr>
+    <tr>
+      <td><code>mv</code></td>
+      <td>ディレクトリやファイルを移動する、名前を変える<br>- <code>mv test1 1_haru</code> : <code>test1</code> を <code>1_haru</code>にする</td>
+    </tr>
+    <tr>
+      <td><code>rm</code></td>
+      <td>ファイルを削除する<br>- <code>rm 1.txt</code> : 1.txtを削除する<br>- <code>rm -r test1</code> : ディレクトリtest1を削除する<br>- <code>rm -rf</code> : <b>暗黒魔法！ やらない！ <code>-f</code> 禁止！</b></td>
+    </tr>
+    <tr>
+      <td><code>find</code></td>
+      <td>ファイルを検索する。<br>- <code>find . -name "*..py"</code> 今いる場所以下から <code>.py</code> ファイル検索</td>
+    </tr>
+    <tr>
+      <td><code>which</code></td>
+      <td><code>which コマンド名</code> でコマンド名の場所をチェック</td>
+    </tr>
+  </tbody>
+</table>
+<h2>個人的なコマンド（特に自分用のは★付き）</h2>
+<table>
+  <thead>
+    <tr>
+      <th>コマンド</th>
+      <th>効果</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>alias</code></td>
+      <td><code>~\.bashrc</code>内にあるコマンドの効果を確認</td>
+    </tr>
+    <tr>
+      <td><code>nano</code></td>
+      <td>Linux内のワープロ。<code>nano ~\.bashrc</code> で設定ファイルをいじる</td>
+    </tr>
+    <tr>
+      <td><code>code .</code></td>
+      <td>カレントディレクトリをVSCodeで開く</td>
+    </tr>
+    <tr>
+      <td><code>cdh</code></td>
+      <td>★Haskell用のディレクトリへcd</td>
+    </tr>
+    <tr>
+      <td><code>runghc name.hs</code></td>
+      <td><code>name.hs</code>という名前の.hsをHaskellで処理</td>
+    </tr>
+    <tr>
+      <td><code>ghci</code></td>
+      <td>Haskellの対話環境を開く</td>
+    </tr>
+    <tr>
+      <td><code>cdwork</code></td>
+      <td>★仕事用のディレクトリへcd</td>
+    </tr>
+    <tr>
+      <td><code>python3 script.py</code></td>
+      <td>★仕事用のスクリプトの実行</td>
+    </tr>
+    <tr>
+      <td><code>python3 str_script.py result</code></td>
+      <td>★<code>result</code> フォルダ内のディレクトリをpython3で処理（resultは.pyへの引数として渡している）</td>
+    </tr>
+    <tr>
+      <td><code>cdsite</code></td>
+      <td>★ホームページ用のディレクトリへcd</td>
+    </tr>
+    <tr>
+      <td><code>nazoserver</code></td>
+      <td>★ホームページ用の仮想サーバーを立てて開く</td>
+    </tr>
+    <tr>
+      <td><code>openpub (絶対パス)</code></td>
+      <td>★<code>nazoserver</code>が動いている時にそこを開く</td>
+    </tr>
+  </tbody>
+</table>
+<h2>Gitコマンド</h2>
+<table>
+  <thead>
+    <tr>
+      <th>コマンド</th>
+      <th>効果</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>git clone URL</code></td>
+      <td>GitHubなどにあるリポジトリを自分のPCに丸ごとコピーする。<br>- <code>git clone https://github.com/user/repository.git</code><br>：今いるところに<code>repository</code>フォルダを作る。</td>
+    </tr>
+    <tr>
+      <td><code>git status</code></td>
+      <td>今の変更状況を見る</td>
+    </tr>
+    <tr>
+      <td><code>git add ファイル名</code></td>
+      <td>変更したファイルを「次の記録対象」に入れる」</td>
+    </tr>
+    <tr>
+      <td><code>git commit -m "メッセージ"</code></td>
+      <td>変更を記録する</td>
+    </tr>
+    <tr>
+      <td><code>git pull</code></td>
+      <td>リモート側の最新変更を取り込む。<br>- StableDiffusionのForgeNeoを最新にする時に使った。</td>
+    </tr>
+    <tr>
+      <td><code>git push</code></td>
+      <td>自分の記録をリモート側へ送る。<br>- 開発の人が使う。自分のホームページもいずれは？</td>
+    </tr>
+    <tr>
+      <td><code>git log</code></td>
+      <td>過去の記録を見る</td>
+    </tr>
+    <tr>
+      <td><code>git diff</code></td>
+      <td>変更内容を確認する。</td>
+    </tr>
+    <tr>
+      <td><code>git branch</code></td>
+      <td>ブランチ一覧を見る</td>
+    </tr>
+    <tr>
+      <td><code>git switch ブランチ名</code></td>
+      <td>ブランチを切り替える</td>
+    </tr>
+    <tr>
+      <td><code>git switch -c ブランチ名</code></td>
+      <td>新しいブランチを作って切り替える</td>
+    </tr>
+  </tbody>
+</table>
+    
+    <hr />
+
+    <div style="text-align: center;">
+      <a href="../index.html" class="rain-window-btn">
+        <canvas data-rainwindow="true"></canvas>
+        <span class="rw-label">Back</span>
+      </a>
+    </div>
+
+    <script>
+      document.querySelectorAll('canvas[data-rainwindow]').forEach(cv => {
+        const dpr = window.devicePixelRatio || 1;
+        const parent = cv.parentElement;
+        const rect = parent.getBoundingClientRect();
+        cv.width = rect.width * dpr; cv.height = rect.height * dpr;
+        const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+        const w = rect.width, h = rect.height;
+        const drops = Array.from({ length: 30 }, () => ({
+          x: Math.random() * w, y: Math.random() * h, speed: 0.5 + Math.random() * 1.5,
+          len: 4 + Math.random() * 10, opacity: 0.15 + Math.random() * 0.35, width: 0.5 + Math.random() * 0.8
+        }));
+        const splashes = [];
+        function draw() {
+          ctx.clearRect(0, 0, w, h);
+          drops.forEach(d => {
+            ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - 0.3, d.y + d.len);
+            ctx.strokeStyle = `rgba(158,200,209,${d.opacity})`; ctx.lineWidth = d.width; ctx.stroke();
+            d.y += d.speed;
+            if (d.y > h) {
+              splashes.push({ x: d.x, y: h - 2, r: 0, opacity: 0.4 });
+              d.y = -d.len - Math.random() * 20; d.x = Math.random() * w;
+            }
+          });
+          splashes.forEach(s => {
+            s.r += 0.3; s.opacity -= 0.015;
+            if (s.opacity <= 0) return;
+            ctx.beginPath(); ctx.ellipse(s.x, s.y, s.r * 1.5, s.r * 0.5, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(158,200,209,${s.opacity})`; ctx.lineWidth = 0.5; ctx.stroke();
+          });
+          while (splashes.length > 0 && splashes[0].opacity <= 0) splashes.shift();
+          requestAnimationFrame(draw);
+        }
+        draw();
+      });
+        </script>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
+</body>
+</html>

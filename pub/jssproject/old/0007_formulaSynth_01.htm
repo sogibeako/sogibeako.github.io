@@ -1,0 +1,1133 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Formula Synth + Keyboard + Scale + WAV Export (No name clash)</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="icon" href="data:,">
+    <style>
+        :root {
+            --card: #f9fafb;
+            --line: #e5e7eb;
+            --ink: #111;
+            --sub: #555;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.45;
+            margin-left: 20px;
+            margin-top: 20px;
+            background: #fff;
+            color: var(--ink)
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 20px auto;
+            padding: 0 20px
+        }
+
+        h1 {
+            font-size: 20px;
+            margin: 0 0 12px
+        }
+
+        h3 {
+            margin: 0 0 10px;
+            font-size: 16px
+        }
+
+        .row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap
+        }
+
+        .card {
+            flex: 1 1 360px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 16px;
+            background: #f9fafb
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            font-family: ui-monospace, Menlo, Consolas, monospace;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 10px;
+            background: #fff;
+            transition: border-color .15s
+        }
+
+        input[type="number"],
+        select {
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 8px 10px;
+            background: #fff
+        }
+
+        button {
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            background: #fff;
+            cursor: pointer
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 10px
+        }
+
+        .hint {
+            font-size: 12px;
+            color: var(--sub)
+        }
+
+        canvas {
+            width: 100%;
+            height: 200px;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 10px
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px
+        }
+
+        th,
+        td {
+            border-top: 1px solid var(--line);
+            padding: 6px 8px;
+            text-align: right
+        }
+
+        th:first-child,
+        td:first-child {
+            text-align: left
+        }
+
+        kbd {
+            background: #eee;
+            border-radius: 6px;
+            padding: 2px 6px
+        }
+
+        .ok {
+            color: #059669
+        }
+
+        pre,
+        pre code {
+            background-color: #bbbbbb;
+            color: #000;
+            padding: 0.5em;
+            display: block;
+            overflow-x: auto;
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+        }
+
+        code {
+            background-color: #bbbbbb;
+            color: #000;
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+            font-family: "Courier New", Courier, monospace;
+            display: inline-block;
+            line-height: 1.2;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@11/lib/browser/math.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+</head>
+
+<body>
+
+    <div class="p_left">現在位置 : <a href="../index.html">ホーム</a>　＞　JSS Project　＞　<a
+            href="0007_formulaSynth.htm"><b>#007</b></a></div>
+    <div class="container">
+        <h1>数式シンセ + キーボード演奏 + スケール + WAV出力</h1>
+
+        <!-- 1) Formula -->
+        <div class="card">
+            <h3>Formula</h3>
+            <textarea id="expr">tanh(3*(2*ph-1))</textarea>
+            <div class="controls">
+                <label>安全処理
+                    <select id="safety">
+                        <option value="soft" selected>ソフト(tanh)</option>
+                        <option value="clip">ハード([-1,1])</option>
+                    </select>
+                </label>
+                <label>DCブロック <input id="dcblock" type="checkbox" checked></label>
+                <label>ゲイン <input id="gain" type="number" value="0.25" step="0.01" min="0" max="1"></label>
+                <label>Sampling
+                    <select id="virtSR">
+                        <option value="48000" selected>48000 (原寸)</option>
+                        <option value="24000">24000</option>
+                        <option value="16000">16000</option>
+                        <option value="12000">12000</option>
+                        <option value="8000">8000</option>
+                        <option value="6000">6000</option>
+                        <option value="4000">4000</option>
+                        <option value="2000">2000</option>
+                    </select>
+                </label>
+
+                <button id="genBtn">Generate 波形/スペクトル</button>
+                <button id="stopAll">All Stop</button>
+                <button id="panic" style="border-color:#ef4444;color:#ef4444">Panic</button>
+                <button id="shareUrl">Share URL</button>
+            </div>
+            <div class="hint">識別子: <code>ph</code>, <code>t</code>, <code>sr</code>, <code>pi</code>,
+                <code>e</code>。<br>
+                関数: <code>sin cos tan asin acos atan exp log pow sqrt abs sign floor ceil round min max tanh</code><br>
+                ビット演算: <code>i32 u32 band bor bxor bnot shl shr ushr rol ror</code>。非有限値は0。
+            </div>
+        </div>
+
+        <!-- 2) 波形・スペクトル -->
+        <div class="row" style="margin-top:16px">
+            <div class="card" style="flex:1 1 520px">
+                <h3>波形（先頭50ms）</h3>
+                <canvas id="wave"></canvas>
+            </div>
+            <div class="card" style="flex:1 1 520px">
+                <h3>スペクトル（dB）</h3>
+                <canvas id="spec"></canvas>
+            </div>
+        </div>
+
+        <!-- 3) Scale -->
+        <div class="card" style="margin-top:16px">
+            <h3>Scale</h3>
+            <label>Scale data（最後の行＝周期）</label>
+            <textarea id="scale">100.
+200.
+300.
+400.
+500.
+600.
+700.
+800.
+900.
+1000.
+1100.
+1200.</textarea>
+            <div class="controls">
+                <label>基準周波数 <input id="baseHz" type="number" value="440" step="0.1"></label>
+                <span>基準キー <kbd>a</kbd></span>
+                <button id="parse">Parse</button>
+            </div>
+            <div class="hint">行ごとに <b>p/q</b>（純正比）or <b>小数=セント</b>。最後の行が周期。1/1 は自動追加。<br>
+                キー割当：<kbd>a</kbd>=0、<kbd>q</kbd>=+5、<kbd>1</kbd>=+10、<kbd>z</kbd>=-5（そこから右に +1 ずつ）。</div>
+        </div>
+
+        <!-- 4) Scale Table -->
+        <div class="card" style="margin-top:16px;max-height:320px;overflow:auto">
+            <h3>Scale Table</h3>
+            <table id="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Ratio</th>
+                        <th>Cents</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <!-- 5) WAV Export -->
+        <div class="card" style="margin-top:16px">
+            <h3>WAV Export</h3>
+            <div class="controls">
+                <label>度数(step) <input id="expStep" type="number" value="0" step="1"></label>
+                <label>長さ(s) <input id="expDur" type="number" value="5" step="0.1" min="0.1" max="120"></label>
+                <label>SampleRate
+                    <select id="expSR">
+                        <option value="48000" selected>48000</option>
+                        <option value="44100">44100</option>
+                    </select>
+                </label>
+                <label>Normalize <input id="expNorm" type="checkbox"></label>
+                <label>Fade(ms) <input id="expFade" type="number" value="5" step="1" min="0" max="200"></label>
+                <button id="exportBtn">Export WAV</button>
+                <span id="exportMsg" class="ok"></span>
+            </div>
+            <div class="hint">Generateで式を確定後、指定の度数・長さで単音をレンダリングしてWAV保存します。クリック回避のためフェードイン/アウトを自動付与。</div>
+        </div>
+
+        <script>
+            /* ====== Config ====== */
+            const MAX_VOICES = 8;
+            const RAMP = 0.02;
+            const EPS_DENORM = 1e-15;
+
+            /* ====== Scale parsing ====== */
+            function parseScale(text) {
+                const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+                if (!lines.length) throw new Error('Scale data is empty');
+                const toRatio = (s) => {
+                    if (s.includes('/')) {
+                        const [p, q] = s.split('/').map(Number);
+                        if (!isFinite(p) || !isFinite(q) || q === 0) throw new Error('Bad ratio: ' + s);
+                        return p / q;
+                    } else {
+                        const cents = Number(s);
+                        if (!isFinite(cents)) throw new Error('Bad cents: ' + s);
+                        return Math.pow(2, cents / 1200);
+                    }
+                };
+                const ratios = lines.map(toRatio);
+                const period = ratios[ratios.length - 1];
+                const body = ratios.slice(0, -1);
+                const eps = 1e-9, degrees = [];
+                if (body.length === 0 || Math.abs(body[0] - 1) > eps) degrees.push(1);
+                for (const r of body) { if (Math.abs(r - 1) > eps) degrees.push(r); }
+                return { degrees, period };
+            }
+            function rebuildTable(degrees, period) {
+                const tbody = document.querySelector('#table tbody'); tbody.innerHTML = '';
+                const all = [1, ...degrees];
+                all.forEach((r, i) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td>${i}</td><td>${r.toFixed(6)}</td><td>${(1200 * Math.log2(r)).toFixed(3)}</td>`;
+                    tbody.appendChild(tr);
+                });
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td style="font-style:italic">period</td><td style="font-style:italic">${period.toFixed(6)}</td><td style="font-style:italic">${(1200 * Math.log2(period)).toFixed(3)}</td>`;
+                tbody.appendChild(tr);
+            }
+
+            /* ====== Keyboard layout（a=0, q=+5, 1=+10, z=-5） ====== */
+            const keyboardMap = {
+                'a': 0, 's': 1, 'd': 2, 'f': 3, 'g': 4,
+                'h': 5, 'j': 6, 'k': 7, 'l': 8, ';': 9, ':': 9,
+                'q': 5, 'w': 6, 'e': 7, 'r': 8, 't': 9,
+                'y': 10, 'u': 11, 'i': 12, 'o': 13, 'p': 14, '[': 15, ']': 16,
+                '1': 10, '2': 11, '3': 12, '4': 13, '5': 14, '6': 15, '7': 16, '8': 17, '9': 18, '0': 19, '-': 20, '=': 21,
+                'z': -5, 'x': -4, 'c': -3, 'v': -2, 'b': -1,
+                'n': 0, 'm': 1, ',': 2, '.': 3, '/': 4, '?': 4
+            };
+            function offsetOf(key) { const ch = key.toLowerCase(); return (ch in keyboardMap) ? keyboardMap[ch] : null; }
+
+            /* ====== Audio Worklet（anti-denormal, DC-block, soft/hard clip） ====== */
+            const workletURL = URL.createObjectURL(new Blob([`
+class FormulaProc extends AudioWorkletProcessor{
+  static get parameterDescriptors(){ return [
+    { name:'freq', defaultValue:440, minValue:1, maxValue:20000, automationRate:'a-rate' },
+    { name:'gain', defaultValue:0.2,  minValue:0, maxValue:1,      automationRate:'k-rate' }
+  ]; }
+  constructor(){
+    super();
+    this.ph=0; this.mode='soft'; this.dcOn=true; this.prevIn=0; this.prevOut=0;
+    this.expr='tanh(3*(2*ph-1))';
+    this.user = (ph,t)=>Math.tanh(3*(2*ph-1));
+    this.EPS = 1e-15;
+
+    // ★ 追加：仮想SR用のホールド
+    this.virtSR = sampleRate;     // 既定＝ネイティブと同じ
+    this.rCounter = 0;            // ダウンサンプルの残り（ネイティブサンプル数で数える）
+    this.holdY = 0;               // 保持サンプル
+
+    this.buildUser();
+    this.port.onmessage = (e)=>{
+      const d=e.data||{};
+      if (d.type==='config'){
+        if (typeof d.expr==='string') { this.expr=d.expr; this.buildUser(); }
+        if (typeof d.mode==='string') this.mode=d.mode;
+        if (typeof d.dcOn==='boolean') this.dcOn=d.dcOn;
+        if (typeof d.virtSR==='number' && d.virtSR>0) this.virtSR = d.virtSR;   // ★ 受信
+      }
+    };
+  }
+  buildUser(){
+    const args = [
+      'ph','t',
+      'sin','cos','tan','asin','acos','atan','exp','log','pow','sqrt','abs','sign','floor','ceil','round','min','max','tanh',
+      'pi','e','sr',
+      'i32','u32','band','bor','bxor','bnot','shl','shr','ushr','rol','ror'
+    ];
+    const body = (this.expr && this.expr.trim().length) ? this.expr : '0';
+    try{ const f = new Function(...args, 'return ('+ body +');'); this.user = f; }catch(e){}
+  }
+  process(inputs, outputs, params){
+    const out=outputs[0][0], freq=params.freq, g=params.gain[0], sr=sampleRate, eps=this.EPS;
+
+    // ★ ネイティブ/仮想レート比（1サンプルあたり rDec だけカウンタを減らす）
+    const rDec = 1;                      // ネイティブで1サンプル進むたびに1減る
+    const R = Math.max(1e-6, sr / Math.max(1, this.virtSR));  // 何サンプルごとに新規サンプルを取るか
+
+    for (let i=0;i<out.length;i++){
+      const f0 = freq.length>1? freq[i] : freq[0];
+      this.ph += f0/sr; if(this.ph>=1) this.ph-=1;
+
+      // ★ 間引きタイミング：rCounter<=0 のときだけ「新しい値」を評価
+      if (this.rCounter <= 0){
+        let y=0;
+        try{
+          y = this.user(
+            this.ph, currentTime + i/sr,
+            Math.sin,Math.cos,Math.tan,Math.asin,Math.acos,Math.atan,Math.exp,Math.log,Math.pow,(x)=>x>=0?Math.sqrt(x):NaN,Math.abs,Math.sign,Math.floor,Math.ceil,Math.round,Math.min,Math.max,Math.tanh||((x)=>{const e=Math.exp(2*x);return (e-1)/(e+1);}),
+            Math.PI,Math.E,sr,
+            (x)=>x|0,(x)=>x>>>0,(a,b)=>(a|0)&(b|0),(a,b)=>(a|0)|(b|0),(a,b)=>(a|0)^(b|0),(a)=>(~(a|0)),
+            (a,s)=>(a|0)<<((s|0)&31),(a,s)=>(a|0)>>((s|0)&31),(a,s)=>(a>>>0)>>>((s|0)&31),
+            (a,s)=>{s=(s|0)&31;const v=a>>>0;return (v<<s)|(v>>>(32-s));},
+            (a,s)=>{s=(s|0)&31;const v=a>>>0;return (v>>>s)|(v<<(32-s));}
+          );
+        }catch{ y=0; }
+        if(!Number.isFinite(y)) y=0;
+        if (y < eps && y > -eps) y = 0;
+        y = (this.mode==='soft') ? Math.tanh(y) : Math.max(-1,Math.min(1,y));
+        if(this.dcOn){
+          const x=y; 
+          const A = 0.999999;
+          y = x - this.prevIn + A*this.prevOut;
+          this.prevIn=x; this.prevOut=y;
+          if (y < eps && y > -eps) y = 0;
+        }
+        this.holdY = y;              // ★ 新サンプルを保持
+        this.rCounter += R;          // ★ 次の採取までの残り
+      }
+      this.rCounter -= rDec;         // ★ 1 サンプル経過
+      out[i] = g * this.holdY;       // ★ ホールド値を出力
+    }
+    return true;
+  }
+}
+registerProcessor('formula-proc', FormulaProc);
+`], { type: 'application/javascript' }));
+
+            /* ====== App state ====== */
+            let ctx = null, exprBody = 'tanh(3*(2*ph-1))', mode = 'soft', dcOn = true, masterGain = 0.25;
+            let virtSR = 48000;   // ★ 追加：仮想サンプリングレート（内部サンプル化用）
+            const voices = new Map(); // key -> { idx }
+            let isTyping = false;
+            let previewFn = null;
+
+            /* ====== AudioContext helpers ====== */
+            async function ensureCtx() {
+                if (ctx) return ctx;
+                ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000, latencyHint: 'interactive' });
+                await ctx.audioWorklet.addModule(workletURL);
+                return ctx;
+            }
+
+            /* ====== Note/Scale helpers ====== */
+            function noteFreq(step) {
+                const L = scale.degrees.length;     // 周期内の度数（1/1含む）
+                const per = scale.period;            // 周期比（例：2/1）
+                const idx = ((step % L) + L) % L;    // 0..L-1（非負剰余）
+                const q = Math.floor((step - idx) / L); // 一意なオクターブ係数
+                const degree = (idx === 0 ? 1 : scale.degrees[idx]);
+                const f = baseHz * degree * Math.pow(per, q);
+                return Math.max(1, Math.min(20000, f));   // 安全クランプ
+            }
+            function setTypingMute(on) {
+                if (on === isTyping) return;
+                isTyping = on;
+                if (!ctx || !poolReady) return;
+                for (const slot of pool) {
+                    if (!slot.busy) continue;
+                    const g = slot.node.parameters.get('gain');
+                    g.cancelScheduledValues(ctx.currentTime);
+                    g.linearRampToValueAtTime(on ? 0 : masterGain, ctx.currentTime + RAMP);
+                }
+            }
+
+            /* ====== Voice pool ====== */
+            const pool = []; let poolReady = false;
+            async function initPool() {
+                await ensureCtx(); if (poolReady) return;
+                for (let i = 0; i < MAX_VOICES; i++) {
+                    const n = new AudioWorkletNode(ctx, 'formula-proc', { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [1] });
+                    n.parameters.get('gain').setValueAtTime(0, ctx.currentTime); n.connect(ctx.destination);
+                    n.port.postMessage({ type: 'config', expr: exprBody, mode, dcOn });
+                    pool.push({ node: n, step: null, busy: false, t0: 0 });
+                } poolReady = true;
+            }
+            function anyBusy() { return pool.some(v => v.busy); }
+            async function contextResumeIfNeeded() { await ensureCtx(); if (ctx.state !== 'running') await ctx.resume(); }
+            function contextSuspendIfIdleSoon() { setTimeout(async () => { if (!anyBusy() && ctx && ctx.state === 'running') { try { await ctx.suspend(); } catch { } } }, 120); }
+            function findFreeIndex() {
+                const f = pool.findIndex(v => !v.busy); if (f >= 0) return f;
+                let victim = 0, tMin = Infinity; for (let i = 0; i < pool.length; i++) { const v = pool[i]; if (v.busy && v.t0 < tMin) { tMin = v.t0; victim = i; } }
+                const g = pool[victim].node.parameters.get('gain'); g.cancelScheduledValues(ctx.currentTime); g.linearRampToValueAtTime(0, ctx.currentTime + RAMP);
+                return victim;
+            }
+            async function startVoice(key, step) {
+                if (isTyping) return; await initPool(); await contextResumeIfNeeded(); if (voices.has(key)) return;
+                const i = findFreeIndex(), s = pool[i]; s.step = step; s.busy = true; s.t0 = ctx.currentTime;
+                const f = s.node.parameters.get('freq'), g = s.node.parameters.get('gain');
+                f.cancelScheduledValues(ctx.currentTime); f.linearRampToValueAtTime(noteFreq(step), ctx.currentTime + RAMP);
+                g.cancelScheduledValues(ctx.currentTime); g.linearRampToValueAtTime(isTyping ? 0 : masterGain, ctx.currentTime + RAMP);
+                voices.set(key, { idx: i });
+            }
+            function stopVoice(key) {
+                const m = voices.get(key); if (!m) return; const s = pool[m.idx]; const g = s.node.parameters.get('gain');
+                g.cancelScheduledValues(ctx.currentTime); g.linearRampToValueAtTime(0, ctx.currentTime + RAMP);
+                setTimeout(() => { s.busy = false; s.step = null; contextSuspendIfIdleSoon(); }, Math.ceil((RAMP + 0.03) * 1000));
+                voices.delete(key);
+            }
+            function stopAll() { for (const [k] of voices) stopVoice(k); }
+
+            /* ====== Broadcast ====== */
+            function refreshAllVoiceFreq() {
+                if (!ctx || !poolReady) return;
+                for (const v of pool) {
+                    if (!v.busy || v.step == null) continue; const p = v.node.parameters.get('freq');
+                    p.cancelScheduledValues(ctx.currentTime); p.linearRampToValueAtTime(noteFreq(v.step), ctx.currentTime + RAMP);
+                }
+            }
+            function broadcastExprToPool() {
+                if (!poolReady) return;
+                for (const v of pool) v.node.port.postMessage({ type: 'config', expr: exprBody, virtSR });
+            }
+            function broadcastModeDcToPool() {
+                if (!poolReady) return;
+                for (const v of pool) v.node.port.postMessage({ type: 'config', mode, dcOn, virtSR });
+            }
+            /* ====== Reset helpers ====== */
+            async function hardResetAudio() {
+                try {
+                    for (const v of pool) {
+                        if (!ctx) break; const g = v.node.parameters.get('gain'); g.cancelScheduledValues(ctx.currentTime); g.linearRampToValueAtTime(0, ctx.currentTime + RAMP);
+                        v.busy = false; v.step = null;
+                    } voices.clear(); if (ctx) { await ctx.close(); }
+                } finally { pool.length = 0; poolReady = false; ctx = null; }
+            }
+            async function resetAndReinitPool() { await hardResetAudio(); await initPool(); broadcastModeDcToPool(); }
+
+            /* ====== UI: Scale ====== */
+            document.getElementById('parse').onclick = () => {
+                try {
+                    setTypingMute(true);
+                    scale = parseScale(document.getElementById('scale').value);
+                    baseHz = +document.getElementById('baseHz').value;
+                    rebuildTable(scale.degrees, scale.period);
+                    refreshAllVoiceFreq();
+                } catch (e) { alert(e.message); }
+                finally { setTypingMute(false); }
+            };
+            document.getElementById('parse').click();
+
+            /* ====== 式：検証＋Generate（準Panic付き） ====== */
+            function tryCompile(expr) {
+                const body = (expr && expr.trim().length) ? expr : '0';
+                try {
+                    return new Function(
+                        'ph', 't',
+                        'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'exp', 'log', 'pow', 'sqrt', 'abs', 'sign', 'floor', 'ceil', 'round', 'min', 'max', 'tanh',
+                        'pi', 'e', 'sr',
+                        'i32', 'u32', 'band', 'bor', 'bxor', 'bnot', 'shl', 'shr', 'ushr', 'rol', 'ror',
+                        'return (' + body + ');'
+                    );
+                } catch { return null; }
+            }
+            let exprTimer = null;
+            const exprEl = document.getElementById('expr'), scaleEl = document.getElementById('scale');
+            function setFieldTyping(el, on) { on ? setTypingMute(true) : setTypingMute(false); }
+            exprEl.addEventListener('focus', () => setFieldTyping(exprEl, true));
+            exprEl.addEventListener('blur', () => setFieldTyping(exprEl, false));
+            scaleEl.addEventListener('focus', () => setFieldTyping(scaleEl, true));
+            scaleEl.addEventListener('blur', () => setFieldTyping(scaleEl, false));
+            exprEl.addEventListener('input', e => {
+                clearTimeout(exprTimer); setTypingMute(true);
+                exprTimer = setTimeout(() => { const fn = tryCompile(e.target.value); e.target.style.borderColor = fn ? '' : '#e11d48'; }, 300);
+            });
+            document.getElementById('genBtn').onclick = async () => {
+                const raw = exprEl.value, fn = tryCompile(raw);
+                if (!fn) { alert('式に構文エラーがあります。修正してから再度「Generate」を押してください。'); exprEl.style.borderColor = '#e11d48'; return; }
+                await resetAndReinitPool();
+                previewFn = fn; exprBody = (raw.trim().length ? raw : '0'); exprEl.style.borderColor = '';
+                broadcastExprToPool(); drawPreview(); setTypingMute(false);
+            };
+
+            /* ====== Mode/DC/Gain/Sampling ====== */
+            document.getElementById('safety').onchange = e => { mode = e.target.value; broadcastModeDcToPool(); };
+            document.getElementById('dcblock').onchange = e => {
+                dcOn = e.target.checked;
+                broadcastModeDcToPool();
+                drawPreview();                 // ← 反映を即時プレビュー
+            };
+            document.getElementById('gain').onchange = e => {
+                masterGain = +e.target.value; if (!ctx || !poolReady) return;
+                for (const v of pool) {
+                    if (!v.busy) continue; const g = v.node.parameters.get('gain');
+                    g.cancelScheduledValues(ctx.currentTime); g.linearRampToValueAtTime(isTyping ? 0 : masterGain, ctx.currentTime + RAMP);
+                }
+            };
+            document.getElementById('virtSR').onchange = (e) => {
+                virtSR = +e.target.value;
+                broadcastModeDcToPool();   // 全ノードへ virtSR も一緒に通知
+                drawPreview();             // プレビューも即反映
+                scheduleSave();
+            };
+
+            /* ====== Safety ====== */
+            document.getElementById('stopAll').onclick = stopAll;
+            document.getElementById('panic').onclick = async () => { await hardResetAudio(); };
+
+            /* ====== Keyboard ====== */
+            window.addEventListener('keydown', e => { if (e.repeat) return; const step = offsetOf(e.key); if (step == null) return; startVoice(e.key, step); });
+            window.addEventListener('keyup', e => { const step = offsetOf(e.key); if (step == null) return; stopVoice(e.key); });
+            window.addEventListener('blur', stopAll);
+            document.addEventListener('visibilitychange', () => { if (document.hidden) stopAll(); });
+
+            /* ====== FFT & drawing ====== */
+            function fftRadix2(re, im) {
+                const n = re.length; let j = 0;
+                for (let i = 1; i < n; i++) {
+                    let bit = n >> 1; for (; (j & bit) !== 0; bit >>= 1) j ^= bit; j ^= bit;
+                    if (i < j) { const r = re[i]; re[i] = re[j]; re[j] = r; const ii = im[i]; im[i] = im[j]; im[j] = ii; }
+                }
+                for (let len = 2; len <= n; len <<= 1) {
+                    const ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang);
+                    for (let i0 = 0; i0 < n; i0 += len) {
+                        let wRe = 1, wIm = 0;
+                        for (let k = 0; k < (len >> 1); k++) {
+                            const uRe = re[i0 + k], uIm = im[i0 + k];
+                            const xRe = re[i0 + k + (len >> 1)], xIm = im[i0 + k + (len >> 1)];
+                            const vRe = xRe * wRe - xIm * wIm, vIm = xRe * wIm + xIm * wRe;
+                            re[i0 + k] = uRe + vRe; im[i0 + k] = uIm + vIm;
+                            re[i0 + k + (len >> 1)] = uRe - vRe; im[i0 + k + (len >> 1)] = uIm - vIm;
+                            const nwRe = wRe * wr - wIm * wi, nwIm = wRe * wi + wIm * wr; wRe = nwRe; wIm = nwIm;
+                        }
+                    }
+                }
+            }
+            function drawLine(canvas, xs, ys) {
+                const ctx2 = canvas.getContext('2d');
+                const W = canvas.width = canvas.clientWidth * devicePixelRatio;
+                const H = canvas.height = canvas.clientHeight * devicePixelRatio;
+
+                ctx2.clearRect(0, 0, W, H);
+                ctx2.lineWidth = 2 * devicePixelRatio;
+
+                // 中央線（常に y=0 を示す）
+                const centerY = H / 2;
+                ctx2.strokeStyle = '#e5e7eb';
+                ctx2.beginPath(); ctx2.moveTo(0, centerY); ctx2.lineTo(W, centerY); ctx2.stroke();
+
+                // 横方向スケール（従来どおり）
+                const xmin = xs[0], xmax = xs[xs.length - 1], xr = (xmax - xmin) || 1;
+                const X = x => (x - xmin) / xr * (W - 10) + 5;
+
+                // 縦方向は「ピークで正規化」。ゼロ基準固定。
+                let peak = 0; for (const y of ys) { const a = Math.abs(y); if (a > peak) peak = a; }
+                if (peak < 1e-9) peak = 1; // 無信号対策
+                const pad = 10;                          // 上下マージン
+                const scaleY = (H / 2 - pad) / peak;       // 0→center、±peak→上下ほぼ一杯
+                const Y = y => centerY - y * scaleY;
+
+                ctx2.strokeStyle = '#111';
+                ctx2.beginPath();
+                ys.forEach((y, i) => { const x = X(xs[i]); const yy = Y(y); if (i === 0) ctx2.moveTo(x, yy); else ctx2.lineTo(x, yy); });
+                ctx2.stroke();
+            }
+
+            // 周波数スペクトル + 整数次倍音ガイド線
+            function drawSpectrumWithHarmonics(canvas, xs, ys, f0) {
+                const ctx2 = canvas.getContext('2d');
+                const W = canvas.width = canvas.clientWidth * devicePixelRatio;
+                const H = canvas.height = canvas.clientHeight * devicePixelRatio;
+
+                ctx2.clearRect(0, 0, W, H);
+                ctx2.lineWidth = 2 * devicePixelRatio;
+
+                // 0dBの基準線ではなく、中線を薄く（見やすさ用）
+                ctx2.strokeStyle = '#e5e7eb';
+                ctx2.beginPath(); ctx2.moveTo(0, H / 2); ctx2.lineTo(W, H / 2); ctx2.stroke();
+
+                // X/Yスケール
+                const xmin = xs[0], xmax = xs[xs.length - 1], xr = (xmax - xmin) || 1;
+                const X = x => (x - xmin) / xr * (W - 10) + 5;
+
+                let ymin = Infinity, ymax = -Infinity;
+                for (const y of ys) { if (y < ymin) ymin = y; if (y > ymax) ymax = y; }
+                const yr = (ymax - ymin) || 1;
+                const Y = y => H - ((y - ymin) / yr * (H - 20) + 10);
+
+                // スペクトル線
+                ctx2.strokeStyle = '#111';
+                ctx2.beginPath();
+                ys.forEach((y, i) => { const x = X(xs[i]); const yy = Y(y); if (i === 0) ctx2.moveTo(x, yy); else ctx2.lineTo(x, yy); });
+                ctx2.stroke();
+
+                // 整数次倍音ガイド（f0, 2f0, 3f0, ... Nyquistまで）
+                if (f0 > 0 && isFinite(f0)) {
+                    const kMax = Math.floor(xmax / f0);
+                    ctx2.save();
+                    ctx2.strokeStyle = 'rgba(0,0,0,0.18)';
+                    ctx2.setLineDash([4 * devicePixelRatio, 4 * devicePixelRatio]);
+                    ctx2.lineWidth = 1 * devicePixelRatio;
+                    for (let k = 1; k <= kMax; k++) {
+                        const x = X(k * f0);
+                        ctx2.beginPath();
+                        ctx2.moveTo(x, 10);
+                        ctx2.lineTo(x, H - 10);
+                        ctx2.stroke();
+                    }
+                    ctx2.restore();
+                }
+            }
+
+            function drawPreview() {
+                if (!previewFn) return;
+                const sr = 48000, dur = 0.1, N = Math.floor(sr * dur);
+                const A = 0.9999;
+                let ph = 0, prevIn = 0, prevOut = 0;
+                const eps = EPS_DENORM;
+                const out = new Float32Array(N);
+
+                // ★ 仮想SRのサンプル＆ホールド
+                const R = Math.max(1e-6, sr / Math.max(1, virtSR)); // 何サンプルごとに採取
+                let rCounter = 0;
+                let holdY = 0;
+
+                for (let n = 0; n < N; n++) {
+                    ph += baseHz / sr; if (ph >= 1) ph -= 1;
+
+                    if (rCounter <= 0) {
+                        let y = 0;
+                        try {
+                            y = previewFn(
+                                ph, n / sr,
+                                Math.sin, Math.cos, Math.tan, Math.asin, Math.acos, Math.atan, Math.exp, Math.log, Math.pow, (x) => x >= 0 ? Math.sqrt(x) : NaN, Math.abs, Math.sign, Math.floor, Math.ceil, Math.round, Math.min, Math.max, Math.tanh || ((x) => { const e = Math.exp(2 * x); return (e - 1) / (e + 1); }),
+                                Math.PI, Math.E, sr,
+                                (x) => x | 0, (x) => x >>> 0, (a, b) => (a | 0) & (b | 0), (a, b) => (a | 0) | (b | 0), (a, b) => (a | 0) ^ (b | 0), (a) => (~(a | 0)),
+                                (a, s) => (a | 0) << ((s | 0) & 31), (a, s) => (a | 0) >> ((s | 0) & 31), (a, s) => (a >>> 0) >>> ((s | 0) & 31),
+                                (a, s) => { s = (s | 0) & 31; const v = a >>> 0; return (v << s) | (v >>> (32 - s)); },
+                                (a, s) => { s = (s | 0) & 31; const v = a >>> 0; return (v >>> s) | (v << (32 - s)); }
+                            );
+                        } catch { }
+                        if (!Number.isFinite(y)) y = 0;
+                        if (y < eps && y > -eps) y = 0;
+                        y = (mode === 'soft') ? Math.tanh(y) : Math.max(-1, Math.min(1, y));
+                        if (dcOn) {
+                            const x = y; y = x - prevIn + A * prevOut; prevIn = x; prevOut = y;
+                            if (y < eps && y > -eps) y = 0;
+                        }
+                        holdY = y;
+                        rCounter += R;
+                    }
+                    rCounter -= 1;
+
+                    out[n] = holdY * masterGain;
+                }
+
+                // 以下はそのまま（波形/スペクトルの描画）
+                const showN = Math.min(N, Math.floor(sr * 0.05));
+                const xs = new Array(showN), ys = new Array(showN);
+                for (let i = 0; i < showN; i++) { xs[i] = i / sr; ys[i] = out[i]; }
+                drawLine(document.getElementById('wave'), xs, ys);
+
+                const M = 2048, re = new Float64Array(M), im = new Float64Array(M);
+                for (let i = 0; i < M; i++) { const w = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (M - 1)); re[i] = (out[i] || 0) * w; im[i] = 0; }
+                fftRadix2(re, im);
+                const fx = new Array(M / 2), fy = new Array(M / 2);
+                for (let k = 0; k < M / 2; k++) { const R = re[k], I = im[k], aamp = Math.sqrt(R * R + I * I) * 2 / M; fx[k] = k * sr / M; fy[k] = 20 * Math.log10(aamp + 1e-12); }
+                drawSpectrumWithHarmonics(document.getElementById('spec'), fx, fy, baseHz);
+            }
+
+            /* ====== WAV Export ====== */
+            function floatTo16bitPCM(float32) {
+                const out = new Int16Array(float32.length);
+                for (let i = 0; i < float32.length; i++) {
+                    let s = Math.max(-1, Math.min(1, float32[i]));
+                    out[i] = (s < 0 ? s * 0x8000 : s * 0x7fff) | 0;
+                }
+                return out;
+            }
+            function makeWavBlob(int16, sampleRate) {
+                const numCh = 1, bps = 16, byteRate = sampleRate * numCh * bps / 8, blockAlign = numCh * bps / 8;
+                const dataLen = int16.length * 2;
+                const buf = new ArrayBuffer(44 + dataLen); const dv = new DataView(buf);
+                let p = 0;
+                function wrStr(s) { for (let i = 0; i < s.length; i++) dv.setUint8(p++, s.charCodeAt(i)); }
+                function wr32(v) { dv.setUint32(p, v, true); p += 4; }
+                function wr16(v) { dv.setUint16(p, v, true); p += 2; }
+                wrStr('RIFF'); wr32(36 + dataLen); wrStr('WAVE');
+                wrStr('fmt '); wr32(16); wr16(1); wr16(numCh); wr32(sampleRate); wr32(byteRate); wr16(blockAlign); wr16(bps);
+                wrStr('data'); wr32(dataLen);
+                const arr = new Int16Array(buf, 44, int16.length); arr.set(int16);
+                return new Blob([buf], { type: 'audio/wav' });
+            }
+            async function exportWav() {
+                const msg = document.getElementById('exportMsg'); msg.textContent = '';
+                // 1) 式チェック
+                const raw = exprEl.value; const fn = tryCompile(raw);
+                if (!fn) { alert('式に構文エラーがあります。先に「Generate」で確定してください。'); exprEl.style.borderColor = '#e11d48'; return; }
+                previewFn = fn; exprBody = (raw.trim().length ? raw : '0');
+
+                // 2) パラメータ
+                const step = +document.getElementById('expStep').value | 0;
+                const dur = Math.max(0.1, +document.getElementById('expDur').value || 5);
+                const sr = +document.getElementById('expSR').value || 48000;
+                const norm = document.getElementById('expNorm').checked;
+                const fadeMs = Math.max(0, +document.getElementById('expFade').value || 5);
+
+                const N = Math.floor(sr * dur), freq = noteFreq(step);
+                // 3) オフライン合成
+                let ph = 0, prevIn = 0, prevOut = 0; const a = 0.995, eps = EPS_DENORM;
+                const out = new Float32Array(N);
+
+                // ★ 追加：virtSR によるダウンサンプル＆ホールド
+                const R = Math.max(1e-6, sr / Math.max(1, virtSR));
+                let rCounter = 0;
+                let holdY = 0;
+
+                for (let n = 0; n < N; n++) {
+                    ph += freq / sr; if (ph >= 1) ph -= 1;
+
+                    if (rCounter <= 0) {
+                        let y = 0;
+                        try {
+                            y = previewFn(/* いつも通りの引数 */
+                                ph, n / sr,
+                                Math.sin, Math.cos, Math.tan, Math.asin, Math.acos, Math.atan, Math.exp, Math.log, Math.pow, (x) => x >= 0 ? Math.sqrt(x) : NaN, Math.abs, Math.sign, Math.floor, Math.ceil, Math.round, Math.min, Math.max, Math.tanh || ((x) => { const e = Math.exp(2 * x); return (e - 1) / (e + 1); }),
+                                Math.PI, Math.E, sr,
+                                (x) => x | 0, (x) => x >>> 0, (a, b) => (a | 0) & (b | 0), (a, b) => (a | 0) | (b | 0), (a, b) => (a | 0) ^ (b | 0), (a) => (~(a | 0)),
+                                (a, s) => (a | 0) << ((s | 0) & 31), (a, s) => (a | 0) >> ((s | 0) & 31), (a, s) => (a >>> 0) >>> ((s | 0) & 31),
+                                (a, s) => { s = (s | 0) & 31; const v = a >>> 0; return (v << s) | (v >>> (32 - s)); },
+                                (a, s) => { s = (s | 0) & 31; const v = a >>> 0; return (v >>> s) | (v << (32 - s)); }
+                            );
+                        } catch { }
+                        if (!Number.isFinite(y)) y = 0;
+                        if (y < eps && y > -eps) y = 0;
+                        y = (mode === 'soft') ? Math.tanh(y) : Math.max(-1, Math.min(1, y));
+                        if (dcOn) { const x = y; y = x - prevIn + a * prevOut; prevIn = x; prevOut = y; if (y < eps && y > -eps) y = 0; }
+                        holdY = y;
+                        rCounter += R;
+                    }
+                    rCounter -= 1;
+
+                    out[n] = holdY * masterGain;
+                }
+                // 4) フェード in/out
+                const fSamp = Math.floor(sr * fadeMs / 1000);
+                for (let i = 0; i < Math.min(fSamp, N); i++) { out[i] *= i / Math.max(1, fSamp); }
+                for (let i = 0; i < Math.min(fSamp, N); i++) { const k = N - 1 - i; out[k] *= i / Math.max(1, fSamp); }
+
+                // 5) Normalize（任意）
+                if (norm) {
+                    let peak = 0; for (let i = 0; i < N; i++) { const a = Math.abs(out[i]); if (a > peak) peak = a; }
+                    if (peak > 0) { const g = 0.999 / peak; for (let i = 0; i < N; i++) out[i] *= g; }
+                }
+                // 6) WAV化 → ダウンロード
+                const pcm16 = floatTo16bitPCM(out);
+                const blob = makeWavBlob(pcm16, sr);
+                const url = URL.createObjectURL(blob);
+                const linkEl = document.createElement('a'); // ★ 変数名を a から変更
+                const safeFreq = Math.round(freq * 100) / 100;
+                linkEl.href = url;
+                linkEl.download = `formula_${safeFreq}Hz_${dur}s.wav`;
+                linkEl.click();
+                setTimeout(() => URL.revokeObjectURL(url), 4000);
+                msg.textContent = 'Exported!';
+            }
+            document.getElementById('exportBtn').onclick = exportWav;
+
+            // ---- URLから復元（hash→展開→UI反映→必要ならGenerate/Parse） ----
+            function appStateFromUrl() {
+                if (!location.hash) return false;
+                const m = location.hash.match(/v1=([^&]+)/);
+                if (!m) return false;
+                try {
+                    const json = LZString.decompressFromEncodedURIComponent(m[1]);
+                    const s = JSON.parse(json);
+                    if (typeof s.expr === 'string') document.getElementById('expr').value = s.expr;
+                    if (s.safety) document.getElementById('safety').value = s.safety;
+                    if ('dc' in s) document.getElementById('dcblock').checked = !!s.dc;
+                    if ('gain' in s) document.getElementById('gain').value = s.gain;
+                    if (typeof s.scale === 'string') document.getElementById('scale').value = s.scale;
+                    if ('baseHz' in s) document.getElementById('baseHz').value = s.baseHz;
+                    // 反映
+                    mode = document.getElementById('safety').value;
+                    dcOn = document.getElementById('dcblock').checked;
+                    masterGain = +document.getElementById('gain').value;
+                    // スケール再構築
+                    document.getElementById('parse').click();
+                    // プレビューも更新
+                    const fn = tryCompile(document.getElementById('expr').value);
+                    if (fn) { previewFn = fn; exprBody = document.getElementById('expr').value; drawPreview(); }
+                    return true;
+                } catch (e) {
+                    console.warn('state restore failed:', e);
+                    return false;
+                }
+            }
+
+            // ---- URLシリアライズ（圧縮して hash に保存） ----
+            function appStateToUrl() {
+                const state = {
+                    expr: document.getElementById('expr').value,
+                    safety: document.getElementById('safety').value,
+                    dc: document.getElementById('dcblock').checked ? 1 : 0,
+                    gain: +document.getElementById('gain').value,
+                    scale: document.getElementById('scale').value,
+                    baseHz: +document.getElementById('baseHz').value,
+                    virtSR: +document.getElementById('virtSR').value     // ★ 追加
+                };
+                const json = JSON.stringify(state);
+                const packed = LZString.compressToEncodedURIComponent(json);
+                // 先頭にバージョンをつけておくと将来拡張が楽
+                location.hash = `v1=${packed}`;
+            }
+
+            // ---- URLから復元（hash→展開→UI反映→必要ならGenerate/Parse） ----
+            function appStateFromUrl() {
+                if (!location.hash) return false;
+                const m = location.hash.match(/v1=([^&]+)/);
+                if (!m) return false;
+                try {
+                    const json = LZString.decompressFromEncodedURIComponent(m[1]);
+                    const s = JSON.parse(json);
+                    if (typeof s.expr === 'string') document.getElementById('expr').value = s.expr;
+                    if (s.safety) document.getElementById('safety').value = s.safety;
+                    if ('dc' in s) document.getElementById('dcblock').checked = !!s.dc;
+                    if ('gain' in s) document.getElementById('gain').value = s.gain;
+                    if ('virtSR' in s) document.getElementById('virtSR').value = s.virtSR;
+                    if (typeof s.scale === 'string') document.getElementById('scale').value = s.scale;
+                    if ('baseHz' in s) document.getElementById('baseHz').value = s.baseHz;
+                    // 反映
+                    mode = document.getElementById('safety').value;
+                    dcOn = document.getElementById('dcblock').checked;
+                    masterGain = +document.getElementById('gain').value;
+                    virtSR = +document.getElementById('virtSR').value;      // ★ 追加
+                    // スケール再構築
+                    document.getElementById('parse').click();
+                    // プレビューも更新
+                    const fn = tryCompile(document.getElementById('expr').value);
+                    if (fn) { previewFn = fn; exprBody = document.getElementById('expr').value; drawPreview(); }
+                    return true;
+                } catch (e) {
+                    console.warn('state restore failed:', e);
+                    return false;
+                }
+            }
+
+            // 共有用リンク生成
+            document.getElementById('shareUrl').onclick = () => {
+                appStateToUrl();
+                const url = location.href;
+                const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+                if (navigator.clipboard && (window.isSecureContext || isLocal)) {
+                    navigator.clipboard.writeText(url)
+                        .then(() => alert('URLをコピーしました！'))
+                        .catch(() => alert('URLを更新しました。（手動でコピーしてください）'));
+                } else {
+                    alert('URLを更新しました。（手動でコピーしてください）');
+                }
+            };
+
+
+            // 主要操作のたびにURLを更新（軽めのデバウンス）
+            let saveTimer = null;
+            function scheduleSave() {
+                clearTimeout(saveTimer);
+                saveTimer = setTimeout(() => {
+                    // URLへ保存
+                    appStateToUrl();
+                    // sessionStorageへ保存（Live Server のオートリロード対策）
+                    try {
+                        const state = {
+                            expr: document.getElementById('expr').value,
+                            safety: document.getElementById('safety').value,
+                            dc: document.getElementById('dcblock').checked ? 1 : 0,
+                            gain: +document.getElementById('gain').value,
+                            scale: document.getElementById('scale').value,
+                            baseHz: +document.getElementById('baseHz').value
+                        };
+                        sessionStorage.setItem('formulaSynth_state_v1', JSON.stringify(state));
+                    } catch { }
+                }, 200);
+            }
+
+            // 起動時：URLに状態があれば復元、なければ現状をURLへ
+            window.addEventListener('load', () => {
+                const ok = appStateFromUrl();
+                if (!ok) appStateToUrl();
+            });
+
+            // すでにUIに入っている値を、Scale→式→プレビューの順で反映
+            function applyUiToPreview() {
+                // UI →内部状態
+                mode = document.getElementById('safety').value;
+                dcOn = document.getElementById('dcblock').checked;
+                masterGain = +document.getElementById('gain').value;
+
+                // Scale 反映（テーブル更新＆周波数計算もOK）
+                try {
+                    scale = parseScale(document.getElementById('scale').value);
+                    baseHz = +document.getElementById('baseHz').value;
+                    rebuildTable(scale.degrees, scale.period);
+                } catch (e) {
+                    console.warn('scale parse failed:', e);
+                }
+
+                // 式をコンパイル→プレビュー描画（Generateボタンを押さなくてもOK）
+                const raw = document.getElementById('expr').value;
+                const fn = tryCompile(raw);
+                if (fn) {
+                    previewFn = fn;
+                    exprBody = (raw.trim().length ? raw : '0');
+                    drawPreview();     // 波形＆スペクトルを描画
+                    document.getElementById('expr').style.borderColor = '';
+                } else {
+                    // 式にエラーがある時は赤枠にして描画はスキップ
+                    document.getElementById('expr').style.borderColor = '#e11d48';
+                }
+            }
+
+
+
+            // Live Server やリロードでも確実に復元する初期化
+            async function initApp() {
+                let restored = false;
+                try { restored = appStateFromUrl(); } catch { }
+
+                if (!restored) {
+                    try {
+                        const s = sessionStorage.getItem('formulaSynth_state_v1');
+                        if (s) {
+                            const obj = JSON.parse(s);
+                            if (typeof obj.expr === 'string') document.getElementById('expr').value = obj.expr;
+                            if (typeof obj.safety === 'string') document.getElementById('safety').value = obj.safety;
+                            if ('dc' in obj) document.getElementById('dcblock').checked = !!obj.dc;
+                            if ('gain' in obj) document.getElementById('gain').value = obj.gain;
+                            if (typeof obj.scale === 'string') document.getElementById('scale').value = obj.scale;
+                            if ('baseHz' in obj) document.getElementById('baseHz').value = obj.baseHz;
+                            restored = true;
+                        }
+                    } catch { }
+                }
+
+                if (!restored) appStateToUrl();
+
+                // ← ここがポイント：いずれの場合も“見た目を完成状態”にする
+                applyUiToPreview();
+
+                // 共有URLのハッシュが変わったら即反映
+                window.addEventListener('hashchange', () => {
+                    if (appStateFromUrl()) applyUiToPreview();
+                });
+            }
+            window.addEventListener('DOMContentLoaded', initApp);
+
+        </script>
+
+        <!-- 6) Hints: Operators & Recipes -->
+        <div class="card" style="margin:16px 0">
+            <h3 style="color: red;">⚠注意</h3>
+            <p style="color: red; font-weight: bold;">
+                このJSでは波形生成時に音量超過などに対する安全処理を行っていますが、<br>
+                それを以て『数式それ自体の安全性』は保障しません。<br>
+                Max8・PureData・その他のプログラム上で数式から音色を生成する場合は、<br>
+                機器や聴覚への安全のため、必ずリミッターなどの処理を施してください。</p>
+            <br>
+            <h3>Hints：演算子・関数の要点とおすすめ波形</h3>
+
+            <details open>
+                <summary><b>基本演算子</b>（連続系・滑らか）</summary>
+                <ul class="hint">
+                    <li><code>+</code> 加算、<code>-</code> 減算、<code>*</code> 乗算、<code>/</code> 除算、<code>%</code>
+                        余り（位相ラップ等に応用可）</li>
+                    <li><code>pow(x,y)</code> べき乗、<code>sqrt(x)</code> 平方根、<code>abs(x)</code> 絶対値</li>
+                    <li><code>exp(x)</code>、<code>log(x)</code>（自然対数）、<code>min/max</code>、<code>floor/ceil/round</code>
+                    </li>
+                    <li><b>三角関数</b>：<code>sin cos tan asin acos atan</code>、<code>tanh</code>（ソフトクリップ用途に最適）</li>
+                    <li>位相は <code>ph ∈ [0,1)</code>、角周波は <code>2*pi*ph</code>。</li>
+                </ul>
+            </details>
+
+            <details>
+                <summary><b>ビット演算（i32/u32/band/bor/bxor/bnot/shl/shr/ushr/rol/ror）</b>（離散・荒さを出す）</summary>
+                <ul class="hint">
+                    <li><code>i32(x)</code> 符号付き32bit化、<code>u32(x)</code> 符号なし32bit化。</li>
+                    <li><code>band(a,b)</code> AND、<code>bor(a,b)</code> OR、<code>bxor(a,b)</code>
+                        XOR、<code>bnot(a)</code> NOT。</li>
+                    <li><code>shl/shr/ushr</code> シフト、<code>rol/ror</code> ローテート（ビット巡回）。</li>
+                    <li>コツ：まず連続値をスケール→<code>i32</code>で量子化→ビット操作→<code>/const</code>で -1..1 に戻す。音は荒くローファイになります。</li>
+                </ul>
+            </details>
+
+            <details>
+                <summary><b>レシピ集（そのままコピペOK）</b></summary>
+                <div class="hint">
+                    <p><b>1) サイン</b>（基音）：<br>
+                        <code>sin(2*pi*ph)</code>
+                    </p>
+                    <p><b>2) 矩形（奇数次和音）</b>：<br>
+                        <code>(4/pi)*(sin(2*pi*ph) + (1/3)*sin(2*3*pi*ph) + (1/5)*sin(2*5*pi*ph) + (1/7)*sin(2*7*pi*ph) + (1/9)*sin(2*9*pi*ph))</code><br>
+                        破綻しそうなら <i>Safety=soft</i> や <i>Hard clip</i> を。
+                    </p>
+                    <p><b>3) のこぎり</b>（帯域制限なし・要DCブロック）：<br>
+                        <code>(2*((ph + 0.5) % 1) - 1)</code>
+                    </p>
+                    <p><b>4) 三角</b>（サインからの整形）：<br>
+                        <code>(2/pi) * asin( sin(2*pi*ph) )</code>
+                    </p>
+                    <p><b>5) パルス幅（PWM）</b>：<br>
+                        <code>( ( (ph % 1) &lt; 0.3 ? 1 : -1) )</code><br>
+                        0.3 を変えるとデューティ比が変わります。エイリアシングが気になるときは <i>soft</i> で丸める：
+                        <br><code>tanh(6*( ( (ph%1)&lt;0.3 ? 1 : -1) ))</code>
+                    </p>
+                    <p><b>6) ソフトクリップ・ウェーブシェイパ</b>（滑らかに太く）：<br>
+                        <code>tanh(3 * sin(2*pi*ph))</code>
+                    </p>
+                    <p><b>7) リングモジュレーション</b>（倍音の金属感）：<br>
+                        <code>sin(2*pi*ph) * sin(2*pi*ph*3.2)</code>
+                    </p>
+                    <p><b>8) ビットクラッシュ</b>（量子化ノイズ）：<br>
+                        <code>(i32(sin(2*pi*ph)*32767) / 32767)</code>
+                    </p>
+                    <p><b>9) XORシンセ（デジタル荒れ）</b>：<br>
+                        <code>(bxor( i32( ph*65536 ), i32( (ph*65536)*3 ) ) / 32768 - 1)</code><br>
+                        ※<code>ph</code> は 0..1 なので一旦整数空間に拡大してから XOR。
+                    </p>
+                    <p><b>10) ステップ波（サンプル＆ホールド風）</b>：<br>
+                        <code>(floor( (ph*8) ) / 4 - 1)</code>（8段ステップ）
+                    </p>
+                    <p><b>11) ハードクリップ矩形化</b>（どんな式にも後段で）：<br>
+                        <code>max(-1, min(1, YOUR_EXPR ))</code>
+                    </p>
+                    <p><b>12) DCオフセット除去を前提にした波</b>（のこぎり等）：<br>
+                        DCブロック ON を推奨。必要なら基底に正負対称の式を選ぶ。
+                    </p>
+                </div>
+            </details>
+
+            <details>
+                <summary><b>実用Tips</b></summary>
+                <ul class="hint">
+                    <li>エイリアシング回避：倍音の多い波（矩形/のこぎり/ビット系）は <b>Safety=soft</b> で緩める、もしくは倍音の数を制限。</li>
+                    <li>クリック対策：<b>ゲイン</b>は急に大きくしない（ここは内部で短いランプ済み）。自前式でも <code>tanh</code> を活用。</li>
+                    <li>プレビューが暴れる：<b>DCブロックON</b> と <b>ゲイン控えめ</b> から調整。</li>
+                    <li>WAV出力：ロングトーンは 5–20秒が扱いやすい。ループ用途は「シングルサイクル」も有効（必要なら追加実装可）。</li>
+                    <li>キーマップ：<kbd>a</kbd>=0、<kbd>q</kbd>=+5、<kbd>1</kbd>=+10、<kbd>z</kbd>=-5（右へ+1）。</li>
+                </ul>
+            </details>
+        </div>
+    </div>
+</body>
+
+</html>

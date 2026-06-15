@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>『星雲は』</title>
+  <style>
+    /* 色は出来るだけ、SB Creative出版『日本の美しい色と言葉』から取っていく。 */
+    /* 当ページはp256『しとしと』 */
+    /* 氷雨 #e3e8f1 */
+    /* 俄雨 #6290b1 */
+    /* 長雨 #afd3e6 */
+    /* 秋雨 #609aa0 */
+    /* 五月雨 #9ec8d1 */
+    body {
+      font-size: 1rem;
+      background-color: #111822;
+      /* 青っぽい背景色 */
+      margin: 0;
+      padding: 0;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    h1 {
+      background-color: #609aa0;
+      /* 秋雨 */
+      color: black;
+      /* 文字は黒でよい */
+      padding: 0.5em;
+      /* 内側の余白で見た目よく */
+    }
+
+    h2 {
+      background-color: #609aa0;
+      /* 秋雨 */
+      color: black;
+      /* 文字は黒でよい */
+      padding: 0.5em;
+      /* 内側の余白で見た目よく */
+    }
+
+    .p_left {
+      text-align: left;
+    }
+
+    .wrapper {
+      max-width: 700px;
+      width: 80%;
+      margin: 50px auto;
+      padding: 20px;
+      border: 0px solid #111;
+      background-color: #afd3e6;
+      /* 長雨 */
+      font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+    }
+
+    .inner_wrapper {
+      width: 600px;
+      margin: 10px auto;
+      padding: 20px;
+      border: 1px solid #111;
+      background-color: #ffffee;
+      font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", sans-serif;
+    }
+
+    .grid-table {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 2px;
+    }
+
+    .grid-table2 {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 2px;
+    }
+
+    .cell {
+      border: 0px solid #ccc;
+      padding: 4px 8px;
+      line-break: strict;
+      /* 日本語の自然な改行ルールに従う */
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    img.top-image {
+      width: 100%;
+      max-width: 800px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    hr {
+      border-width: 2px 0 0 0;
+      /* 線の太さ */
+      border-style: dashed;
+      /* 線の種類 */
+      border-color: #609aa0
+        /* 線の色 */
+    }
+
+    .br-sp {
+      display: none;
+    }
+
+    /* ── コピーボタン ── */
+    .copy-bar {
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: flex-end;
+      padding: 1rem 0;
+      background: linear-gradient(to bottom, var(--bg) 60%, transparent);
+    }
+
+    .copy-btn {
+      font-family: inherit;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      padding: 0.5em 1.4em;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: #888888;
+      color: #000000;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .copy-btn:hover {
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    .copy-btn:active {
+      transform: scale(0.97);
+    }
+
+    .copy-btn.copied {
+      background: #f0f5f0;
+    }
+
+    @media screen and (max-width: 600px) {
+      body {
+        font-size: 0.7rem;
+      }
+
+      h1,
+      h2 {
+        font-size: 1rem;
+      }
+
+      .wrapper,
+      .inner_wrapper {
+        width: 95%;
+        padding: 10px;
+        word-wrap: break-word;
+        box-sizing: border-box;
+      }
+
+      .grid-table,
+      .grid-table2 {
+        grid-template-columns: 1fr;
+      }
+
+      .br-sp {
+        display: inline;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrapper">
+    <div class="p_left">現在位置 : <a href="../index.html">ホーム</a> ＞ <a href="index.htm">Novels</a> ＞ <a
+        href="nebula.htm"><b>『星雲は』</b></a></div>
+    <div class="copy-bar">
+      <button class="copy-btn" onclick="copyAll()" id="copyBtn">📋 本文をすべてコピー</button>
+    </div>
+    <div id="novel-content">
+      <h1>『星雲は』</h1>
+      ＜星雲は　腫瘍のごとく　横たわる＞<br><br>
+      余比喩、樹脂葡萄、松脂から誘導される位相。種子と輪郭、コルクのキャップ、木机、壁紙、囲繞する指先花火、逆惑星。理想化された妹、辿り着いたマイノングの穴、排中律によって排された中庸としての長男。そのようにして登場人物は配置される。準星座の池が広がる。<br>
+      <br>
+      霧の早朝、舟を漕ぎだす。小さな誘拐として。感情逆系の図式として自動誘導されていく射影極限としての虚無、指先ですくう泥、骨と誼み。鎖骨、首筋、輪郭、連星、やわらかさ、肋骨で感じた痛み、章動、追悼としてのポインセチア。弟の名残を残した子供部屋。<br><br>
+      願望夢。不在の人魚が誘った長男。水晶の繁茂、伸長してゆく豊穣の開射、あなたを三度騙して開闢される開世界。四角い円がぼくを飲み込み……。気が付けばそばには誰もいない。星雲は腫瘍のごとく横たわる。回転する人工衛星の軌道。霊魂を直交分解した向日葵畑、宙を渉る帆船、少女としての少年。<br><br>
+      ＜この先には何もない。これで終わり。もう、ここで出来ることはない。この中でぼくは、同じことを繰り返して、あるいは変奏を何度試みても、行き着くところは同じで、そして、目が覚めて、この気持ちを、君に隠して生きていく。無尽蔵に何もかもが叶ったとして、それで、そのあとどこに行くのか。そうした精神はきっと、生まれる前へと回帰するだけだ。その地点では生成と消滅が向かい合い、一点で交わる＞<br><br>
+      目を凝らせば砂嵐の中に見えてくるものがある。非在の領域へと広がる関係図式、多重化されたモノイド対象、図と地が入れ替わり、白が黒へ、実数が虚数へ入れ替わる人物相関図。人工木材から糸杉へ。90度反転して並ぶアルファベッタ、それは踊り子の名前、開かれるカルテシアン閉劇場の韃靼踊り、二重否定位相、ブーリアン部分トポスから追放され、笛の音に操られ、曖昧の霧へと消えていく子供たち。<br><br>
+      抗躁剤すなわち鎮静薬としての催眠音、化石化した地雷、怒り、悲しみ、希望の干満、行く先、骨、水、花、星、さらさら、そして、樹皮、自分の指で鼻筋を触るくすぐったさ、母乳、または。貧困化する開基、一般化平均、鳥の羽根、澪標、島嶼部。湿った粘り気と自己嫌悪。<br><br>
+      ＜さようなら、倒錯と熱情のぼく。また会う日まで。そして、こんにちは、慈愛と灰色のぼく。君の良き兄として、ぼくは平坦な日常へと帰っていく＞<br><br>
+      <br>
+    </div>
+  </div>
+  <script>
+    async function copyAll() {
+      const content = document.getElementById('novel-content');
+      const btn = document.getElementById('copyBtn');
+
+      // innerText はブラウザが見た目通りのテキスト（改行・空行含む）を返す
+      const text = content.innerText;
+
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.textContent = '✓ コピーしました！';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = '📋 本文をすべてコピー';
+          btn.classList.remove('copied');
+        }, 2000);
+      } catch (err) {
+        // フォールバック（古いブラウザ・file://プロトコル対策）
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        btn.textContent = '✓ コピーしました！';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = '📋 本文をすべてコピー';
+          btn.classList.remove('copied');
+        }, 2000);
+      }
+    }
+  </script>
+</body>
+
+</html>

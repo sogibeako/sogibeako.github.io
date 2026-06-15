@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>変な地形 - Strange Terrain Generator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;background:linear-gradient(180deg,#0a0a12 0%,#12121f 50%,#0a0a12 100%);color:#d4d0c8;font-family:'Noto Serif JP','Yu Mincho','Hiragino Mincho ProN',serif}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{text-shadow:0 0 8px rgba(255,100,100,.3)}50%{text-shadow:0 0 20px rgba(255,100,100,.7)}}
+@keyframes glitch{0%,90%,100%{transform:none}92%{transform:translate(-2px,1px)}94%{transform:translate(2px,-1px)}96%{transform:translate(-1px,-2px)}98%{transform:translate(1px,2px)}}
+@keyframes tripleGlitch{0%,85%,100%{transform:none;filter:none}87%{transform:translate(-3px,2px) skewX(2deg);filter:hue-rotate(90deg)}89%{transform:translate(3px,-1px);filter:hue-rotate(180deg)}91%{transform:translate(-2px,-3px);filter:hue-rotate(270deg)}93%{transform:translate(2px,3px) skewX(3deg)}95%{transform:translate(-1px,-2px);filter:hue-rotate(45deg)}}
+.section{animation:fadeIn .5s ease-out both;margin-bottom:20px;padding:20px;border:1px solid #1a1a2a;background:linear-gradient(180deg,#0e0e1a00,#0e0e1a)}
+.section:nth-child(2){animation-delay:.05s}.section:nth-child(3){animation-delay:.1s}.section:nth-child(4){animation-delay:.15s}.section:nth-child(5){animation-delay:.2s}.section:nth-child(6){animation-delay:.25s}.section:nth-child(7){animation-delay:.3s}.section:nth-child(8){animation-delay:.35s}.section:nth-child(9){animation-delay:.4s}.section:nth-child(10){animation-delay:.45s}
+.section h3{font-size:13px;color:#777;letter-spacing:4px;margin-bottom:12px;border-bottom:1px solid #1a1a2a;padding-bottom:8px;font-weight:normal}
+.chaos-text{animation:glitch 3s infinite}.triple-chaos-text{animation:tripleGlitch 2s infinite}.high-level{animation:pulse 2s infinite}
+.gen-btn{background:linear-gradient(135deg,#1a1a2e,#2a2a4a);border:1px solid #444;color:#e0dcd0;padding:16px 48px;font-size:18px;font-family:inherit;cursor:pointer;letter-spacing:4px;transition:all .3s}
+.gen-btn:hover{border-color:#888;background:linear-gradient(135deg,#2a2a4e,#3a3a6a);box-shadow:0 0 30px rgba(100,100,200,.2)}.gen-btn:active{transform:scale(.97)}
+.hist-btn{background:transparent;border:1px solid #333;color:#777;padding:8px 20px;font-size:12px;font-family:inherit;cursor:pointer;letter-spacing:2px}.hist-btn:hover{border-color:#666;color:#aaa}
+.chimera-tag{display:inline-block;background:rgba(255,50,50,.15);border:1px solid rgba(255,50,50,.3);padding:1px 6px;font-size:10px;color:#ff6666;margin-left:6px;letter-spacing:1px}
+.chaos-badge{display:inline-block;background:linear-gradient(90deg,#ff006620,#ff00ff20,#00ffff20);border:1px solid #ff00ff44;padding:2px 10px;font-size:11px;color:#ff66ff;letter-spacing:2px;margin-left:8px}
+.triple-badge{background:linear-gradient(90deg,#ff000030,#ff00ff30,#00ffff30,#ffff0030)!important;border:1px solid #ff44ff66!important;color:#ff88ff!important;animation:tripleGlitch 4s infinite}
+.diff-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:700px;margin:0 auto}
+.diff-btn{background:transparent;border:1px solid #222;color:#555;padding:10px 4px;font-size:12px;font-family:inherit;cursor:pointer;transition:all .2s;text-align:center;line-height:1.4}
+.diff-btn.active{background:linear-gradient(135deg,#2a2a4e,#3a3a6a);border:1px solid #6666aa;color:#e0dcd0}
+.diff-btn .icon{font-size:18px;margin-bottom:2px}
+.diff-btn .label{letter-spacing:1px}
+.item-tag{padding:4px 12px;border:1px solid #333;font-size:13px;background:#0a0a16;color:#bbb;display:inline-block;margin:0 4px 4px 0}
+.hist-item{padding:6px 8px;border-bottom:1px solid #1a1a2a;cursor:pointer;font-size:13px}
+.hist-item:hover{background:#1a1a2a}
+.event-card{padding:16px;border:1px solid;animation:fadeIn .4s ease-out both}
+.event-card+.event-card{margin-top:12px}
+#content{max-width:700px;margin:0 auto;padding:0 20px 60px}
+</style>
+</head>
+<body>
+
+<div style="text-align:center;padding:40px 20px 20px;border-bottom:1px solid #222">
+  <h1 style="font-size:28px;font-weight:900;letter-spacing:8px;color:#c8c0b0;margin-bottom:8px">変 な 地 形</h1>
+  <p style="font-size:12px;color:#666;letter-spacing:3px">STRANGE TERRAIN GENERATOR</p>
+</div>
+
+<div style="max-width:700px;margin:0 auto;padding:24px 20px 0">
+  <p style="font-size:11px;color:#555;letter-spacing:3px;text-align:center;margin-bottom:12px">冒険難易度</p>
+  <div class="diff-grid" id="diffGrid"></div>
+  <p id="diffDesc" style="font-size:11px;color:#444;text-align:center;margin-top:8px;letter-spacing:1px"></p>
+</div>
+
+<div style="text-align:center;padding:20px 20px 32px">
+  <button class="gen-btn" id="genBtn" onclick="generate()">地 形 を 生 成</button>
+  <div id="histBtnWrap" style="margin-top:12px;display:none">
+    <button class="hist-btn" onclick="toggleHistory()">履歴</button>
+  </div>
+</div>
+
+<div id="histPanel" style="max-width:700px;margin:0 auto 20px;padding:0 20px;display:none">
+  <div id="histList" style="border:1px solid #222;padding:12px;background:#0e0e1a;max-height:200px;overflow-y:auto"></div>
+</div>
+
+<div id="content"></div>
+<div id="empty" style="text-align:center;padding:60px 20px;color:#444;font-size:14px;letter-spacing:2px">ボタンを押して地形を生成してください</div>
+
+<script>
+// ─── UTILITY ────────────────────────────────────────────────────────
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const roll = (n) => Math.floor(Math.random() * n) + 1;
+const chance = (pct) => Math.random() * 100 < pct;
+const pickN = (arr, n) => {
+  const copy = [...arr];
+  const result = [];
+  for (let i = 0; i < Math.min(n, copy.length); i++) {
+    const idx = Math.floor(Math.random() * copy.length);
+    result.push(copy.splice(idx, 1)[0]);
+  }
+  return result;
+};
+
+const gaussRandom = (mean, stddev) => {
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) * stddev + mean;
+};
+const rollLevel = (center, spread) => Math.max(1, Math.min(200, Math.round(gaussRandom(center, spread))));
+
+const DIFFICULTY_PRESETS = [
+  { id: "picnic",  label: "遠足",      icon: "🌼", center: 3,   spread: 2,  desc: "お花を摘みに行こう" },
+  { id: "travel",  label: "旅路",      icon: "🧳", center: 10,  spread: 5,  desc: "ちょっとした冒険の始まり" },
+  { id: "quest",   label: "冒険",      icon: "⚔️", center: 30,  spread: 12, desc: "本格的な冒険者の仕事" },
+  { id: "peril",   label: "死線",      icon: "💀", center: 55,  spread: 18, desc: "生きて帰れる保証はない" },
+  { id: "dragon",  label: "龍域",      icon: "🐉", center: 75,  spread: 20, desc: "古龍の息吹を感じる" },
+  { id: "myth",    label: "神話",      icon: "✨", center: 110, spread: 30, desc: "人の身で立ち入る領域ではない" },
+  { id: "madness", label: "狂気",      icon: "🌀", center: 160, spread: 35, desc: "理性を保てるかどうかも怪しい" },
+  { id: "any",     label: "何でもあり", icon: "🎲", center: 100, spread: 70, desc: "Lv1〜200、完全にランダム" },
+];
+
+// ─── DATA: BASE BIOMES ─────────────────────────────────────────────
+const BIOMES = [
+  { id: "grassland", name: "草原", icon: "🌾" },
+  { id: "road", name: "街道", icon: "🛤️" },
+  { id: "coast", name: "海岸", icon: "🏖️" },
+  { id: "volcano", name: "火山", icon: "🌋" },
+  { id: "desert", name: "砂漠", icon: "🏜️" },
+  { id: "ice", name: "氷原", icon: "❄️" },
+  { id: "ocean", name: "海洋", icon: "🌊" },
+  { id: "forest", name: "深森", icon: "🌲" },
+  { id: "swamp", name: "沼地", icon: "🐸" },
+  { id: "mountain", name: "山岳", icon: "⛰️" },
+  { id: "canyon", name: "峡谷", icon: "🏜️" },
+  { id: "cave", name: "洞窟", icon: "🕳️" },
+  { id: "ruins", name: "遺跡", icon: "🏛️" },
+  { id: "sky", name: "天空", icon: "☁️" },
+  { id: "abyss", name: "深淵", icon: "🕳️" },
+  { id: "crystal", name: "水晶地帯", icon: "💎" },
+  { id: "fungus", name: "菌糸原野", icon: "🍄" },
+  { id: "void", name: "虚無", icon: "⬛" },
+  { id: "cosmos", name: "宇宙", icon: "🌌" },
+  { id: "garden", name: "庭園", icon: "🌸" },
+];
+
+const getLevelTier = (lv) => {
+  if (lv <= 5) return { tier: "peaceful", label: "穏やかな", desc: "幼い女の子でも安心して歩ける" };
+  if (lv <= 15) return { tier: "easy", label: "のどかな", desc: "旅商人が行き交う" };
+  if (lv <= 30) return { tier: "moderate", label: "険しい", desc: "熟練冒険者向けの" };
+  if (lv <= 50) return { tier: "hard", label: "危険な", desc: "歴戦の戦士でも油断できない" };
+  if (lv <= 70) return { tier: "extreme", label: "禁忌の", desc: "古龍が徘徊する" };
+  if (lv <= 100) return { tier: "mythic", label: "神域の", desc: "神話に語られる" };
+  if (lv <= 150) return { tier: "transcendent", label: "超越した", desc: "存在そのものが歪む" };
+  return { tier: "incomprehensible", label: "理解不能の", desc: "認識することすら許されない" };
+};
+
+// ─── DATA: LANDSCAPE ────────────────────────────────────────────────
+const L = {
+  grassland: {
+    peaceful: ["柔らかな風が背の低い草を撫でている。タンポポの綿毛が漂い、遠くで牛が鳴いている。","なだらかな丘陵が続き、小さな花が咲き乱れている。蝶が気ままに舞っている。","足元の草は膝丈ほど。どこまでも広がる緑の絨毯に、小さな白い花が星のように散らばっている。"],
+    easy: ["交易路の脇に広がる草原。轍の跡が残り、旅人の焚き火跡がちらほら見える。","見渡す限りの草むらに、時折石積みの道標が立っている。野兎が駆け抜けていく。"],
+    moderate: ["草の丈が人の背を超える。風に揺れる草原の奥から、何かの気配がする。","一見のどかだが、地面に巨大な爪痕が走っている。この草原は獣の縄張りだ。","草原のただ中に、不自然に草が生えない円形の地帯がある。魔力の残滓を感じる。"],
+    hard: ["草の一本一本が刃のように鋭い。風が吹くたびに金属的な音が響く。","大地そのものが脈動するように、地面が周期的に隆起しては沈む。草はそれに合わせて波打つ。"],
+    extreme: ["草原全体が龍の背の上だった。一歩ごとに鱗が軋む音がする。地平線は龍の尾だ。","草が意思を持っている。近づくと道を空け、去ると閉じる。古龍との契約のもとにある土地。"],
+    mythic: ["一本の草を引き抜くと、大地が悲鳴をあげた。ここは神の体毛だ。","草原が星空を映している。上も下も区別がつかない。重力の方向を自分で決める場所。"],
+    transcendent: ["草という概念そのものが地表を覆っている。『緑色』が物理的な厚みを持ち、歩くと色が足首まで沈む。","一歩進むたびに、この草原で起きたすべての歴史が同時に再生される。恐竜と騎士団が共存する風景。"],
+    incomprehensible: ["ここに草原があったかどうかすら分からない。あなたが『草原だ』と思った瞬間、それは草原になる。あるいはならない。","草原の定義を述べよ。述べた瞬間にその定義は嘘になる。足元にあるのは草か、草の記憶か、草を見た者の恐怖か。"],
+  },
+  road: {
+    peaceful:["整備された石畳の道。馬車の通った轍が残り、道端に休憩用の石碑がある。"],easy:["商隊が行き交う幹線道路。宿場町の灯りが遠くに見える。"],moderate:["古い街道だが、最近は通る者が少ない。石畳の隙間から不気味な植物が生えている。"],hard:["道そのものが罠になっている。石畳が不規則に沈み、どこかで歯車の音がする。"],extreme:["街道を歩いているはずが、気づくと同じ場所に戻っている。道が意思を持って旅人を惑わす。"],mythic:["この道を歩いた者は二度と同じ世界に戻れない。道標には読めない文字で警告が刻まれている。"],transcendent:["道が時間軸に沿って伸びている。一歩進むと千年が過ぎ、一歩下がると千年が戻る。"],incomprehensible:["道とは何か。始点と終点を持つなら道だが、ここには始まりも終わりもない。歩いているのはあなたか、道か。"],
+  },
+  coast: {
+    peaceful:["白い砂浜に穏やかな波が打ち寄せる。潮の香りが心地よい。貝殻が散らばっている。"],easy:["漁村の近くの海岸。干物が風に揺れ、子供たちが水遊びをしている。"],moderate:["切り立った断崖の海岸。波が激しく岩を叩き、海鳥の悲鳴のような声が響く。"],hard:["海岸線が生きている。潮の満ち引きに合わせて地形そのものが変化する。"],extreme:["海と陸の境界が曖昧になっている。砂が水のように流れ、波が固体として打ち寄せる。"],mythic:["ここは世界の端だ。海の向こうは滝のように流れ落ち、その先は星空につながっている。"],transcendent:["海岸という概念が崩壊しつつある。波と砂が入れ替わり、空と海面が反転する。"],incomprehensible:["海か。岸か。どちらでもない何か。潮騒の音だけが『ここには何かがあった』と証言している。"],
+  },
+  volcano: {
+    peaceful:["穏やかな温泉が湧く火山の麓。硫黄の匂いがするが、花が咲いている。"],easy:["活動の落ち着いた火山。溶岩が冷え固まった奇岩が並び、観光客向けの道が整備されている。"],moderate:["赤熱した溶岩流が間近に見える。空気が焼けるように熱い。"],hard:["噴火口の縁を歩いている。マグマが脈動し、火山弾が不規則に飛んでくる。"],extreme:["火山そのものが古龍の巣だ。溶岩は龍の血であり、噴煙は龍の吐息だ。"],mythic:["この火山は逆さまに生えている。溶岩が天に向かって流れ上がり、空に炎の湖を作っている。"],transcendent:["火と岩の境界がない。すべてが溶融した概念の中で、温度という物理量が意味を失っている。"],incomprehensible:["火山は怒っているのではない。泣いているのだ。なぜかは、世界が終わっても分からない。"],
+  },
+  desert: {
+    peaceful:["穏やかな砂丘が続く。オアシスの椰子が見え、乾いた風が心地よい。"],easy:["隊商路沿いの砂漠。ラクダの足跡と、点々と立つ目印の石柱が道案内をしてくれる。"],moderate:["砂嵐の予兆がある。空が茶色く曇り、砂が肌を刺す。方角を見失いやすい。"],hard:["砂が意思を持って動いている。足を取られると二度と抜け出せない流砂の迷路。"],extreme:["砂の一粒一粒が微細な魔石だ。砂漠全体が巨大な魔法陣として機能している。"],mythic:["この砂漠には時間が流れていない。千年前の旅人の足跡が、今しがた付けたかのように新鮮だ。"],transcendent:["砂粒の数が無限を超えた。数え始めると世界が終わるまで数え続けることになる。"],incomprehensible:["乾きとは何か。この砂漠は渇望そのものが堆積した地形だ。水を注いでも満たされない。"],
+  },
+  ice: {
+    peaceful:["一面の雪原。足跡が残り、遠くで雪うさぎが跳ねている。空気は冷たいが澄んでいる。"],easy:["凍った湖の周囲の氷原。氷上に交易路が設けられ、ソリの轍がついている。"],moderate:["ブリザードが吹き荒れる氷原。視界は数メートル。足元の氷がいつ割れるかわからない。"],hard:["氷の厚さが百メートルを超える永久凍土。氷の下に巨大な影が蠢いている。"],extreme:["氷が生きている。触れると記憶を吸い取られる。凍っているのは水ではなく時間だ。"],mythic:["絶対零度を下回る領域。物質の運動が停止し、光すら凍って結晶化している。"],transcendent:["冷たさの概念が物理法則を書き換えている。炎を起こすと、炎もまた凍る。"],incomprehensible:["ここは氷ではない。世界が終わった後に残る『静けさ』が結晶化したものだ。"],
+  },
+  ocean: {
+    peaceful:["穏やかな内海。小舟が浮かび、海底の砂地が透けて見える。"],easy:["航路の通った海域。遠くに商船の帆が見え、イルカが並走してくる。"],moderate:["外海の荒波。うねりが船を翻弄し、空には嵐雲が迫っている。"],hard:["海面が不自然に静かだ。この静けさの下に、何か途方もないものが潜んでいる。"],extreme:["海が二層に分かれている。上層は通常の海水、下層は液体化した魔力。境界面で異形の魚が泳ぐ。"],mythic:["この海には底がない。どこまでも潜り続けると、別の世界の空に出る。"],transcendent:["海と空の区別がない。水は上にも下にもあり、呼吸できるかどうかは気持ち次第だ。"],incomprehensible:["水とは何か。Hが二つとOが一つ？ ここではその定義自体が溶解している。"],
+  },
+  forest: {
+    peaceful:["木漏れ日が差す穏やかな森。小鳥のさえずりが聞こえ、どんぐりが落ちてくる。"],easy:["よく管理された森林。木こりの小屋があり、薪の匂いがする。"],moderate:["鬱蒼とした深い森。日差しが届かず、方角がわからなくなる。"],hard:["木々が異常に巨大で、根が地上に網のように張り出している。森全体が一つの生命体のようだ。"],extreme:["樹齢一万年の巨木が意思を持つ。入森者を裁き、不適格者は養分にされる。"],mythic:["この森は世界樹の根の一部だ。木の内部に文明が栄えている。"],transcendent:["森と森でないものの境界が失われた。都市も砂漠も、ここでは全て森の一部として解釈される。"],incomprehensible:["木が時間を光合成している。過去を吸い、未来を吐く。あなたの寿命は今、一本の枝になった。"],
+  },
+  swamp:{peaceful:["浅い湿地帯。カエルの鳴き声が響き、蓮の花が浮かんでいる。"],easy:["泥炭地の沼。木道が整備されており、薬草が自生している。"],moderate:["毒沼。紫色の霧が漂い、足を踏み入れると腐食が始まる。"],hard:["沼底から手が伸びてくる。ここは古代の戦場跡で、怨念が液状化している。"],extreme:["沼の水面に別の世界が映っている。その世界からも何かがこちらを覗いている。"],mythic:["この沼は世界の排水溝だ。あらゆる場所の不要なものがここに流れ着く。"],transcendent:["液体と固体と気体が同時に存在する沼。三態の境界が消えている。"],incomprehensible:["沈んでいるのはあなたか、沼か。重力の主語が入れ替わっている。"]},
+  mountain:{peaceful:["なだらかな山の麓。登山道が整備され、山小屋の煙が見える。"],easy:["中腹の山道。眺望が開け、麓の町が小さく見える。"],moderate:["険しい稜線。岩肌が露出し、強風が体を持っていきそうになる。"],hard:["垂直の岩壁。重力に逆らって何かが壁を登っている。それは岩そのものだ。"],extreme:["山頂が天界に突き刺さっている。高度の概念が崩壊し、登るほど気圧が上がる。"],mythic:["この山は神の墓標だ。頂上にある石碑に触れると、世界の設計図が見える。"],transcendent:["山が増殖している。昨日は一つだったのに、今日は三つある。明日は幾つになるのか。"],incomprehensible:["高い、とは何か。この山は『上』を所有している。上という概念がこの山の知的財産だ。"]},
+  canyon:{peaceful:["浅い渓谷。小川が流れ、壁面に色とりどりの地層が見える。"],easy:["交易路として使われる峡谷。馬車がすれ違える程度の幅がある。"],moderate:["深い裂け目。底が見えず、壁面から奇妙な鉱石が露出している。"],hard:["峡谷が呼吸している。壁が周期的に迫り、潰されないよう走り抜ける必要がある。"],extreme:["この峡谷は世界に走った亀裂だ。壁の向こう側は別の次元が見える。"],mythic:["神が世界を作りかけて放棄した断面。地層に『設計変更メモ』が化石として残っている。"],transcendent:["深さが無限の峡谷。落ちた者は永遠に落ち続け、やがて落下そのものと同化する。"],incomprehensible:["裂け目ではない。世界が二つに分裂した証拠だ。あなたは今、どちら側にいるのか。"]},
+  cave:{peaceful:["浅い洞窟。入口に光が差し込み、コウモリが数匹ぶら下がっている。"],easy:["採掘跡の洞窟。松明の跡と、掘り残しの鉱石がある。"],moderate:["暗く深い洞窟。水滴の音が不規則に響き、何かの目が光っている。"],hard:["洞窟の壁面が内臓のように蠢いている。ここは巨大な生物の体内だ。"],extreme:["光が存在できない洞窟。松明をつけると松明ごと闇に呑まれる。"],mythic:["この洞窟は世界の記憶装置だ。壁に触れると、過去の出来事が壁画として浮かび上がる。"],transcendent:["洞窟の中に洞窟がある。その中にも。無限に再帰する空洞。"],incomprehensible:["ここには入口があったはずだ。しかし今、出口しかない。出口から出ると、また出口がある。"]},
+  ruins:{peaceful:["古い村の跡。石壁の残骸に蔦が絡み、花が咲いている。穏やかな廃墟。"],easy:["かつての砦の跡。冒険者が残した焚き火跡と、簡易的な野営地がある。"],moderate:["巨大な神殿の廃墟。柱が倒れ、床に魔法陣の痕跡が残っている。"],hard:["崩壊した遺跡が自己修復を始めている。石が勝手に積み上がり、かつての姿を取り戻そうとしている。"],extreme:["時間が巻き戻り始めた遺跡。崩壊前の姿と廃墟が重なって見える。住人の幽影が日常を繰り返している。"],mythic:["この遺跡は未来の文明の跡だ。まだ発明されていない技術の残骸が散らばっている。"],transcendent:["遺跡が記憶している。訪れた者すべての人生を壁に刻む。あなたの未来もすでに刻まれている。"],incomprehensible:["ここに文明があった証拠はない。しかし遺跡がある。遺跡だけが先に存在し、文明が後から生まれるのを待っている。"]},
+  sky:{peaceful:["雲の上の穏やかな空間。足元に綿雲が広がり、虹が架かっている。"],easy:["浮遊島が点在する空域。島と島を繋ぐ古い吊り橋が揺れている。"],moderate:["乱気流の渦巻く空。雷雲の中を進むと、雷に意思があることに気づく。"],hard:["重力が反転する空域。落ちる方向が上。空に向かって墜落していく。"],extreme:["天空の果てに到達した。ここから先は宇宙だが、空気がある。矛盾が成立している。"],mythic:["空そのものが神の瞳だ。この中を歩くことは、神に見つめられ続けることを意味する。"],transcendent:["上下左右前後という概念が六つとも消失した空間。方向は自分で発明する必要がある。"],incomprehensible:["空を歩いているのではない。空があなたの中を歩いている。"]},
+  abyss:{peaceful:["底の浅い裂け目。暗いが温かく、発光するキノコが道を照らしている。"],easy:["冒険者が調査済みの浅い深淵。ロープと目印が設置されている。"],moderate:["光の届かない深淵。自分の心臓の音だけが聞こえる。何かがそれに合わせて脈動している。"],hard:["深淵が見つめ返してきた。比喩ではなく、文字通り巨大な眼球が底にある。"],extreme:["ここは世界の下水道だ。あらゆる恐怖、忘れたい記憶、後悔が液体となって溜まっている。"],mythic:["深淵の底に扉がある。扉の向こうは『世界が存在しなかった場合の世界』だ。"],transcendent:["深淵そのものが意識を持ち、あなたに問いかけてくる。『なぜ落ちてきた？ 落としたのは私ではない。お前自身だ。』"],incomprehensible:["深さの限界を超えた。もはや深淵ではない。これは深淵が見る夢の中だ。"]},
+  crystal:{peaceful:["小さな水晶が地面に散らばっている。陽光を受けて虹色に輝いている。"],easy:["水晶の柱が林立する谷。鉱夫が採掘した跡がある。"],moderate:["巨大な水晶が共鳴し、不協和音を奏でている。長時間いると意識が朦朧とする。"],hard:["水晶の中に人影が閉じ込められている。彼らは生きている。助けを求める声が結晶を通して歪んで聞こえる。"],extreme:["水晶が光そのものを結晶化している。砕くと閃光が放たれ、周囲の時間が止まる。"],mythic:["この水晶地帯は世界の演算装置だ。結晶の配列が物理法則を計算している。一つでも抜くと因果律が崩壊する。"],transcendent:["水晶と現実の区別がない。あなた自身も結晶化し始めている。"],incomprehensible:["透明であるとはどういうことか。この水晶は透明すぎて、見ると存在が透けてしまう。"]},
+  fungus:{peaceful:["大きなキノコが傘を広げる林。胞子が光り、幻想的な雰囲気。"],easy:["薬師が管理する菌糸の畑。食用と毒の見分け方を示す看板がある。"],moderate:["菌糸が地面を覆い尽くしている。踏むと胞子が舞い、幻覚を引き起こす。"],hard:["菌糸のネットワークが知性を持っている。侵入者の情報を瞬時に共有し、対策を講じてくる。"],extreme:["この菌糸原野は一つの超生命体だ。面積は大陸規模。あなたは今、その体表を歩いている。"],mythic:["菌糸が時間を分解している。過去と未来がカビのように腐敗し、現在だけがかろうじて新鮮だ。"],transcendent:["菌糸と宿主の関係が逆転した。世界そのものが菌糸の宿主であり、我々は菌糸の見る夢だ。"],incomprehensible:["分解とは創造の裏返しか。この菌糸原野では『腐る』ことが『生まれる』と同義だ。"]},
+  void:{peaceful:["何もない空間だが、不思議と怖くない。静寂が心地よい。"],easy:["虚無の縁。覗き込むと、自分の記憶がプロジェクターのように投影される。"],moderate:["虚無が侵食を始めている。足元の地面が少しずつ消えていく。"],hard:["ここには物理法則がない。思考がそのまま現実になるが、制御できない。"],extreme:["虚無が実体を持っている。『何もない』が手触りのある物質として存在する矛盾した空間。"],mythic:["世界が作られる前のドラフト空間。神々の書き損じた設計図の断片が漂っている。"],transcendent:["虚無が虚無を虚無している。無の三乗。理解しようとすると理解力そのものが消える。"],incomprehensible:["　。"]},
+  cosmos:{peaceful:["プラネタリウムのような星空。足元に光る星雲が広がり、穏やかに回転している。"],easy:["低軌道の宇宙空間。惑星が近くに見え、小惑星に簡易基地が設置されている。"],moderate:["恒星間空間。どこを見ても暗黒。方向感覚が失われ、自分の位置が分からない。"],hard:["ブラックホールの降着円盤の縁。時間の流れが歪み、体の上半分と下半分で時間が違う。"],extreme:["銀河が衝突する最中に立っている。星が花火のように散り、新しい星系が生まれている。"],mythic:["宇宙の外側に出た。ここには空間がないはずなのに、あなたはいる。"],transcendent:["宇宙の全歴史が一瞬に圧縮されている。ビッグバンから熱死まで、瞬きの間に繰り返される。"],incomprehensible:["宇宙は有限か無限か。その問い自体が宇宙の一部であり、答えが出ると宇宙が終わる。"]},
+  garden:{peaceful:["手入れの行き届いた花園。バラの香りが漂い、噴水が穏やかに水を吹いている。"],easy:["貴族の庭園跡。荒れてはいるが四季の花が咲き乱れ、迷路のような生垣がある。"],moderate:["人喰い花が咲く庭園。美しいが、近づくと蔓が首を狙ってくる。"],hard:["庭師がまだいる。千年間、誰もいない庭を手入れし続けている不死の老人。彼の剪定鋏は聖剣より鋭い。"],extreme:["この庭園で咲く花はすべて概念を持つ。『死』の花、『忘却』の花、『後悔』の花。摘むとその概念に触れてしまう。"],mythic:["エデンの残骸。知恵の木の切り株がまだ芽吹こうとしている。"],transcendent:["花が言語を持っている。その言葉は人間には美しすぎて、聞くと涙が止まらなくなる。"],incomprehensible:["庭園とは人間が自然を支配した証だ。だがこの庭園は自然が人間を植えている。あなたは今、花壇に挿されたばかりだ。"]},
+};
+
+// ─── DATA: VEGETATION / CLIMATE / ITEMS ─────────────────────────────
+const V={grassland:["クローバー","タンポポ","ススキ","レンゲ"],road:["道端の雑草","オオバコ","ヨモギ"],coast:["アマモ","ハマナス","海藻の打ち上がり"],volcano:["耐熱苔","火山灰に咲く赤い花","溶岩サボテン"],desert:["サボテン","タンブルウィード","砂漠バラ"],ice:["氷下海藻","凍結花","雪苔"],ocean:["サンゴ","昆布","深海蛍光藻"],forest:["シダ","苔","巨大キノコ","ツタ"],swamp:["ガマ","スイレン","食虫植物"],mountain:["エーデルワイス","高山植物","岩苔"],canyon:["断崖の根草","岩生シダ","壁面苔"],cave:["発光苔","洞窟キノコ","暗闇ツタ"],ruins:["蔦","瓦礫花","魔法陣の発光苔"],sky:["雲草","天空蘭","虹苔"],abyss:["深淵キノコ","闇蔓","虚無苔"],crystal:["結晶花","鉱石苔","プリズム草"],fungus:["巨大マッシュルーム","粘菌","胞子の滝"],void:["概念の芽","無の種子","虚構の花"],cosmos:["星間胞子","暗黒物質藻","超新星花"],garden:["薔薇","百合","藤","桜"]};
+const C={grassland:["温暖で穏やか","春のそよ風"],road:["季節相応の気候","旅人に優しい気温"],coast:["潮風が強い","海風が心地よい"],volcano:["灼熱","硫黄混じりの熱風"],desert:["極度の乾燥","昼は灼熱・夜は極寒"],ice:["極寒","凍てつく静寂"],ocean:["海洋性気候","突発的な嵐"],forest:["湿潤","薄暗く涼しい"],swamp:["湿度100%","瘴気が漂う"],mountain:["高山気候","突風と雷"],canyon:["乾いた風が吹き抜ける"],cave:["無風で湿度が高い","空気が淀んでいる"],ruins:["不自然に無風","時折冷気が走る"],sky:["強風","気圧が不安定"],abyss:["重い空気","音が吸収される"],crystal:["乾燥した冷気","静電気が走る"],fungus:["温暖多湿","胞子の甘い匂い"],void:["気候という概念がない"],cosmos:["真空","無重力"],garden:["四季が同時に存在する","花粉の霧"]};
+const I={grassland:["薬草","蜂蜜","野いちご","四つ葉のクローバー"],road:["旅人の日記","古い地図","銀貨","干し肉"],coast:["真珠","流木","珊瑚の欠片","瓶詰めの手紙"],volcano:["溶岩石","火竜の鱗","硫黄結晶"],desert:["砂金","オアシスの水","砂漠の薔薇石","蜃気楼の欠片"],ice:["万年氷","凍結花","マンモスの牙の化石"],ocean:["深海真珠","沈没船の金貨","人魚の涙"],forest:["エルフの矢尻","古樹の樹液","妖精の粉"],swamp:["沼鉄鉱","猛毒の花蜜","腐泥の結晶"],mountain:["霊峰の水","鷲の羽","高山茶の葉"],canyon:["化石","断層の結晶","地層インク"],cave:["鍾乳石の欠片","暗闇キノコ","地底湖の水"],ruins:["古代のコイン","壊れた魔法器具","封印の欠片"],sky:["雲の結晶","天使の羽毛（偽物）","風の種"],abyss:["深淵の涙","恐怖の結晶","虚無の欠片"],crystal:["純度99%の水晶","共鳴石","光の種子"],fungus:["幻覚キノコ","胞子爆弾","粘菌のゼリー"],void:["無の欠片","概念の種","存在証明書（空欄）"],cosmos:["隕石の欠片","星の砂","時空の歪み（瓶詰め）"],garden:["概念の花弁","知恵の実の種","庭師の剪定鋏"]};
+const IH=["世界の欠片","因果律の結び目","時間の化石","次元の裂け目（携帯用）","神の書き損じ","真理の断片","永遠の一瞬（瓶詰め）","概念兵器の設計図","存在しない色の染料","重力の種","言語の原石","沈黙の結晶"];
+
+// ─── DATA: SISTER ───────────────────────────────────────────────────
+const ST={
+  peaceful:["「わー、きれい！ お花摘んでいい？」と妹が駆け出す。","「おにいちゃん、ここでお弁当にしよう？」妹が座り込む。","「虫さんがいるよ！ ……触るのはやめとく」妹が後ずさりする。","「風が気持ちいいねー」妹が両手を広げてくるくる回る。"],
+  easy:["「旅って楽しいね！ でもそろそろ足が痛い……」妹がぼやく。","「あのお店で何か買ってくれない？」妹がおねだりする。","「地図、合ってる？ なんか不安なんだけど」妹が心配そうに言う。"],
+  moderate:["「……おにいちゃん、ちょっと怖い」妹が袖を掴む。","「大丈夫だよね？ 大丈夫って言って」妹の手が震えている。","「なんか変な音しなかった？ ……しなかった？ ほんとに？」"],
+  hard:["「帰りたい。帰りたいんだけど。無理？ 無理なの？」妹が泣きそうだ。","「おにいちゃんが一緒だから大丈夫。大丈夫。大丈夫……」妹が自己暗示をかけている。","「これ冒険じゃなくて生存だよね！？」妹が正論を叫ぶ。"],
+  extreme:["「……（言葉を失って、ただ兄の手を握っている）」","「世界って、こんなだったっけ」妹の目がどこか遠くを見ている。","「お兄ちゃん。もし帰れなくても、一緒だから、いいよ」妹が静かに言う。"],
+  mythic:["「ここ、人が来ちゃいけない場所だと思う。……でも来ちゃったもんね」","「お兄ちゃん、私たち今、神話の中にいるんだね」妹がどこか嬉しそうだ。","「……なんか、自分が自分じゃない感じがする」妹の輪郭が揺らいでいる。"],
+  transcendent:["「私、さっきから三人いるんだけど、どれが本物？」妹が首を傾げる。","「言葉が……出てこない。言葉じゃ足りない場所ってあるんだね」","「おにいちゃんの顔が思い出せない。目の前にいるのに」"],
+  incomprehensible:["「　　」妹が何かを言ったが、言語としての属性を失い、空気に溶けた。","（妹がここにいたはずだが、『いた』という概念が不確かだ）","「……あれ。私、誰だっけ。お兄ちゃんは……お兄ちゃんって、なに？」"],
+};
+const SB={
+  grassland:["「草のにおいがする！ 学校の校庭みたい」妹が深呼吸する。","「てんとう虫！ ……あ、飛んでった」妹が名残惜しそうに手を振る。","「ねえ、寝転がっていい？ 雲がゆっくり動いてるの、見たい」"],
+  coast:["「海だーーー！！」妹が靴を脱いで波打ち際に走る。","「貝殻拾いたい！ お兄ちゃんも手伝って！」","「しょっぱい！ 海の水なめたら怒られるやつだ！」妹が舌を出す。"],
+  volcano:["「熱い！ 足の裏が焼ける！ これ温泉じゃないの！？」妹が跳ねている。","「硫黄くさい……卵が腐ったにおい……うえぇ」妹が鼻をつまむ。"],
+  desert:["「水……水ちょうだい……」妹がふらふらしている。","「砂が靴の中に入って気持ち悪い！ 全部！ 砂しかない！」","「あれオアシス？ ……嘘でしょ蜃気楼でしょ。もう騙されないからね」"],
+  ice:["「さっっっむ！！！」妹がマフラーに顔をうずめる。","「お兄ちゃんの手あったかい？ ……あったかくない！ 二人とも冷たい！」","「雪だるま作りたいけど、手が動かない……」妹の唇が紫色だ。"],
+  ocean:["「船酔い……していない！ 私強い！ ……やっぱちょっとしてる」","「お魚見える！ あ、でかい！ でかいのはちょっと怖い！」","「陸が見えないよ……帰れるよね？ ……ね？」"],
+  forest:["「暗い……手、繋いでいい？」妹が小声で言う。","「キノコだ！ ……食べられるかな。食べちゃダメなやつかな」","「木がしゃべってる気がする。……気のせいだよね。木だけに」妹がドヤ顔する。"],
+  swamp:["「靴が沈む！ 好きな靴なのに！ おにいちゃんのせいだからね！」","「カエルの声すごい……合唱団？」妹が耳を傾ける。"],
+  mountain:["「足パンパン……。休憩。絶対休憩。動けません」妹が岩に座り込む。","「わー！ 上からだと全部見える！ あの町ちっちゃい！」妹の目が輝く。"],
+  cave:["「真っ暗……。お兄ちゃんどこ？ 手！ 手握って！」妹がパニック寸前。","「コウモリ！！ やだやだやだ出る出る帰る！！」妹が入口に向かって走る。"],
+  ruins:["「冒険者って感じ！ 宝箱ないかな！」妹がきょろきょろする。","「ここに昔、人が住んでたんだよね。……なんかちょっと切ない」"],
+  sky:["「下見ちゃダメ！ 下見ちゃダメ！ ……見ちゃった。うわあああ」妹がしゃがみ込む。","「鳥の気持ちがわかった。すごい。でも怖い」"],
+  crystal:["「きれい……。全部宝石？ 持って帰っていい？ いくつでも？」妹の目がキラキラしている。"],
+  fungus:["「マリオみたい！ ……でもサイズ感が怖い。あのキノコ家より大きいよ」","「胞子が光ってる……きれいだけど吸ったら大丈夫？」"],
+  garden:["「お花畑！ わー！ ……あれ、この花、歯がある」妹が固まる。"],
+  abyss:["「……下、見たくない。でも何かが見て欲しそうにしてる」妹が震えている。"],
+  cosmos:["「星がきれい……。でも息できるのなんで？」","「地球どこ？ ……あれ？ ……どっちが地球？」"],
+  void:["「何もない。ほんとに何もない。私たちだけ……」妹が兄にくっつく。"],
+  canyon:["「声が反響する！ やっほー！ ……おおおおお！ すごい！」"],
+  road:["「あ、馬車の跡！ 人がいるところに続いてるかな」"],
+};
+
+// ─── DATA: MONSTERS ─────────────────────────────────────────────────
+const BM=["ゴブリン","スライム","オーク","コボルド","スケルトン","ウルフ","バット","トロール","ゴーレム","ワーム","リザードマン","ハーピー","ガーゴイル","インプ","ゴースト","バジリスク","マンティコア","グリフォン","ケルベロス","ヒュドラ","ドラゴン","リッチ","デーモン","フェニックス","クラーケン","ベヒーモス","キマイラ","バンシー","ミノタウロス","サハギン"];
+const MA={peaceful:["ちいさな","おとなしい","迷子の","眠そうな"],easy:["若い","群れの","空腹の","縄張り意識の強い"],moderate:["歴戦の","凶暴な","変異した","狡猾な"],hard:["伝説級の","覚醒した","呪われた","不死の"],extreme:["古代の","神殺しの","世界を喰らう","次元を裂く"],mythic:["始祖の","概念と化した","法則を纏う","因果を断つ"],transcendent:["定義不能の","存在確率が揺らぐ","観測するだけで危険な"],incomprehensible:["■■■■の","意味を持たない","理解した者から消える"]};
+const BIM={grassland:["ホーンラビット","グラスサーペント","風の精霊"],road:["盗賊","野犬","ドッペルゲンガー"],coast:["カニ戦士","シーサーペント","海の魔女"],volcano:["マグマスライム","炎の精霊","溶岩ゴーレム"],desert:["サンドワーム","ミイラ","砂嵐の精霊"],ice:["フロストジャイアント","アイスドレイク","雪女"],ocean:["クラーケンの腕","深海魚人","海賊亡霊"],forest:["トレント","巨大蜘蛛","ウッドエルフの番人"],swamp:["毒蛙","スワンプハグ","沼の主"],mountain:["ロックバード","山岳ゴーレム","ワイバーン"],canyon:["壁蜥蜴","岩の擬態者","落石ゴーレム"],cave:["暗闇蜘蛛","鍾乳石の擬態者","地底湖の主"],ruins:["アンデッドソルジャー","石像兵","遺跡の守護者"],sky:["サンダーバード","雲の巨人","天空魚"],abyss:["深淵の這いずり","恐怖の具現","虚無のウミヘビ"],crystal:["クリスタルゴーレム","光の捕食者","共鳴獣"],fungus:["キノコ戦士","胞子獣","粘菌スライム"],void:["虚無の番人","概念捕食者","無の使徒"],cosmos:["宇宙クラゲ","星間捕食者","重力の化身"],garden:["人喰い花","庭師のゴーレム","棘の精霊"]};
+
+// ─── DATA: WATER / UNDERGROUND ──────────────────────────────────────
+// ─── DATA: MAP BLOCKS (必須=required, 選抜=optional pool) ──────────
+// Each biome has: required (always appear), optional (pick from these)
+const BLOCKS={
+  grassland:{required:["草ブロック","土ブロック"],optional:["花つき草","背の高い草","クローバー群生","小石まじりの土","粘土","腐葉土","たんぽぽ畑","野花の茂み","うさぎの巣穴つき土"]},
+  road:{required:["石畳ブロック","踏み固めた土"],optional:["苔むした石畳","ひび割れた舗装","轍の跡つき土","砂利","古い煉瓦","道標の石柱","馬糞まじりの泥（肥沃）"]},
+  coast:{required:["砂ブロック","波打ち際の濡れ砂"],optional:["貝殻まじりの砂","砂岩","珊瑚片","流木","潮溜まりブロック","塩の結晶化した岩","海藻のからまった石"]},
+  volcano:{required:["玄武岩","溶岩ブロック"],optional:["黒曜石","軽石","硫黄結晶","灰ブロック","赤熱した岩","溶岩の冷え固まり","火山ガラス","焦げた土"]},
+  desert:{required:["砂ブロック","砂岩"],optional:["赤い砂","硬化砂","化石入り砂岩","干からびた粘土","蜃気楼タイル（実体なし）","砂漠のバラ鉱","風紋つき砂"]},
+  ice:{required:["氷ブロック","雪ブロック"],optional:["圧縮氷","霜柱ブロック","凍結土","氷晶","万年雪","青氷","クレバスの縁氷"]},
+  ocean:{required:["水ブロック","海底砂"],optional:["深海泥","珊瑚ブロック","海藻ブロック","沈没船の板材","真珠母貝殻","海溝の闇石","泡立つ熱水鉱床"]},
+  forest:{required:["木材ブロック","腐葉土"],optional:["苔むした丸太","巨木の根","シダの茂み","キノコの生えた切り株","蜘蛛の巣つき枝","樹皮ブロック","どんぐりの堆積層"]},
+  swamp:{required:["泥ブロック","腐泥"],optional:["泥炭","ガマの茂み","浮き草マット","蛭のいる泥","瘴気を含んだ泥","朽ちた木材","沼底のメタン泡ブロック"]},
+  mountain:{required:["花崗岩","岩盤ブロック"],optional:["頁岩","雲母入り石","鉄鉱石","高山の薄い土","砕石","霊峰の白石","化石入り石灰岩"]},
+  canyon:{required:["層状岩","砂岩ブロック"],optional:["赤い堆積岩","化石層","断層面の石英","地層剥き出しブロック","風化した岩柱の欠片","古代の貝殻層","鍾乳石の芽"]},
+  cave:{required:["石灰岩","暗石"],optional:["鍾乳石ブロック","石筍","蛍光鉱石","コウモリの糞層","地底粘土","湧水しみ出し石","暗闇キノコの生えた岩"]},
+  ruins:{required:["加工石材","崩れた煉瓦"],optional:["魔法陣の刻まれた床石","苔むした柱の破片","錆びた鉄格子","碑文の欠片","封印石","ステンドグラスの破片","古代のタイル"]},
+  sky:{required:["雲ブロック","風化した浮遊石"],optional:["凝固した雲","虹色のプリズム石","雷を帯びた岩","天使の階段（白石）","風の結晶","鳥の巣材ブロック","乱気流の渦石"]},
+  abyss:{required:["深淵石","虚暗岩"],optional:["恐怖の結晶化した岩","目のある壁面","涙痕の石","記憶を吸う泥","影の堆積層","底なしブロック（下面なし）","嘆きの化石"]},
+  crystal:{required:["水晶ブロック","石英岩"],optional:["アメジスト柱","プリズム結晶","共鳴するクリスタル","虹色鉱石","透明な岩（向こうが見える）","光を蓄える蛍石","屈折石"]},
+  fungus:{required:["菌糸ブロック","胞子土"],optional:["巨大キノコの傘材","粘菌マット","発光菌糸","分解途中の有機ブロック","胞子袋","菌核石","腐木菌床"]},
+  void:{required:["虚無ブロック（触ると指が消える）","空白"],optional:["概念の残骸","記憶の破片ブロック","存在確率50%のブロック","反物質タイル","無音石","定義未定ブロック","黒（ただの黒）"]},
+  cosmos:{required:["暗黒物質ブロック","星屑"],optional:["隕石鉄","凍った光","真空の器","重力レンズ石","パルサーの欠片","宇宙塵の凝集体","時空歪曲タイル"]},
+  garden:{required:["花壇の土","芝生ブロック"],optional:["薔薇の生垣材","石畳（庭園用）","噴水の石材","剪定枝","永遠に濡れた苔石","花弁の堆積層","蔦のからまった煉瓦"]},
+};
+
+// Level-dependent block modifiers (high levels transform blocks)
+const BLOCK_MODS={
+  peaceful:[],easy:[],moderate:["魔力を帯びた","微かに振動する"],
+  hard:["呪われた","脈動する","意思を持つ"],
+  extreme:["次元が歪んだ","古龍の力が宿る","時間が止まった"],
+  mythic:["神が触れた","因果を含む","存在が不安定な"],
+  transcendent:["概念化した","定義が揺らぐ","観測すると変質する"],
+  incomprehensible:["■■の","名状しがたい","認識不可能な"],
+};
+
+const WB={grassland:["小川","泉","池"],road:["街道沿いの井戸","水飲み場"],coast:["潮溜まり","入り江"],volcano:["温泉","間欠泉"],desert:["オアシス","蜃気楼の湖"],ice:["氷河湖","凍った滝"],ocean:["大海原","渦潮"],forest:["森の泉","苔むした渓流"],swamp:["沼","毒の湧き水"],mountain:["山頂湖","雪解け水の滝"],canyon:["渓流","滝壺"],cave:["地底湖","湧き水"],ruins:["枯れかけの噴水","呪われた井戸"],sky:["雲の滝","天空の泉"],abyss:["深淵の涙溜まり","記憶の水溜まり"],crystal:["液体水晶の泉","プリズムの涙"],fungus:["菌糸の濾過泉","粘液の池"],void:["虚無の水溜まり（水ではない）","概念の液体"],cosmos:["ブラックホールの涙","超新星の残り湯"],garden:["知恵の泉","永遠の噴水"]};
+const WD={peaceful:["澄んだ水が流れている。手ですくうと冷たくて美味しい。","穏やかな水面に空が映っている。"],easy:["旅人が水筒を満たす場所。水質は良好だ。"],moderate:["水は澄んでいるが、底に何か動くものが見える。","飲めそうだが、微かに魔力を含んでいる。"],hard:["水面が鏡のように静かだ。覗き込むと、自分ではない何かが映る。","水が逆流している。"],extreme:["この水は時間を含んでいる。飲むと一瞬だけ未来が見える。代償として過去の記憶を一つ失う。"],mythic:["この水は世界が泣いた涙だ。一滴で枯れた大地が蘇る。二滴で生命が進化する。三滴で神が生まれる。"],transcendent:["水という概念が液体として存在している。H₂Oではなく、『水』という文字そのものが流れている。"],incomprehensible:["液体か？ 固体か？ 気体か？ 第四の状態だ。名前がまだない。お前がつけろ。"]};
+const UB={grassland:"草原の地下には薄い土の層と根の網目が広がる",road:"街道の石畳の下には古い下水道がある",coast:"海岸の地下は砂と岩の混合層",volcano:"地下にはマグマ溜まりが脈動している",desert:"砂の下には古代の河床と化石が埋まっている",ice:"氷原の下は永久凍土。数万年前の生物が眠る",ocean:"海底には深海熱水噴出孔が連なる",forest:"巨大な根のネットワークが地下を支配する",swamp:"沼の底は腐泥の層。メタンガスの泡が湧く",mountain:"山の内部は鉱脈と空洞の迷宮",canyon:"峡谷の下にはさらに深い裂け目が続く",cave:"洞窟の下にはさらなる洞窟。どこまでも深い",ruins:"遺跡の地下には封印された区画がある",sky:"天空島の底面には逆さまの塔が生えている",abyss:"深淵の下にさらなる深淵がある",crystal:"地下は巨大な一枚の水晶だ",fungus:"菌糸のネットワークが地球規模で広がる",void:"地下という概念が存在しない",cosmos:"足元は別の宇宙の天井だ",garden:"地下には枯れた根と、次に咲く花の夢が埋まっている"};
+const UD={peaceful:["掘ると虫やミミズが出てくる。健全な土壌だ。"],easy:["古い地下室の跡がある。まだ使えそうだ。"],moderate:["地下から微かな振動が伝わる。何かが動いている。"],hard:["地下に知性のある鉱脈がある。掘ると反撃してくる。"],extreme:["地下に封印された古代都市がある。封印が弱まっている。"],mythic:["地下に世界の心臓がある。脈動するたびに地震が起きる。"],transcendent:["地下に『上』がある。掘り下げていたはずが、いつの間にか空に向かっている。"],incomprehensible:["地下は存在しない。なぜなら、ここが地下だからだ。あなたは最初から地中にいた。"]};
+
+// ─── DATA: SPECIAL EVENTS ───────────────────────────────────────────
+const EV_TYPES = ["treasure","npc","trap","phenomenon","campsite"];
+const EV_LABELS = {treasure:"宝箱・発見物",npc:"NPC遭遇",trap:"罠・障害",phenomenon:"異常現象",campsite:"休息地点"};
+const EV = {
+  treasure:{
+    peaceful:[{icon:"📦",title:"忘れ物の木箱",desc:"道端に小さな木箱。中には旅人が忘れたパンとチーズ、「取った人へ：おいしく食べてね」というメモ。"},{icon:"🌟",title:"光る石ころ",desc:"足元にきらりと光る石。拾うと手のひらでしばらく温かい。妹が「きれい！」と喜ぶ。売値3銅貨。"}],
+    easy:[{icon:"🗝️",title:"錆びた宝箱",desc:"道端の茂みに半分埋まった宝箱。中には銀貨数枚と冒険者の手記。最後のページに「この先、気をつけろ」。"},{icon:"💰",title:"行商人の隠し穴",desc:"木の根元に掘られた穴。布に包まれた商品サンプルがいくつか。持ち主はもう戻ってこなかったらしい。"}],
+    moderate:[{icon:"⚗️",title:"魔術師の遺留品",desc:"焦げた地面に散乱する瓶と巻物。一本だけ完全な状態のポーションが残っている。ラベルは読めない。"},{icon:"🗡️",title:"岩に刺さった剣",desc:"不自然な角度で岩に刺さった剣。抜こうとすると岩全体が震える。抜けるかもしれないし、抜かないほうがいいかもしれない。"}],
+    hard:[{icon:"👑",title:"王の棺",desc:"地面から露出した石棺。蓋に王家の紋章。開けると呪われるか、財宝を得るか。棺の中から微かに鼓動が聞こえる。"},{icon:"📜",title:"禁書の断片",desc:"空中に浮かぶ羊皮紙の切れ端。読むと知識を得るが、読んだ文字の分だけ別の記憶を失う。等価交換。"}],
+    extreme:[{icon:"🔮",title:"次元の亀裂から落ちてきた何か",desc:"空間の裂け目から転がり落ちた球体。触ると別の世界の映像が流れ込む。その世界では、あなたは存在しない。"}],
+    mythic:[{icon:"🌌",title:"世界のセーブポイント",desc:"ここに触れた瞬間の世界の状態が記録される。しかしロードする方法は誰も知らない。"},{icon:"📖",title:"書かれる前の物語",desc:"白紙の本。読み始めると文字が現れる。読者の人生に基づいた物語が未来まで含めて記述される。最後のページは糊付けされている。"}],
+    transcendent:[{icon:"∞",title:"『可能性』の化石",desc:"あり得たかもしれない世界の物理的な残骸。手に取ると、別の人生を生きた自分の記憶が流れ込む。"}],
+    incomprehensible:[{icon:"？",title:"■■■",desc:"これは宝箱か？ 中身が外にあり箱が中にある。開けると閉じ、閉じると消える。消えると増える。"}],
+  },
+  npc:{
+    peaceful:[{icon:"👴",title:"花を摘む老人",desc:"「やあ、旅の方かね。……ほれ、この花をやろう。妹さんに」老人は花を一輪差し出し、微笑んで去っていく。"},{icon:"🐱",title:"道に座る猫",desc:"近づくと喉を鳴らし、一定の方向を見つめる。ついていくと薬草の群生地に出る。案内料はなでること。"}],
+    easy:[{icon:"🧙",title:"迷子の見習い魔術師",desc:"「す、すみません！ 師匠とはぐれまして……」地図を逆さまに持っている。"},{icon:"🏪",title:"移動商人",desc:"「掘り出し物あるよ！ ……たぶん。正直、自分でも何を売ってるか把握してない」"}],
+    moderate:[{icon:"⚔️",title:"座り込む冒険者",desc:"血の滲んだ包帯を巻いた冒険者。「……この先は行かないほうがいい。俺のパーティは全滅した」"},{icon:"🦊",title:"喋る狐",desc:"「やあ。道を教えてあげてもいいけど、対価は……そうだな、名前を一つくれ」狐が笑う。"}],
+    hard:[{icon:"💀",title:"死んだ冒険者の霊",desc:"「この先にある宝箱には手を出すな。あれは罠だ。……なぜ分かるかって？ 俺がそれで死んだからだよ」"},{icon:"🗿",title:"石化した賢者",desc:"石像のように見えたが、口だけが動く。「……三百年、ここに立っている」"}],
+    extreme:[{icon:"🐉",title:"人の姿をした龍",desc:"「珍しい客だ。人間がここまで来るのは百年ぶりか。……少し話でもするか。暇でね。三千年も生きると」茶を勧められる。"},{icon:"👤",title:"もう一人の自分",desc:"鏡のように同じ姿をした人物。言葉を発する前に、自分が言おうとしたことを先に言う。一手先の未来を生きている存在。"}],
+    mythic:[{icon:"⚖️",title:"世界の管理者",desc:"「あなたはここに来るべきではない。しかし来てしまった。……やれやれ、また始末書だ」"},{icon:"👶",title:"生まれる前の神",desc:"光の繭の中で眠る何か。目覚めると世界が一つ増えるらしい。今は寝かせておいたほうがいい。"}],
+    transcendent:[{icon:"🫥",title:"概念としての旅人",desc:"『旅』という概念が人の形をとって歩いている。話しかけると、あなた自身の旅の意味を問い返してくる。"}],
+    incomprehensible:[{icon:"⬜",title:"名前のない存在",desc:"それは何か。いる。いるということだけが確かで、他のすべてが不確かだ。"}],
+  },
+  trap:{
+    peaceful:[{icon:"🪤",title:"獣罠（空）",desc:"猟師が仕掛けた罠。錆びて動かない。……と思ったら妹が引っかかった。「足挟まった！ ……痛くはない。でも抜けない！」"},{icon:"🕸️",title:"蜘蛛の巣",desc:"顔面に蜘蛛の巣が張り付く。「ぎゃああ！」妹の絶叫。小さな蜘蛛が迷惑そうに退避する。"}],
+    easy:[{icon:"⚠️",title:"落とし穴",desc:"見事な偽装の落とし穴。底は浅く泥が溜まっている。落ちると泥だらけ。プライドに傷がつく。"},{icon:"🧲",title:"磁石の石柱",desc:"近づくと金属装備が引き寄せられる。鎧を着ていると動けなくなる。"}],
+    moderate:[{icon:"💥",title:"魔法のトリップワイヤー",desc:"見えない糸に触れた瞬間、全員の靴の左右が入れ替わる嫌がらせ級の魔法。制作者の性格が知れる。"},{icon:"🔔",title:"警報の鈴",desc:"うっかり触れた鈴が甲高い音を立てる。半径500メートルのすべての魔物に位置が知れ渡った。"}],
+    hard:[{icon:"⏰",title:"時間の罠",desc:"足を踏み入れた瞬間、体感で一瞬。しかし外の世界では三日が過ぎている。"},{icon:"🪞",title:"鏡面の床",desc:"踏むと鏡の中に落ちる。脱出するには自分の名前を逆さに言う必要がある。"}],
+    extreme:[{icon:"🌀",title:"概念汚染トラップ",desc:"「前」と「後ろ」の概念が入れ替わる罠。前に進もうとすると後退し、後退しようとすると前進する。"},{icon:"📛",title:"名前を奪う結界",desc:"この結界内では名前が消える。名前がないと存在が不安定になり、体が透け始める。"}],
+    mythic:[{icon:"🎭",title:"運命の分岐点",desc:"右の道を選ぶと富を得るが孤独になる。左の道を選ぶと貧しくなるが仲間を得る。立ち止まると、両方とも消える。"}],
+    transcendent:[{icon:"❌",title:"存在否定の領域",desc:"存在するだけでダメージを受ける。存在しなければ安全だが認識できない。詰み。"}],
+    incomprehensible:[{icon:"　",title:"罠は存在しない",desc:"罠はない。罠がないことが罠だ。安心した瞬間に何かが失われるが、何が失われたかは分からない。"}],
+  },
+  phenomenon:{
+    peaceful:[{icon:"🌈",title:"二重虹",desc:"空に美しい二重の虹。見ているとなんだか幸せな気持ちになる。特に意味はない。ただ、きれいだ。"},{icon:"🦋",title:"蝶の大群",desc:"数百匹の蝶が一斉に飛び立つ。光を浴びて鱗粉がきらきらと舞う。"}],
+    easy:[{icon:"🔥",title:"鬼火",desc:"遠くに青白い光がゆらゆら。追いかけると逃げ、無視すると近づいてくる。害はないが不気味。"},{icon:"🌙",title:"昼間の月",desc:"真昼なのに月が見える。しかも通常よりずっと大きい。現地の人は「たまにある」と言う。"}],
+    moderate:[{icon:"⚡",title:"静かな雷",desc:"雷が落ちているのに音がしない。光だけが走り、着弾点に花が咲く。美しいが不穏。"},{icon:"👁️",title:"視線",desc:"常に誰かに見られている気配。振り返っても何もいない。しかし足元に自分のものではない影がもう一つある。"}],
+    hard:[{icon:"⏳",title:"時間の澱み",desc:"このエリアだけ時間の流れが遅い。中にいると1時間が1分に感じる。"},{icon:"🫧",title:"浮遊する記憶",desc:"空中にシャボン玉のような球体。触れるとその場所で過去に起きた出来事が再生される。"}],
+    extreme:[{icon:"🌑",title:"局所的な日食",desc:"太陽がこの場所からだけ見えない。半径100メートルだけが夜。月は出ていないのに潮が満ちてくる。"},{icon:"📐",title:"ユークリッド幾何学の崩壊",desc:"三角形の内角の和が180度ではない。直線が曲がり、平行線が交差する。"}],
+    mythic:[{icon:"🎵",title:"世界の心音",desc:"大地の奥底から規則的な振動。心臓の鼓動に似ているが、リズムが徐々に自分の心臓に同期していく。"}],
+    transcendent:[{icon:"🔄",title:"因果の逆流",desc:"結果が先に起き、原因が後から発生する。石が割れてから投げた手が動く。妹が「痛い」と言ってから転ぶ。"}],
+    incomprehensible:[{icon:"⬜",title:"何も起きない",desc:"何も起きない。それが現象だ。確率ゼロの事象が発生している。"}],
+  },
+  campsite:{
+    peaceful:[{icon:"🏕️",title:"焚き火のあと",desc:"まだ温かい焚き火跡と丸太のベンチ。「ご自由に」と書かれた板が立っている。"}],
+    easy:[{icon:"⛺",title:"冒険者の野営地",desc:"数人分のテント跡と共有の焚き火場。「水場は東200m」「獣の出没注意」と掲示板がある。"}],
+    moderate:[{icon:"🛖",title:"放棄された山小屋",desc:"まだ使えるが窓が割れている。壁に爪で引っ掻いた正の字が無数にある。最後の「正」は書きかけだ。"}],
+    hard:[{icon:"🔥",title:"永遠に燃え続ける焚き火",desc:"薪がないのに燃え続ける火。魔物は寄ってこない。しかしこの火のそばで眠ると必ず同じ夢を見る。"}],
+    extreme:[{icon:"🏛️",title:"時間の避難所",desc:"この石室の中だけ時間が正常。壁には「ここから出るな」と百カ国語で書かれている。"}],
+    mythic:[{icon:"🌿",title:"世界樹の根元",desc:"世界樹の根に寄りかかると世界のどこにいても安眠できる。ただし夢の中で世界樹に話しかけられる。"}],
+    transcendent:[{icon:"💭",title:"夢のキャンプ",desc:"ここでは眠ると現実になり起きると夢になる。休息を取りたいなら起き続ける必要がある。"}],
+    incomprehensible:[{icon:"⬛",title:"休息という概念",desc:"休むという行為が物理的な場所になったもの。ここにいるだけで疲労が回復するが出ると記憶がなくなる。"}],
+  },
+};
+
+// ─── DATA: CHAOS ────────────────────────────────────────────────────
+const CP=["天空","地底","逆さまの","燃える","凍った","歌う","腐りゆく","時間が止まった","夢の中の","影の","水没した","浮遊する","回転する","透明な","裏返しの","記憶の中の","数式で構成された","言語でできた","感情が堆積した","誰かの夢の"];
+const CD=["空に海が広がり、海の底に太陽がある。重力が90度横を向いている。","地面が鏡面で、空もまた鏡面だ。無限に反射する自分の姿の中で本物が分からない。","音が可視化され、色が聞こえる。共感覚が地形として固定されている。","過去の建物と未来の建物が同時に存在する。縄文式住居とサイバーパンクなビルが隣接する。","文字が地面から生えている。踏むと意味が変わる。「安全」を踏むと「危険」に変わった。","ここでは嘘が物理法則になっている。「火は冷たい」と言えば火が冷たくなる。","季節が一歩ごとに変わる。右足が春で左足が冬。","数学の定理が物理的な構造物として存在する。ゲーデルの不完全性定理は常に一つ足りない階段だ。","プールと教室とお墓が融合した空間。水中で授業を受けながら死者が復活するカリキュラム。","楽譜が地形になっている。ト音記号の丘を登り、全休符の谷間で休憩する。","ここは比喩が実体化する場所だ。「心が折れる」と言うと胸から折れた棒が出てくる。","全てが逆再生されている。木は地面に吸い込まれ、雨は空に昇る。","この場所は『括弧』の中にある。すべてが注釈であり、本文がどこにも存在しない。","全てが食べ物でできている世界だが食べようとすると岩に変わる。観測問題。","あらゆるものが半透明。存在の不透明度が50%に設定されている。"];
+const CTC=["が融合し、さらにその上に","の残骸の上に","と量子もつれした","を母体として寄生する","の夢が実体化して生まれた","を材料に錬成された","と敵対的共生関係にある"];
+
+// ─── GENERATOR ──────────────────────────────────────────────────────
+function generateMap(center=100,spread=70){
+  const level=rollLevel(center,spread);
+  const tierInfo=getLevelTier(level);
+  const chaosRoll=Math.random()*100;
+  const t3=level>100?8:level>50?5:3;
+  const t2=level>100?30:level>50?20:12;
+  const isTriple=chaosRoll<t3;
+  const isDouble=!isTriple&&chaosRoll<t2;
+  const isChaos=isTriple||isDouble;
+  let biomeName,biomeIcon,isChaosMap=false,chaosLevel=0,biomeIds=[];
+
+  if(isTriple){
+    const bs=pickN(BIOMES,3);biomeIds=bs.map(b=>b.id);
+    biomeName=`${pick(CP)}${bs[0].name}${bs[1].name}${pick(CTC)}${bs[2].name}`;
+    biomeIcon=bs.map(b=>b.icon).join("");isChaosMap=true;chaosLevel=3;
+  }else if(isDouble){
+    const bs=pickN(BIOMES,2);biomeIds=bs.map(b=>b.id);
+    biomeName=(chance(40)?pick(CP):"")+bs[0].name+bs[1].name;
+    biomeIcon=bs[0].icon+bs[1].icon;isChaosMap=true;chaosLevel=2;
+  }else{
+    const b=pick(BIOMES);biomeIds=[b.id];biomeName=b.name;biomeIcon=b.icon;
+  }
+  const bid=i=>biomeIds[i%biomeIds.length];
+  const tier=tierInfo.tier;
+
+  // Landscape
+  let landscape;
+  if(isChaosMap){
+    const chaosBase=pick(CD);
+    const ps=biomeIds.map(id=>{const d=L[id]?.[tier];return d?pick(d):"";});
+    landscape=chaosBase+"\n\n"+biomeName+"特有の現象として、";
+    if(chaosLevel===3){
+      landscape+=ps[0].slice(0,ps[0].length/3|0)+"……しかし同時に、"+ps[1].slice(ps[1].length/3|0,(ps[1].length*2/3)|0)+"……そしてなぜか、"+ps[2].slice(ps[2].length/2|0);
+      landscape+="\n\nこの地形を記述しようとした地理学者は三人が発狂し、一人が別の次元に引っ越した。";
+    }else{
+      landscape+=ps[0].slice(0,ps[0].length/2|0)+"……と同時に、"+ps[1].slice(ps[1].length/2|0);
+      landscape+="\n\nなお、この地形に関する学術論文は査読を通らなかった。";
+    }
+  }else{
+    landscape=pick(L[bid(0)]?.[tier]||["不思議な景色が広がっている。"]);
+  }
+
+  const vegs=biomeIds.map(id=>pick(V[id]||["不明な植物"]));
+  const vegetation=isChaosMap?(chaosLevel===3?`${vegs[0]}と${vegs[1]}と${vegs[2]}が三つ巴で生態系を形成。学名をつけようとした植物学者のペンが折れた。`:`${vegs[0]}と${vegs[1]}が不可能な形で共生。植物学者が見たら気絶する。`):`${vegs[0]}や${pick(V[bid(0)]||["草"])}が自生している。`;
+  const clims=biomeIds.map(id=>pick(C[id]||["不明"]));
+  const climate=isChaosMap?(chaosLevel===3?`${clims.join("と")}が同一地点で同時発生。気象庁が「もう知らん」と声明。`:`${clims[0]}かと思えば${clims[1]}。天気予報士が匙を投げた。`):`気候: ${clims[0]}`;
+
+  let items=[pick(I[bid(0)]||["？"]),pick(I[bid(0)]||["？"])];
+  if(isChaosMap)biomeIds.slice(1).forEach(id=>items.push(pick(I[id]||["次元の欠片"])));
+  if(level>80)items.push(pick(IH));if(level>150)items.push(pick(IH));
+  items=[...new Set(items)];
+
+  // Sister
+  let sisterComment;
+  if(isChaosMap){
+    const r1=SB[bid(0)]?pick(SB[bid(0)]):pick(ST[tier]);
+    const r2=biomeIds.length>1&&SB[bid(1)]?pick(SB[bid(1)]):null;
+    sisterComment=r2&&chance(60)?r1+"\n\n（数秒後）\n\n"+r2+"\n\n妹の感情が地形に追いつけていない。":pick(ST[tier]);
+  }else{
+    sisterComment=chance(50)&&SB[bid(0)]?pick(SB[bid(0)]):pick(ST[tier]);
+  }
+
+  // Monsters
+  const mc=isChaosMap?roll(3)+2:roll(3)+1;
+  const monsters=[];
+  for(let i=0;i<mc;i++){
+    const useC=isChaosMap?chance(chaosLevel===3?85:70):chance(level>60?25:10);
+    const adj=pick(MA[tier]||["謎の"]);
+    if(useC){
+      const p1=[...BM,...(BIM[bid(0)]||[])];
+      const p2=isChaosMap?[...BM,...(BIM[bid(1)]||[]),...(biomeIds[2]?BIM[bid(2)]||[]:[])]:p1;
+      const m1=pick(p1);let m2=pick(p2);while(m2===m1)m2=pick(p2);
+      monsters.push({name:`${adj}${m1}${m2}`,chimera:true});
+    }else{
+      monsters.push({name:`${adj}${pick([...BM,...(BIM[bid(0)]||[])])}`,chimera:false});
+    }
+  }
+
+  const waterName=pick(WB[bid(0)]||["水場"]);
+  const waterDesc=pick(WD[tier]||["水がある。"]);
+  let water;
+  if(isChaosMap){
+    const ew=biomeIds.slice(1).map(id=>pick(WB[id]||["異次元の液体"]));
+    water=`【${waterName}×${ew.join("×")}】\n${waterDesc}\n……ただし、ここでは水の物理法則が${chaosLevel===3?"三重に":""}破綻している。`;
+  }else water=`【${waterName}】\n${waterDesc}`;
+
+  const ugB=UB[bid(0)]||"地下の様子は不明";
+  const ugD=pick(UD[tier]||["特に異常はない。"]);
+  let underground;
+  if(isChaosMap){
+    const ex=biomeIds.slice(1).map(id=>UB[id]||"別の地下");
+    underground=`${ugB}。しかし${ex.join("であると同時に")}でもある。地下が${chaosLevel}重に重なる。\n${ugD}`;
+  }else underground=`${ugB}。\n${ugD}`;
+
+  // Events
+  const ec=isChaosMap?roll(2)+1:(chance(60)?1:chance(30)?2:0);
+  const events=[];
+  if(ec>0){
+    const ct=pickN(EV_TYPES,ec);
+    for(const type of ct){
+      const te=EV[type][tier]||EV[type].peaceful;
+      events.push({type,typeLabel:EV_LABELS[type],...pick(te)});
+    }
+  }
+
+  // Blocks
+  const mods=BLOCK_MODS[tier]||[];
+  const addMod=(name)=>mods.length>0&&chance(40)?pick(mods)+name:name;
+  let blocks=[];
+  if(isChaosMap){
+    // All required from each biome
+    for(const id of biomeIds){
+      const b=BLOCKS[id];if(!b)continue;
+      for(const r of b.required)blocks.push({name:addMod(r),required:true,from:id});
+    }
+    // Pick 1-2 optional from combined pools
+    const allOpt=biomeIds.flatMap(id=>(BLOCKS[id]?.optional||[]).map(o=>({name:o,from:id})));
+    const optPicks=pickN(allOpt,roll(2));
+    for(const o of optPicks)blocks.push({name:addMod(o.name),required:false,from:o.from});
+  }else{
+    const b=BLOCKS[bid(0)];
+    if(b){
+      for(const r of b.required)blocks.push({name:addMod(r),required:true,from:bid(0)});
+      const optPicks=pickN(b.optional,roll(2));
+      for(const o of optPicks)blocks.push({name:addMod(o),required:false,from:bid(0)});
+    }
+  }
+  // Deduplicate by name
+  blocks=[...new Map(blocks.map(b=>[b.name,b])).values()];
+
+  return{level,tierInfo,biomeName,biomeIcon,isChaosMap,chaosLevel,landscape,vegetation,climate,items,sisterComment,monsters,water,underground,events,blocks};
+}
+
+
+// ─── STATE ──────────────────────────────────────────────────────────
+let currentDifficulty = DIFFICULTY_PRESETS[2];
+let history = [];
+let historyVisible = false;
+
+// ─── HELPERS ────────────────────────────────────────────────────────
+const esc = s => s.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const nl2br = s => esc(s).replace(/\n/g,'<br>');
+
+function levelColor(lv){
+  if(lv<=5)return"#6ec46e";if(lv<=15)return"#8bc34a";if(lv<=30)return"#ffc107";
+  if(lv<=50)return"#ff9800";if(lv<=70)return"#f44336";if(lv<=100)return"#9c27b0";
+  if(lv<=150)return"#e040fb";return"#ff1744";
+}
+function eventColor(t){return{treasure:"#ffd700",npc:"#66bbff",trap:"#ff6666",phenomenon:"#bb88ff",campsite:"#66cc88"}[t]||"#888"}
+
+// ─── DIFFICULTY SELECTOR ────────────────────────────────────────────
+function renderDiffGrid(){
+  const grid=document.getElementById('diffGrid');
+  grid.innerHTML=DIFFICULTY_PRESETS.map(d=>
+    `<button class="diff-btn ${currentDifficulty.id===d.id?'active':''}" onclick="setDiff('${d.id}')">
+      <div class="icon">${d.icon}</div><div class="label">${d.label}</div>
+    </button>`
+  ).join('');
+  document.getElementById('diffDesc').innerHTML=
+    `${currentDifficulty.desc}<span style="color:#333;margin-left:8px">(中心Lv.${currentDifficulty.center} ±${currentDifficulty.spread})</span>`;
+}
+function setDiff(id){
+  currentDifficulty=DIFFICULTY_PRESETS.find(d=>d.id===id);
+  renderDiffGrid();
+}
+
+// ─── GENERATE ───────────────────────────────────────────────────────
+function generate(){
+  const btn=document.getElementById('genBtn');
+  btn.textContent='生 成 中 ...';btn.disabled=true;
+  document.getElementById('empty').style.display='none';
+  setTimeout(()=>{
+    const m=generateMap(currentDifficulty.center,currentDifficulty.spread);
+    history.unshift(m);if(history.length>50)history.pop();
+    renderMap(m);
+    renderHistBtn();
+    btn.textContent='地 形 を 生 成';btn.disabled=false;
+  },300);
+}
+
+// ─── RENDER MAP ─────────────────────────────────────────────────────
+function renderMap(m){
+  const lc=levelColor(m.level);
+  const chaosClass=m.chaosLevel===3?'triple-chaos-text':m.isChaosMap?'chaos-text':'';
+  const titleSize=m.biomeName.length>12?'16px':'24px';
+  const titleLS=m.biomeName.length>12?'1px':'6px';
+  const titleColor=m.chaosLevel===3?'#ff88ff':m.isChaosMap?'#ff66ff':'#e0dcd0';
+  const borderColor=m.chaosLevel===3?'#ff44ff33':'#2a2a3a';
+  const bgTitle=m.chaosLevel===3?'linear-gradient(180deg,#1a0a1f,#120a18)':'linear-gradient(180deg,#12121f,#0e0e1a)';
+  const chaosBadge=m.isChaosMap?`<span class="chaos-badge ${m.chaosLevel===3?'triple-badge':''}">${m.chaosLevel===3?'超混沌マップ':'混沌マップ'}</span>`:'';
+  const lvClass=m.level>100?'high-level':'';
+
+  let html=`
+    <div class="section" style="text-align:center;margin-bottom:32px;padding:24px;border:1px solid ${borderColor};background:${bgTitle}">
+      <div style="font-size:48px;margin-bottom:8px" class="${chaosClass}">${m.biomeIcon}</div>
+      <h2 style="font-size:${titleSize};font-weight:900;letter-spacing:${titleLS};color:${titleColor};margin-bottom:8px;line-height:1.5" class="${chaosClass}">${esc(m.tierInfo.label+m.biomeName)}</h2>
+      ${chaosBadge}
+      <div style="margin-top:12px;display:inline-block;padding:4px 20px;border:1px solid ${lc}44;color:${lc};font-size:14px;letter-spacing:3px" class="${lvClass}">LEVEL ${m.level}</div>
+      <p style="margin-top:8px;font-size:12px;color:#888;letter-spacing:2px">${esc(m.tierInfo.desc)}</p>
+    </div>`;
+
+  html+=sec('風景','🗺️',`<p style="line-height:1.9;white-space:pre-wrap">${esc(m.landscape)}</p>`);
+  html+=sec('植生・気候','🌿',`<p style="line-height:1.8">${esc(m.vegetation)}</p><p style="line-height:1.8;margin-top:8px;color:#999">${esc(m.climate)}</p>`);
+
+  // Blocks
+  if(m.blocks.length>0){
+    html+=sec('地形ブロック','🧱',m.blocks.map(b=>{
+      const color=b.required?'#a0b8c8':'#8a8a7a';
+      const borderC=b.required?'#4a6a7a':'#3a3a3a';
+      const tag=b.required?`<span style="font-size:9px;padding:0 4px;border:1px solid ${borderC};color:${color};margin-left:6px;letter-spacing:1px;opacity:.7">必須</span>`:'';
+      return `<div style="display:inline-flex;align-items:center;gap:4px;padding:5px 12px;margin:0 6px 6px 0;border:1px solid ${borderC};background:#0a0a16;font-size:13px"><span style="color:${color}">${esc(b.name)}</span>${tag}</div>`;
+    }).join(''));
+  }
+
+  html+=sec('採取可能アイテム','💎',m.items.map(it=>`<span class="item-tag">${esc(it)}</span>`).join(''));
+  html+=sec('妹の感想','👧',`<p style="line-height:1.8;color:#d4a0a0;font-style:italic;white-space:pre-wrap">${esc(m.sisterComment)}</p>`);
+  html+=sec('出現モンスター','👹',m.monsters.map(mo=>
+    `<div style="padding:8px 12px;border-bottom:1px solid #1a1a2a;font-size:14px"><span style="color:${mo.chimera?'#ff8866':'#ccc'};font-weight:${mo.chimera?'bold':'normal'}">${esc(mo.name)}</span>${mo.chimera?'<span class="chimera-tag">CHIMERA</span>':''}</div>`
+  ).join(''));
+
+  if(m.events.length>0){
+    html+=sec('特殊イベント','⚡',m.events.map((ev,i)=>{
+      const c=eventColor(ev.type);
+      return `<div class="event-card" style="border-color:${c}33;background:linear-gradient(135deg,${c}08,${c}04);animation-delay:${i*0.1}s">
+        <div style="margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:20px">${ev.icon}</span>
+          <span style="font-size:15px;font-weight:bold;color:${c}">${esc(ev.title)}</span>
+          <span style="font-size:10px;padding:1px 8px;border:1px solid ${c}44;color:${c};letter-spacing:1px;opacity:.7">${esc(ev.typeLabel)}</span>
+        </div>
+        <p style="line-height:1.8;font-size:13px;color:#b0aca0">${esc(ev.desc)}</p>
+      </div>`;
+    }).join(''));
+  }
+
+  html+=sec('水場','💧',`<p style="line-height:1.9;white-space:pre-wrap">${esc(m.water)}</p>`);
+  html+=sec('地下の様子','⛏️',`<p style="line-height:1.9;white-space:pre-wrap">${esc(m.underground)}</p>`);
+
+  document.getElementById('content').innerHTML=html;
+}
+
+function sec(title,emoji,inner){
+  return `<div class="section"><h3>${emoji} ${title}</h3>${inner}</div>`;
+}
+
+// ─── HISTORY ────────────────────────────────────────────────────────
+function renderHistBtn(){
+  const w=document.getElementById('histBtnWrap');
+  w.style.display=history.length>1?'block':'none';
+  w.innerHTML=`<button class="hist-btn" onclick="toggleHistory()">${historyVisible?'履歴を閉じる':'履歴 ('+history.length+'件)'}</button>`;
+}
+function toggleHistory(){
+  historyVisible=!historyVisible;
+  const p=document.getElementById('histPanel');
+  p.style.display=historyVisible?'block':'none';
+  if(historyVisible)renderHistList();
+  renderHistBtn();
+}
+function renderHistList(){
+  document.getElementById('histList').innerHTML=history.map((h,i)=>{
+    const c=levelColor(h.level);
+    const badge=h.isChaosMap?`<span class="chaos-badge ${h.chaosLevel===3?'triple-badge':''}">${h.chaosLevel===3?'超混沌':'混沌'}</span>`:'';
+    const evBadge=h.events.length>0?`<span style="color:#555;margin-left:6px;font-size:10px">⚡×${h.events.length}</span>`:'';
+    return `<div class="hist-item" style="opacity:${i===0?1:.6}" onclick="showHist(${i})"><span style="color:${c};font-weight:bold">Lv.${h.level}</span> ${h.biomeIcon} ${esc(h.biomeName)}${badge}${evBadge}</div>`;
+  }).join('');
+}
+function showHist(i){
+  renderMap(history[i]);
+  historyVisible=false;
+  document.getElementById('histPanel').style.display='none';
+  renderHistBtn();
+}
+
+// ─── INIT ───────────────────────────────────────────────────────────
+renderDiffGrid();
+</script>
+</body>
+</html>

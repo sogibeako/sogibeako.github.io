@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>圏論入門デモンストレーション</title>
+  
+  <!-- 図式描画用のCSSとライブラリを読み込み -->
+  <link rel="stylesheet" href="./style.css">
+  
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <script src="./cat-diagram.js"></script>
+  
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.8;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      background-color: #fcfcfc;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 10px;
+      margin-bottom: 40px;
+    }
+    h2 {
+      margin-top: 50px;
+      border-left: 4px solid #007bff;
+      padding-left: 10px;
+    }
+    p {
+      margin-bottom: 20px;
+    }
+    .diagram-wrapper {
+      display: flex;
+      justify-content: center;
+      margin: 30px 0;
+      background-color: #f4f6f9; 
+      /* 二重矢印のマスク用背景色をこのコンテナの背景色と合わせます */
+      --cat-bg: #f4f6f9;
+      border-radius: 8px;
+      padding: 20px;
+    }
+    
+    /* ユーザーのサイトのようなダーク/カスタムテーマのテスト用 */
+    .user-theme-wrapper {
+      background-color: #111822; /* サイト背景 */
+      padding: 40px;
+      margin-top: 60px;
+      border-radius: 8px;
+      color: #e3e8f1; /* 氷雨 */
+    }
+    .user-theme-inner {
+      background-color: #afd3e6; /* 長雨 */
+      color: black; /* 中の文字は黒 */
+      --cat-bg: #afd3e6; /* ここで背景色変数を指定すると二重矢印も馴染みます！ */
+      padding: 30px;
+      border-radius: 4px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>圏論の世界へようこそ</h1>
+  <p>
+    ここでは、圏論の基本的な概念を、今回開発した図式描画ライブラリ <code>CatDiagram2.js</code> を使って視覚的に解説します。以下の図式はすべて画像ファイルではなく、ブラウザ上で動的にレンダリングされており、HTMLの中に完全に透過・枠なしで埋め込まれています。
+  </p>
+
+  <h2>1. 射の合成 (Composition)</h2>
+  <p>
+    圏（Category）を構成する最も重要な要素は「対象（Object）」と「射（Morphism）」です。
+    射は対象から対象への「プロセス」や「関係」を表し、2つの射が連続しているとき、それらをひとまとめにした「合成射（Composite Morphism）」が必ず存在します。
+  </p>
+  <div class="diagram-wrapper">
+    <div id="diagram-composition" class="inline-diagram"></div>
+  </div>
+  <p>
+    上の図は、対象 \(A\) から \(B\) への射 \(f\) と、\(B\) から \(C\) への射 \(g\) を合成して、一気に \(A\) から \(C\) へ向かう射 \(h = g \circ f\) が得られる様子（三角図式）を表しています。この図式が「可換」であるとは、どの経路を通っても同じ結果になることを意味します。
+  </p>
+
+  <h2>2. 関手 (Functor)</h2>
+  <p>
+    圏と圏の間の「構造を保つ写像」を関手と呼びます。
+    関手は、対象を対象に、射を射に移し、合成と恒等射の構造をそのまま保存します。
+  </p>
+  <div class="diagram-wrapper">
+    <div id="diagram-functor" class="inline-diagram"></div>
+  </div>
+  <p>
+    圏 \(\mathcal{C}\) から圏 \(\mathcal{D}\) への関手 \(F\) を考えたとき、\(\mathcal{C}\) 内の射 \(f: A \to B\) は、\(\mathcal{D}\) 内の射 \(F(f): F(A) \to F(B)\) へとマッピングされます。
+  </p>
+
+  <h2>3. 自然変換 (Natural Transformation)</h2>
+  <p>
+    「関手と関手の間の写像」とも言えるのが自然変換です。
+    同じ2つの圏の間に2つの関手 \(F\) と \(G\) があるとき、自然変換 \(\alpha\) は \(F\) の結果を \(G\) の結果へと「自然に」スライドさせる役割を持ちます。
+  </p>
+  <div class="diagram-wrapper">
+    <div id="diagram-natural-transformation" class="inline-diagram"></div>
+  </div>
+  <p>
+    この「2-射（射から射への射）」は圏論で頻繁に登場し、随伴関手やモナドなど、より高度な概念の基礎となります。この二重矢印（\(\Rightarrow\)）の描画にも、本ライブラリの機能が活用されています。
+  </p>
+
+  <div class="user-theme-wrapper">
+    <h2 style="color: #609aa0; border-color: #609aa0; margin-top: 0;">4. カスタムテーマとの相性テスト</h2>
+    <p>
+      頂いたご自身のサイトのCSS（背景 <code>#111822</code>、ラッパー <code>#afd3e6</code>）を適用したテスト領域です。文字色に <code>currentColor</code> を使うようにSVG側をアップデートしたため、親要素の色指定に自動で追従します！
+    </p>
+    <div class="user-theme-inner">
+      <p style="margin-top: 0; font-weight: bold;">【 .wrapper クラス相当の領域 】</p>
+      <div id="diagram-theme-test" class="inline-diagram"></div>
+    </div>
+  </div>
+
+  <script>
+    // 描画用のデータを準備
+    const compData = CatTemplates.triangle({ A: "A", B: "B", C: "C", f: "f", g: "h = g \\circ f", h: "g" });
+    
+    // 関手の図式は手動で作成
+    const functorData = {
+      version: "0.1",
+      nodes: [
+        { id: "A", label: "A", x: 100, y: 100 },
+        { id: "B", label: "B", x: 100, y: 250 },
+        { id: "FA", label: "F(A)", x: 400, y: 100 },
+        { id: "FB", label: "F(B)", x: 400, y: 250 }
+      ],
+      arrows: [
+        { from: "A", to: "B", label: "f" },
+        { from: "FA", to: "FB", label: "F(f)" },
+        { from: "A", to: "FA", label: "F", style: "dashed" },
+        { from: "B", to: "FB", label: "F", style: "dashed" }
+      ]
+    };
+
+    const natTransData = CatTemplates.natural_transformation();
+
+    // ページ読み込み完了後にレンダリング実行
+    window.addEventListener('DOMContentLoaded', () => {
+      // builderMode を false (デフォルト) で描画するとオートクロップされます
+      CatDiagram.render('#diagram-composition', compData);
+      CatDiagram.render('#diagram-functor', functorData);
+      CatDiagram.render('#diagram-natural-transformation', natTransData);
+      CatDiagram.render('#diagram-theme-test', CatTemplates.monoidal_triangle());
+    });
+  </script>
+
+</body>
+</html>

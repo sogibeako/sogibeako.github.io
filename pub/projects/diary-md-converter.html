@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>日記錬成釜 - Markdown to HTML Converter</title>
+  <style>
+    /* ========== Tool UI CSS ========== */
+    :root {
+      --tool-bg: #111822;
+      --tool-panel: #1e293b;
+      --tool-text: #e2e8f0;
+      --tool-border: #334155;
+      --tool-accent: #6290b1;
+    }
+
+    html, body.tool-body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      background-color: var(--tool-bg);
+      color: var(--tool-text);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-size: 14px;
+    }
+
+    #tool-header {
+      padding: 10px 20px;
+      background: var(--tool-panel);
+      border-bottom: 1px solid var(--tool-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #tool-header h1 {
+      background: transparent;
+      color: var(--tool-text);
+      margin: 0;
+      padding: 0;
+      font-size: 1.2rem;
+    }
+
+    .settings {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    #tool-main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #pane-left, #pane-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--tool-border);
+    }
+
+    #pane-right {
+      border-right: none;
+      background-color: #111822; /* Diary bg */
+      overflow-y: auto;
+    }
+
+    .pane-title {
+      padding: 5px 10px;
+      background: #0f172a;
+      font-size: 0.9rem;
+      font-weight: bold;
+      border-bottom: 1px solid var(--tool-border);
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #mdInput {
+      flex: 1;
+      background: var(--tool-bg);
+      color: #cbd5e1;
+      border: none;
+      padding: 15px;
+      font-family: "Source Code Pro", "Courier New", Courier, monospace;
+      font-size: 1rem;
+      resize: none;
+      outline: none;
+    }
+
+    #preview-container {
+      padding: 20px;
+      min-height: 100%;
+    }
+
+    #tool-bottom {
+      height: 30vh;
+      display: flex;
+      flex-direction: column;
+      border-top: 1px solid var(--tool-border);
+      background: var(--tool-panel);
+    }
+
+    #controls {
+      padding: 10px 20px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      border-bottom: 1px solid var(--tool-border);
+    }
+
+    #controls button {
+      padding: 6px 12px;
+      background: var(--tool-accent);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #controls button:hover {
+      background: #4a7594;
+    }
+
+    #htmlOutput {
+      flex: 1;
+      background: #0f172a;
+      color: #a5b4fc;
+      border: none;
+      padding: 10px 20px;
+      font-family: "Source Code Pro", "Courier New", Courier, monospace;
+      font-size: 0.9rem;
+      resize: none;
+      outline: none;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #10b981;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 4px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    /* ========== User Diary CSS (Namespaced to .wrapper mostly) ========== */
+    @font-face {
+      font-family: "Seoremium_clg";
+      src: url("../seoremium/seoremium41.ttf") format("truetype");
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Source Code Pro";
+      src: url("../jssproject/SourceCodePro-VariableFont_wght.ttf");
+      font-display: swap;
+    }
+
+    #preview-container .wrapper {
+      max-width: 700px;
+      width: 80%;
+      margin: 0 auto; /* preview mode, no top margin needed */
+      padding: 20px;
+      border: 0px solid #111;
+      background-color: #afd3e6;
+      font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+      line-height: 1.6;
+      color: #000;
+      font-size: 1rem;
+    }
+
+    .wrapper h1 {
+      background-color: #609aa0;
+      color: black;
+      padding: 0.5em;
+      font-size: 2em;
+      margin-block-start: 0.67em;
+      margin-block-end: 0.67em;
+    }
+
+    .wrapper h2 {
+      background-color: #6290b1;
+      color: black;
+      padding: 0.2em;
+      font-size: 1.5em;
+      margin-block-start: 0.83em;
+      margin-block-end: 0.83em;
+    }
+
+    .wrapper h3 {
+      background-color: #fde5c5;
+      color: black;
+      padding: 0.1em;
+      font-size: 1.17em;
+      margin-block-start: 1em;
+      margin-block-end: 1em;
+    }
+
+    .wrapper .p_left {
+      text-align: left;
+    }
+
+    .wrapper .inner_wrapper {
+      width: 600px;
+      margin: 10px auto;
+      padding: 20px;
+      border: 1px solid #111;
+      background-color: #ffffee;
+      font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", sans-serif;
+      box-sizing: border-box;
+    }
+
+    .wrapper img.yokonaga-image {
+      width: 100%;
+      max-width: 800px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .wrapper img.tatenaga-image {
+      width: 60%;
+      max-width: 800px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .wrapper hr {
+      border-width: 2px 0 0 0;
+      border-style: dashed;
+      border-color: #609aa0;
+      margin: 20px 0;
+    }
+
+    .wrapper dt { font-weight: bold; }
+    .wrapper .seoremium {
+      font-family: "Seoremium_clg";
+      font-size: 1.0rem;
+      font-weight: normal;
+    }
+    .wrapper .br-sp { display: none; }
+
+    .wrapper pre, .wrapper pre code {
+      background-color: #bbbbbb;
+      color: #000;
+      padding: 0.5em;
+      display: block;
+      overflow-x: auto;
+      border-radius: 4px;
+      font-family: "Source Code Pro", "Courier New", Courier, monospace;
+    }
+
+    .wrapper code {
+      background-color: #bbbbbb;
+      color: #000;
+      padding: 0.1em 0.3em;
+      border-radius: 3px;
+      font-family: "Source Code Pro", "Courier New", Courier, monospace;
+      display: inline-block;
+      line-height: 1.2;
+    }
+
+    .wrapper .bold { font-weight: bold; }
+    .wrapper .del {
+      text-decoration: line-through;
+      text-decoration-color: gray;
+      font-size: 0.75rem;
+      color: gray;
+    }
+
+    .wrapper table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+    }
+
+    .wrapper table th, .wrapper table td {
+      border: 1px solid #666;
+      padding: 0.4em 0.6em;
+      text-align: left;
+    }
+
+    .wrapper ol { font-weight: bold; }
+    .wrapper ul { font-weight: normal; }
+    .wrapper ul li, .wrapper ol li { font-weight: normal; }
+    .wrapper ol > li { font-weight: bold; }
+
+    .wrapper .rain-window-btn {
+      position: relative;
+      width: 200px;
+      height: 64px;
+      background: rgba(17, 24, 34, 0.85);
+      border: 2px solid #609aa055;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: border-color 0.4s, box-shadow 0.4s;
+      margin: 0 auto;
+    }
+
+    .wrapper .rain-window-btn canvas {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+    }
+
+    .wrapper .rain-window-btn .rw-label {
+      position: relative;
+      z-index: 1;
+      font-family: sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.2em;
+      color: #e3e8f1;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+      transition: text-shadow 0.4s;
+    }
+
+    @media screen and (max-width: 600px) {
+      #preview-container .wrapper,
+      #preview-container .inner_wrapper {
+        width: 95%;
+        padding: 10px;
+        word-wrap: break-word;
+        box-sizing: border-box;
+      }
+      #tool-main { flex-direction: column; }
+      #pane-left, #pane-right { border-right: none; border-bottom: 1px solid var(--tool-border); }
+    }
+  </style>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body class="tool-body">
+  <div id="tool-header">
+    <h1>日記錬成釜</h1>
+    <div class="settings">
+      <label><input type="checkbox" id="wrapPToggle" checked> 段落を &lt;p&gt; で囲む</label>
+      <label>リストインデント: 
+        <select id="indentSize">
+          <option value="2">2スペース</option>
+          <option value="4">4スペース</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <div id="tool-main">
+    <div id="pane-left">
+      <div class="pane-title">Markdown入力</div>
+      <textarea id="mdInput" spellcheck="false" placeholder="@title 2026年第二期 * 湫埜と雨滴 *&#10;&#10;# 2026年5月15日&#10;&#10;## UbuntuからHaskellの触り方&#10;&#10;本文……"></textarea>
+    </div>
+    <div id="pane-right">
+      <div class="pane-title">プレビュー <button id="btnRefreshMath" style="background:transparent; color:#94a3b8; border:1px solid #334155; cursor:pointer; font-size:0.8rem; border-radius:3px;">数式再描画</button></div>
+      <div id="preview-container">
+        <div class="wrapper" id="preview"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tool-bottom">
+    <div id="controls">
+      <button id="btnConvert">変換</button>
+      <button id="btnCopyHtml">HTMLコピー</button>
+      <label><input type="radio" name="outputMode" value="fragment" checked> 本文断片</label>
+      <label><input type="radio" name="outputMode" value="full"> 完全HTML</label>
+      <span id="statusMessage" style="color: #cbd5e1; font-size: 0.9rem; margin-left: 10px;"></span>
+    </div>
+    <textarea id="htmlOutput" readonly></textarea>
+  </div>
+
+  <div class="toast" id="toast">コピーしました！</div>
+
+  <script>
+    // --- User's raw CSS for Full HTML output ---
+    const userGlobalCss = `
+    @font-face {
+      font-family: "Seoremium_clg";
+      src: url("../seoremium/seoremium41.ttf") format("truetype");
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Source Code Pro";
+      src: url("../jssproject/SourceCodePro-VariableFont_wght.ttf");
+      font-display: swap;
+    }
+    body {
+      font-size: 1rem;
+      background-color: #111822;
+      margin: 0; padding: 0; text-align: left; line-height: 1.6;
+    }
+    h1 { background-color: #609aa0; color: black; padding: 0.5em; }
+    h2 { background-color: #6290b1; color: black; padding: 0.2em; }
+    h3 { background-color: #fde5c5; color: black; padding: 0.1em; }
+    .p_left { text-align: left; }
+    .wrapper {
+      max-width: 700px; width: 80%; margin: 50px auto; padding: 20px;
+      border: 0px solid #111; background-color: #afd3e6;
+      font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+    }
+    .inner_wrapper {
+      width: 600px; margin: 10px auto; padding: 20px; border: 1px solid #111;
+      background-color: #ffffee; font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", sans-serif;
+    }
+    img.yokonaga-image { width: 100%; max-width: 800px; height: auto; display: block; margin: 0 auto; }
+    img.tatenaga-image { width: 60%; max-width: 800px; height: auto; display: block; margin: 0 auto; }
+    hr { border-width: 2px 0 0 0; border-style: dashed; border-color: #609aa0; }
+    dt { font-weight: bold; }
+    .seoremium { font-family: "Seoremium_clg"; font-size: 1.0rem; font-weight: normal; }
+    .br-sp { display: none; }
+    pre, pre code { background-color: #bbbbbb; color: #000; padding: 0.5em; display: block; overflow-x: auto; border-radius: 4px; font-family: "Source Code Pro", "Courier New", Courier, monospace; }
+    code { background-color: #bbbbbb; color: #000; padding: 0.1em 0.3em; border-radius: 3px; font-family: "Source Code Pro", "Courier New", Courier, monospace; display: inline-block; line-height: 1.2; }
+    .bold { font-weight: bold; }
+    .del { text-decoration: line-through; text-decoration-color: gray; font-size: 0.75rem; color: gray; }
+    table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+    table th, table td { border: 1px solid #666; padding: 0.4em 0.6em; text-align: left; }
+    ol { font-weight: bold; }
+    .rain-window-btn { position: relative; width: 200px; height: 64px; background: rgba(17, 24, 34, 0.85); border: 2px solid #609aa055; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; overflow: hidden; transition: border-color 0.4s, box-shadow 0.4s; margin: 0 auto; }
+    .rain-window-btn canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    .rain-window-btn .rw-label { position: relative; z-index: 1; font-family: 'Zen Maru Gothic', sans-serif; font-weight: 700; font-size: 1rem; letter-spacing: 0.2em; color: #e3e8f1; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6); transition: text-shadow 0.4s; }
+    .rain-window-btn:hover { border-color: #9ec8d1; box-shadow: 0 0 24px rgba(158, 200, 209, 0.15); }
+    .rain-window-btn:hover .rw-label { text-shadow: 0 0 10px rgba(158, 200, 209, 0.5), 0 1px 4px rgba(0, 0, 0, 0.6); }
+    @media screen and (max-width: 600px) {
+      body { font-size: 0.7rem; } h1, h2 { font-size: 1rem; } .seoremium { font-size: 1rem; }
+      .wrapper, .inner_wrapper { width: 95%; padding: 10px; word-wrap: break-word; box-sizing: border-box; }
+      .br-sp { display: inline; }
+    }
+    `;
+
+    const rainScript = `
+      document.querySelectorAll('canvas[data-rainwindow]').forEach(cv => {
+        const dpr = window.devicePixelRatio || 1;
+        const parent = cv.parentElement;
+        const rect = parent.getBoundingClientRect();
+        cv.width = rect.width * dpr; cv.height = rect.height * dpr;
+        const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+        const w = rect.width, h = rect.height;
+        const drops = Array.from({ length: 30 }, () => ({
+          x: Math.random() * w, y: Math.random() * h, speed: 0.5 + Math.random() * 1.5,
+          len: 4 + Math.random() * 10, opacity: 0.15 + Math.random() * 0.35, width: 0.5 + Math.random() * 0.8
+        }));
+        const splashes = [];
+        function draw() {
+          ctx.clearRect(0, 0, w, h);
+          drops.forEach(d => {
+            ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - 0.3, d.y + d.len);
+            ctx.strokeStyle = \`rgba(158,200,209,\${d.opacity})\`; ctx.lineWidth = d.width; ctx.stroke();
+            d.y += d.speed;
+            if (d.y > h) {
+              splashes.push({ x: d.x, y: h - 2, r: 0, opacity: 0.4 });
+              d.y = -d.len - Math.random() * 20; d.x = Math.random() * w;
+            }
+          });
+          splashes.forEach(s => {
+            s.r += 0.3; s.opacity -= 0.015;
+            if (s.opacity <= 0) return;
+            ctx.beginPath(); ctx.ellipse(s.x, s.y, s.r * 1.5, s.r * 0.5, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = \`rgba(158,200,209,\${s.opacity})\`; ctx.lineWidth = 0.5; ctx.stroke();
+          });
+          while (splashes.length > 0 && splashes[0].opacity <= 0) splashes.shift();
+          requestAnimationFrame(draw);
+        }
+        draw();
+      });
+    `;
+
+    // --- Parser Engine ---
+
+    function escapeHtml(text) {
+      return text.replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;");
+    }
+
+    function parseInline(text) {
+      // 1. MathJax $...$ -> \( ... \)
+      text = text.replace(/(^|[^$])\$([^$]+?)\$(?!\$)/g, '$1\\($2\\)');
+      // 2. Inline code
+      text = text.replace(/`([^`]+)`/g, (match, code) => `<code>${escapeHtml(code)}</code>`);
+      // 3. Bold
+      text = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+      // 4. Strikethrough
+      text = text.replace(/~~(.*?)~~/g, '<span class="del">$1</span>');
+      // 5. Seoremium
+      text = text.replace(/\{seo:(.*?)\}/g, '<span class="seoremium">$1</span>');
+      // 6. Image ![alt](url){.class} or ![alt](url)
+      text = text.replace(/!\[(.*?)\]\((.*?)\)(?:\{([^\}]+)\})?/g, (match, alt, url, cls) => {
+          let classAttr = cls ? ` class="${cls.replace(/^\./, '')}"` : '';
+          return `<img src="${url}" alt="${alt}"${classAttr}>`;
+      });
+      // 7. Link
+      text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
+      
+      return text;
+    }
+
+    function isSpecialLine(line) {
+      if (line.startsWith('```')) return true;
+      if (line.trim() === '$$') return true;
+      if (line.trim() === '::seo' || line.trim() === ':::hidden' || line.trim() === ':::inner') return true;
+      if (line.startsWith('|')) return true;
+      if (line.match(/^(#{1,6})\s+/)) return true;
+      if (line.trim() === '---') return true;
+      if (line.match(/^(\s*)(-\s+|\d+\.\s+)/)) return true;
+      return false;
+    }
+
+    function parseList(lines, indentSize) {
+      let root = { type: 'root', children: [] };
+      let path = [{ indent: -1, node: root }];
+
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        if (line.trim() === '') continue;
+
+        let match = line.match(/^(\s*)(-\s+|\d+\.\s+)(.*)$/);
+        if (match) {
+          let spaceStr = match[1];
+          let marker = match[2];
+          let content = match[3];
+          let indentLevel = Math.floor(spaceStr.length / indentSize);
+          let isOl = marker.match(/^\d/);
+          
+          let item = { type: 'item', content: [content], children: [] };
+          
+          while (path.length > 1 && path[path.length - 1].indent >= indentLevel) {
+            path.pop();
+          }
+          let parentNode = path[path.length - 1].node;
+          
+          if (parentNode.children.length === 0 || parentNode.children[parentNode.children.length - 1].type !== (isOl ? 'ol' : 'ul')) {
+            parentNode.children.push({ type: isOl ? 'ol' : 'ul', items: [] });
+          }
+          let listContainer = parentNode.children[parentNode.children.length - 1];
+          listContainer.items.push(item);
+          
+          path.push({ indent: indentLevel, node: item });
+        } else {
+          let currentItem = path[path.length - 1].node;
+          if (currentItem && currentItem.type === 'item') {
+            currentItem.content.push(line.trim());
+          }
+        }
+      }
+      
+      function renderListTree(node) {
+        if (node.type === 'root') {
+          return node.children.map(renderListTree).join('\n');
+        } else if (node.type === 'ul' || node.type === 'ol') {
+          let tag = node.type;
+          let html = `<${tag}>\n`;
+          for (let item of node.items) {
+            html += `  <li>${parseInline(item.content.join('<br>'))}`;
+            if (item.children.length > 0) {
+              html += '\n' + item.children.map(renderListTree).join('\n').replace(/^/gm, '    ');
+            }
+            html += `</li>\n`;
+          }
+          html += `</${tag}>\n`;
+          return html;
+        }
+        return '';
+      }
+      return renderListTree(root);
+    }
+
+    function parseBlocks(lines, wrapP, indentSize) {
+      const blocks = [];
+      let i = 0;
+      while (i < lines.length) {
+        let line = lines[i];
+
+        if (line.startsWith('```')) {
+          const lang = line.slice(3).trim();
+          let codeContent = [];
+          i++;
+          while (i < lines.length && !lines[i].startsWith('```')) {
+            codeContent.push(lines[i]);
+            i++;
+          }
+          blocks.push({ type: 'codeblock', lang, content: codeContent.join('\n') });
+          i++;
+          continue;
+        }
+
+        if (line.trim() === '$$') {
+          let mathContent = [];
+          i++;
+          while (i < lines.length && lines[i].trim() !== '$$') {
+            mathContent.push(lines[i]);
+            i++;
+          }
+          blocks.push({ type: 'mathblock', content: mathContent.join('\n') });
+          i++;
+          continue;
+        }
+
+        let isCustomBlock = false;
+        let blockType = '';
+        if (line.trim() === '::seo') { isCustomBlock = true; blockType = 'seo'; }
+        else if (line.trim() === ':::hidden') { isCustomBlock = true; blockType = 'hidden'; }
+        else if (line.trim() === ':::inner') { isCustomBlock = true; blockType = 'inner'; }
+
+        if (isCustomBlock) {
+          let innerLines = [];
+          i++;
+          let endMarker = blockType === 'seo' ? '::' : ':::';
+          while (i < lines.length && lines[i].trim() !== endMarker) {
+            innerLines.push(lines[i]);
+            i++;
+          }
+          let innerHtml = renderBlocks(parseBlocks(innerLines, wrapP, indentSize), wrapP, indentSize);
+          blocks.push({ type: 'customblock', subType: blockType, html: innerHtml });
+          i++;
+          continue;
+        }
+
+        if (line.startsWith('|') && i + 1 < lines.length && lines[i+1].match(/^\|\s*[:-]+\s*\|/)) {
+          let tableLines = [line];
+          i += 2; 
+          while (i < lines.length && lines[i].startsWith('|')) {
+            tableLines.push(lines[i]);
+            i++;
+          }
+          blocks.push({ type: 'table', header: tableLines[0], rows: tableLines.slice(1) });
+          continue;
+        }
+
+        const headingMatch = line.match(/^(#{1,6})\s+(.*)$/);
+        if (headingMatch) {
+          blocks.push({ type: 'heading', level: headingMatch[1].length, text: headingMatch[2] });
+          i++;
+          continue;
+        }
+
+        if (line.trim() === '---') {
+          blocks.push({ type: 'hr' });
+          i++;
+          continue;
+        }
+
+        if (line.match(/^(\s*)(-\s+|\d+\.\s+)/)) {
+          let listLines = [];
+          while (i < lines.length) {
+            if (lines[i].trim() === '') {
+              if (i + 1 < lines.length && (lines[i+1].match(/^(\s*)(-\s+|\d+\.\s+)/) || lines[i+1].match(/^\s{2,}/))) {
+                // ignore
+              } else {
+                break;
+              }
+            }
+            if (lines[i].trim() !== '' && isSpecialLine(lines[i]) && !lines[i].match(/^(\s*)(-\s+|\d+\.\s+)/)) {
+              break;
+            }
+            listLines.push(lines[i]);
+            i++;
+          }
+          blocks.push({ type: 'list', html: parseList(listLines, indentSize) });
+          continue;
+        }
+
+        if (line.trim() === '') {
+          i++;
+          continue;
+        }
+
+        if (line.trim().startsWith('<') && line.trim().endsWith('>')) {
+          let rawHtmlLines = [];
+          while (i < lines.length && lines[i].trim() !== '' && !isSpecialLine(lines[i])) {
+            rawHtmlLines.push(lines[i]);
+            i++;
+          }
+          blocks.push({ type: 'rawhtml', content: rawHtmlLines.join('\n') });
+          continue;
+        }
+
+        let pLines = [];
+        pLines.push(lines[i]);
+        i++;
+        while (i < lines.length && lines[i].trim() !== '' && !isSpecialLine(lines[i])) {
+          pLines.push(lines[i]);
+          i++;
+        }
+        blocks.push({ type: 'paragraph', lines: pLines });
+      }
+      return blocks;
+    }
+
+    function renderBlocks(blocks, wrapP, indentSize) {
+      let html = '';
+      for (let block of blocks) {
+        if (block.type === 'codeblock') {
+          let langClass = block.lang ? ` class="language-${block.lang.toLowerCase()}"` : '';
+          html += `<pre><code${langClass}>${escapeHtml(block.content)}</code></pre>\n`;
+        } else if (block.type === 'mathblock') {
+          html += `<div class="eqwrap">\n\\[\n${block.content}\n\\]\n</div>\n`;
+        } else if (block.type === 'customblock') {
+          if (block.subType === 'seo') {
+            html += `<div class="seoremium">\n${block.html}</div>\n`;
+          } else if (block.subType === 'hidden') {
+            html += `<div style="display: none;">\n${block.html}</div>\n`;
+          } else if (block.subType === 'inner') {
+            html += `<div class="inner_wrapper">\n${block.html}</div>\n`;
+          }
+        } else if (block.type === 'table') {
+          html += `<table>\n  <thead>\n    <tr>\n`;
+          let headerCells = block.header.split('|').map(s => s.trim()).filter(s => s);
+          for (let cell of headerCells) {
+            html += `      <th>${parseInline(cell)}</th>\n`;
+          }
+          html += `    </tr>\n  </thead>\n  <tbody>\n`;
+          for (let row of block.rows) {
+            html += `    <tr>\n`;
+            let cells = row.split('|').map(s => s.trim()).filter((s, idx, arr) => {
+               if (idx === 0 && row.startsWith('|')) return false;
+               if (idx === arr.length - 1 && row.endsWith('|')) return false;
+               return true;
+            });
+            for (let cell of cells) {
+              html += `      <td>${parseInline(cell)}</td>\n`;
+            }
+            html += `    </tr>\n`;
+          }
+          html += `  </tbody>\n</table>\n`;
+        } else if (block.type === 'heading') {
+          html += `<h${block.level}>${parseInline(block.text)}</h${block.level}>\n`;
+        } else if (block.type === 'hr') {
+          html += `<hr />\n`;
+        } else if (block.type === 'list') {
+          html += block.html;
+        } else if (block.type === 'rawhtml') {
+          html += block.content + '\n';
+        } else if (block.type === 'paragraph') {
+          if (wrapP) {
+            html += `<p>${parseInline(block.lines.join('<br>'))}</p>\n`;
+          } else {
+            html += `${parseInline(block.lines.join('<br>'))}<br>\n`;
+          }
+        }
+      }
+      return html;
+    }
+
+    function extractMetadataAndContent(text) {
+      const lines = text.split('\n');
+      let contentLines = [];
+      let meta = { title: '', prev: '', prevText: '', next: '', nextText: '' };
+      
+      for (let line of lines) {
+        if (line.startsWith('@title ')) {
+          meta.title = line.substring(7).trim();
+        } else if (line.startsWith('@prev ')) {
+          const parts = line.substring(6).trim().split(' ');
+          meta.prev = parts[0];
+          meta.prevText = parts.slice(1).join(' ');
+        } else if (line.startsWith('@next ')) {
+          const parts = line.substring(6).trim().split(' ');
+          meta.next = parts[0];
+          meta.nextText = parts.slice(1).join(' ');
+        } else {
+          contentLines.push(line);
+        }
+      }
+      return { meta, contentLines };
+    }
+
+    function getFullHtml(bodyHtml, meta) {
+      const titleStr = meta.title || 'Diary';
+      const prevStr = meta.prev ? `<a href="${meta.prev}">←${meta.prevText || '前へ'}</a>` : '';
+      const nextStr = meta.next ? `<a href="${meta.next}">${meta.nextText || '次へ'}→</a>` : '';
+      let navStr = '';
+      if (prevStr || nextStr) {
+        navStr = `    <p style="text-align: center">\n      ${prevStr}　　　　　　　${nextStr}\n    </p>\n`;
+      }
+
+      return `<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${titleStr}</title>
+  <link rel="preload" as="font" href="/seoremium/seoremium41.ttf" type="ttf" crossorigin />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
+  <style>${userGlobalCss}  </style>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"><\/script>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="p_left">
+      現在位置 : <a href="../index.html">ホーム</a> ＞ <a href="index.htm">Diary</a> ＞
+      <b>${titleStr.split(' *')[0] || titleStr}</b>
+    </div>
+    <hr />
+${navStr}
+${bodyHtml.replace(/^/gm, '    ')}
+    <hr />
+${navStr}
+    <div style="text-align: center;">
+      <a href="../index.html" class="rain-window-btn">
+        <canvas data-rainwindow="true"></canvas>
+        <span class="rw-label">Back</span>
+      </a>
+    </div>
+
+    <script>${rainScript}    <\/script>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"><\/script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"><\/script>
+</body>
+</html>`;
+    }
+
+    // --- Event Listeners ---
+    
+    const els = {
+      mdInput: document.getElementById('mdInput'),
+      preview: document.getElementById('preview'),
+      htmlOutput: document.getElementById('htmlOutput'),
+      btnConvert: document.getElementById('btnConvert'),
+      btnCopyHtml: document.getElementById('btnCopyHtml'),
+      wrapPToggle: document.getElementById('wrapPToggle'),
+      indentSize: document.getElementById('indentSize'),
+      radios: document.getElementsByName('outputMode'),
+      statusMessage: document.getElementById('statusMessage'),
+      toast: document.getElementById('toast'),
+      btnRefreshMath: document.getElementById('btnRefreshMath')
+    };
+
+    function updateConversion() {
+      const text = els.mdInput.value;
+      const wrapP = els.wrapPToggle.checked;
+      const indentSize = parseInt(els.indentSize.value, 10);
+      let outputMode = 'fragment';
+      for (let r of els.radios) {
+        if (r.checked) outputMode = r.value;
+      }
+
+      const { meta, contentLines } = extractMetadataAndContent(text);
+      const blocks = parseBlocks(contentLines, wrapP, indentSize);
+      let bodyHtml = renderBlocks(blocks, wrapP, indentSize);
+
+      // Update preview (always just body fragment, with MathJax processing)
+      els.preview.innerHTML = bodyHtml;
+      
+      if (window.MathJax) {
+        window.MathJax.typesetPromise([els.preview]).catch(err => console.error(err));
+      }
+
+      // Update output text area
+      if (outputMode === 'full') {
+        els.htmlOutput.value = getFullHtml(bodyHtml, meta);
+      } else {
+        els.htmlOutput.value = bodyHtml.trim();
+      }
+      
+      els.statusMessage.textContent = '変換完了 ' + new Date().toLocaleTimeString();
+    }
+
+    els.btnConvert.addEventListener('click', updateConversion);
+    
+    // Auto-convert with Ctrl+Enter or Cmd+Enter
+    els.mdInput.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        updateConversion();
+      }
+    });
+
+    [els.wrapPToggle, els.indentSize, ...els.radios].forEach(el => {
+      el.addEventListener('change', updateConversion);
+    });
+
+    els.btnCopyHtml.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(els.htmlOutput.value);
+        showToast();
+      } catch (err) {
+        alert('クリップボードにコピーできませんでした。');
+      }
+    });
+
+    els.btnRefreshMath.addEventListener('click', () => {
+      if (window.MathJax) {
+        window.MathJax.typesetPromise([els.preview]);
+      }
+    });
+
+    function showToast() {
+      els.toast.style.opacity = '1';
+      setTimeout(() => {
+        els.toast.style.opacity = '0';
+      }, 2000);
+    }
+    
+    // Initial run
+    updateConversion();
+  </script>
+</body>
+</html>

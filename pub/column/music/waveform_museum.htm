@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<!-- saved from url=(0042)https://melxen28.lsv.jp/diary/20251012.htm -->
+<html lang="ja">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>波形博物館 * 湫埜と雨滴 *</title>
+  <link rel="preload" as="font" href="https://melxen28.lsv.jp/seoremium/Seoremium_clg.ttf" type="ttf" crossorigin="" />
+  <!-- Lightbox2 CSS -->
+  <link href="./20251012_files/lightbox.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="../../style/diary_style.css">
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+  <div class="wrapper">
+    <div class="p_left">
+      現在位置 : <a href="../../index.html">ホーム</a> ＞
+      <a href="../columnIndex.htm" title="いとしいしとぉ。">コラム</a> ＞
+      <a href="waveform_museum.htm"><b>波形博物館</b></a>
+    </div>
+    <h1>波形博物館</h1>
+    <h3>このページは？</h3>
+    <hr />
+    JavaScriptで作った<a href="../../jssproject/0007_formulaSynth.htm">「数式シンセ」</a>
+    で作成された、数式と波形とスペクトルたちです。画像はリンクになっており、クリックすると、そのように調律された音色と音階にジャンプできます。<br />
+    <br />
+    ではさっそくどうぞ。<br />
+    <br />
+    <h2>sin波いじり系</h2>
+    <h3>絶対値（全波整流）</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIAqACAvCgTAKigS1wAsAdAOzIHcBDANzHRSoCMBnAChb1LYAYA6AKzYkAShFkyEBtTqVaYbPwAcIADQgWVAGZgALgE8EGgPZbdakABMAxgh7qA5lS52+mAepbWqAGzBGARh5+MkxgvjIAZnCyABYY0gEEgDYEgHYEpQSATgSgvPyI0gCw-gsmKhYwAAkALwRY+PUaPBhdAGUAJQas4IBfIA">
+      <img src="waveform_museum_src/absSin.png" , class="yokonaga-image" /></a>
+    <pre class="codebox"><code>T = 2*pi*ph
+
+wave = abs(sin(0.5*T))
+
+x = wave
+wave*0.8</code></pre>
+    ひとこと：スペクトルだけ見るとノコギリ波的ですが、音はかなり丸くなっています。倍音控えめなのかも。
+    ごらんのとおり、並進対称性がさらに増えるため、波長が半分になります。<code>sin(0.5*T)</code>としたのはそのためです。<br />
+    <br />
+    <hr />
+    <h3>後半のないsin（半波整流）</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIAqACAvCgTAKigS1wAsAdAOzIHcBDANzHRQFsqIAKAZz1NaQEoAaAAy8yZCA2p1KtMNgCMAOkEh+IdlQBmYAC4BPBGoD2G7SpAATAMYJBqgOZUuNhQBZV7S1QA2YA3MGCCmSYAUGkAMyhZC5RpACssQBssQDssQAcsQCcsf65eWFyIYFmAEZU7GAAEgBeCC4xqjR4MNoAygBK9ZkBqlBUrXjeAOoyBtpUpT5m-YPe7AYAxDBU2niGKFSMUGRyKHJki5gogXEoKICncoDQcoDNDICHDIDPDIATDIBFDIBlDE+AtHKAQAyAkOaAnUqAawZAOoMgH0GQAiDIAWDUAECqAewZFoAkhkAUkqAEzTDuETgpwuFDi5MZg4oczoFMIdEpi5ClDikKS5DukKQSQABfIA">
+      <img src="waveform_museum_src/max_sin_0.png" , class="yokonaga-image" /></a>
+    <pre class="codebox"><code>T = 2*pi*ph
+
+wave = max(sin(T),0)
+
+x = wave
+wave*1.0</code></pre>
+    ひとこと：なぜか、2,4,6,…と、偶数次が目立ちます。
+    というのは、実はこのグラフは、 \( \text{max}(\text{sin}~t,0) =
+    \frac{1}{2}\text{sin}~t + \frac{1}{2}|\text{sin}~t| \)
+    と書くことが出来るからだそうです。た、確かに……。つまり、上で書いた全波整流が混ざっていることになります。
+    全波整流 \( |\text{sin}~t| \)
+    は周波数が2倍になります。そのため、偶数次の成分が目立つのだと……。<br />
+    <br />
+    <hr />
+    <h3>一回置きに位相を変更する正弦波</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcID2AzFACAvOgDAOgFZ1iTSBiXPPARkAh-6zAZgDYcAGgGkoCYDMBOdoEh-gDoA7KFnRQAFgCpu4gIZTJAWnQoANkiQwAFFACU5SjXEBrKdt0HjpUznR701cQHclANzBSAzgCWYvrcclABcvoqANToFnKoKEZG4vqePnL4ABwpYiAcIH5KKGAALgCeCCAAxloBUPkgACbVCDgFAOZKQW14vAV+1UpaYFXUOPji3BN44owz4gAsC2IEK6yTYgDsK1krgpvjK9RHs2LU0-iNAEZKfmAAEgBeCIvLBV4BMKUAygBKrz2EwKUCU3wCwwA6t5RohSkpriNGqDwcM-FUyDAlKUAkh0EoALZQcTUVziMjcShEdCAU7lANBygGaGQCHDIBnhkAEwyAIoZAGUMbMAtHKAIAZAJDmgE6lQDWDIB1BkA+gyAEQZACwagAgVQD2DGRAEkMgCklQAmaeTGJRGIxyYseARyUR8IoxGRmJRqFtyVtrYtyVlrbwQABfIA">
+      <img src="waveform_museum_src/double_phase_sin.png" , class="yokonaga-image" /></a>
+    <pre class="codebox"><code>off = 0.5          # 0..1（1=360°, 0.25=90°）
+p = ph*2
+a = p - floor(p)    # 0..1
+k = floor(p)        # 0 or 1
+wave = sin(2*pi*(a + k*off))
+(wave*0.8)</code></pre>
+    ひとこと：今度は奇数次しかないです。つまり矩形波にかなり似た音になります。
+    後半の位相を変えていくと、今度は2倍音が現れるものの、それ以降の偶数次は現れません。
+    変調波が矩形波になっているため、
+    「時間軸をn等分した離散的な周期信号はn倍音を含まない」法則が影響しているようです。<br />
+    <br />
+    <hr />
+    <h3>三周期で位相を変化させる正弦波</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIByACAvCgzAHQHZXRSgAsAqJPAa0IDMAbAewZgAooBKPAQ0IIFoUlPHgY0aABkLiAdOPEixARinTMahTQBMKgGx7huUTUItKaNJID8KI5PgpT55daPL7Rze064A7lwBuYIQAzgCWuCyapFChpCw8ANQ2Yl54foGkMjogADQgwVw0YAAuAJ4I+aLFuSAAJgDGCOJ5AOZc4U3SmgCsecH1XHRgFYpy0niaY3iYU7gALLPdszqzAOyzAByzAJyzo3v747iKkzI1AEZcwWAAEgBeCHMLef6hMMUAygBKj1tyeVAuO9QoMAOoBYaIYpcc5DGqA4GDYIVADEMC4xVCDBQXAAtlA8MpFHgUdoZN0UChAKdygGg5QDNDIBDhkAzwyACYZAEUMgDKGFmAWjlAEAMgEhzQCdSoBrBkA6gyAfQZACIMgBYNQAQKoB7BhRgCSGQBSSoATNJJmBQMnUuBRc21XW6JIpMk0JJ0hsUqxJqytcxJGytPRAAF8gA">
+      <img src="waveform_museum_src/triple_phase_sin.png" , class="yokonaga-image" /></a>
+    <pre class="codebox"><code>N = 3
+p = ph*N
+k = floor(p)
+a = p - k
+
+off0 = 0.00
+off1 = 0.333
+off2 = 0.666
+
+off = (k==0 ? off0 : (k==1 ? off1 : off2))
+wave = (sin(2*pi*(a + off)))
+wave*0.8</code></pre>
+    ひとこと：今度は3倍, 6倍, 9倍……がなくなります。わかりやすいですね。
+    これはステップ波形のスペクトルによく似ています。
+    位相のオフセットは0.333おきにすると3倍音が最小化されるようでした。<br />
+    <br />
+    <hr />
+    <h3>1周期ごとに正弦波と矩形波が切り替わる波形</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIAuBDAdgCwBQGYBUWATHlBgLQCMAlFSADQgDOKAZmEgJ4JMD2LS9EABMAxggoMA5igCWaBAAYAdIQCsDRiJQAbMNwoLlAHTSFDSkznMmALNbSr7ANnsB2ewA57ATnsG--hZoFGbKggBGKIxgABIAXgg2dgwAbjIwSADKAEqJXoYMUCgZMjoA6igpeoio4bqCRSU6jNwAxDAoSDI8AAQoALZQJhQ9FCathD3Kqj09gKdygNBygM0MgIcMgM8MgBMMgEUMgGUMG4C0coBADICQ5oCdSoDWDIDqDID6DIAiDIAsGoAQKoD2DK2ASQyAUkqAJmnjOFNKOBw4xs-zU4xmykI4yc-wornGrlhNnGHlhahAAF8gA">
+      <img src="waveform_museum_src/sin_square_alt.png" , class="yokonaga-image" /></a>
+    <pre class="codebox"><code>(ph < 0.5) ? sin(4*pi*ph) : ((ph < 0.75) ? 1 : -1)</code></pre>
+    ひとこと：想像されているよりもかなり複雑な倍音が出ます。<br />
+    <br />
+    <hr />
+    <h3>1周期ごとに正弦波とノコギリ波が切り替わる波形</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIAuBDAdgCwBQGYBUWATHlBgLQCMAlFSADQgDOKAZmEgJ4JMD2LS9EABMAxggoMA5igCWaBAAYAdIQCsDRiJQAbMNwoLlAHTSFDSkznMmALNbSr7ANnsB2ewA57ATnsG--hZoFGbKggBGKIxgABIAXgg2dgwAbjIwSADKAEqJXoYMUCgZMjoA6igpeoio4bqCRSU6jNwAxDAoSDI8AAQoALZQJhQ9FCathD3Kqj09gKdygNBygM0MgIcMgM8MgBMMgEUMgGUMG4C0coBADICQ5oCdSoDWDIDqDID6DIAiDIAsGoAQKoD2DK2ASQyAUkqAJmnjOFNKOBw4xs-zU4xmykI4yc-wornGrlhNnGHlhahAAF8gA">
+      <img src="waveform_museum_src/sin_saw_alt.png" , class="yokonaga-image" /></a>
+    <pre class="codebox"><code>(ph < 0.5) ? sin(4*pi*ph) : (2*((( (ph-0.5)*2 ) + 0.5) % 1) - 1)</code></pre>
+    ひとこと：こちらも同じく。<br />
+    <br />
+    <h2>可算合成an-b系</h2>
+    <h3>1n-0波　／　可算合成ノコギリ波（5-limit JI）</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcICGSAEBeVAmAOgOyQCMNUBmfJAYxIBYKATEgVgrBIDYKAzEgdgoDmJABwUAFiQCc+ACoksAKigBLJWPz4A7kgBubTAGdleABQyAlKgDUqE0dMyFKc5YD0qFNdv2zTwi9R3Ii87Y18qAKDqG1CHJ3pIj0YYn0ckMET0kNSnLkyeFLC0gUyhQrikMUz1PHwIEm09LV0wBQAGADoARiYQABoQAyQuMAAXAE8EQYB7LlH+kHpKBDaBgSRjFY7JAYNKJAAbMCmu9lce-ElXUTwzljwmVzo8GldyF8fSXDxSV2-hVz3T74U6uaR4HrXfBYc4LQhIAxgAASAC8EDQaKsQDplDBRgBlABK6OEbTJAF8gA">
+      <img src="waveform_museum_src/1n-0.png" , class="yokonaga-image" /></a>
+    <pre class="codebox"><code>aa = 2
+ab = 3
+ac = 4
+ad = 5
+ae = 6
+af = 7
+ag = 8
+ah = 9
+T = 2*pi*ph
+
+wave = sin(T) + (sin(T*aa)) / aa + (sin(T*ab)) / ab + (sin(T*ac)) / ac + (sin(T*ad)) / ad + (sin(T*ae)) / ae + (sin(T*af)) / af + (sin(T*ag)) / ag + (sin(T*ah)) / ah
+
+x = wave
+wave*0.15</code></pre>
+    ひとこと：第n倍音をどんどん足しつつ、各振幅を1/nにすると、ノコギリ波になります。
+    これを原音として、フィルターをかけていくと、ちょっとだけピアノっぽくなったりします。
+    実際のところ、ピアノの弦というのは低音弦になるにつれ叩く場所が固定端に近くなり高次倍音が出やすく、
+    高音弦になるにつれ叩く場所がどんどん中央に寄っていくため高音ほど偶数倍音が少ない、という特性があるようです。
+    これがシンセで言うと（すごくざっくり言うと）ローパスフィルター＋フィルターエンベロープっぽい挙動になるのだ……とか……？
+    （実際は低音部が倍音が整数倍からズレるとか、高音部は何本も弦を使っているとかで更に複雑だそうですが）
+    ちなみに、こちらのJSSでなら、ノコギリ波は可算合成ではなく、識別子
+    <code>ph</code> と、剰余演算子 <code>%</code> で書いた方が綺麗に書けます。
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIDuBDAbmABAXkwJgCoAKIqAC0wGpMAGAOgFYBKTAUkwEYWBaTgHQB2giDkyoMg8WAL0ODEABoQAZxQAzMABcAnghUB7NZsUgAJgGMENJQHMUASwFW6ATiXLzKADZg9HAGwA9HKCLoEAHIJBDIIMgQAsgvGBAMxJcSl4gimBWQLhgTECGYIBgS6lcZECeMEmAEYoymAAEgBeCPHx1iBo9jCaAMoASp3hNBMAvkA">こちら</a>
+    で試してみてください。<br />
+    <br />
+    <hr />
+    <h3>2n-1波　／　可算合成矩形波（5-limit JI）</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcICGSAEBeVBmAOgOyQCMNUBWfJAYxIHYKATEgTgrBIEZ2KAzD3AgOYdyBABYc6eACokATACooAS0Wj8+AO5IAbm0wBnJXgAUUgJSoA1KmOGTU+SjMWA9KhRWbd048LPUbkSetkY+VP6B1NYh9o70Ee6M0d4OSGAJacEpjtwZvMmhqQIZQgWxSKIZanj4ECRaupo6YPIADAB07KQgADQg+kjcYAAuAJ4I-QD23MO9IPSUCK19AkhGS+1MffqUSAA2YBPsAGwuXfhMLgAc+KcipC4ALPiPLvyPD1iy+Fgu33hXFz3N74E4uFh4LrXfCyM5zQhIfRgAASAC8EI9HssQNolDBhgBlABKGKurXJAF8gA">
+      <img src="waveform_museum_src/2n-1.png" , class="yokonaga-image" /></a>
+    <pre class="codebox"><code>aa = 3
+ab = 5
+ac = 7
+ad = 9
+ae = 11
+af = 13
+ag = 15
+ah = 17
+T = 2*pi*ph
+
+wave = sin(T) + (sin(T*aa)) / aa + (sin(T*ab)) / ab + (sin(T*ac)) / ac + (sin(T*ad)) / ad + (sin(T*ae)) / ae + (sin(T*af)) / af + (sin(T*ag)) / ag + (sin(T*ah)) / ah
+
+x = wave
+wave*0.15</code></pre>
+    ひとこと：第(2n-1)倍音をどんどん足しつつ、各振幅を 1/(2n-1)
+    にすると、矩形波になります。閉管で出がちな、管楽器などでよく聞かれる音です。
+    ちなみに、矩形波も識別子 <code>ph</code> と、剰余演算子
+    <code>%</code> と、三項演算子 <code>?</code> で書いた方が綺麗に書けます。
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIDuBDAbmABAXkwCnygAtMBSTARgEpMAeTABgDoBWTAfks3kwFoLMVADoA7URByZUGUdLAAqZgA4QAGhABnFADMwAFwCeCTQHttetSAAmAYwQN1AcxQBLEfaYAmFuo02UADZgxhQAbAD0FCyiAJzhSqIR0SIs4QAsomnhAMyZqdmeotnhhSJK4cn5omHhMdWpCSKekZYARigaYAASAF4IaWkOIGguMHoAygBK-UoMc+pQKGMugQDq6MGIeiitQZaLy4EaxgDEMCh6LiaYKAC2UNWUoieejKyYmICncoDQcoDNDICHDIBnhkAEwyAIoZAGUMwMAtHKAIAZAJDmgE6lQDWDIB1BkA+gyAEQZACwagAgVQD2DCdAEkMgCklQAmac9sm9srkRCc0m9vM82MxSidQm8KAB2Z6cjkZWlKDneEAAXyAA">こちら</a>
+    で試してみてください。<br />
+    <br />
+    <hr />
+    <h3>3n-2波（5-limit JI）</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcICGSAEBeVAWAOgOyQCMNUB2fJAYxIEYAGCgE1oGYKxaA2CgM1oE4KAcxIAmURQAWYgKz4AKmIBUUAJYrJ+fAHckANw6YAzqrwAKeQEpUAalRmT5+UpSXrAelQpb9xxZeEbqieRD4Opv5UQSHUduFOLozRXsxxfs5IYMmZYekuPNl8aREZQtkixQlIktmaePgQJLoGOvpgSnQAdDQyIAA0IEZIPGAALgCeCIMA9jyj-SCMlAh0A0JIpiud-ANGlEgANmBTNJzuPfj87gAc+GdyeDLuuHhY7myvTywSeCzuP9d3A8vvhTu5BHgejd8KJzgtCEgjGAABIALwQWCwqxAelUMFGAGUAEoY650ckAXyAA">
+      <img src="waveform_museum_src/3n-2.png" , class="yokonaga-image" /></a>
+    <pre class="codebox"><code>aa = 4
+ab = 7
+ac = 10
+ad = 13
+ae = 16
+af = 19
+ag = 22
+ah = 25
+T = 2*pi*ph
+
+wave = sin(T) + (sin(T*aa)) / aa + (sin(T*ab)) / ab + (sin(T*ac)) / ac + (sin(T*ad)) / ad + (sin(T*ae)) / ae + (sin(T*af)) / af + (sin(T*ag)) / ag + (sin(T*ah)) / ah
+
+x = wave
+wave*0.15</code></pre>
+    ひとこと：1,4,7,10,13,…,25という倍音列を可算合成したものです。ナイフのような何かのような、なんとも言えない形をしています。
+    現実ではこのような音を出す楽器を設計するのは難しいようです。フィルターを物理的に設計するような感じなのかな。
+    可算合成はクリップしやすく、別の倍音もスペクトルに出てきています。<br />
+    <br />
+    <hr />
+    <h3>4n-3波（5-limit JI）</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcICGSAEBeVBWAOgOyQCMNUBOfJAYxIEYBmCgE1oHYKwSAmGigMy9wEA5l3IEAFiToM8AFS4AqKAEsl4-PgDuSAG4dMAZ2V4AFLICUqANSoTR07IUpzlgPSoU12-bNPCL1HciLztjXyoAoOobUIcnRkiPZhifRyQwRPSQ1KdeTP4UsLShTJFCuKRxTPU8fAgSbT0tXTAFAAYAOhosEAAaEAMkXjAAFwBPBAGAe14RvpBGSgQ2-qEkY2WO0n6DSiQAGzBJmgA2V278UlcADnwzwSxXABZ8J9cZJ8e6Tnw6Vx+8NdXA93vhTq4xN0bvhOOd5oQkAYwAAJABeCCeTxWIB0yhgIwAygAlDHXNrkgC+QA">
+      <img src="waveform_museum_src/4n-3.png" , class="yokonaga-image" /></a>
+    <pre class="codebox"><code>aa = 5
+ab = 9
+ac = 13
+ad = 17
+ae = 21
+af = 25
+ag = 29
+ah = 33
+T = 2*pi*ph
+
+wave = sin(T) + (sin(T*aa)) / aa + (sin(T*ab)) / ab + (sin(T*ac)) / ac + (sin(T*ad)) / ad + (sin(T*ae)) / ae + (sin(T*af)) / af + (sin(T*ag)) / ag + (sin(T*ah)) / ah
+
+x = wave
+wave*0.15</code></pre>
+    ひとこと：結構綺麗な形です。個人的には、440Hzでは13倍音が主張してくるように聞こえます。<br />
+    <br />
+    <hr />
+    <h3>5n-4波（5-limit JI）</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcICGSAEBeVA2AOgOyQCMNUBGU-JAYxNNwIBMSAmCgsF+pAMxIGY2SAOb8uACxIAWNgBUWAKigBLRWPz4A7kgBuHTAGcleABQyAlKgDUqY4ZMz5KMxYD0qFFZt3Tjws9RuRJ62Rj7U-oE01iH2jgwR7kzR3g5IYAlpwSmO3Bm8yaGpQhkiBbFIYhlqePgQJFq6mjpg8gAMAHSkAKwgADQg+jxgAC4AnggDAPbcw30gDFQIrf1CSEZL7QCc-fpUSAA2YBN0Lt34my4AHPhYLl34XS6S+JIufC+PfMz4fC7feJc7g83vgTptQY9rnhmKc5oQkPowAAJABeCEkkmWIG0ShgwwAygAldGXVpkgC+QA">
+      <img src="waveform_museum_src/5n-4.png" , class="yokonaga-image" /></a>
+    <pre class="codebox"><code>aa = 6
+ab = 11
+ac = 16
+ad = 21
+ae = 26
+af = 31
+ag = 36
+ah = 41
+T = 2*pi*ph
+
+wave = sin(T) + (sin(T*aa)) / aa + (sin(T*ab)) / ab + (sin(T*ac)) / ac + (sin(T*ad)) / ad + (sin(T*ae)) / ae + (sin(T*af)) / af + (sin(T*ag)) / ag + (sin(T*ah)) / ah
+
+x = wave
+wave*0.15</code></pre>
+    ひとこと：何とも言えない形です。高調波成分が強調されているだけあって、ベルのような音ですね。
+    11倍音が面白かったので、音色とよく合うように16:19:22:25:28:31とかが試せるJIスケールも作りました。
+    ご興味の方は、<a
+      href="https://melxen28.lsv.jp/jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcICGSAEBeVA2AOgOyQCMNUBGU-JAYxNNwIBMSAmCgsF+pAMxIGY2SAOb8uACxIAWNgBUWAKigBLRWPz4A7kgBuHTAGcleABQyAlKgDUqY4ZMz5KMxYD0qFFZt3Tjws9RuRJ62Rj7U-oE01iH2jgwR7kzR3g5IYAlpwSmO3Bm8yaGpQhkiBbFIYhlqePgQJFq6mjpg8gAMAHSkAKwgADQg+jxgAC4AnggDAPbcw30gDFQIrf1CSEZL7QCc-fpUSAA2YBObLgAc+KQndPhdLpIXpGf4fC7M+My313gA7HfPj19mC5SHNCEh9GAABIALwQkkkyxA2iUMGGAGUAEpw06tXEAXyAA">こちら</a>
+    で試して見てください。a d g j k l …
+    と弾くとそれっぽくなります。差音として3が現れますし、3/2とかをいい感じで混ぜるとまた面白かったりして？
+    <br />
+    <hr />
+    <h3>6n-5波（5-limit JI）</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcICGSAEBeVB2AOgOyQCMNUBGAZnyQGMTSBOKgExICYBWKsE80qgMx64CAcxIAWSgQAWExngAqbAFRQAlqun58AdyQA3bpgDOavAAoFASlQBqVOdMWFylFZsB6VCjsOnl10J3VC8iX0czAJpg0Np7COdXJhjvFnj-FyQwFKzwjNd+HMF0yMyRHLESxKRpHK08fAgSPUNdAzBlAAYAOlJ2EAAaEGMkfjAAFwBPBGGAe35xwZAmagROoZEkMzXu+iHjaiQAGzAZ0gA2Dz78eg8ADnxLzjx2D3F8cQ8pcVfyVnxyB5-ng7h5nr98BcPPI+vd8KwrktCEhjGAABIALwQ4nE6xA+jUMHGAGUAErYu6dKkAXyAA">
+      <img src="waveform_museum_src/6n-5.png" , class="yokonaga-image" />
+    </a>
+    <pre class="codebox"><code>aa = 7
+ab = 13
+ac = 19
+ad = 25
+ae = 31
+af = 37
+ag = 43
+ah = 49
+T = 2*pi*ph
+
+wave = sin(T) + (sin(T*aa)) / aa + (sin(T*ab)) / ab + (sin(T*ac)) / ac + (sin(T*ad)) / ad + (sin(T*ae)) / ae + (sin(T*af)) / af + (sin(T*ag)) / ag + (sin(T*ah)) / ah
+
+x = wave
+wave*0.15</code></pre>
+    ひとこと：変な形です！ こうなるのか……。<br />
+    <br />
+    <hr />
+    <h3>7n-6波（5-limit JI）</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcICGSAEBeVAOAOgOyQCMNUBGAVnyQGMSAmOqgE3oE4qwSBmANioDMSAFi5UA5iXIAGKgAtJAdnwAVegCooASw2z8+AO5IAbp0wBnTXgAUygJSoA1KisXrytSlv2A9KhSPnVxsPQi9UXyIAl0tgmjCI2idotw8meL8WJKD3JDB03Kjsj358wSyYnLF8iXKUpFl83Tx8CBJDEwNjMDUpADoKEAAaEDMkfjAAFwBPBBGAe34JoZAmagQpYbEkS3Xe1mGzaiQAGzBZ0h5vCnxWb1w8S8o8cm8hfCFvUTwhF65GPC43n+WG8T1++Au3nYeAod3wdCuy0ISDMYAAEgAvBBCIQbEBGTQwCYAZQAStisFIqQBfIA">
+      <img src="waveform_museum_src/7n-6.png" , class="yokonaga-image" />
+    </a>
+    <pre class="codebox"><code>aa = 8
+ab = 15
+ac = 22
+ad = 29
+ae = 36
+af = 43
+ag = 50
+ah = 57
+T = 2*pi*ph
+
+wave = sin(T) + (sin(T*aa)) / aa + (sin(T*ab)) / ab + (sin(T*ac)) / ac + (sin(T*ad)) / ad + (sin(T*ae)) / ae + (sin(T*af)) / af + (sin(T*ag)) / ag + (sin(T*ah)) / ah
+
+x = wave
+wave*0.15</code></pre>
+    ひとこと：変な形です（コメントがネタギレしましたｗ）この後、高調波になっていくとナイキストで折り返してヘンな音が入りつつも、サイン波に近づいていくのです。<br />
+    <br />
+    <hr />
+    <h2>部分音合成によるn平均律用波形</h2>
+    <h3>12平均律ノコギリ波</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIAqACAvCgTAKigS1wAsAdAOzIHcBDANzAEZ0UBnPUgCiQEoyyAXKqULsADADoAHNmp16XEABoQzKgDMwfAJ4JlAe1V9FIACYBjBCKUBzKmwtjMAViXNTVADZgd9EeLKZfMTIAZkCyABYw0kcogDYogHYoiSiATiifDMyg0noA8SMAIypmMAAJAC8EcMilGjwYPgBlACVqlN8lKCpGvA8AdVovRAFCzyNu3o9mHQBiGCo+PF0UKgBbKDJGen8APXY8gHo8rhRxRz2D1OPMU-Fgh8vMcJu7hwvSTH3MCVezhxEl2C9D+4nosViQJeJ3+9HCQNioLEeQ+X3YwV+MLBO0++0iSJ8l3CmCRIlSROCpIkwSJ0Nu-xECRAAF8gA">
+      <img src="waveform_museum_src/sawWave_12edo.png" , class="yokonaga-image" /></a>
+    <h4>#Formula</h4>
+    <pre class="codebox"><code>T = 2*pi*ph
+
+wave1 = sin(T)
+
+tanh(0.8*wave1)</code></pre>
+    <h4>#Partials</h4>
+    <pre class="codebox"><code>#ratio    amp
+1         1
+2^(12/12) 0.5
+2^(19/12) 0.333
+2^(24/12) 0.25
+2^(28/12) 0.20
+2^(31/12) 0.166
+2^(34/12) 0.14
+2^(36/12) 0.125
+2^(38/12) 0.11
+2^(40/12) 0.10
+2^(42/12) 0.09
+2^(43/12) 0.083
+2^(44/12) 0.07</code></pre>
+    ひとこと：ノコギリ波の上に乗っかってくるスペクトルを、12平均律上にクォンタイズ（？）したものです。
+    新機能のPartialを使って、非周期的な（Inharmonicな）部分音を追加しています。
+    波形を見ても、周期は壊れてしまっていて「らしきもの」になっており、
+    最大値と最小値自体がゆらいでいる＝うなりが可視化されているようです。
+    倍音が少し高くなっていく分、明るさが目立つような気がしますね。Resynthesisとかすれば色んな音をこういう風に出来たりするのかしら。<br />
+    <br />
+    <hr />
+    <h3>13平均律ノコギリ波</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIAqACAvCgTAKigS1wAsAdAOzIHcBDANzAEZ0UBnPUgCiQEoyyAXKqULsADADoAHNmp16XEABoQzKgDMwfAJ4JlAe1V9FIACYBjBCKUBzKmwtjMAViXNTVADZgdATkxiAzCISZPQSACxiAGz0jmSYAOyRYr7+ZP6R3g7+9GRh0WKO-sGkjoWSeWSReWIxYWTxRWJ5mGQSgWKJ3mQpYiLx8SEiMQESsaT09H1RviGYIuJGAEZUzGAAEgBeCGFhliA0eDB8AMoAStsS83tQVEd4HgDqtF6IAoueRjd3Hsw6AMQwKh8PC6FBUAC2UBCKBypEwAD12PR-AB6ZFcFDiMYI9hzNH+DHifzEuKIzCRfGEhzYxGBSmYhwiUnsMKo9EM+iRSLM9L08T0Opw2nePk1JzMsL0UUTCVsgkcplClmOUUiLpKvKqtoSiSq+IgAC+QA">
+      <img src="waveform_museum_src/sawWave_13edo.png" , class="yokonaga-image" /></a>
+    <h4>#Formula</h4>
+    <pre class="codebox"><code>T = 2*pi*ph
+
+wave1 = sin(T)
+
+tanh(0.8*wave1)</code></pre>
+    <h4>#Partials</h4>
+    <pre class="codebox"><code>#ratio    amp
+1         1
+2^(13/13) 0.5
+2^(20/13) 0.333
+2^(26/13) 0.25
+2^(30/13) 0.20
+2^(43/13) 0.166
+2^(36/13) 0.14
+2^(39/13) 0.125
+2^(41/13) 0.11
+2^(43/13) 0.10
+2^(45/13) 0.09
+2^(46/13) 0.083
+2^(48/13) 0.07</code></pre>
+    ひとこと：今度は13平均律上にクォンタイズ（？）したものです。結構な変わり種です。
+    詳しくは<a href="https://en.xen.wiki/w/13edo">Xenharmonic Wikiの13edoのページ</a>を見てみてください。 あえて3/2にあたる音程として、6\13 =
+    646.15centsを拾って加算しているのは、 その五度を持つスケール、<a
+      href="https://en.xen.wiki/w/13edo#Octatonic_5th-generated_(5L3s_or_oneirotonic)">Oneirotonic</a>
+    = <a href="https://tdxen.replit.app/index.php/5L_3s">5L3s</a>,
+    LLsLLsLsが好きだからです。
+    良かったら、上の画像をクリックし、「adgqet134」をいい感じに弾いてみてください。特に「t134」のところが、憂鬱で切なくておすすめです。
+    12EDOで言うと、メロディックメジャー = LLsLsLL と ディミニッシュ = LsLsLsLs
+    の間みたいなセンスだと思うんですよね。<br />
+    <br />
+    <hr />
+    <h3>13平均律調整ノコギリ波</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIAqACAvCgTAKigS1wAsAdAOzIHcBDANzAEZ0UBnPUgCiQEoyyAXKqULsADADoAHNmp16XEABoQzKgDMwfAJ4JlAe1V9FIACYBjBCKUBzKmwtjMAViXNTVADZgdATkxiAzCISZPQSACxiAGz0jmSYAOyRYr7+ZP6R3g7+9GRh0WKO-sGkjoWSeWSReWIxYWTxRWJ5mGQSgWKJ3mQpYiLx8SEiMQESsaT09H1RviGYIuJGAEZUzGAAEgBeCGFhliA0eDB8AMoAStsS83tQVEd4HgDqtF6IAoueRjd3Hsw6AMQwKh8PC6FBUAC2UBCKEYKDh8IRKAA9EiYXEAHrsej+JHYrgocSOOEorAY9hzXH+fHiGLI1GpUiYTGYSKU6kOIkkuqMzGBNkEhwiOkoMZM9j+HF4gXzYWRCBk9L88QibzCgY88XeJW9IUkiTyjVhRzakT+YXeEAAXyAA">
+      <img src="waveform_museum_src/reducedSawWave_13edo.png" , class="yokonaga-image" /></a>
+    <h4>#Formula</h4>
+    <pre class="codebox"><code>T = 2*pi*ph
+
+wave1 = sin(T)
+
+tanh(0.8*wave1)</code></pre>
+    <h4>#Partials</h4>
+    <pre class="codebox"><code>#ratio    amp
+1         1    // 1
+2^(13/13) 0.5  // 2
+2^(20/13) 0.15 // 3
+2^(26/13) 0.25 // 4
+2^(30/13) 0.20 // 5
+2^(33/13) 0.00 // 6x
+2^(36/13) 0.09 // 7
+2^(39/13) 0.00 // 8x
+2^(45/13) 0.03 // 9</code></pre>
+    ひとこと：上の波形の高調波がちょっときつかったので調整したものです。同じくスケールも13平均律に調整してあります。<br />
+    <br />
+    <hr />
+    <h3>デューティ波＋拡張加算合成</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIDuBDAbmAjAAgLzYApCoALbAUm0wEpsAebABgDoAmbAfiu3mwFoc1ADoA7UQBcUIkgRYAOAFSoMNEABoQAZxQAzMOICeCLQHsd49SAAmAYwSMNAcxQBLEfbYBWDZpsoANmDGAJwA9HKirJihmABsogDMoayimJ7hkTGiYQAskdERIkmYlgBGKJpgABIAXgg5OQ4gaC4w4gDKAEr1cox9GlAobS4BAOroQYiSpYGWg8MBmsYAxDAo4i4m2CgAtlCp2IdUiUdMzAkXh6Gh2KwKBEmswiJh7GesH1c3CfePz7GnFhxAHYa7YHK-ZLPNLJd59L7YTyQp7ZQHMTAYhGxZHPKKwoHw0E3ADsONSbzOjDkCQRigeUJAAF8gA">
+      <img src="waveform_museum_src/duty_3extended.png" , class="yokonaga-image" /></a>
+    <h4>#Formula</h4>
+    <pre class="codebox"><code>wave1 = ( (ph % 1) < 0.2 ? 1 : -1 )
+
+tanh(0.8*wave1)</code></pre>
+    <h4>#Partials</h4>
+    <pre class="codebox"><code>#ratio amp
+1      1
+3      0.333  // 2*(3/2)
+9/2    0.222  // 3*(3/2)
+6      0.166  // 4*(3/2)
+15/2   0.200  // 5*(3/2)
+9      0.111  // 6*(3/2)
+21/2   0.100  // 7*(3/2)
+12     0.083  // 8*(3/2)</code></pre>
+    ひとこと：上音の第一音が2/1から3/1になるようにPartialsの上音列を乗算しています。
+    デューティ波にするとどうなるかな～と思って試してみたところ、
+    ファミコン感に非整数次倍音（4.5, 7.5, 10.5）が足されてなかなか面白いです。
+    つまり、非整次のデューティ波がいっぱい複製されてこんな感じになっています。
+    オクターブ感強めのノンオクターブ純正音階に調律してあるので弾いてみると楽しいかも？<br />
+    <br />
+    <hr />
+    <h2>その他日々作ったもの</h2>
+    <h3>6n-5波+AM変調</h3>
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcICGSAEBeVB2AOgOyQCMNUBGAZnyQGMTSBOKgExICYBWKsE80qgMx64CAcxIAWSgQAWExngAqJKAEsAVFGn58AdyQA3MKRIBnFXgAUCgJSoA1KgtnLCtSmu2A9KhT3HzqzdCD1RvIj8nc0CaELDaB0iXNyZYnxYEgNckMFTsiMy3flzBDKiskVyxUqSkaVytPD1DVhILJqNrNUzrbTwAFyQ8aQsABgA6AA41dpaAWnHxdmsQABoQEyR+MD6ATwR1gHt+PtWQJmoEEbWRJHNLsfY1k2okABswfdJWADZJ-A5yGNvvhyBMFvh2CMsGNWPhvuRxGN8FhvuMJvgJhNocC8KQRqREeJ8KQCaQYcSfhMkbjyPREejcexWGScaRvuIqUTcVgsOxybj6CNWGNToQkCYwAAJABeCHE4iuIH0KhgfQAygAlOVgkYjAC+QA">
+      <img src="waveform_museum_src/experiment_20251207.png" , class="yokonaga-image" />
+    </a>
+    <pre class="codebox"><code>aa = 7
+ab = 13
+ac = 19
+ad = 25
+ae = 31
+af = 37
+ag = 43
+ah = 49
+T = pi*ph
+
+wave1 = sin(T) + (sin(T*aa)) / aa + (sin(T*ab)) / ab + (sin(T*ac)) / ac + (sin(T*ad)) / ad + (sin(T*ae)) / ae + (sin(T*af)) / af + (sin(T*ag)) / ag + (sin(T*ah)) / ah
+wave2 = (wave1)*sin(T)
+
+tanh(0.8*wave2 -0.3)</code></pre>
+    ひとこと：2025/12/07作成。とりあえずAM変調を試してみたところ、なんか変な形が誕生。
+    2,5,8,11,...(3n-1)...の倍音が少なめという謎の特徴を持っており、
+    なら3倍音とか7倍音が綺麗に響く感じならどうかと、15ED3（1902centsを15等分する音階）などを試してみることに。<br />
+    <br />
+  </div>
+
+  <!-- jQuery（先） -->
+  <script src="./20251012_files/jquery.min.js.ダウンロード"></script>
+  <!-- Lightbox2（後） -->
+  <script src="./20251012_files/lightbox.min.js.ダウンロード"></script>
+
+  <div id="lightboxOverlay" tabindex="-1" class="lightboxOverlay" style="display: none"></div>
+  <div id="lightbox" tabindex="-1" class="lightbox" style="display: none">
+    <div class="lb-outerContainer">
+      <div class="lb-container">
+        <img class="lb-image" src="data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw=="
+          alt="" />
+        <div class="lb-nav">
+          <a class="lb-prev" role="button" tabindex="0" aria-label="Previous image"
+            href="https://melxen28.lsv.jp/diary/20251012.htm"></a><a class="lb-next" role="button" tabindex="0"
+            aria-label="Next image" href="https://melxen28.lsv.jp/diary/20251012.htm"></a>
+        </div>
+        <div class="lb-loader">
+          <a class="lb-cancel" role="button" tabindex="0"></a>
+        </div>
+      </div>
+    </div>
+    <div class="lb-dataContainer">
+      <div class="lb-data">
+        <div class="lb-details">
+          <span class="lb-caption"></span><span class="lb-number"></span>
+        </div>
+        <div class="lb-closeContainer">
+          <a class="lb-close" role="button" tabindex="0"></a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="glasp-extension-toaster" style="
+        display: block;
+        width: 320px;
+        margin: unset;
+        padding: unset;
+        border: unset;
+        border-radius: unset;
+        outline: unset;
+        background-color: unset;
+        box-shadow: unset;
+        position: fixed;
+        top: 40px;
+        right: 24px;
+        z-index: 9999;
+      ">
+    <template shadowrootmode="open">
+      <div class="glasp-extension" style="font-family: inherit"></div>
+    </template>
+  </div>
+</body>
+<div class="glasp-extension" style="
+      display: block;
+      width: unset;
+      margin: unset;
+      padding: unset;
+      border: unset;
+      border-radius: unset;
+      outline: unset;
+      background-color: unset;
+      box-shadow: unset;
+      position: fixed;
+      bottom: 16px;
+      right: 16px;
+      z-index: 9999;
+    ">
+  <div class="glasp-extension" style="font-family: inherit"></div>
+</div>
+
+</html>

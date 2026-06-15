@@ -1,0 +1,2119 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Glitch Clock</title>
+  <style>
+    :root {
+      --bg: #050816;
+      --bg2: #0b1020;
+      --panel: rgba(10, 14, 28, 0.84);
+      --panel-border: rgba(255, 255, 255, 0.12);
+      --text: #e8eefc;
+      --muted: #9fb0d8;
+      --seg: #ff6257;
+      --seg-off: rgba(255, 255, 255, 0.05);
+      --accent: #8be9fd;
+      --good: #86efac;
+      --warn: #fda4af;
+      --digit-w: 96px;
+      --digit-h: 164px;
+      --gap: 14px;
+      --glow: 9px;
+      --tilt: 0deg;
+      --jitter-x: 0px;
+      --jitter-y: 0px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "Space Mono", "Segoe UI", monospace;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(40, 70, 140, 0.28) 0%, transparent 38%),
+        radial-gradient(circle at 80% 20%, rgba(255, 80, 80, 0.08) 0%, transparent 28%),
+        linear-gradient(180deg, var(--bg2), var(--bg));
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.08;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 100% 3px, 3px 100%;
+      mix-blend-mode: screen;
+      animation: scan 9s linear infinite;
+    }
+
+    @keyframes scan {
+      0% {
+        transform: translateY(0);
+      }
+
+      100% {
+        transform: translateY(12px);
+      }
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: 1fr auto;
+    }
+
+    body.ui-hidden .app {
+      grid-template-rows: 1fr;
+    }
+
+    .stage {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 52vh;
+      padding: 40px 24px 120px;
+      isolation: isolate;
+    }
+
+    body.ui-hidden .stage {
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    .halo {
+      position: absolute;
+      width: min(90vw, 1200px);
+      height: min(50vh, 400px);
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(255, 98, 87, 0.14), transparent 70%);
+      filter: blur(24px);
+      transform: translate(var(--jitter-x), var(--jitter-y));
+      transition: background 0.25s ease, transform 0.18s ease;
+      z-index: 0;
+    }
+
+    .history-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.92;
+      z-index: 0;
+      mix-blend-mode: screen;
+    }
+
+    .clock-wrap {
+      position: relative;
+      z-index: 1;
+      transform: rotate(var(--tilt)) translate(var(--jitter-x), var(--jitter-y));
+      transition: transform 0.16s ease, left 0.22s ease, top 0.22s ease;
+    }
+
+    body.ui-hidden .clock-wrap {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      z-index: 3;
+      transform: translate(-50%, -50%) rotate(var(--tilt)) translate(var(--jitter-x), var(--jitter-y));
+    }
+
+    .display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--gap);
+      user-select: none;
+      filter: drop-shadow(0 0 var(--glow) color-mix(in srgb, var(--seg) 55%, transparent));
+      transition: filter 0.25s ease;
+    }
+
+    .digit-box {
+      position: relative;
+      width: var(--digit-w);
+      height: var(--digit-h);
+      flex: 0 0 auto;
+    }
+
+    .digit-box.flash {
+      animation: blink 0.18s linear 1;
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.68;
+      }
+    }
+
+    .colon {
+      width: 18px;
+      height: var(--digit-h);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 26px;
+      flex: 0 0 auto;
+    }
+
+    .colon-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--seg);
+      box-shadow: 0 0 10px color-mix(in srgb, var(--seg) 70%, transparent);
+      opacity: 0.9;
+      transition: opacity 0.15s ease, transform 0.15s ease, background 0.2s ease;
+    }
+
+    body.ui-hidden .controls,
+    body.ui-hidden .hud {
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+    }
+
+    body.ui-hidden .controls {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+
+    .controls,
+    .hud {
+      transition: opacity 0.22s ease, transform 0.22s ease;
+    }
+
+    .clock-wrap.clickable {
+      cursor: pointer;
+    }
+
+    .seg {
+      position: absolute;
+      opacity: 0;
+      background: var(--seg);
+      transition: opacity 0.12s linear, transform 0.14s ease, filter 0.12s ease, background 0.2s ease;
+      box-shadow: 0 0 6px color-mix(in srgb, var(--seg) 50%, transparent);
+    }
+
+    .seg.on {
+      opacity: 1;
+    }
+
+    .seg.off {
+      opacity: 0.08;
+      background: var(--seg-off);
+      box-shadow: none;
+    }
+
+    .seg.ghost {
+      opacity: 0.28;
+      filter: blur(0.8px);
+    }
+
+    .seg.violent {
+      filter: blur(1.2px) brightness(1.3);
+    }
+
+    .seg-h {
+      clip-path: polygon(14% 0, 86% 0, 100% 50%, 86% 100%, 14% 100%, 0 50%);
+    }
+
+    .seg-v {
+      clip-path: polygon(0 14%, 50% 0, 100% 14%, 100% 86%, 50% 100%, 0 86%);
+    }
+
+    .hud {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      right: 18px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .status,
+    .legend {
+      padding: 10px 12px;
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      background: rgba(8, 12, 24, 0.45);
+      backdrop-filter: blur(10px);
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .controls {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--panel);
+      backdrop-filter: blur(12px);
+      padding: 14px 18px 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(120px, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .field.span-2 {
+      grid-column: span 2;
+    }
+
+    .field.span-3 {
+      grid-column: span 3;
+    }
+
+    label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    input[type="range"],
+    input[type="color"],
+    textarea,
+    select,
+    button {
+      width: 100%;
+      font: inherit;
+    }
+
+    textarea,
+    select,
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      padding: 10px 12px;
+    }
+
+    textarea {
+      min-height: 94px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    input[type="range"] {
+      accent-color: var(--seg);
+    }
+
+    .value-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-weight: 700;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--seg) 70%, white), color-mix(in srgb, var(--seg) 40%, #9dd9ff));
+      color: #08101d;
+    }
+
+    button.secondary {
+      background: linear-gradient(135deg, #c4b5fd, #8be9fd);
+    }
+
+    button.ghost {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .tiny {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    @media (max-width: 980px) {
+      :root {
+        --digit-w: 68px;
+        --digit-h: 120px;
+        --gap: 10px;
+      }
+
+      html,
+      body {
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+
+      .stage {
+        min-height: 48vh;
+        padding: 28px 18px 80px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .field.span-2,
+      .field.span-3 {
+        grid-column: span 2;
+      }
+
+      .hud {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .controls {
+        padding: 14px 14px 18px;
+      }
+    }
+
+    @media (max-width: 700px) {
+      :root {
+        --digit-w: 46px;
+        --digit-h: 82px;
+        --gap: 6px;
+      }
+
+      .app {
+        min-height: 100dvh;
+      }
+
+      .stage {
+        min-height: 42vh;
+        padding: 72px 10px 28px;
+      }
+
+      body.ui-hidden .stage {
+        min-height: 100dvh;
+        padding: 10px;
+      }
+
+      .halo {
+        width: min(120vw, 820px);
+        height: min(42vh, 240px);
+      }
+
+      .display {
+        gap: var(--gap);
+      }
+
+      .colon {
+        width: 10px;
+        gap: 14px;
+      }
+
+      .colon-dot {
+        width: 6px;
+        height: 6px;
+      }
+
+      .hud {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        gap: 8px;
+      }
+
+      .status,
+      .legend {
+        max-width: 100%;
+        padding: 8px 10px;
+        font-size: 10px;
+        letter-spacing: 0.05em;
+        white-space: normal;
+      }
+
+      .controls {
+        gap: 12px;
+        padding: 12px 10px 16px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .field.span-2,
+      .field.span-3 {
+        grid-column: span 1;
+      }
+
+      .btn-row {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        padding: 12px 14px;
+      }
+
+      textarea {
+        min-height: 120px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      :root {
+        --digit-w: 38px;
+        --digit-h: 68px;
+        --gap: 4px;
+      }
+
+      .stage {
+        min-height: 38vh;
+        padding-top: 78px;
+      }
+
+      .clock-wrap {
+        max-width: calc(100vw - 10px);
+      }
+
+      .display {
+        transform: scale(0.98);
+        transform-origin: center;
+      }
+
+      body.ui-hidden .display {
+        transform: scale(1.06);
+      }
+    }
+
+    body.history-disabled .history-canvas {
+      display: none;
+    }
+
+    body.compact-mobile .status,
+    body.compact-mobile .legend {
+      backdrop-filter: blur(6px);
+    }
+
+    .pomo-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .pomo-chip strong {
+      color: var(--accent);
+    }
+
+    @media (max-width: 700px) {
+      body.compact-mobile .history-canvas {
+        display: none;
+      }
+    }
+
+    .app {
+      height: 100vh;
+      display: grid;
+      grid-template-rows: 1fr auto;
+    }
+
+    .controls {
+      max-height: 42vh;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <section class="stage">
+      <div class="hud">
+        <div class="status" id="statusText">MODE: NOISE</div>
+        <div class="legend" id="truthText">REAL TIME: --:--:-- | DIST: --</div>
+      </div>
+      <div class="halo" id="halo"></div>
+      <canvas class="history-canvas" id="historyCanvas"></canvas>
+      <div class="clock-wrap" id="clockWrap">
+        <div class="display" id="display"></div>
+      </div>
+    </section>
+
+    <section class="controls">
+      <div class="grid">
+        <div class="field">
+          <label for="bgColor">背景色</label>
+          <input id="bgColor" type="color" value="#050816" />
+        </div>
+        <div class="field">
+          <label for="segColor">セグ色</label>
+          <input id="segColor" type="color" value="#00ff00" />
+        </div>
+        <div class="field">
+          <label for="offColor">消灯色</label>
+          <input id="offColor" type="color" value="#273041" />
+        </div>
+        <div class="field">
+          <label for="sizeScale">サイズ</label>
+          <input id="sizeScale" type="range" min="50" max="160" step="1" value="100" />
+          <div class="value-row"><span>表示倍率</span><span id="sizeScaleValue">100%</span></div>
+        </div>
+        <div class="field">
+          <label for="glowPower">グロー</label>
+          <input id="glowPower" type="range" min="0" max="30" step="1" value="21" />
+          <div class="value-row"><span>発光量</span><span id="glowPowerValue">9</span></div>
+        </div>
+        <div class="field">
+          <label for="tickMs">更新間隔</label>
+          <input id="tickMs" type="range" min="100" max="5000" step="100" value="1000" />
+          <div class="value-row"><span>ミリ秒</span><span id="tickMsValue">1000ms</span></div>
+        </div>
+
+        <div class="field">
+          <label for="messageRate">意味あり表示率</label>
+          <input id="messageRate" type="range" min="0" max="100" step="1" value="28" />
+          <div class="value-row"><span>signal / pseudo-digit</span><span id="messageRateValue">28%</span></div>
+        </div>
+        <div class="field">
+          <label for="fullClockRate">完全時計率</label>
+          <input id="fullClockRate" type="range" min="0" max="100" step="1" value="10" />
+          <div class="value-row"><span>急に時計になる</span><span id="fullClockRateValue">10%</span></div>
+        </div>
+        <div class="field">
+          <label for="timeLeakRate">時刻漏れ率</label>
+          <input id="timeLeakRate" type="range" min="0" max="100" step="1" value="48" />
+          <div class="value-row"><span>部分的に本物が混ざる</span><span id="timeLeakRateValue">48%</span></div>
+        </div>
+        <div class="field">
+          <label for="customRate">指定列率</label>
+          <input id="customRate" type="range" min="0" max="100" step="1" value="18" />
+          <div class="value-row"><span>ユーザー指定列</span><span id="customRateValue">18%</span></div>
+        </div>
+        <div class="field">
+          <label for="readabilityFloor">時計らしさの最低保証</label>
+          <input id="readabilityFloor" type="range" min="0" max="100" step="1" value="38" />
+          <div class="value-row"><span>7セグ骨格の残りやすさ</span><span id="readabilityFloorValue">38%</span></div>
+        </div>
+        <div class="field">
+          <label for="colonTruth">コロンの生存率</label>
+          <input id="colonTruth" type="range" min="0" max="100" step="1" value="86" />
+          <div class="value-row"><span>コロンだけ生きてる率</span><span id="colonTruthValue">86%</span></div>
+        </div>
+        <div class="field">
+          <label for="tiltToggle">ぐにゃっと角度変化</label>
+          <select id="tiltToggle">
+            <option value="off" selected>OFF</option>
+            <option value="on">ON</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="segmentDriftToggle">セグの位置ゆらぎ</label>
+          <select id="segmentDriftToggle">
+            <option value="off" selected>OFF</option>
+            <option value="on">ON</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="modeSelect">表示モード</label>
+          <select id="modeSelect">
+            <option value="clock" selected>時計</option>
+            <option value="pomodoro">ポモドーロ</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="historyToggle">履歴グラフ</label>
+          <select id="historyToggle">
+            <option value="auto" selected>AUTO</option>
+            <option value="on">ON</option>
+            <option value="off">OFF</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="soundToggle">チャイム</label>
+          <select id="soundToggle">
+            <option value="on" selected>ON</option>
+            <option value="off">OFF</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="soundVolume">音量</label>
+          <input id="soundVolume" type="range" min="0" max="100" step="1" value="55" />
+          <div class="value-row"><span>volume</span><span id="soundVolumeValue">55%</span></div>
+        </div>
+
+        <div class="field">
+          <label for="workMinutes">作業(分)</label>
+          <input id="workMinutes" type="number" min="1" max="180" step="1" value="25" />
+        </div>
+
+        <div class="field">
+          <label for="shortBreakMinutes">短休憩(分)</label>
+          <input id="shortBreakMinutes" type="number" min="1" max="60" step="1" value="5" />
+        </div>
+
+        <div class="field">
+          <label for="longBreakMinutes">長休憩(分)</label>
+          <input id="longBreakMinutes" type="number" min="1" max="120" step="1" value="15" />
+        </div>
+
+        <div class="field">
+          <label for="longBreakEvery">何回ごとに長休憩</label>
+          <input id="longBreakEvery" type="number" min="2" max="8" step="1" value="4" />
+        </div>
+
+        <div class="field span-2">
+          <label>ポモドーロ状態</label>
+          <div class="pomo-chip"><strong id="pomoPhaseLabel">WORK</strong><span id="pomoCycleLabel">Cycle 0</span></div>
+        </div>
+
+        <div class="field span-3">
+          <label for="customSequences">指定したい 6 桁列（改行区切り / 数字以外は無視）</label>
+          <textarea id="customSequences">123456
+987654
+135791
+111111
+404404
+314159
+271828</textarea>
+        </div>
+        <div class="field span-3">
+          <label for="meaningfulSequences">意味あり列（自動候補）</label>
+          <textarea id="meaningfulSequences">123456
+654321
+987654
+135791
+246824
+111111
+222222
+000000
+121212
+404404
+070707
+888888</textarea>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button id="rerollBtn">今すぐ変異</button>
+        <button id="freezeBtn" class="secondary">一時停止</button>
+        <button id="pomoStartBtn" class="secondary">ポモドーロ開始</button>
+        <button id="pomoResetBtn" class="ghost">ポモドーロ初期化</button>
+        <button id="pomoSkipBtn" class="ghost">次の区間へ</button>
+        <button id="fullscreenBtn" class="ghost">fullscreen</button>
+      </div>
+      <div class="tiny">普段はノイズ寄りです。ときどき数字の断片、意味あり列、そして突然ほんものの時刻が現れます。毎更新ごとに表示全体を生成し直しています。</div>
+    </section>
+  </div>
+
+  <script>
+    const SEGS = ["a", "b", "c", "d", "e", "f", "g"];
+    const DIGIT_MAP = {
+      "0": [1, 1, 1, 1, 1, 1, 0],
+      "1": [0, 1, 1, 0, 0, 0, 0],
+      "2": [1, 1, 0, 1, 1, 0, 1],
+      "3": [1, 1, 1, 1, 0, 0, 1],
+      "4": [0, 1, 1, 0, 0, 1, 1],
+      "5": [1, 0, 1, 1, 0, 1, 1],
+      "6": [1, 0, 1, 1, 1, 1, 1],
+      "7": [1, 1, 1, 0, 0, 0, 0],
+      "8": [1, 1, 1, 1, 1, 1, 1],
+      "9": [1, 1, 1, 1, 0, 1, 1],
+      "-": [0, 0, 0, 0, 0, 0, 1],
+      " ": [0, 0, 0, 0, 0, 0, 0]
+    };
+
+    const display = document.getElementById("display");
+    const statusText = document.getElementById("statusText");
+    const truthText = document.getElementById("truthText");
+    const halo = document.getElementById("halo");
+    const historyCanvas = document.getElementById("historyCanvas");
+    const historyCtx = historyCanvas.getContext("2d");
+    const clockWrap = document.getElementById("clockWrap");
+
+    const ids = [
+      "bgColor", "segColor", "offColor", "sizeScale", "glowPower", "tickMs",
+      "messageRate", "fullClockRate", "timeLeakRate", "customRate", "readabilityFloor", "colonTruth",
+      "tiltToggle", "segmentDriftToggle",
+      "modeSelect", "historyToggle",
+      "soundToggle", "soundVolume",
+      "workMinutes", "shortBreakMinutes", "longBreakMinutes", "longBreakEvery",
+      "customSequences", "meaningfulSequences"
+    ];
+
+    const controls = Object.fromEntries(ids.map(id => [id, document.getElementById(id)]));
+    const valueEls = {
+      sizeScale: document.getElementById("sizeScaleValue"),
+      glowPower: document.getElementById("glowPowerValue"),
+      tickMs: document.getElementById("tickMsValue"),
+      messageRate: document.getElementById("messageRateValue"),
+      fullClockRate: document.getElementById("fullClockRateValue"),
+      timeLeakRate: document.getElementById("timeLeakRateValue"),
+      customRate: document.getElementById("customRateValue"),
+      readabilityFloor: document.getElementById("readabilityFloorValue"),
+      colonTruth: document.getElementById("colonTruthValue"),
+      soundVolume: document.getElementById("soundVolumeValue")
+    };
+
+    const rerollBtn = document.getElementById("rerollBtn");
+    const freezeBtn = document.getElementById("freezeBtn");
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
+    const pomoStartBtn = document.getElementById("pomoStartBtn");
+    const pomoResetBtn = document.getElementById("pomoResetBtn");
+    const pomoSkipBtn = document.getElementById("pomoSkipBtn");
+    const pomoPhaseLabel = document.getElementById("pomoPhaseLabel");
+    const pomoCycleLabel = document.getElementById("pomoCycleLabel");
+
+    const POSITIONS = [0, 1, "c1", 2, 3, "c2", 4, 5];
+    const digitState = Array.from({ length: 6 }, () => Array(7).fill(0));
+
+    let segmentMeta = Array.from({ length: 6 }, () => Array.from({ length: 7 }, () => ({ ghost: false, violent: false, dx: 0, dy: 0 })));
+    let colonState = [true, true];
+    let timer = null;
+    let frozen = false;
+    let lastMode = "noise";
+    let uiHidden = false;
+    let currentConvergence = null;
+    let currentRealDigits = ["0", "0", "0", "0", "0", "0"];
+    let spacetimeDistance = { totalTruthDistance: 0, totalNearestDistance: 0, perDigit: [], aggregateSegmentTruthMismatch: Array(7).fill(0) };
+    let historyBuffer = [];
+
+    const MOBILE_BP = 700;
+    const isMobileDevice = () => window.innerWidth <= MOBILE_BP;
+
+    let historyEnabled = !isMobileDevice();
+    let appMode = "clock";
+
+    let pomoRunning = false;
+    let pomoPhase = "work"; // work | shortBreak | longBreak
+    let pomoCycle = 0;
+    let pomoRemainingMs = 25 * 60 * 1000;
+    let pomoLastTs = Date.now();
+
+    let audioCtx = null;
+    let audioUnlocked = false;
+
+    function ensureAudioContext() {
+      if (!audioCtx) {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return null;
+        audioCtx = new Ctx();
+      }
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+      audioUnlocked = true;
+      return audioCtx;
+    }
+
+    function isSoundEnabled() {
+      return controls.soundToggle?.value !== "off";
+    }
+
+    function getSoundVolume() {
+      return (Number(controls.soundVolume?.value || 55) / 100) * 0.18;
+    }
+
+    function playTone(freq = 880, duration = 0.18, when = 0, type = "sine", gainMul = 1) {
+      const ctx = ensureAudioContext();
+      if (!ctx || !isSoundEnabled()) return;
+
+      const t0 = ctx.currentTime + when;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+
+      const vol = getSoundVolume() * gainMul;
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, vol), t0 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(t0);
+      osc.stop(t0 + duration + 0.02);
+    }
+
+    function playChord(freqs, step = 0.03, duration = 0.22, type = "sine", gainMul = 1) {
+      freqs.forEach((freq, i) => {
+        playTone(freq, duration, i * step, type, gainMul);
+      });
+    }
+
+    function playPomodoroStartChime() {
+      playChord([523.25, 659.25, 783.99], 0.04, 0.22, "sine", 1.0);
+    }
+
+    function playPomodoroWorkChime() {
+      playChord([587.33, 698.46, 880.00], 0.04, 0.24, "triangle", 1.0);
+    }
+
+    function playPomodoroBreakChime() {
+      playChord([659.25, 783.99, 987.77], 0.05, 0.24, "sine", 0.95);
+    }
+
+    function playPomodoroLongBreakChime() {
+      playChord([523.25, 659.25, 783.99, 1046.5], 0.05, 0.26, "sine", 1.0);
+    }
+
+    function playPomodoroEndChime() {
+      playTone(880, 0.18, 0.00, "triangle", 0.9);
+      playTone(1174.66, 0.22, 0.08, "triangle", 0.9);
+      playTone(1567.98, 0.32, 0.18, "triangle", 1.0);
+    }
+
+    const HISTORY_LIMIT = 180;
+
+    const POSITION_STABILITY = [0.92, 0.92, 0.72, 0.72, 0.46, 0.46];
+    const GROUP_STABILITY = { hours: 0.92, minutes: 0.72, seconds: 0.46 };
+
+    function clamp(n, min, max) {
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function chance(pct) {
+      return Math.random() * 100 < pct;
+    }
+
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function pick(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function buildDisplay() {
+      display.innerHTML = "";
+      const digitW = getComputedStyle(document.documentElement).getPropertyValue("--digit-w").trim();
+      const digitH = getComputedStyle(document.documentElement).getPropertyValue("--digit-h").trim();
+      const w = parseFloat(digitW);
+      const h = parseFloat(digitH);
+
+      for (const pos of POSITIONS) {
+        if (typeof pos === "string") {
+          const col = document.createElement("div");
+          col.className = "colon";
+          col.dataset.id = pos;
+          for (let k = 0; k < 2; k++) {
+            const dot = document.createElement("div");
+            dot.className = "colon-dot";
+            dot.id = `colon-${pos}-${k}`;
+            col.appendChild(dot);
+          }
+          display.appendChild(col);
+          continue;
+        }
+
+        const box = document.createElement("div");
+        box.className = "digit-box";
+        box.id = `digit-${pos}`;
+
+        const hW = w * 0.68;
+        const hH = Math.max(5, h * 0.075);
+        const vW = Math.max(7, w * 0.13);
+        const vH = h * 0.34;
+        const padX = w * 0.1;
+        const padY = h * 0.04;
+        const defs = [
+          { cls: "seg-h", w: hW, h: hH, x: (w - hW) / 2, y: 0 },
+          { cls: "seg-v", w: vW, h: vH, x: w - padX - vW, y: padY },
+          { cls: "seg-v", w: vW, h: vH, x: w - padX - vW, y: h * 0.5 + padY * 0.35 },
+          { cls: "seg-h", w: hW, h: hH, x: (w - hW) / 2, y: h - hH },
+          { cls: "seg-v", w: vW, h: vH, x: padX, y: h * 0.5 + padY * 0.35 },
+          { cls: "seg-v", w: vW, h: vH, x: padX, y: padY },
+          { cls: "seg-h", w: hW, h: hH, x: (w - hW) / 2, y: (h - hH) / 2 }
+        ];
+
+        defs.forEach((d, idx) => {
+          const seg = document.createElement("div");
+          seg.id = `seg-${pos}-${idx}`;
+          seg.className = `seg ${d.cls} off`;
+          seg.style.width = `${d.w}px`;
+          seg.style.height = `${d.h}px`;
+          seg.style.left = `${d.x}px`;
+          seg.style.top = `${d.y}px`;
+          box.appendChild(seg);
+        });
+
+        display.appendChild(box);
+      }
+    }
+
+    function applyTheme() {
+      document.documentElement.style.setProperty("--bg", controls.bgColor.value);
+      document.documentElement.style.setProperty("--seg", controls.segColor.value);
+      document.documentElement.style.setProperty("--seg-off", controls.offColor.value);
+      document.documentElement.style.setProperty("--glow", `${controls.glowPower.value}px`);
+      const scale = Number(controls.sizeScale.value) / 100;
+      document.documentElement.style.setProperty("--digit-w", `${96 * scale}px`);
+      document.documentElement.style.setProperty("--digit-h", `${164 * scale}px`);
+      document.documentElement.style.setProperty("--gap", `${14 * scale}px`);
+      buildDisplay();
+      renderState();
+      resizeHistoryCanvas();
+      updateValueLabels();
+    }
+
+    function updateValueLabels() {
+      valueEls.sizeScale.textContent = `${controls.sizeScale.value}%`;
+      valueEls.glowPower.textContent = controls.glowPower.value;
+      valueEls.tickMs.textContent = `${controls.tickMs.value}ms`;
+      valueEls.messageRate.textContent = `${controls.messageRate.value}%`;
+      valueEls.fullClockRate.textContent = `${controls.fullClockRate.value}%`;
+      valueEls.timeLeakRate.textContent = `${controls.timeLeakRate.value}%`;
+      valueEls.customRate.textContent = `${controls.customRate.value}%`;
+      valueEls.readabilityFloor.textContent = `${controls.readabilityFloor.value}%`;
+      valueEls.colonTruth.textContent = `${controls.colonTruth.value}%`;
+      if (valueEls.soundVolume && controls.soundVolume) {
+        valueEls.soundVolume.textContent = `${controls.soundVolume.value}%`;
+      }
+    }
+
+    function getResolvedHistoryEnabled() {
+      const mode = controls.historyToggle?.value || "auto";
+      if (mode === "on") return true;
+      if (mode === "off") return false;
+      return !isMobileDevice();
+    }
+
+    function applyPerformanceMode() {
+      historyEnabled = getResolvedHistoryEnabled();
+      document.body.classList.toggle("history-disabled", !historyEnabled);
+      document.body.classList.toggle("compact-mobile", isMobileDevice());
+
+      if (isMobileDevice() && controls.segmentDriftToggle.value !== "off") {
+        controls.segmentDriftToggle.value = "off";
+      }
+
+      if (isMobileDevice() && Number(controls.tickMs.value) < 1500) {
+        controls.tickMs.value = "1500";
+      }
+
+      updateValueLabels();
+    }
+
+    function getClockDigits() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, "0");
+      const m = String(now.getMinutes()).padStart(2, "0");
+      const s = String(now.getSeconds()).padStart(2, "0");
+      return [...(h + m + s)];
+    }
+
+    function getPomodoroDigits() {
+      const totalSec = Math.max(0, Math.ceil(pomoRemainingMs / 1000));
+      const hh = String(Math.floor(totalSec / 3600)).padStart(2, "0");
+      const mm = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
+      const ss = String(totalSec % 60).padStart(2, "0");
+      return [...(hh + mm + ss)];
+    }
+
+    function getActiveDigits() {
+      return appMode === "pomodoro" ? getPomodoroDigits() : getClockDigits();
+    }
+
+    function getPhaseMinutes(phase) {
+      if (phase === "work") return Number(controls.workMinutes.value || 25);
+      if (phase === "shortBreak") return Number(controls.shortBreakMinutes.value || 5);
+      return Number(controls.longBreakMinutes.value || 15);
+    }
+
+    function setPomodoroPhase(phase, resetCycle = false) {
+      pomoPhase = phase;
+      if (resetCycle) pomoCycle = 0;
+      pomoRemainingMs = getPhaseMinutes(phase) * 60 * 1000;
+      pomoLastTs = Date.now();
+      updatePomodoroLabels();
+    }
+
+    function updatePomodoroLabels() {
+      const map = {
+        work: "WORK",
+        shortBreak: "SHORT BREAK",
+        longBreak: "LONG BREAK"
+      };
+      pomoPhaseLabel.textContent = map[pomoPhase] || "WORK";
+      pomoCycleLabel.textContent = `Cycle ${pomoCycle}`;
+    }
+
+    function advancePomodoroPhase() {
+      playPomodoroEndChime();
+
+      if (pomoPhase === "work") {
+        pomoCycle += 1;
+        const every = Math.max(2, Number(controls.longBreakEvery.value || 4));
+
+        if (pomoCycle % every === 0) {
+          setPomodoroPhase("longBreak");
+          playPomodoroLongBreakChime();
+        } else {
+          setPomodoroPhase("shortBreak");
+          playPomodoroBreakChime();
+        }
+      } else {
+        setPomodoroPhase("work");
+        playPomodoroWorkChime();
+      }
+    }
+
+    function tickPomodoro(nowTs) {
+      if (!pomoRunning || frozen || appMode !== "pomodoro") {
+        pomoLastTs = nowTs;
+        return;
+      }
+      const delta = nowTs - pomoLastTs;
+      pomoLastTs = nowTs;
+      pomoRemainingMs -= delta;
+
+      if (pomoRemainingMs <= 0) {
+        advancePomodoroPhase();
+      }
+    }
+
+    function updateHudLabel(realDigits, dist = spacetimeDistance) {
+      const hhmmss = `${realDigits[0]}${realDigits[1]}:${realDigits[2]}${realDigits[3]}:${realDigits[4]}${realDigits[5]}`;
+      const prefix = appMode === "pomodoro" ? "POMODORO" : "REAL TIME";
+      truthText.textContent = `${prefix}: ${hhmmss} | DIST: T${dist.totalTruthDistance} / N${dist.totalNearestDistance}`;
+    }
+
+    function getRealDigits() {
+      return getClockDigits();
+    }
+
+    function updateTruthHud(realDigits, dist = spacetimeDistance) {
+      updateHudLabel(realDigits, dist);
+    }
+
+    function hexToRgb(hex) {
+      const clean = (hex || '').replace('#', '').trim();
+      if (clean.length === 3) {
+        const r = parseInt(clean[0] + clean[0], 16);
+        const g = parseInt(clean[1] + clean[1], 16);
+        const b = parseInt(clean[2] + clean[2], 16);
+        return { r, g, b };
+      }
+      if (clean.length >= 6) {
+        const r = parseInt(clean.slice(0, 2), 16);
+        const g = parseInt(clean.slice(2, 4), 16);
+        const b = parseInt(clean.slice(4, 6), 16);
+        return { r, g, b };
+      }
+      return { r: 255, g: 98, b: 87 };
+    }
+
+    function rgbaFromHex(hex, alpha = 1, mix = 1, floor = 0) {
+      const { r, g, b } = hexToRgb(hex);
+      const rr = Math.round(r * mix + floor * (1 - mix));
+      const gg = Math.round(g * mix + floor * (1 - mix));
+      const bb = Math.round(b * mix + floor * (1 - mix));
+      return `rgba(${rr}, ${gg}, ${bb}, ${alpha})`;
+    }
+
+    function getGraphLayout(w, h) {
+      const compact = window.innerWidth <= 700;
+      const hiddenBoost = uiHidden ? 1 : 0;
+      const padX = compact
+        ? Math.min(Math.max(14, w * 0.05), 28)
+        : Math.min(56, w * (uiHidden ? 0.08 : 0.06));
+      const padTopBase = compact ? 18 : 24;
+      const padBottomBase = compact ? 18 : 26;
+      const padTop = Math.min(Math.max(padTopBase, h * (compact ? 0.07 : 0.08)), uiHidden ? 72 : 56);
+      const padBottom = Math.min(Math.max(padBottomBase, h * (compact ? 0.09 : 0.10)), uiHidden ? 88 : 64);
+      const plotW = Math.max(1, w - padX * 2);
+      const plotH = Math.max(1, h - padTop - padBottom);
+      return { padX, padTop, padBottom, plotW, plotH, hiddenBoost };
+    }
+
+    function resizeHistoryCanvas() {
+      if (!historyEnabled) return;
+      const rect = historyCanvas.getBoundingClientRect();
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      historyCanvas.width = Math.max(1, Math.round(rect.width * dpr));
+      historyCanvas.height = Math.max(1, Math.round(rect.height * dpr));
+      historyCtx.setTransform(1, 0, 0, 1, 0, 0);
+      historyCtx.scale(dpr, dpr);
+      drawHistoryGraph();
+    }
+
+    function pushHistorySample(dist) {
+      const perDigit = dist.perDigit || [];
+      const hours = perDigit.slice(0, 2).reduce((sum, info) => sum + (info?.truthDistance || 0), 0);
+      const minutes = perDigit.slice(2, 4).reduce((sum, info) => sum + (info?.truthDistance || 0), 0);
+      const seconds = perDigit.slice(4, 6).reduce((sum, info) => sum + (info?.truthDistance || 0), 0);
+      historyBuffer.push({
+        totalTruthDistance: dist.totalTruthDistance || 0,
+        totalNearestDistance: dist.totalNearestDistance || 0,
+        hours,
+        minutes,
+        seconds,
+        ts: Date.now()
+      });
+      if (historyBuffer.length > HISTORY_LIMIT) {
+        historyBuffer.splice(0, historyBuffer.length - HISTORY_LIMIT);
+      }
+    }
+
+    function drawHistoryLine(values, maxValue, color, lineWidth, glow = 0, layout = getGraphLayout(historyCanvas.clientWidth || 1, historyCanvas.clientHeight || 1)) {
+      const { padX, padTop, plotW, plotH } = layout;
+      historyCtx.beginPath();
+      values.forEach((v, i) => {
+        const x = padX + (values.length <= 1 ? plotW * 0.5 : (i / (values.length - 1)) * plotW);
+        const y = padTop + plotH - (Math.min(v, maxValue) / maxValue) * plotH;
+        if (i === 0) historyCtx.moveTo(x, y);
+        else historyCtx.lineTo(x, y);
+      });
+      historyCtx.strokeStyle = color;
+      historyCtx.lineWidth = lineWidth;
+      historyCtx.shadowBlur = glow;
+      historyCtx.shadowColor = color;
+      historyCtx.stroke();
+      historyCtx.shadowBlur = 0;
+    }
+
+    function drawHistoryGraph() {
+      const w = historyCanvas.clientWidth || 1;
+      const h = historyCanvas.clientHeight || 1;
+      const layout = getGraphLayout(w, h);
+      const { padX, padTop, padBottom, plotW, plotH } = layout;
+      historyCtx.clearRect(0, 0, w, h);
+
+      const segColor = controls?.segColor?.value || '#ff6257';
+      const bgColor = controls?.bgColor?.value || '#050816';
+      const darkGrid = rgbaFromHex(segColor, uiHidden ? 0.09 : 0.06, 0.42, 24);
+      const darkFill = rgbaFromHex(segColor, uiHidden ? 0.14 : 0.10, 0.32, 10);
+      const totalLine = rgbaFromHex(segColor, uiHidden ? 0.56 : 0.40, 0.52, 12);
+      const nearestLine = rgbaFromHex(segColor, 0.18, 0.28, 20);
+      const hourLine = 'rgba(140, 233, 253, 0.22)';
+      const minuteLine = 'rgba(196, 181, 253, 0.18)';
+      const secondLine = rgbaFromHex(segColor, 0.20, 0.45, 8);
+
+      const bgGrad = historyCtx.createLinearGradient(0, 0, 0, h);
+      bgGrad.addColorStop(0, rgbaFromHex(bgColor, 0.00, 1, 0));
+      bgGrad.addColorStop(0.4, rgbaFromHex(segColor, uiHidden ? 0.06 : 0.03, 0.30, 8));
+      bgGrad.addColorStop(1, rgbaFromHex(bgColor, 0.00, 1, 0));
+      historyCtx.fillStyle = bgGrad;
+      historyCtx.fillRect(0, 0, w, h);
+
+      for (let i = 0; i <= 4; i++) {
+        const y = padTop + (plotH / 4) * i;
+        historyCtx.beginPath();
+        historyCtx.moveTo(padX, y);
+        historyCtx.lineTo(padX + plotW, y);
+        historyCtx.strokeStyle = darkGrid;
+        historyCtx.lineWidth = 1;
+        historyCtx.stroke();
+      }
+
+      for (let i = 0; i <= 5; i++) {
+        const x = padX + (plotW / 5) * i;
+        historyCtx.beginPath();
+        historyCtx.moveTo(x, padTop);
+        historyCtx.lineTo(x, padTop + plotH);
+        historyCtx.strokeStyle = darkGrid;
+        historyCtx.lineWidth = 1;
+        historyCtx.stroke();
+      }
+
+      if (!historyBuffer.length) return;
+
+      const maxValue = Math.max(1, ...historyBuffer.map(v => Math.max(v.totalTruthDistance, v.totalNearestDistance, v.hours, v.minutes, v.seconds)));
+      const totalTruth = historyBuffer.map(v => v.totalTruthDistance);
+      const totalNearest = historyBuffer.map(v => v.totalNearestDistance);
+      const hours = historyBuffer.map(v => v.hours);
+      const minutes = historyBuffer.map(v => v.minutes);
+      const seconds = historyBuffer.map(v => v.seconds);
+
+      const areaGrad = historyCtx.createLinearGradient(0, padTop, 0, padTop + plotH);
+      areaGrad.addColorStop(0, darkFill);
+      areaGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      historyCtx.beginPath();
+      totalTruth.forEach((v, i) => {
+        const x = padX + (totalTruth.length <= 1 ? plotW * 0.5 : (i / (totalTruth.length - 1)) * plotW);
+        const y = padTop + plotH - (Math.min(v, maxValue) / maxValue) * plotH;
+        if (i === 0) historyCtx.moveTo(x, y);
+        else historyCtx.lineTo(x, y);
+      });
+      historyCtx.lineTo(padX + plotW, padTop + plotH);
+      historyCtx.lineTo(padX, padTop + plotH);
+      historyCtx.closePath();
+      historyCtx.fillStyle = areaGrad;
+      historyCtx.fill();
+
+      drawHistoryLine(totalNearest, maxValue, nearestLine, 1.2, 0, layout);
+      drawHistoryLine(hours, maxValue, hourLine, 1.0, 0, layout);
+      drawHistoryLine(minutes, maxValue, minuteLine, 1.0, 0, layout);
+      drawHistoryLine(seconds, maxValue, secondLine, 1.0, 0, layout);
+      drawHistoryLine(totalTruth, maxValue, totalLine, uiHidden ? 2.1 : 1.8, uiHidden ? 12 : 8, layout);
+
+      const last = historyBuffer[historyBuffer.length - 1];
+      const lastX = padX + plotW;
+      const lastY = padTop + plotH - (Math.min(last.totalTruthDistance, maxValue) / maxValue) * plotH;
+      historyCtx.beginPath();
+      historyCtx.arc(lastX, lastY, uiHidden ? 3.8 : 3.2, 0, Math.PI * 2);
+      historyCtx.fillStyle = rgbaFromHex(segColor, 0.58, 0.72, 24);
+      historyCtx.shadowBlur = uiHidden ? 14 : 10;
+      historyCtx.shadowColor = rgbaFromHex(segColor, 0.45, 0.72, 24);
+      historyCtx.fill();
+      historyCtx.shadowBlur = 0;
+
+      historyCtx.fillStyle = rgbaFromHex(segColor, uiHidden ? 0.28 : 0.22, 0.55, 40);
+      historyCtx.font = `${window.innerWidth <= 700 ? 10 : 12}px "Space Mono", monospace`;
+      historyCtx.fillText('SPACETIME DISTANCE LOG', padX, Math.max(12, padTop - 8));
+    }
+
+    function getPositionStability(index) {
+      return POSITION_STABILITY[index] ?? 0.5;
+    }
+
+    function getPositionLabel(index) {
+      return index < 2 ? "hours" : index < 4 ? "minutes" : "seconds";
+    }
+
+    function mixTowardsTruth(state, truthState, stability) {
+      const out = [...state];
+      const restoreChance = 18 + stability * 54;
+      for (let i = 0; i < 7; i++) {
+        if (out[i] !== truthState[i] && chance(restoreChance)) {
+          out[i] = truthState[i];
+        }
+      }
+      return out;
+    }
+
+    function makeMetaArray() {
+      return Array.from({ length: 7 }, () => ({ ghost: false, violent: false, dx: 0, dy: 0, truthMismatch: 0, nearestMismatch: 0 }));
+    }
+
+    function applyOperation(state, op) {
+      const out = [...state];
+      if (op.type === "toggle") {
+        for (const idx of op.indices) out[idx] = out[idx] ? 0 : 1;
+      } else if (op.type === "swap") {
+        for (const [a, b] of op.pairs) [out[a], out[b]] = [out[b], out[a]];
+      } else if (op.type === "rotate") {
+        const shift = ((op.shift % 7) + 7) % 7;
+        return out.map((_, idx) => out[(idx - shift + 7) % 7]);
+      } else if (op.type === "mask") {
+        for (let i = 0; i < 7; i++) if (op.mask[i]) out[i] = out[i] ? 0 : 1;
+      }
+      return out;
+    }
+
+    function invertOperation(op) {
+      if (op.type === "rotate") return { type: "rotate", shift: (7 - (op.shift % 7)) % 7 };
+      return JSON.parse(JSON.stringify(op));
+    }
+
+    function randomOperation() {
+      const pool = [
+        () => ({ type: "toggle", indices: [randInt(0, 6)] }),
+        () => ({ type: "toggle", indices: Array.from(new Set([randInt(0, 6), randInt(0, 6)])).sort((a, b) => a - b) }),
+        () => ({ type: "swap", pairs: [pick([[1, 5], [2, 4], [0, 3]])] }),
+        () => ({ type: "rotate", shift: randInt(1, 3) }),
+        () => ({ type: "mask", mask: Array.from({ length: 7 }, () => chance(26) ? 1 : 0) })
+      ];
+      return pick(pool)();
+    }
+
+    function buildConvergencePath(targetDigit, stability = 0.5, desiredLength = null) {
+      const targetState = digitToState(targetDigit);
+      const opCount = randInt(2, stability > 0.8 ? 3 : 5);
+      let distorted = [...targetState];
+      const inverseOps = [];
+
+      for (let i = 0; i < opCount; i++) {
+        const op = randomOperation();
+        distorted = applyOperation(distorted, op);
+        inverseOps.unshift(invertOperation(op));
+      }
+
+      let cursor = [...distorted];
+      let chain = [cursor];
+      for (const inv of inverseOps) {
+        cursor = applyOperation(cursor, inv);
+        chain.push(cursor);
+      }
+
+      if (chain.length < 2) chain.push(targetState);
+      chain = chain.map(step => [...step]);
+
+      if (!desiredLength || desiredLength <= 0) return chain;
+      if (desiredLength === 1) return [chain[0]];
+
+      const resampled = [];
+      const maxIndex = chain.length - 1;
+      for (let i = 0; i < desiredLength; i++) {
+        const ratio = desiredLength === 1 ? 1 : i / (desiredLength - 1);
+        const sourceIndex = Math.round(ratio * maxIndex);
+        resampled.push([...chain[sourceIndex]]);
+      }
+      resampled[desiredLength - 1] = [...targetState];
+      return resampled;
+    }
+
+    function formatDigitsFromDate(date) {
+      const h = String(date.getHours()).padStart(2, "0");
+      const m = String(date.getMinutes()).padStart(2, "0");
+      const s = String(date.getSeconds()).padStart(2, "0");
+      return [...(h + m + s)];
+    }
+
+    function chooseConvergenceTarget(now, tickMs) {
+      const alignedNextSecond = Math.ceil((now.getTime() + 1) / 1000) * 1000;
+      const minLeadMs = Math.max(1800, tickMs * 3);
+      const maxLeadMs = Math.max(minLeadMs + 1000, tickMs * 6);
+      const desiredLeadMs = randInt(minLeadMs, maxLeadMs);
+      const targetTimestamp = Math.ceil((alignedNextSecond + desiredLeadMs) / 1000) * 1000;
+      return new Date(targetTimestamp);
+    }
+
+    function startConvergence(now = new Date()) {
+      const tickMs = Number(controls.tickMs.value);
+      const targetDate = chooseConvergenceTarget(now, tickMs);
+      const targetDigits = formatDigitsFromDate(targetDate);
+      const leadMs = Math.max(1, targetDate.getTime() - now.getTime());
+      const frameBudget = Math.max(3, Math.ceil(leadMs / Math.max(1, tickMs)) + 1);
+      const paths = targetDigits.map((digit, index) => buildConvergencePath(digit, getPositionStability(index), frameBudget));
+      currentConvergence = {
+        step: 0,
+        maxStep: Math.max(...paths.map(path => path.length - 1)),
+        paths,
+        startTimestamp: now.getTime(),
+        targetTimestamp: targetDate.getTime(),
+        targetDigits,
+        frameBudget
+      };
+      return advanceConvergence(formatDigitsFromDate(now), now);
+    }
+
+    function advanceConvergence(realDigits, now = new Date()) {
+      if (!currentConvergence) return null;
+      const states = [];
+      const metas = [];
+      const nowTs = now.getTime();
+      const duration = Math.max(1, currentConvergence.targetTimestamp - currentConvergence.startTimestamp);
+      const progress = clamp((nowTs - currentConvergence.startTimestamp) / duration, 0, 1);
+      const plannedStep = Math.round(progress * currentConvergence.maxStep);
+      const effectiveStep = Math.max(currentConvergence.step, plannedStep);
+
+      for (let i = 0; i < 6; i++) {
+        const path = currentConvergence.paths[i];
+        const idx = Math.min(effectiveStep, path.length - 1);
+        const state = [...path[idx]];
+        const truth = digitToState(realDigits[i]);
+        const meta = makeMetaArray();
+        for (let j = 0; j < 7; j++) {
+          const mismatch = state[j] === truth[j] ? 0 : 1;
+          meta[j].truthMismatch = mismatch;
+          meta[j].nearestMismatch = mismatch;
+          if (mismatch) {
+            meta[j].ghost = idx < path.length - 1;
+            meta[j].dx = idx < path.length - 1 ? (path.length - 1 - idx) * (j % 2 === 0 ? 1 : -1) : 0;
+          }
+        }
+        states.push(state);
+        metas.push(meta);
+      }
+
+      currentConvergence.step = effectiveStep + 1;
+      const finished = nowTs >= currentConvergence.targetTimestamp || effectiveStep >= currentConvergence.maxStep;
+      if (finished) {
+        for (let i = 0; i < 6; i++) states[i] = digitToState(realDigits[i]);
+        currentConvergence = null;
+      }
+      return { states, metas, mode: "convergence" };
+    }
+
+    function computeSpacetimeDistance(states, realDigits) {
+      const perDigit = [];
+      const aggregateSegmentTruthMismatch = Array(7).fill(0);
+      let totalTruthDistance = 0;
+      let totalNearestDistance = 0;
+
+      for (let i = 0; i < states.length; i++) {
+        const state = states[i];
+        const truth = digitToState(realDigits[i]);
+        const truthMismatchBySegment = state.map((v, idx) => Number(v !== truth[idx]));
+        const truthDistance = truthMismatchBySegment.reduce((a, b) => a + b, 0);
+
+        let nearestDigit = "0";
+        let nearestDistance = Infinity;
+        let nearestMismatchBySegment = truthMismatchBySegment;
+        for (const [digit, digitStateDef] of Object.entries(DIGIT_MAP)) {
+          if (!/^\d$/.test(digit)) continue;
+          const mismatch = state.map((v, idx) => Number(v !== digitStateDef[idx]));
+          const dist = mismatch.reduce((a, b) => a + b, 0);
+          if (dist < nearestDistance) {
+            nearestDistance = dist;
+            nearestDigit = digit;
+            nearestMismatchBySegment = mismatch;
+          }
+        }
+
+        perDigit.push({
+          truthDigit: realDigits[i],
+          truthDistance,
+          nearestDigit,
+          nearestDistance,
+          truthMismatchBySegment,
+          nearestMismatchBySegment,
+          stability: getPositionStability(i),
+          label: getPositionLabel(i)
+        });
+        totalTruthDistance += truthDistance;
+        totalNearestDistance += nearestDistance;
+        for (let j = 0; j < 7; j++) aggregateSegmentTruthMismatch[j] += truthMismatchBySegment[j];
+      }
+
+      return { totalTruthDistance, totalNearestDistance, perDigit, aggregateSegmentTruthMismatch };
+    }
+
+    function parseSequenceList(text) {
+      return text
+        .split(/\r?\n/)
+        .map(line => (line.match(/\d/g) || []).join(""))
+        .filter(line => line.length > 0)
+        .map(line => line.length >= 6 ? line.slice(0, 6) : line.padEnd(6, line[line.length - 1] || "0"));
+    }
+
+    function digitToState(ch) {
+      return [...(DIGIT_MAP[ch] || DIGIT_MAP[" "])];
+    }
+
+    function randomState(readabilityFloor = 0, stability = 0.5, truthDigit = null) {
+      if (chance(readabilityFloor * (0.5 + stability * 0.5))) {
+        return digitToState(String(randInt(0, 9)));
+      }
+      const density = 0.15 + Math.random() * (0.72 - stability * 0.24);
+      let out = Array.from({ length: 7 }, () => Math.random() < density ? 1 : 0);
+      if (truthDigit != null && chance(20 + stability * 40)) {
+        out = mixTowardsTruth(out, digitToState(truthDigit), stability);
+      }
+      return out;
+    }
+
+    function mutateState(base, effect, strength, readabilityFloor, stability = 0.5, truthDigit = null) {
+      let out = [...base];
+      const meta = Array.from({ length: 7 }, () => ({ ghost: false, violent: false, dx: 0, dy: 0 }));
+
+      const flips = () => {
+        const count = randInt(1, Math.max(1, Math.ceil(4 * strength)));
+        for (let i = 0; i < count; i++) {
+          const idx = randInt(0, 6);
+          out[idx] = out[idx] ? 0 : 1;
+          meta[idx].violent = chance(42);
+        }
+      };
+
+      const rotate = () => {
+        const shift = randInt(1, 6);
+        out = out.map((_, idx) => out[(idx - shift + 7) % 7]);
+        out.forEach((_, i) => { meta[i].dx = randInt(-8, 8); meta[i].dy = randInt(-6, 6); });
+      };
+
+      const mirror = () => {
+        [out[1], out[5]] = [out[5], out[1]];
+        [out[2], out[4]] = [out[4], out[2]];
+        meta[1].dx = 6; meta[5].dx = -6;
+        meta[2].dx = 4; meta[4].dx = -4;
+      };
+
+      const invert = () => {
+        out = out.map(v => v ? 0 : 1);
+        meta.forEach(m => { m.violent = true; });
+      };
+
+      const melt = () => {
+        if (out[0] && chance(70)) out[0] = 0;
+        if (chance(70)) out[3] = 1;
+        if (chance(55)) out[2] = 1;
+        if (chance(55)) out[4] = 1;
+        meta[3].dy = randInt(5, 12);
+        meta[2].dy = randInt(4, 10);
+        meta[4].dy = randInt(4, 10);
+        meta[0].ghost = true;
+      };
+
+      const cascade = () => {
+        const count = randInt(2, 4);
+        for (let i = 0; i < count; i++) {
+          const idx = randInt(0, 6);
+          out[idx] = 1;
+          meta[idx].ghost = chance(50);
+          meta[idx].dx = randInt(-3, 3);
+        }
+      };
+
+      const evolve = () => {
+        const digit = String(randInt(0, 9));
+        const target = digitToState(digit);
+        for (let i = 0; i < 7; i++) {
+          if (chance(35 + strength * 35)) out[i] = target[i];
+        }
+      };
+
+      const erode = () => {
+        for (let i = 0; i < 7; i++) {
+          if (out[i] && chance(25 + strength * 35)) {
+            out[i] = 0;
+            meta[i].ghost = true;
+          }
+        }
+      };
+
+      const effects = {
+        flip: flips,
+        rotate,
+        mirror,
+        invert,
+        melt,
+        cascade,
+        evolve,
+        erode
+      };
+
+      effects[effect]?.();
+
+      if (truthDigit != null) {
+        out = mixTowardsTruth(out, digitToState(truthDigit), stability);
+      }
+
+      if (!out.some(Boolean) && chance(readabilityFloor * (0.45 + stability * 0.55))) {
+        out = digitToState(String(randInt(0, 9)));
+      }
+
+      if (chance(readabilityFloor * 0.16 * (0.4 + stability))) {
+        const sourceDigit = truthDigit ?? String(randInt(0, 9));
+        const restored = digitToState(sourceDigit);
+        for (let i = 0; i < 7; i++) {
+          if (chance(40 + stability * 35)) out[i] = restored[i];
+        }
+      }
+
+      return { state: out, meta };
+    }
+
+    function applyGlobalEffect(states, metas, effect, readabilityFloor, realDigits) {
+      if (effect === "cascade") {
+        for (let i = 1; i < states.length; i++) {
+          for (let j = 0; j < 7; j++) {
+            if (states[i - 1][j] && chance(33)) {
+              states[i][j] = 1;
+              metas[i][j].ghost = chance(45);
+            }
+          }
+        }
+      }
+
+      if (effect === "mirror") {
+        if (chance(38)) states.reverse();
+        if (chance(22)) metas.reverse();
+      }
+
+      if (effect === "invert" && chance(40)) {
+        for (let i = 0; i < states.length; i++) {
+          states[i] = states[i].map(v => v ? 0 : 1);
+          metas[i].forEach(m => m.violent = true);
+        }
+      }
+
+      if (effect === "melt") {
+        for (let i = 0; i < states.length; i++) {
+          if (chance(50)) {
+            states[i][3] = 1;
+            metas[i][3].dy = randInt(7, 14);
+          }
+        }
+      }
+
+      if (effect === "rotate" && chance(45)) {
+        for (let i = 0; i < states.length; i++) {
+          const shift = randInt(1, 6);
+          states[i] = states[i].map((_, idx) => states[i][(idx - shift + 7) % 7]);
+        }
+      }
+
+      if (chance(readabilityFloor * 0.16)) {
+        const idx = randInt(0, 5);
+        states[idx] = digitToState(String(randInt(0, 9)));
+      }
+
+      for (let i = 0; i < states.length; i++) {
+        const stability = getPositionStability(i);
+        states[i] = mixTowardsTruth(states[i], digitToState(realDigits[i]), stability);
+      }
+    }
+
+    function createSignalSequence(realDigits, config) {
+      const meaningful = parseSequenceList(controls.meaningfulSequences.value);
+      const custom = parseSequenceList(controls.customSequences.value);
+      const roll = Math.random() * 100;
+
+      if (roll < Number(config.fullClockRate)) {
+        return { digits: [...realDigits], mode: "revelation" };
+      }
+
+      if (roll < Number(config.fullClockRate) + Number(config.customRate) && custom.length) {
+        return { digits: [...pick(custom)], mode: "custom" };
+      }
+
+      if (roll < Number(config.fullClockRate) + Number(config.customRate) + Number(config.messageRate) && meaningful.length) {
+        return { digits: [...pick(meaningful)], mode: "signal" };
+      }
+
+      if (chance(40)) {
+        const n = String(randInt(0, 9));
+        return { digits: [n, n, n, n, n, n], mode: "repeated" };
+      }
+
+      if (chance(55)) {
+        const digits = [...realDigits];
+        const count = randInt(1, 4);
+        for (let i = 0; i < count; i++) {
+          const idx = randInt(0, 5);
+          digits[idx] = String(randInt(0, 9));
+        }
+        return { digits, mode: "time-leak" };
+      }
+
+      return { digits: Array.from({ length: 6 }, () => String(randInt(0, 9))), mode: "pseudo-digit" };
+    }
+
+    function chooseBaseDigits(realDigits, config) {
+      const guaranteedClockish = chance(Number(config.readabilityFloor) * 0.35);
+
+      if (guaranteedClockish || chance(Number(config.timeLeakRate))) {
+        return createSignalSequence(realDigits, config);
+      }
+
+      return { digits: Array.from({ length: 6 }, () => String(randInt(0, 9))), mode: "noise" };
+    }
+
+    function generateFrame() {
+      const now = new Date();
+      tickPomodoro(now.getTime());
+
+      const realDigits = getActiveDigits();
+      currentRealDigits = [...realDigits];
+      const config = Object.fromEntries(
+        Object.entries(controls).map(([key, el]) => [key, el.value])
+      );
+
+      if (currentConvergence) {
+        const advanced = advanceConvergence(realDigits, now);
+        if (advanced) {
+          digitState.splice(0, digitState.length, ...advanced.states);
+          segmentMeta = advanced.metas;
+          colonState = [true, true];
+          lastMode = "CONVERGENCE / FUTURE LOCK";
+
+          spacetimeDistance = computeSpacetimeDistance(digitState, realDigits);
+          updateTruthHud(realDigits, spacetimeDistance);
+
+          if (historyEnabled) {
+            pushHistorySample(spacetimeDistance);
+            drawHistoryGraph();
+          }
+
+          animateEnvironment(appMode === "pomodoro" ? "signal" : "revelation", "evolve");
+          renderState();
+          return;
+        }
+      }
+
+      const effectPool = ["flip", "rotate", "mirror", "invert", "evolve", "cascade", "melt", "erode"];
+      const globalEffect = pick(effectPool);
+      const readabilityFloor = Number(config.readabilityFloor);
+
+      if (chance(10 + readabilityFloor * 0.08)) {
+        const converged = startConvergence(now);
+        digitState.splice(0, digitState.length, ...converged.states);
+        segmentMeta = converged.metas;
+        colonState = [true, true];
+        lastMode = "CONVERGENCE / FUTURE LOCK";
+        const targetLabel = currentConvergence
+          ? formatDigitsFromDate(new Date(currentConvergence.targetTimestamp)).join("")
+          : realDigits.join("");
+        statusText.textContent = `MODE: ${lastMode} → ${targetLabel.slice(0, 2)}:${targetLabel.slice(2, 4)}:${targetLabel.slice(4, 6)}`;
+        spacetimeDistance = computeSpacetimeDistance(digitState, realDigits);
+        updateTruthHud(realDigits, spacetimeDistance);
+        pushHistorySample(spacetimeDistance);
+        animateEnvironment("revelation", "evolve");
+        renderState();
+        drawHistoryGraph();
+        return;
+      }
+
+
+      const base = chooseBaseDigits(realDigits, config);
+      lastMode = `${base.mode} / ${globalEffect}`.toUpperCase();
+      statusText.textContent = `MODE: ${lastMode}`;
+
+      const states = [];
+      const metas = [];
+      const strength = 0.35 + Math.random() * 0.65;
+
+      for (let i = 0; i < 6; i++) {
+        const stability = getPositionStability(i);
+        const truthDigit = realDigits[i];
+        let state;
+        if (base.mode === "noise" && !chance(readabilityFloor * (0.35 + stability * 0.65))) {
+          state = randomState(readabilityFloor * 0.6, stability, truthDigit);
+        } else {
+          state = digitToState(base.digits[i]);
+        }
+
+        if (chance((78 - stability * 28))) {
+          const localEffect = chance(50 - stability * 18) ? globalEffect : pick(effectPool);
+          const mutated = mutateState(state, localEffect, strength * (1 - stability * 0.35), readabilityFloor, stability, truthDigit);
+          state = mutated.state;
+          metas.push(mutated.meta);
+        } else {
+          metas.push(makeMetaArray());
+        }
+
+        if (chance(Number(config.timeLeakRate) * (0.28 + stability * 0.55))) {
+          const truth = digitToState(truthDigit);
+          for (let j = 0; j < 7; j++) {
+            if (chance(10 + stability * 70 + readabilityFloor * 0.1)) {
+              state[j] = truth[j];
+            }
+          }
+        }
+
+        states.push(state);
+      }
+
+      applyGlobalEffect(states, metas, globalEffect, readabilityFloor, realDigits);
+
+      digitState.splice(0, digitState.length, ...states);
+      segmentMeta = metas;
+
+      colonState = [
+        chance(Number(config.colonTruth)) ? true : chance(35),
+        chance(Number(config.colonTruth)) ? true : chance(35)
+      ];
+
+      if (base.mode === "revelation") {
+        digitState.splice(0, digitState.length, ...realDigits.map(digitToState));
+        segmentMeta = Array.from({ length: 6 }, () => makeMetaArray());
+        colonState = [true, true];
+      }
+
+      spacetimeDistance = computeSpacetimeDistance(digitState, realDigits);
+      updateTruthHud(realDigits, spacetimeDistance);
+      pushHistorySample(spacetimeDistance);
+      animateEnvironment(base.mode, globalEffect);
+      renderState();
+      drawHistoryGraph();
+    }
+
+    function animateEnvironment(mode, effect) {
+      let seg = controls.segColor.value;
+      let haloColor = `radial-gradient(circle, color-mix(in srgb, ${seg} 24%, transparent), transparent 70%)`;
+      let tilt = `${randInt(-2, 2)}deg`;
+      let jx = `${randInt(-6, 6)}px`;
+      let jy = `${randInt(-4, 4)}px`;
+      const allowTilt = controls.tiltToggle.value === "on";
+
+      if (mode === "revelation") {
+        haloColor = `radial-gradient(circle, rgba(120, 220, 255, 0.26), transparent 70%)`;
+        tilt = `${randInt(-1, 1)}deg`;
+        jx = "0px";
+        jy = "0px";
+      }
+      if (effect === "invert") haloColor = `radial-gradient(circle, rgba(255, 255, 255, 0.18), transparent 70%)`;
+      if (effect === "melt") haloColor = `radial-gradient(circle, rgba(255, 90, 90, 0.2), transparent 70%)`;
+      if (effect === "cascade") haloColor = `radial-gradient(circle, rgba(140, 255, 220, 0.18), transparent 70%)`;
+
+      if (!allowTilt) {
+        tilt = "0deg";
+        jx = "0px";
+        jy = "0px";
+      }
+
+      halo.style.background = haloColor;
+      document.documentElement.style.setProperty("--tilt", tilt);
+      document.documentElement.style.setProperty("--jitter-x", jx);
+      document.documentElement.style.setProperty("--jitter-y", jy);
+    }
+
+    function renderState() {
+      const allowSegmentDrift = controls.segmentDriftToggle.value === "on";
+      const allowColonDrift = allowSegmentDrift;
+      const perDigit = spacetimeDistance.perDigit || [];
+      const hourDist = perDigit.slice(0, 2).reduce((sum, info) => sum + (info?.truthDistance || 0), 0);
+      const minuteDist = perDigit.slice(2, 4).reduce((sum, info) => sum + (info?.truthDistance || 0), 0);
+      const secondDist = perDigit.slice(4, 6).reduce((sum, info) => sum + (info?.truthDistance || 0), 0);
+      statusText.textContent = `MODE: ${lastMode} | H:${hourDist} M:${minuteDist} S:${secondDist}`;
+
+      for (let i = 0; i < 6; i++) {
+        const box = document.getElementById(`digit-${i}`);
+        if (box) {
+          box.classList.toggle("flash", chance(12));
+          setTimeout(() => box.classList.remove("flash"), 180);
+          const info = perDigit[i];
+          if (info) {
+            box.title = `${info.label} / truth ${info.truthDigit} / truthDist ${info.truthDistance} / nearest ${info.nearestDigit}(${info.nearestDistance}) / stability ${info.stability.toFixed(2)}`;
+          }
+        }
+
+        for (let j = 0; j < 7; j++) {
+          const el = document.getElementById(`seg-${i}-${j}`);
+          if (!el) continue;
+          const on = digitState[i][j];
+          const baseMeta = segmentMeta[i][j] || { ghost: false, violent: false, dx: 0, dy: 0 };
+          const info = perDigit[i];
+          const truthMismatch = info ? info.truthMismatchBySegment[j] : 0;
+          const nearestMismatch = info ? info.nearestMismatchBySegment[j] : 0;
+          const meta = { ...baseMeta, truthMismatch, nearestMismatch };
+          el.className = `seg ${[0, 3, 6].includes(j) ? "seg-h" : "seg-v"} ${on ? "on" : "off"}`;
+          if (meta.ghost || truthMismatch) el.classList.add("ghost");
+          if (meta.violent || truthMismatch > 0 && chance(35)) el.classList.add("violent");
+          const dx = allowSegmentDrift ? (meta.dx || 0) + (truthMismatch ? (j % 2 === 0 ? 1 : -1) : 0) : 0;
+          const dy = allowSegmentDrift ? (meta.dy || 0) + (truthMismatch ? 1 : 0) : 0;
+          const rot = allowSegmentDrift ? (truthMismatch ? randInt(-4, 4) : randInt(-1, 1)) : 0;
+          el.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
+          el.style.opacity = on ? (truthMismatch ? 0.88 : 1) : (nearestMismatch ? 0.05 : 0.09);
+          el.title = `truthMismatch:${truthMismatch} / nearestMismatch:${nearestMismatch}`;
+        }
+      }
+
+      ["c1", "c2"].forEach((cid, idx) => {
+        for (let k = 0; k < 2; k++) {
+          const dot = document.getElementById(`colon-${cid}-${k}`);
+          if (!dot) continue;
+          const alive = colonState[idx];
+          dot.style.opacity = alive ? (chance(80) ? 0.92 : 0.45) : 0.08;
+          const colonDx = allowColonDrift ? randInt(-2, 2) : 0;
+          const colonDy = allowColonDrift ? randInt(-2, 2) : 0;
+          const colonScale = allowColonDrift ? (alive ? (0.9 + Math.random() * 0.25) : 0.8) : (alive ? 1 : 0.9);
+          dot.style.transform = `translate(${colonDx}px, ${colonDy}px) scale(${colonScale})`;
+        }
+      });
+    }
+
+    function scheduleLoop() {
+      clearInterval(timer);
+      pomoLastTs = Date.now();
+      timer = setInterval(() => {
+        generateFrame();
+      }, Number(controls.tickMs.value));
+    }
+
+    let syncStageLayoutFrames = 0;
+
+    let syncStageLayoutTimer = null;
+
+    function syncStageLayout() {
+      const settle = () => {
+        if (historyEnabled) resizeHistoryCanvas();
+        renderState();
+      };
+
+      settle();
+      requestAnimationFrame(settle);
+
+      if (syncStageLayoutTimer) clearTimeout(syncStageLayoutTimer);
+      syncStageLayoutTimer = setTimeout(() => {
+        settle();
+        syncStageLayoutTimer = null;
+      }, 120);
+    }
+
+    function bindControls() {
+      const unlockAudio = () => {
+        ensureAudioContext();
+      };
+
+      document.addEventListener("pointerdown", unlockAudio, { once: true });
+      document.addEventListener("keydown", unlockAudio, { once: true });
+
+      [controls.bgColor, controls.segColor, controls.offColor, controls.sizeScale, controls.glowPower].forEach(el => {
+        el.addEventListener("input", applyTheme);
+      });
+
+      window.addEventListener("resize", () => {
+        applyPerformanceMode();
+        syncStageLayout();
+      });
+      window.addEventListener("orientationchange", () => {
+        applyPerformanceMode();
+        syncStageLayout();
+      });
+      window.addEventListener("fullscreenchange", syncStageLayout);
+
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", () => {
+          applyPerformanceMode();
+          syncStageLayout();
+        });
+      }
+
+      controls.tiltToggle.addEventListener("change", () => {
+        animateEnvironment(lastMode.includes("REVELATION") ? "revelation" : "noise", lastMode.split(" / ")[1]?.toLowerCase() || "flip");
+      });
+
+      controls.segmentDriftToggle.addEventListener("change", renderState);
+
+      [
+        controls.tickMs, controls.messageRate, controls.fullClockRate, controls.timeLeakRate,
+        controls.customRate, controls.readabilityFloor, controls.colonTruth,
+        controls.modeSelect, controls.historyToggle,
+        controls.workMinutes, controls.shortBreakMinutes, controls.longBreakMinutes, controls.longBreakEvery
+      ].forEach(el => {
+        el.addEventListener("input", () => {
+          updateValueLabels();
+
+          if (el === controls.tickMs) {
+            scheduleLoop();
+          }
+
+          if (
+            el === controls.historyToggle ||
+            el === controls.modeSelect ||
+            el === controls.workMinutes ||
+            el === controls.shortBreakMinutes ||
+            el === controls.longBreakMinutes ||
+            el === controls.longBreakEvery
+          ) {
+            appMode = controls.modeSelect.value;
+            applyPerformanceMode();
+            if (appMode === "pomodoro") {
+              if (!pomoRunning) {
+                setPomodoroPhase("work", true);
+              } else {
+                updatePomodoroLabels();
+              }
+            }
+            syncStageLayout();
+            generateFrame();
+          }
+        });
+      });
+
+      rerollBtn.addEventListener("click", generateFrame);
+
+      clockWrap.classList.add("clickable");
+      clockWrap.addEventListener("click", () => {
+        uiHidden = !uiHidden;
+        document.body.classList.toggle("ui-hidden", uiHidden);
+        syncStageLayout();
+      });
+
+      freezeBtn.addEventListener("click", () => {
+        frozen = !frozen;
+        freezeBtn.textContent = frozen ? "再開" : "一時停止";
+        pomoLastTs = Date.now();
+      });
+
+      pomoStartBtn.addEventListener("click", () => {
+        appMode = "pomodoro";
+        controls.modeSelect.value = "pomodoro";
+
+        const wasRunning = pomoRunning;
+
+        if (!pomoRunning) {
+          pomoRunning = true;
+          if (pomoRemainingMs <= 0) setPomodoroPhase("work", true);
+          playPomodoroStartChime();
+        } else {
+          pomoRunning = false;
+        }
+
+        pomoStartBtn.textContent = pomoRunning ? "ポモドーロ停止" : "ポモドーロ開始";
+        pomoLastTs = Date.now();
+        updatePomodoroLabels();
+        generateFrame();
+      });
+
+      pomoResetBtn.addEventListener("click", () => {
+        pomoRunning = false;
+        pomoStartBtn.textContent = "ポモドーロ開始";
+        setPomodoroPhase("work", true);
+        generateFrame();
+      });
+
+      pomoSkipBtn.addEventListener("click", () => {
+        advancePomodoroPhase();
+        generateFrame();
+      });
+
+      fullscreenBtn.addEventListener("click", async () => {
+        try {
+          if (!document.fullscreenElement) {
+            await document.documentElement.requestFullscreen();
+          } else {
+            await document.exitFullscreen();
+          }
+        } catch (err) {
+          console.warn(err);
+        }
+      });
+    }
+
+    function init() {
+      appMode = controls.modeSelect.value;
+      setPomodoroPhase("work", true);
+      applyPerformanceMode();
+      applyTheme();
+      bindControls();
+      scheduleLoop();
+      generateFrame();
+      updatePomodoroLabels();
+    }
+
+    init();
+  </script>
+</body>
+
+</html>

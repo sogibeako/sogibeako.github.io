@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>幾何学模様SVG仕上げツール</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="toolbar">
+      <h1>SVG Finisher</h1>
+      <div class="toolbar-actions">
+        <label class="btn primary">
+          SVG読込 <input type="file" id="btn-load-svg" accept=".svg" style="display: none;">
+        </label>
+        <button id="btn-save-svg" class="btn">SVG保存</button>
+        <button id="btn-save-png" class="btn">PNG保存</button>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <aside class="panel left-panel">
+        <h2>Layers / Objects</h2>
+        <div id="layer-list" class="layer-list">
+          <!-- JSでレイヤー情報を生成 -->
+        </div>
+      </aside>
+
+      <section class="canvas-container" id="canvas-container">
+        <!-- SVGがここにレンダリングされる -->
+        <svg id="main-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+          <defs id="svg-defs"></defs>
+          <g id="svg-backgrounds"></g>
+          <g id="svg-regions"></g>
+          <g id="svg-shapes"></g>
+        </svg>
+      </section>
+
+      <aside class="panel right-panel">
+        <h2>Properties</h2>
+        <div id="property-panel" class="property-panel">
+          <p class="empty-message">オブジェクトを選択してください</p>
+          <!-- JSでプロパティ編集UIを生成 -->
+        </div>
+      </aside>
+    </main>
+
+    <footer class="status-bar">
+      <span id="status-message">準備完了</span>
+    </footer>
+  </div>
+
+  <script src="js/state.js"></script>
+  <script src="js/svg-parser.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

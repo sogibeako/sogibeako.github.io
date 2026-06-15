@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>* JSProject // 湫埜と雨滴 *</title>
+    <!-- Lightbox2 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
+    <style>
+        /* 色は出来るだけ、SB Creative出版『日本の美しい色と言葉』から取っていく。 */
+        /* 当ページはp256『しとしと』 */
+        /* 氷雨 #e3e8f1 */
+        /* 俄雨 #6290b1 */
+        /* 長雨 #afd3e6 */
+        /* 秋雨 #609aa0 */
+        /* 五月雨 #9ec8d1 */
+        body {
+            font-size: 1rem;
+            background-color: #111822;
+            /* 青っぽい背景色 */
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+            line-height: 1.6;
+        }
+
+        h1 {
+            background-color: #609aa0;
+            /* 秋雨 */
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.5em;
+            /* 内側の余白で見た目よく */
+        }
+
+        h2 {
+            background-color: #609aa0;
+            /* 秋雨 */
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.5em;
+            /* 内側の余白で見た目よく */
+        }
+
+        .p_left {
+            text-align: left;
+        }
+
+        .wrapper {
+            max-width: 700px;
+            width: 80%;
+            margin: 50px auto;
+            padding: 20px;
+            border: 0px solid #111;
+            background-color: #afd3e6;
+            /* 長雨 */
+            font-family: inherit;
+        }
+
+        .inner_wrapper {
+            width: 600px;
+            margin: 10px auto;
+            padding: 20px;
+            border: 1px solid #111;
+            background-color: #ffffee;
+            font-family: inherit;
+        }
+
+        .grid-table {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 2px;
+        }
+
+        .grid-table2 {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 2px;
+        }
+
+        .cell {
+            border: 0px solid #ccc;
+            padding: 4px 8px;
+            line-break: strict;
+            /* 日本語の自然な改行ルールに従う */
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        img.top-image {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        hr {
+            border-width: 2px 0 0 0;
+            /* 線の太さ */
+            border-style: dashed;
+            /* 線の種類 */
+            border-color: #609aa0;
+            /* 線の色 */
+        }
+
+        .annotation {
+            font-size: 0.8rem;
+        }
+
+        .br-sp {
+            display: none;
+        }
+
+        /* ============================================================
+         案D: 雨窓ボタン（Canvas雨粒アニメーション背景）
+        ============================================================ */
+        .rain-window-btn {
+            position: relative;
+            width: 200px;
+            height: 64px;
+            background: rgba(17, 24, 34, 0.85);
+            border: 2px solid #609aa055;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: border-color 0.4s, box-shadow 0.4s;
+            margin: 0 auto;
+        }
+
+        .rain-window-btn canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .rain-window-btn .rw-label {
+            position: relative;
+            z-index: 1;
+            font-family: 'Zen Maru Gothic', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.2em;
+            color: #e3e8f1;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+            transition: text-shadow 0.4s;
+        }
+
+        .rain-window-btn:hover {
+            border-color: #9ec8d1;
+            box-shadow: 0 0 24px rgba(158, 200, 209, 0.15);
+        }
+
+        .rain-window-btn:hover .rw-label {
+            text-shadow: 0 0 10px rgba(158, 200, 209, 0.5), 0 1px 4px rgba(0, 0, 0, 0.6);
+        }
+
+        /* ====== レスポンシブ ====== */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1rem;
+            }
+
+            .rain-badge {
+                width: 140px;
+                height: 46px;
+            }
+
+            .rain-badge .badge-label {
+                font-size: 0.75rem;
+            }
+
+            .ripple-btn {
+                width: 150px;
+                height: 48px;
+            }
+
+            .rain-window-btn {
+                width: 160px;
+                height: 54px;
+            }
+
+            .drop-links-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media screen and (max-width: 600px) {
+            body {
+                font-size: 0.7rem;
+            }
+
+            .seoremium {
+                font-size: 1rem;
+            }
+
+            h1,
+            h2 {
+                font-size: 1rem;
+            }
+
+            .wrapper,
+            .inner_wrapper {
+                width: 95%;
+                padding: 10px;
+                word-wrap: break-word;
+                box-sizing: border-box;
+            }
+
+            .grid-table,
+            .grid-table2 {
+                grid-template-columns: 1fr;
+            }
+
+            .annotation {
+                font-size: 0.6rem;
+            }
+
+            .br-sp {
+                display: inline;
+            }
+        }
+    </style>
+    <script>
+        window.addEventListener("blur", () => pressed.clear());
+    </script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="p_left">
+            現在位置 : <a href="../../index.html">ホーム</a> ＞ <a href="../index.htm">JS Project</a> ＞ <a
+                href="material.htm"><b>0010_Material</b></a>
+        </div>
+        <h1>* 0010_Material *</h1>
+        <h3>このページは？</h3>
+        <hr />
+        <a href="../index.htm">JavaScriptページ</a> で公開されているグリッチ系の画像編集スクリプトに読み込ませると幸せになるかもしれないものをまとめておきます。
+        <br />
+        <h2>素材類</h2>
+        <!-- 画像ループ開始 -->
+        <div class="grid-table2">
+            <div class="cell p_left">
+                <a href="img/0001.png" data-lightbox="gallery">
+                    <img src="img/0001.png" style="width: 120px; height: auto" /></a>
+            </div>
+            <div class="cell p_left">
+                数字。16×16単位
+            </div>
+            <div class="cell p_left">
+                <a href="img/0002.png" data-lightbox="gallery">
+                    <img src="img/0002.png" style="width: 120px; height: auto" /></a>
+            </div>
+            <div class="cell p_left">
+                多角形パターン。8×8単位
+            </div>
+            <div class="cell p_left">
+                <a href="img/0003.png" data-lightbox="gallery">
+                    <img src="img/0003.png" style="width: 120px; height: auto" /></a>
+            </div>
+            <div class="cell p_left">
+                数字と多角形パターン。8×8単位
+            </div>
+            <div class="cell p_left">
+                <a href="img/0004.png" data-lightbox="gallery">
+                    <img src="img/0004.png" style="width: 120px; height: auto" /></a>
+            </div>
+            <div class="cell p_left">
+                上の白黒パターン。8×8単位。<br />
+                <a href="../0012/index.htm">Glitch Matrix</a> に食わせると面白いパターンが出ます。<br />
+            </div>
+        </div>
+
+
+        <br />
+        <hr />
+        <br />
+        <div style="text-align: center;">
+            <a href="../index.html" class="rain-window-btn">
+                <canvas data-rainwindow="true"></canvas>
+                <span class="rw-label">Back</span>
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        /* ============================================================
+           案D: 雨窓 — 常に降る雨粒
+           ============================================================ */
+        document.querySelectorAll('canvas[data-rainwindow]').forEach(cv => {
+            const dpr = window.devicePixelRatio || 1;
+            const parent = cv.parentElement;
+            const rect = parent.getBoundingClientRect();
+            cv.width = rect.width * dpr;
+            cv.height = rect.height * dpr;
+            const ctx = cv.getContext('2d');
+            ctx.scale(dpr, dpr);
+            const w = rect.width, h = rect.height;
+
+            const drops = Array.from({ length: 30 }, () => ({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                speed: 0.5 + Math.random() * 1.5,
+                len: 4 + Math.random() * 10,
+                opacity: 0.15 + Math.random() * 0.35,
+                width: 0.5 + Math.random() * 0.8
+            }));
+
+            // 水滴の着弾スプラッシュ
+            const splashes = [];
+
+            function draw() {
+                ctx.clearRect(0, 0, w, h);
+
+                // 雨粒
+                drops.forEach(d => {
+                    ctx.beginPath();
+                    ctx.moveTo(d.x, d.y);
+                    ctx.lineTo(d.x - 0.3, d.y + d.len);
+                    ctx.strokeStyle = `rgba(158,200,209,${d.opacity})`;
+                    ctx.lineWidth = d.width;
+                    ctx.stroke();
+                    d.y += d.speed;
+                    if (d.y > h) {
+                        splashes.push({ x: d.x, y: h - 2, r: 0, opacity: 0.4 });
+                        d.y = -d.len - Math.random() * 20;
+                        d.x = Math.random() * w;
+                    }
+                });
+
+                // スプラッシュ
+                splashes.forEach(s => {
+                    s.r += 0.3;
+                    s.opacity -= 0.015;
+                    if (s.opacity <= 0) return;
+                    ctx.beginPath();
+                    ctx.ellipse(s.x, s.y, s.r * 1.5, s.r * 0.5, 0, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(158,200,209,${s.opacity})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                });
+
+                // 古いスプラッシュを除去
+                while (splashes.length > 0 && splashes[0].opacity <= 0) splashes.shift();
+
+                requestAnimationFrame(draw);
+            }
+            draw();
+        });
+    </script>
+    <!-- jQuery（先） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <!-- Lightbox2（後） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
+</body>
+
+</html>

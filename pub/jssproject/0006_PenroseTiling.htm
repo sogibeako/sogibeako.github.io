@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Penrose Tiling Image Collage</title>
+    <style>
+        body {
+            font-size: 1rem;
+            color: #ffffff;
+            background-color: #111822;
+            /* 青っぽい背景色 */
+            margin-left: 20px;
+            margin-top: 20px;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        a {
+            color: #ffffff;
+        }
+
+        h1 {
+            background-color: #609aa0;
+            /* 秋雨 */
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.5em;
+            /* 内側の余白で見た目よく */
+        }
+
+        h2 {
+            background-color: #609aa0;
+            /* 秋雨 */
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.5em;
+            /* 内側の余白で見た目よく */
+        }
+
+        hr {
+            border-width: 2px 0 0 0;
+            /* 線の太さ */
+            border-style: dashed;
+            /* 線の種類 */
+            border-color: #609aa0
+                /* 線の色 */
+        }
+
+        .br-sp {
+            display: none;
+        }
+
+        pre,
+        pre code {
+            background-color: #bbbbbb;
+            color: #000;
+            padding: 0.5em;
+            display: block;
+            overflow-x: auto;
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+        }
+
+        code {
+            background-color: #bbbbbb;
+            color: #000000;
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+            font-family: "Courier New", Courier, monospace;
+            display: inline-block;
+            line-height: 1.2;
+        }
+
+        canvas {
+            border: 3px solid #cccccc;
+        }
+
+        @media screen and (max-width: 600px) {
+            body {
+                font-size: 0.7rem;
+            }
+
+            .grid-table,
+            .grid-table2 {
+                grid-template-columns: 1fr;
+            }
+
+            .br-sp {
+                display: inline;
+            }
+
+            canvas {
+                border: 1px solid #cccccc;
+                background: #ffffff;
+            }
+
+            .controls {
+                margin-top: 10px
+            }
+
+            .controls div {
+                margin: 6px 0
+            }
+
+            .controls label {
+                display: inline-block;
+                width: 120px;
+                text-align: right
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="p_left">現在位置 : <a href="../index.html">ホーム</a>　＞　JSS Project　＞　<a
+            href="0006_PenroseTiling.htm"><b>#006</b></a></div>
+    <br>
+    <hr><br>
+    <h2>ペンローズタイルに画像コラージュ</h2>
+    <p>お好みの画像を下のキャンバスへドラッグ＆ドロップしてください。</p>
+
+    <canvas id="penCanvas" width="800" height="800"></canvas>
+
+    <div class="controls">
+        <div class="pickers">
+            <button id="pickImageBtn" type="button">画像を選ぶ（カメラロール）</button>
+            <input id="filePicker" type="file" accept="image/*" hidden>
+        </div>
+        <div><label for="zoomSlider">ズーム:</label>
+            <input type="range" id="zoomSlider" min="0.5" max="4" step="0.1" value="1">
+        </div>
+        <div><label for="xOffsetSlider">Xオフセット:</label>
+            <input type="range" id="xOffsetSlider" min="-500" max="500" step="1" value="0">
+        </div>
+        <div><label for="yOffsetSlider">Yオフセット:</label>
+            <input type="range" id="yOffsetSlider" min="-500" max="500" step="1" value="0">
+        </div>
+        <div><label for="genSlider">分割回数:</label>
+            <input type="range" id="genSlider" min="1" max="9" step="1" value="6">
+        </div>
+    </div>
+
+    <script>
+        /* ========== グローバル状態 ========== */
+        const canvas = document.getElementById('penCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let img = null;   // ドロップされた画像
+        let zoom = 1;
+        let offsetX = 0;
+        let offsetY = 0;
+        let generations = 6;
+
+        /* ========== 読み込み処理 =========== */
+        const pickBtn = document.getElementById('pickImageBtn');
+        const filePicker = document.getElementById('filePicker');
+
+        function loadImageFile(file) {
+            if (!file || !file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                img = new Image();
+                img.onload = draw;
+                img.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        pickBtn.addEventListener('click', () => filePicker.click());
+
+        filePicker.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            loadImageFile(file);
+            e.target.value = ''; // 同じ画像を連続選択してもchangeが発火するように
+        });
+
+        /* ========== UI スライダー ========== */
+        document.getElementById('zoomSlider').oninput = e => { zoom = +e.target.value; draw(); };
+        document.getElementById('xOffsetSlider').oninput = e => { offsetX = +e.target.value; draw(); };
+        document.getElementById('yOffsetSlider').oninput = e => { offsetY = +e.target.value; draw(); };
+        document.getElementById('genSlider').oninput = e => { generations = +e.target.value; draw(); };
+
+        /* ========== 画像ドラッグ＆ドロップ ========== */
+        canvas.addEventListener('dragover', e => e.preventDefault());
+        canvas.addEventListener('drop', e => {
+            e.preventDefault();
+            loadImageFile(e.dataTransfer.files[0]);
+        });
+
+        /* ========== ペンローズ三角形クラス & 分割 ========== */
+        const PHI = (1 + Math.sqrt(5)) / 2; // 黄金比
+
+        class Tri {
+            // color: 0 = 赤(36°)  1 = 青(108°)
+            constructor(color, A, B, C) { this.color = color; this.A = A; this.B = B; this.C = C; }
+        }
+
+        function subdivide(list) {
+            const next = [];
+            list.forEach(({ color, A, B, C }) => {
+                if (color === 0) {      // 赤
+                    const P = { x: A.x + (B.x - A.x) / PHI, y: A.y + (B.y - A.y) / PHI };
+                    next.push(new Tri(0, C, P, B));
+                    next.push(new Tri(1, P, C, A));
+                } else {                // 青
+                    const Q = { x: B.x + (A.x - B.x) / PHI, y: B.y + (A.y - B.y) / PHI };
+                    const R = { x: B.x + (C.x - B.x) / PHI, y: B.y + (C.y - B.y) / PHI };
+                    next.push(new Tri(1, R, C, A));
+                    next.push(new Tri(1, Q, R, B));
+                    next.push(new Tri(0, R, Q, A));
+                }
+            });
+            return next;
+        }
+
+        function makeTriangles(gen) {
+            // 中心に 10 個の赤三角を放射状に並べた“車輪”を初期形とする
+            let tris = [];
+            for (let i = 0; i < 10; i++) {
+                const a1 = (2 * i - 1) * Math.PI / 10;
+                const a2 = (2 * i + 1) * Math.PI / 10;
+                let B = { x: Math.cos(a1), y: Math.sin(a1) };
+                let C = { x: Math.cos(a2), y: Math.sin(a2) };
+                if (i % 2 === 0) [B, C] = [C, B];  // 偶数番で B と C を入れ替え
+                tris.push(new Tri(0, { x: 0, y: 0 }, B, C));
+            }
+            for (let g = 0; g < gen; g++) tris = subdivide(tris);
+            return tris;
+        }
+
+        /* ========== 描画メイン ========== */
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (!img) return;
+
+            // 三角形リスト生成
+            const tris = makeTriangles(generations);
+
+            /* --- ワールド→キャンバス変換を作るため、バウンディングボックスを計算 --- */
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            tris.forEach(t => [t.A, t.B, t.C].forEach(p => {
+                if (p.x < minX) minX = p.x;
+                if (p.y < minY) minY = p.y;
+                if (p.x > maxX) maxX = p.x;
+                if (p.y > maxY) maxY = p.y;
+            }));
+            const boxW = maxX - minX, boxH = maxY - minY;
+            const scale = 0.9 * Math.min(canvas.width / boxW, canvas.height / boxH); // 90% 余白
+
+            const cxCanvas = canvas.width / 2;
+            const cyCanvas = canvas.height / 2;
+            const cxWorld = (minX + maxX) / 2;
+            const cyWorld = (minY + maxY) / 2;
+
+            tris.forEach(t => {
+                // 三頂点をキャンバス座標へ変換
+                const A = {
+                    x: (t.A.x - cxWorld) * scale + cxCanvas,
+                    y: (t.A.y - cyWorld) * scale + cyCanvas
+                };
+                const B = {
+                    x: (t.B.x - cxWorld) * scale + cxCanvas,
+                    y: (t.B.y - cyWorld) * scale + cyCanvas
+                };
+                const C = {
+                    x: (t.C.x - cxWorld) * scale + cxCanvas,
+                    y: (t.C.y - cyWorld) * scale + cyCanvas
+                };
+
+                /* --- 三角形領域でクリッピング --- */
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(A.x, A.y);
+                ctx.lineTo(B.x, B.y);
+                ctx.lineTo(C.x, C.y);
+                ctx.closePath();
+                ctx.clip();
+
+                /* --- 三角形の重心を基準に画像を貼る --- */
+                const gX = (A.x + B.x + C.x) / 3;
+                const gY = (A.y + B.y + C.y) / 3;
+
+                ctx.translate(gX, gY);
+
+                // 回転: 重心→キャンバス中心方向に向け、放射状パターンを強調
+                ctx.rotate(Math.atan2(gY - cyCanvas, gX - cxCanvas));
+
+                /* 画像切り出し: ズーム & オフセット */
+                const srcW = img.width / zoom;
+                const srcH = img.height / zoom;
+                const sx = img.width / 2 - srcW / 2 + offsetX;
+                const sy = img.height / 2 - srcH / 2 + offsetY;
+
+                // 描画先はクリップされるので大きめで OK
+                const dstSide = Math.max(canvas.width, canvas.height);
+                ctx.drawImage(img, sx, sy, srcW, srcH,
+                    -dstSide / 2, -dstSide / 2, dstSide, dstSide);
+                ctx.restore();
+            });
+        }
+    </script>
+</body>
+
+</html>

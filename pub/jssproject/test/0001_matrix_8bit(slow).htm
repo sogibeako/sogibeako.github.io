@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+  <style>
+    @font-face {
+      font-family: 'PressStart2P';
+      src: url('PressStart2P-Regular.ttf') format('truetype');
+    }
+
+    html, body {
+      margin-top: 0;
+      margin: 0;
+      padding: 0;
+      background: black;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+<canvas id="matrixCanvas"></canvas>
+
+<script>
+  const canvas = document.getElementById("matrixCanvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const fontSize = 24;
+  const fontFamily = "'PressStart2P'";
+  const columns = Math.floor(canvas.width / fontSize);
+  const rows = Math.floor(canvas.height / fontSize);
+
+  const chars = "0123456789";
+  const colors = ["#000000", "#0000AA", "#00AA00", "#00AAAA", "#AA0000", "#AA00AA", "#AA5500", "#AAAAAA", "#555555", "#5555FF", "#55FF55", "#55FFFF", "#FF5555", "#FF55FF", "#FFFF55", "#FFFFFF"];
+
+  const matrix = [];
+  for (let y = 0; y < rows; y++) {
+    matrix[y] = [];
+    for (let x = 0; x < columns; x++) {
+      matrix[y][x] = {
+        charIndex: Math.floor(Math.random() * chars.length),
+        bgColor: colors[Math.floor(Math.random() * colors.length)],
+        fgColor: colors[Math.floor(Math.random() * colors.length)],
+      };
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = `${fontSize}px 'PressStart2P', monospace`;
+    ctx.textBaseline = "top";
+
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < columns; x++) {
+        const cell = matrix[y][x];
+        const char = chars[cell.charIndex];
+
+        ctx.fillStyle = cell.bgColor;
+        ctx.fillRect(x * fontSize, y * fontSize, fontSize, fontSize);
+
+        ctx.fillStyle = cell.fgColor;
+        ctx.fillText(char, x * fontSize, y * fontSize);
+
+        if (Math.random() > 0.99) {
+          cell.charIndex = Math.floor(Math.random() * chars.length);
+          cell.bgColor = colors[Math.floor(Math.random() * colors.length)];
+          cell.fgColor = colors[Math.floor(Math.random() * colors.length)];
+        }
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+</script>
+</body>
+</html>

@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<title>Otherworld 7-Segment Mutator</title>
+
+<style>
+  .otherworld-clock {
+    --ow-color: #00ff88;
+    --ow-bg: #050816;
+    --ow-off-opacity: 0.10;
+    --ow-digit-w: 0.95em;
+    --ow-digit-h: 1.70em;
+    --ow-gap: 0.22em;
+    --ow-seg-thick: 0.12em;
+
+    display: inline-flex;
+    align-items: center;
+    gap: var(--ow-gap);
+    font-size: 48px;
+    line-height: 1;
+    color: var(--ow-color);
+    background-color: var(--ow-bg);
+    padding: 0.35em 0.45em;
+    border-radius: 0.35em;
+    vertical-align: middle;
+    user-select: none;
+  }
+
+  .ow7-digit {
+    position: relative;
+    width: var(--ow-digit-w);
+    height: var(--ow-digit-h);
+    flex: 0 0 auto;
+  }
+
+  .ow7-seg {
+    position: absolute;
+    background: currentColor;
+    opacity: var(--ow-off-opacity);
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  .ow7-seg.on {
+    opacity: 1;
+    box-shadow: 0 0 0.18em currentColor;
+  }
+
+  .ow7-seg:hover {
+    outline: 1px solid rgba(255, 255, 255, 0.6);
+  }
+
+  .ow7-seg.s1 { left: 0.18em; top: 0.00em; width: 0.58em; height: var(--ow-seg-thick); }
+  .ow7-seg.s7 { left: 0.18em; top: 0.78em; width: 0.58em; height: var(--ow-seg-thick); }
+  .ow7-seg.s4 { left: 0.18em; top: 1.56em; width: 0.58em; height: var(--ow-seg-thick); }
+
+  .ow7-seg.s6 { left: 0.00em; top: 0.12em; width: var(--ow-seg-thick); height: 0.58em; }
+  .ow7-seg.s2 { left: 0.81em; top: 0.12em; width: var(--ow-seg-thick); height: 0.58em; }
+  .ow7-seg.s5 { left: 0.00em; top: 0.90em; width: var(--ow-seg-thick); height: 0.58em; }
+  .ow7-seg.s3 { left: 0.81em; top: 0.90em; width: var(--ow-seg-thick); height: 0.58em; }
+
+  .ow7-colon {
+    position: relative;
+    width: 0.22em;
+    height: 1.70em;
+    flex: 0 0 auto;
+  }
+
+  .ow7-colon::before,
+  .ow7-colon::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0.16em;
+    height: 0.16em;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 0.18em currentColor;
+  }
+
+  .ow7-colon::before { top: 0.45em; }
+  .ow7-colon::after  { top: 1.05em; }
+
+  .ow-panel {
+    font-family: system-ui, sans-serif;
+    display: grid;
+    gap: 0.8rem;
+    max-width: 640px;
+    padding: 1rem;
+  }
+
+  .ow-panel input,
+  .ow-panel select,
+  .ow-panel button,
+  .ow-panel textarea {
+    font: inherit;
+  }
+
+  .ow-panel textarea {
+    width: 100%;
+    min-height: 6em;
+    font-family: monospace;
+  }
+
+  .ow-row {
+    display: flex;
+    gap: 0.5rem 0.8rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .digit-toggle-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    padding: 0.5rem;
+    background: #f3f4f6;
+    border-radius: 0.5rem;
+  }
+
+  .digit-toggle-area label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+  }
+
+  .hint {
+    font-size: 0.85rem;
+    color: #555;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="ow-panel">
+  <div>
+    <strong>異界時計</strong>
+    <span id="owClock" class="otherworld-clock"></span>
+  </div>
+
+  <div class="ow-row">
+    <label>
+      元の表示:
+      <input id="sourceText" value="12:34" />
+    </label>
+
+    <label>
+      変異:
+      <select id="mutationSelect"></select>
+    </label>
+
+    <label>
+      適用範囲:
+      <select id="scopeSelect">
+        <option value="digit">桁ごと</option>
+        <option value="clock">時計全体</option>
+      </select>
+    </label>
+
+    <label>
+      再帰回数:
+      <input id="repeatCount" type="number" min="1" max="99" value="1" style="width: 4.5em;" />
+    </label>
+
+    <button id="mutateBtn">変異</button>
+    <button id="resetBtn">元に戻す</button>
+  </div>
+
+  <div>
+    <strong>変異する桁</strong>
+    <div id="digitToggles" class="digit-toggle-area"></div>
+    <div class="hint">
+      「桁ごと」のときだけ使います。チェックした桁だけ変異します。
+    </div>
+  </div>
+
+  <label>
+    異界時計ビット列:
+    <textarea id="bitOutput" readonly></textarea>
+  </label>
+
+  <div class="hint">
+    セグメントを直接クリックすると、そのセグメントだけ ON/OFF が反転します。
+  </div>
+</div>
+
+<script>
+/*
+  セグメント番号:
+
+       [1]
+    [6]   [2]
+       [7]
+    [5]   [3]
+       [4]
+
+  ビット列は 1234567 の順。
+  1111111 = 全点灯 = 標準7セグでは 8
+*/
+
+
+/* =========================================================
+   1. 標準数字定義
+========================================================= */
+
+const STANDARD_7SEG = {
+  "0": "1111110",
+  "1": "0110000",
+  "2": "1101101",
+  "3": "1111001",
+  "4": "0110011",
+  "5": "1011011",
+  "6": "1011111",
+  "7": "1110000",
+  "8": "1111111",
+  "9": "1111011",
+  "-": "0000001",
+  " ": "0000000"
+};
+
+
+/* =========================================================
+   2. 変異定義
+========================================================= */
+
+const MUTATIONS = {
+  none: {
+    label: "変異なし",
+    digit(bits) {
+      return bits;
+    }
+  },
+
+  invert: {
+    label: "反転",
+    digit(bits) {
+      return bits.replace(/[01]/g, b => b === "1" ? "0" : "1");
+    }
+  },
+
+  rotateRight: {
+    label: "右回転",
+    digit(bits) {
+      return bits.slice(-1) + bits.slice(0, -1);
+    }
+  },
+
+  rotateLeft: {
+    label: "左回転",
+    digit(bits) {
+      return bits.slice(1) + bits[0];
+    }
+  },
+
+  mirror: {
+    label: "左右反転",
+    digit(bits) {
+      const b = bits.split("");
+      [b[1], b[5]] = [b[5], b[1]]; // 2 <-> 6
+      [b[2], b[4]] = [b[4], b[2]]; // 3 <-> 5
+      return b.join("");
+    }
+  },
+
+  heavenFall: {
+    label: "天落ち",
+    digit(bits) {
+      const b = bits.split("");
+      const top = b[0]; // 1
+      const mid = b[6]; // 7
+      b[0] = "0";
+      b[6] = top;
+      b[3] = mid; // 4
+      return b.join("");
+    }
+  },
+
+  lowerWorld: {
+    label: "下界化",
+    digit(bits) {
+      const b = bits.split("");
+      b[0] = "0"; // 1
+      b[1] = "0"; // 2
+      b[5] = "0"; // 6
+      b[2] = "1"; // 3
+      b[3] = "1"; // 4
+      b[4] = "1"; // 5
+      return b.join("");
+    }
+  },
+
+  ritual8: {
+    label: "全点灯儀式",
+    digit(bits) {
+      return "1111111";
+    }
+  },
+
+  randomOneFlip: {
+    label: "一画反転",
+    digit(bits) {
+      const b = bits.split("");
+      const i = Math.floor(Math.random() * 7);
+      b[i] = b[i] === "1" ? "0" : "1";
+      return b.join("");
+    }
+  },
+
+  randomNoise: {
+    label: "完全ノイズ",
+    digit(bits) {
+      return Array.from({ length: 7 }, () => Math.random() < 0.5 ? "1" : "0").join("");
+    }
+  },
+
+  clockReverse: {
+    label: "時計反転",
+    digit(bits) {
+      return bits;
+    },
+    clock(bitsList) {
+      return [...bitsList].reverse();
+    }
+  },
+
+  clockRipple: {
+    label: "時空波紋",
+    digit(bits) {
+      return bits;
+    },
+    clock(bitsList) {
+      return bitsList.map((bits, index) => {
+        let out = bits;
+        for (let i = 0; i < index; i++) {
+          out = rotateBitsRight(out);
+        }
+        return out;
+      });
+    }
+  }
+};
+
+
+/* =========================================================
+   3. 状態
+========================================================= */
+
+let currentTokens = [];
+let selectedDigitIndexes = new Set();
+
+
+/* =========================================================
+   4. 基本ユーティリティ
+========================================================= */
+
+function rotateBitsRight(bits) {
+  return bits.slice(-1) + bits.slice(0, -1);
+}
+
+function rotateBitsLeft(bits) {
+  return bits.slice(1) + bits[0];
+}
+
+function applyRepeated(value, fn, count) {
+  let out = value;
+  for (let i = 0; i < count; i++) {
+    out = fn(out);
+  }
+  return out;
+}
+
+function clampRepeatCount(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 1;
+  return Math.max(1, Math.min(99, Math.floor(n)));
+}
+
+
+/* =========================================================
+   5. 文字列 → トークン
+========================================================= */
+
+function textToTokens(text) {
+  return [...String(text)].map(ch => {
+    if (STANDARD_7SEG[ch]) {
+      return {
+        type: "digit",
+        source: ch,
+        bits: STANDARD_7SEG[ch]
+      };
+    }
+
+    return {
+      type: "separator",
+      source: ch,
+      bits: null
+    };
+  });
+}
+
+function getDigitTokenIndexes(tokens) {
+  const indexes = [];
+
+  tokens.forEach((token, tokenIndex) => {
+    if (token.type === "digit") {
+      indexes.push(tokenIndex);
+    }
+  });
+
+  return indexes;
+}
+
+
+/* =========================================================
+   6. 変異処理
+========================================================= */
+
+function mutateDigitBits(bits, mutationName, repeatCount) {
+  const mutation = MUTATIONS[mutationName] || MUTATIONS.none;
+
+  return applyRepeated(bits, currentBits => {
+    return mutation.digit(currentBits);
+  }, repeatCount);
+}
+
+function mutateClockBits(bitsList, mutationName, repeatCount) {
+  const mutation = MUTATIONS[mutationName] || MUTATIONS.none;
+
+  return applyRepeated(bitsList, currentList => {
+    if (typeof mutation.clock === "function") {
+      return mutation.clock(currentList);
+    }
+
+    return currentList.map(bits => mutation.digit(bits));
+  }, repeatCount);
+}
+
+function mutateTokens(tokens, mutationName, scope, repeatCount, selectedDigits) {
+  const result = tokens.map(token => ({ ...token }));
+  const digitTokenIndexes = getDigitTokenIndexes(result);
+
+  if (scope === "clock") {
+    const digitBits = digitTokenIndexes.map(tokenIndex => result[tokenIndex].bits);
+    const mutatedBits = mutateClockBits(digitBits, mutationName, repeatCount);
+
+    digitTokenIndexes.forEach((tokenIndex, digitIndex) => {
+      result[tokenIndex].bits = mutatedBits[digitIndex];
+    });
+
+    return result;
+  }
+
+  digitTokenIndexes.forEach((tokenIndex, digitIndex) => {
+    if (!selectedDigits.has(digitIndex)) return;
+
+    result[tokenIndex].bits = mutateDigitBits(
+      result[tokenIndex].bits,
+      mutationName,
+      repeatCount
+    );
+  });
+
+  return result;
+}
+
+
+/* =========================================================
+   7. セグメント直接クリック
+========================================================= */
+
+function toggleSegment(tokenIndex, segmentIndex) {
+  const token = currentTokens[tokenIndex];
+  if (!token || token.type !== "digit") return;
+
+  const b = token.bits.split("");
+  b[segmentIndex] = b[segmentIndex] === "1" ? "0" : "1";
+  token.bits = b.join("");
+
+  renderTokens(clockEl, currentTokens);
+  updateBitOutput();
+}
+
+
+/* =========================================================
+   8. 7セグ表示
+========================================================= */
+
+function createDigit(bits, tokenIndex) {
+  const digit = document.createElement("span");
+  digit.className = "ow7-digit";
+  digit.title = bits;
+
+  for (let i = 0; i < 7; i++) {
+    const seg = document.createElement("span");
+    seg.className = `ow7-seg s${i + 1}` + (bits[i] === "1" ? " on" : "");
+    seg.title = `segment ${i + 1}`;
+
+    seg.addEventListener("click", event => {
+      event.stopPropagation();
+      toggleSegment(tokenIndex, i);
+    });
+
+    digit.appendChild(seg);
+  }
+
+  return digit;
+}
+
+function createSeparator(token) {
+  if (token === ":" || token === "：") {
+    const colon = document.createElement("span");
+    colon.className = "ow7-colon";
+    return colon;
+  }
+
+  const sep = document.createElement("span");
+  sep.textContent = token;
+  sep.style.display = "inline-flex";
+  sep.style.alignItems = "center";
+  sep.style.height = "1.70em";
+  return sep;
+}
+
+function renderTokens(container, tokens) {
+  container.textContent = "";
+
+  tokens.forEach((token, tokenIndex) => {
+    if (token.type === "digit") {
+      container.appendChild(createDigit(token.bits, tokenIndex));
+    } else {
+      container.appendChild(createSeparator(token.source));
+    }
+  });
+}
+
+
+/* =========================================================
+   9. 桁ごとのON/OFFチェックボックス
+========================================================= */
+
+function rebuildDigitToggles(tokens) {
+  const digitTogglesEl = document.getElementById("digitToggles");
+  digitTogglesEl.textContent = "";
+
+  const digitTokenIndexes = getDigitTokenIndexes(tokens);
+
+  const oldSelected = new Set(selectedDigitIndexes);
+
+  selectedDigitIndexes = new Set();
+
+  digitTokenIndexes.forEach((tokenIndex, digitIndex) => {
+    const token = tokens[tokenIndex];
+
+    /*
+      初回、または桁数が変わった場合はデフォルトON。
+      前回の選択がある場合は引き継ぎ。
+    */
+    const shouldCheck =
+      oldSelected.size === 0
+        ? true
+        : oldSelected.has(digitIndex);
+
+    if (shouldCheck) {
+      selectedDigitIndexes.add(digitIndex);
+    }
+
+    const label = document.createElement("label");
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = shouldCheck;
+    checkbox.dataset.digitIndex = String(digitIndex);
+
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        selectedDigitIndexes.add(digitIndex);
+      } else {
+        selectedDigitIndexes.delete(digitIndex);
+      }
+    });
+
+    const labelText = document.createElement("span");
+    labelText.textContent = `桁${digitIndex + 1}(${token.source})`;
+
+    label.appendChild(checkbox);
+    label.appendChild(labelText);
+    digitTogglesEl.appendChild(label);
+  });
+}
+
+
+/* =========================================================
+   10. 異界時計ビット列出力
+========================================================= */
+
+function tokensToOtherworldBits(tokens) {
+  return tokens.map(token => {
+    if (token.type === "digit") return token.bits;
+    return token.source;
+  }).join("");
+}
+
+function tokensToRenderArrayLiteral(tokens) {
+  const items = tokens.map(token => {
+    if (token.type === "digit") {
+      return `"${token.bits}"`;
+    }
+
+    return `"${token.source}"`;
+  });
+
+  return `[${items.join(", ")}]`;
+}
+
+function tokensToReadableOtherworldBits(tokens) {
+  return tokens.map(token => {
+    if (token.type === "digit") return `[${token.bits}]`;
+    return ` ${token.source} `;
+  }).join("");
+}
+
+function updateBitOutput() {
+  const arrayLiteral = tokensToRenderArrayLiteral(currentTokens);
+
+  bitOutputEl.value =
+    `/* ビット列を直接指定 */\n` +
+    `renderOtherworld7Seg(\n` +
+    `  document.getElementById("clock-b"),\n` +
+    `  ${arrayLiteral}\n` +
+    `);`;
+}
+
+
+/* =========================================================
+   11. UI
+========================================================= */
+
+const clockEl = document.getElementById("owClock");
+const sourceTextEl = document.getElementById("sourceText");
+const mutationSelectEl = document.getElementById("mutationSelect");
+const scopeSelectEl = document.getElementById("scopeSelect");
+const repeatCountEl = document.getElementById("repeatCount");
+const mutateBtn = document.getElementById("mutateBtn");
+const resetBtn = document.getElementById("resetBtn");
+const bitOutputEl = document.getElementById("bitOutput");
+
+for (const [key, mutation] of Object.entries(MUTATIONS)) {
+  const option = document.createElement("option");
+  option.value = key;
+  option.textContent = mutation.label;
+  mutationSelectEl.appendChild(option);
+}
+
+function resetFromSourceText() {
+  currentTokens = textToTokens(sourceTextEl.value);
+  rebuildDigitToggles(currentTokens);
+  renderTokens(clockEl, currentTokens);
+  updateBitOutput();
+}
+
+function applyMutationFromUI() {
+  const mutationName = mutationSelectEl.value;
+  const scope = scopeSelectEl.value;
+  const repeatCount = clampRepeatCount(repeatCountEl.value);
+
+  currentTokens = mutateTokens(
+    currentTokens,
+    mutationName,
+    scope,
+    repeatCount,
+    selectedDigitIndexes
+  );
+
+  renderTokens(clockEl, currentTokens);
+  updateBitOutput();
+}
+
+mutateBtn.addEventListener("click", applyMutationFromUI);
+
+resetBtn.addEventListener("click", resetFromSourceText);
+
+sourceTextEl.addEventListener("input", resetFromSourceText);
+
+scopeSelectEl.addEventListener("change", () => {
+  const digitTogglesEl = document.getElementById("digitToggles");
+  digitTogglesEl.style.opacity = scopeSelectEl.value === "digit" ? "1" : "0.45";
+});
+
+resetFromSourceText();
+
+
+/* =========================================================
+   12. 外部から使う場合
+========================================================= */
+
+window.Otherworld7Seg = {
+  STANDARD_7SEG,
+  MUTATIONS,
+  textToTokens,
+  mutateTokens,
+  renderTokens,
+  tokensToOtherworldBits,
+  tokensToReadableOtherworldBits,
+  get currentTokens() {
+    return currentTokens;
+  }
+};
+</script>
+
+</body>
+</html>

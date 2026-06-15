@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>EarthBound‑Style Background Distorter – Fullscreen Edition</title>
+<style>
+html,body{margin:0;height:100%;width:100%;overflow:hidden;font-family:system-ui;background:#000;color:#eee;}
+#wrap{display:flex;height:100%;}
+#controls{flex:0 0 320px;width:320px;overflow-y:auto;padding:12px;box-sizing:border-box;background:#202020;transition:transform 0.3s ease;}
+#controls.hidden{transform:translateX(-100%);} /* slide out when hidden */
+#controls h2{margin:12px 0 4px;font-size:16px;border-bottom:1px solid #444;padding-bottom:4px;}
+#controls label{display:block;font-size:12px;margin:6px 0 2px;}
+#controls input[type=range]{width:100%;}
+canvas{flex:1;display:block;width:100%;height:100%;cursor:pointer;}
+#hint{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);font-size:12px;color:#aaa;pointer-events:none;user-select:none;transition:opacity 0.5s;}
+#hint.hidden{opacity:0;}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="controls"></div>
+  <canvas id="gl" title="Click or press F to toggle fullscreen"></canvas>
+</div>
+<div id="hint">Click canvas or press <strong>F</strong> to toggle fullscreen</div>
+
+<script>
+/******************** UI helpers ********************/
+function addRange(parent,id,text,min,max,step,value){
+  const label=document.createElement('label');label.textContent=text;
+  const r=document.createElement('input');r.type='range';Object.assign(r,{min,max,step,value,id});
+  label.appendChild(r);parent.appendChild(label);return r;
+}
+/******************** parameters ********************/
+const LAYERS=2;
+const params=[...Array(LAYERS)].map(()=>({}));
+const specs=[
+ ['alpha',0,1,0.01,1],
+ ['scrollX',-1,1,0.01,0],['scrollY',-1,1,0.01,0],
+ ['ampX',0,0.2,0.001,0.05],['freqX',0,4,0.01,1],['speedX',0,5,0.05,2],
+ ['ampY',0,0.2,0.001,0],['freqY',0,4,0.01,0], ['speedY',0,5,0.05,0],
+ ['ampEven',0,0.2,0.001,0],['ampOdd',0,0.2,0.001,0],['freqInter',0,30,0.5,15],
+ ['palSpeed',0,5,0.05,1],
+ /* new scanline (HDMA) distortion */
+ ['lineAmp',0,0.2,0.001,0.05],['lineFreq',0,10,0.1,4],['lineSpeed',0,5,0.05,1.5]
+];
+const controls=document.getElementById('controls');
+const fileInputs=[];
+for(let i=0;i<LAYERS;i++){
+  controls.insertAdjacentHTML('beforeend',`<h2>Layer ${i}</h2>`);
+  const fi=document.createElement('input');fi.type='file';fi.accept='image/*';controls.appendChild(fi);fileInputs.push(fi);
+  specs.forEach(([n,min,max,step,def])=>{
+    const val=(n==='alpha'&&i===1)?0:def;params[i][n]=addRange(controls,`${n}${i}`,n,min,max,step,val);
+  });
+}
+/******************** WebGL init ********************/
+const canvas=document.getElementById('gl');
+const gl=canvas.getContext('webgl2');if(!gl){alert('WebGL2 not supported');throw'no webgl2';}
+function compile(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw gl.getShaderInfoLog(s);return s;}
+const vs=`#version 300 es\nin vec2 aPos;\nout vec2 vUv;\nvoid main(){vUv=(aPos+1.0)*0.5;gl_Position=vec4(aPos,0,1);}\n`;
+const fs=`#version 300 es\nprecision highp float;\n#define TWO_PI 6.28318530718\n#define LAYERS 2\nuniform sampler2D uTex0;\nuniform sampler2D uTex1;\nuniform float uAlpha[LAYERS];\nuniform vec2  uScroll[LAYERS];\nuniform vec3  uOscX[LAYERS];\nuniform vec3  uOscY[LAYERS];\nuniform vec3  uInter[LAYERS];\nuniform float uPalSpeed[LAYERS];\nuniform vec3  uLine[LAYERS];   // (amp, freq, speed)\nuniform float uTime;\nin vec2 vUv;\nout vec4 frag;\n\nvec3 rgb2hsv(vec3 c){vec4 K=vec4(0.,-1./3.,2./3.,-1.);vec4 p=mix(vec4(c.bg,K.wz),vec4(c.gb,K.xy),step(c.b,c.g));vec4 q=mix(vec4(p.xyw,c.r),vec4(c.r,p.yzx),step(p.x,c.r));float d=q.x-min(q.w,q.y);float e=1e-10;return vec3(abs(q.z+(q.w-q.y)/(6.*d+e)),d/(q.x+e),q.x);}vec3 hsv2rgb(vec3 c){vec3 p=abs(fract(c.xxx+vec3(0,1./3.,2./3.))*6.-3.);return c.z*mix(vec3(1.),clamp(p-1.,0.,1.),c.y);}\n\nvec3 texFetch(int i,vec2 uv){\n  return (i==0)?texture(uTex0,uv).rgb:texture(uTex1,uv).rgb;\n}\n\nvec3 sampleLayer(int idx,vec2 uv){\n  vec2 pos = uv + uScroll[idx]*uTime;\n\n  // original oscillations\n  vec3 ox=uOscX[idx];\n  vec3 oy=uOscY[idx];\n  pos.x += ox.x * sin(TWO_PI*ox.y*pos.y + ox.z*uTime);\n  pos.y += oy.x * sin(TWO_PI*oy.y*pos.x + oy.z*uTime);\n\n  // interlace-style horizontal warp\n  vec3 ic = uInter[idx];\n  float line = floor(pos.y * float(textureSize(uTex0,0).y));\n  float amp = mod(line,2.0) < 0.5 ? ic.x : ic.y;\n  pos.x += amp * sin(TWO_PI*ic.z*pos.y + ox.z*uTime);\n\n  // NEW: per-scanline vertical offset (HDMA)\n  float texH = float(textureSize(uTex0,0).y);\n  float scan = floor(gl_FragCoord.y);\n  float vphase = TWO_PI * uLine[idx].y * scan / texH;\n  pos.y += uLine[idx].x * sin(vphase + uLine[idx].z * uTime);\n\n  vec3 col = texFetch(idx, pos);\n\n  // palette roll\n  float shift = uPalSpeed[idx] * uTime * 0.1;\n  vec3 hsv = rgb2hsv(col);\n  hsv.x = fract(hsv.x + shift);\n  return hsv2rgb(hsv);\n}\n\nvoid main(){\n  vec3 a = sampleLayer(0, vUv);\n  vec3 b = sampleLayer(1, vUv);\n  frag = vec4(mix(a, b, uAlpha[1]), 1.0);\n}\n`;
+const prog=gl.createProgram();
+gl.attachShader(prog,compile(gl.VERTEX_SHADER,vs));
+gl.attachShader(prog,compile(gl.FRAGMENT_SHADER,fs));
+gl.linkProgram(prog);
+if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw gl.getProgramInfoLog(prog);
+gl.useProgram(prog);
+
+const quad=new Float32Array([-1,-1,3,-1,-1,3]);
+const vbo=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,vbo);gl.bufferData(gl.ARRAY_BUFFER,quad,gl.STATIC_DRAW);
+const posLoc=gl.getAttribLocation(prog,'aPos');gl.enableVertexAttribArray(posLoc);gl.vertexAttribPointer(posLoc,2,gl.FLOAT,false,0,0);
+
+const loc={
+  uTex0:gl.getUniformLocation(prog,'uTex0'),
+  uTex1:gl.getUniformLocation(prog,'uTex1'),
+  uAlpha:gl.getUniformLocation(prog,'uAlpha[0]'),
+  uScroll:gl.getUniformLocation(prog,'uScroll[0]'),
+  uOscX:gl.getUniformLocation(prog,'uOscX[0]'),
+  uOscY:gl.getUniformLocation(prog,'uOscY[0]'),
+  uInter:gl.getUniformLocation(prog,'uInter[0]'),
+  uPalSpeed:gl.getUniformLocation(prog,'uPalSpeed[0]'),
+  uLine:gl.getUniformLocation(prog,'uLine[0]'),
+  uTime:gl.getUniformLocation(prog,'uTime')
+};
+
+const texs=[gl.createTexture(),gl.createTexture()];
+texs.forEach((t,i)=>{
+  gl.activeTexture(gl.TEXTURE0+i);
+  gl.bindTexture(gl.TEXTURE_2D,t);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([0,0,0,255]));
+});
+gl.uniform1i(loc.uTex0,0);
+gl.uniform1i(loc.uTex1,1);
+
+function loadTex(input, unit, tex) {
+  if (!input.files[0]) return;
+
+  // ① ImageBitmap を上下反転オプション付きで生成
+  createImageBitmap(input.files[0], { imageOrientation: 'flipY' }).then(img => {
+    // ② アップロード先のテクスチャをバインド
+    gl.activeTexture(unit);
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+
+    // ③ ピクセルを GPU へ送る（pixelStorei は不要）
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,            // level
+      gl.RGBA,      // internalFormat
+      gl.RGBA,      // srcFormat
+      gl.UNSIGNED_BYTE,
+      img           // ImageBitmap
+    );
+  });
+}
+
+fileInputs.forEach((fi,i)=>fi.addEventListener('change',()=>loadTex(fi,gl.TEXTURE0+i,texs[i])));
+
+function resize(){
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=canvas.clientWidth*dpr;
+  canvas.height=canvas.clientHeight*dpr;
+  gl.viewport(0,0,gl.drawingBufferWidth,gl.drawingBufferHeight);
+}
+resize();
+window.addEventListener('resize',resize);
+/******************** render loop ********************/
+let start=performance.now();
+function draw(t){
+  const time=(t-start)/1000;
+  gl.uniform1f(loc.uTime,time);
+  gl.uniform1fv(loc.uAlpha,new Float32Array([params[0].alpha.value,params[1].alpha.value]));
+  gl.uniform2fv(loc.uScroll,new Float32Array([
+    params[0].scrollX.value,params[0].scrollY.value,
+    params[1].scrollX.value,params[1].scrollY.value
+  ]));
+  gl.uniform3fv(loc.uOscX,new Float32Array([
+    params[0].ampX.value,params[0].freqX.value,params[0].speedX.value,
+    params[1].ampX.value,params[1].freqX.value,params[1].speedX.value
+  ]));
+  gl.uniform3fv(loc.uOscY,new Float32Array([
+    params[0].ampY.value,params[0].freqY.value,params[0].speedY.value,
+    params[1].ampY.value,params[1].freqY.value,params[1].speedY.value
+  ]));
+  gl.uniform3fv(loc.uInter,new Float32Array([
+    params[0].ampEven.value,params[0].ampOdd.value,params[0].freqInter.value,
+    params[1].ampEven.value,params[1].ampOdd.value,params[1].freqInter.value
+  ]));
+  gl.uniform1fv(loc.uPalSpeed,new Float32Array([params[0].palSpeed.value,params[1].palSpeed.value]));
+  gl.uniform3fv(loc.uLine,new Float32Array([
+    params[0].lineAmp.value,params[0].lineFreq.value,params[0].lineSpeed.value,
+    params[1].lineAmp.value,params[1].lineFreq.value,params[1].lineSpeed.value
+  ]));
+  gl.drawArrays(gl.TRIANGLES,0,3);
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+
+/******************** FULLSCREEN HANDLING ********************/
+const hint=document.getElementById('hint');
+function updateControlsVisibility(){
+  if(document.fullscreenElement){
+    controls.classList.add('hidden');
+    hint.classList.add('hidden');
+  }else{
+    controls.classList.remove('hidden');
+    hint.classList.remove('hidden');
+  }
+}
+function toggleFullscreen(){
+  if(!document.fullscreenElement){
+    (canvas.requestFullscreen||canvas.webkitRequestFullscreen||canvas.mozRequestFullScreen||canvas.msRequestFullscreen).call(canvas).catch(()=>{});
+  }else{
+    (document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen).call(document);
+  }
+}
+canvas.addEventListener('click',toggleFullscreen);
+window.addEventListener('keydown',e=>{if(e.key==='f' || e.key==='F'){toggleFullscreen();}});
+document.addEventListener('fullscreenchange',()=>{updateControlsVisibility();resize();});
+
+// If URL contains ?autoFS, try to auto‑enter fullscreen after a user gesture (first click)
+if(location.search.includes('autoFS')){
+  const onFirstInteract=()=>{toggleFullscreen();window.removeEventListener('click',onFirstInteract);window.removeEventListener('keydown',onFirstInteract);};
+  window.addEventListener('click',onFirstInteract,{once:true});
+  window.addEventListener('keydown',onFirstInteract,{once:true});
+}
+</script>
+</body>
+</html>

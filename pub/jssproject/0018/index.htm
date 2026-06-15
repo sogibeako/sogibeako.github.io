@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>四角タイルジェネレーター</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>四角タイルジェネレーター</h1>
+    <div class="header-actions">
+      <button id="btn-save-settings" class="btn secondary">設定保存</button>
+      <button id="btn-load-settings" class="btn secondary">設定読込</button>
+      <input type="file" id="input-load-settings" accept=".json" style="display: none;">
+    </div>
+  </header>
+
+  <main class="app-container">
+    <!-- 左カラム: 画像・セル管理 -->
+    <section class="panel panel-left">
+      <h2>1. 画像・セル管理</h2>
+      <p class="panel-desc">最大16枚設定可能 (a〜p)</p>
+      <div id="cell-list" class="cell-list">
+        <!-- JSでセルをa〜pまで生成する -->
+      </div>
+    </section>
+
+    <!-- 中央カラム: パターン定義・出力設定 -->
+    <section class="panel panel-center">
+      <h2>2. パターン定義</h2>
+      <div class="control-group">
+        <label for="pattern-input">セル配置 (a〜pを半角スペース・改行区切りで入力)</label>
+        <div class="pattern-helpers">
+          <div class="helper-buttons" id="helper-buttons-row">
+            <!-- JSでa〜pのボタンを生成 -->
+          </div>
+          <div class="template-buttons">
+            <button type="button" class="btn outline btn-template" data-template="2x2">2x2</button>
+            <button type="button" class="btn outline btn-template" data-template="4x4">4x4</button>
+            <button type="button" class="btn outline btn-template" data-template="alternating">市松模様</button>
+          </div>
+        </div>
+        <textarea id="pattern-input" rows="8" spellcheck="false">
+a b
+b a</textarea>
+        <div id="pattern-error" class="error-msg"></div>
+      </div>
+
+      <h2>3. 出力設定</h2>
+      
+      <div class="settings-grid">
+        <!-- 繰り返し・全体 -->
+        <div class="settings-card">
+          <h3>繰り返し・全体</h3>
+          <div class="control-row">
+            <label>横リピート回数</label>
+            <input type="number" id="setting-repeat-x" min="1" max="64" value="4">
+          </div>
+          <div class="control-row">
+            <label>縦リピート回数</label>
+            <input type="number" id="setting-repeat-y" min="1" max="64" value="4">
+          </div>
+          <div class="control-row">
+            <label>全体回転</label>
+            <select id="setting-output-rotation">
+              <option value="0">0°</option>
+              <option value="90">90°</option>
+              <option value="180">180°</option>
+              <option value="270">270°</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ズレ設定 -->
+        <div class="settings-card">
+          <h3>ズレ・オフセット</h3>
+          <div class="control-row">
+            <label>ずれ方向</label>
+            <select id="setting-offset-mode">
+              <option value="none">なし</option>
+              <option value="row">横ずれ (奇数行)</option>
+              <option value="col">縦ずれ (奇数列)</option>
+            </select>
+          </div>
+          <div class="control-row">
+            <label>ずれ量 (%)</label>
+            <input type="range" id="setting-offset-percent" min="0" max="100" value="50">
+            <span class="val-display" id="val-offset-percent">50%</span>
+          </div>
+          <div class="control-row mt-2">
+            <label class="checkbox-label">
+              <input type="checkbox" id="setting-offset-loop"> 端でループする (ラップアラウンド)
+            </label>
+          </div>
+        </div>
+
+        <!-- セル比率 -->
+        <div class="settings-card">
+          <h3>セル比率変更</h3>
+          <div class="control-row">
+            <label>幅比率</label>
+            <input type="number" id="setting-aspect-w" min="1" max="10" value="1">
+          </div>
+          <div class="control-row">
+            <label>高さ比率</label>
+            <input type="number" id="setting-aspect-h" min="1" max="10" value="1">
+          </div>
+          <div class="control-row">
+            <label>描画モード</label>
+            <select id="setting-fit-mode">
+              <option value="cover">中心トリミング (Cover)</option>
+              <option value="contain">全体表示 (Contain)</option>
+              <option value="stretch">引き伸ばし (Stretch)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 目地設定 -->
+        <div class="settings-card full-width">
+          <h3>目地</h3>
+          <div class="control-row">
+            <label class="checkbox-label">
+              <input type="checkbox" id="setting-grout-enabled" checked> 目地を有効にする
+            </label>
+          </div>
+          <div id="grout-settings-wrapper">
+            <div class="control-row">
+              <label class="checkbox-label" title="左上外周の目地を取り除き、タイリングループ可能なテクスチャとして出力します">
+                <input type="checkbox" id="setting-grout-seamless"> シームレス出力 (タイリング用)
+              </label>
+            </div>
+            <div class="control-row">
+              <label>目地幅</label>
+              <input type="range" id="setting-grout-width" min="0" max="50" value="4">
+              <span class="val-display" id="val-grout-width">4px</span>
+            </div>
+            <div class="control-row">
+              <label>目地色</label>
+              <input type="color" id="setting-grout-color" value="#cccccc">
+            </div>
+            
+            <hr class="divider">
+            
+            <div class="control-row">
+              <label class="checkbox-label">
+                <input type="checkbox" id="setting-grout-double"> 二重縁取り (タイル側境界線)
+              </label>
+            </div>
+            <div class="double-grout-group" id="double-grout-wrapper" style="opacity: 0.5; pointer-events: none;">
+              <div class="control-row">
+                <label>外側線幅 (タイル寄り)</label>
+                <input type="number" id="setting-grout-outer-w" min="1" max="20" value="2">
+              </div>
+              <div class="control-row">
+                <label>外側線色</label>
+                <input type="color" id="setting-grout-outer-c" value="#888888">
+              </div>
+              <div class="control-row">
+                <label>内側線幅 (目地の中央寄り)</label>
+                <input type="number" id="setting-grout-inner-w" min="1" max="20" value="1">
+              </div>
+              <div class="control-row">
+                <label>内側線色</label>
+                <input type="color" id="setting-grout-inner-c" value="#ffffff">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右カラム: プレビュー・出力 -->
+    <section class="panel panel-right">
+      <h2>4. プレビュー / 出力</h2>
+      <div class="preview-actions">
+        <button id="btn-export-png" class="btn primary">PNGダウンロード</button>
+        <div class="control-row inline" style="margin-bottom:0; flex-wrap: wrap;">
+          <div style="display:flex; align-items:center; gap: 4px;">
+            <label style="margin:0;">出力幅</label>
+            <select id="export-size" style="width:110px;">
+              <option value="1024">約 1024px</option>
+              <option value="2048" selected>約 2048px (推奨)</option>
+              <option value="4096">約 4096px</option>
+            </select>
+          </div>
+          <div style="display:flex; align-items:center; gap: 4px;">
+            <label style="margin:0;">縮小率</label>
+            <select id="export-scale" style="width:90px;">
+              <option value="1">100%</option>
+              <option value="0.75">75%</option>
+              <option value="0.66">66%</option>
+              <option value="0.5">50%</option>
+              <option value="0.33">33%</option>
+              <option value="0.25">25%</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="preview-container" id="preview-wrapper">
+        <canvas id="preview-canvas"></canvas>
+      </div>
+      <div class="render-stats">
+        サイズ: <span id="stat-size">0 x 0</span> px / 
+        メモリ目安: <span id="stat-ram">0</span> MB
+      </div>
+    </section>
+
+  </main>
+
+  <!-- セルのテンプレート (JSからクローンして使用) -->
+  <template id="tpl-cell">
+    <div class="cell-item" data-id="">
+      <div class="cell-header">
+        <span class="cell-badge"></span>
+        <label class="upload-btn">
+          画像UP
+          <input type="file" class="cell-file" accept="image/png, image/jpeg, image/webp, image/gif" style="display:none;">
+        </label>
+        <button type="button" class="btn icon-btn btn-crop-cell" title="領域指定 (クロップ)" disabled>✂️</button>
+        <button type="button" class="btn icon-btn btn-clear-cell" title="クリア">🗑️</button>
+      </div>
+      <div class="cell-preview-box">
+        <!-- 元画像を保持する隠しキャンバスと、エフェクト適用後のプレビューキャンバス -->
+        <div class="empty-state">No Image</div>
+        <canvas class="cell-thumb-canvas" width="64" height="64" style="display:none;"></canvas>
+      </div>
+      <div class="cell-controls">
+        <div class="control-row small">
+          <label>回転</label>
+          <select class="ctrl-rot">
+            <option value="0">0°</option>
+            <option value="90">90°</option>
+            <option value="180">180°</option>
+            <option value="270">270°</option>
+          </select>
+        </div>
+        <div class="control-row small">
+          <label>反転</label>
+          <select class="ctrl-flip">
+            <option value="none">なし</option>
+            <option value="x">左右</option>
+            <option value="y">上下</option>
+            <option value="xy">両方</option>
+          </select>
+        </div>
+        <details class="color-adjust-details">
+          <summary>色調補正</summary>
+          <div class="control-row micro">
+            <label>色相(Hue)</label>
+            <input type="range" class="ctrl-hue" min="-180" max="180" value="0">
+          </div>
+          <div class="control-row micro">
+            <label>彩度(Sat)</label>
+            <input type="range" class="ctrl-sat" min="-100" max="100" value="0">
+          </div>
+          <div class="control-row micro">
+            <label>明度(Bri)</label>
+            <input type="range" class="ctrl-bri" min="-100" max="100" value="0">
+          </div>
+          <button type="button" class="btn outline tiny w-full btn-reset-color">リセット</button>
+        </details>
+      </div>
+    </div>
+  </template>
+
+  <!-- クロップ編集モーダル -->
+  <div id="crop-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content crop-modal-content">
+      <div class="modal-header">
+        <h3 id="crop-modal-title">領域指定</h3>
+        <button type="button" class="btn icon-btn btn-close-modal">✖</button>
+      </div>
+      <div class="modal-toolbar">
+        <div style="display:flex; gap: 8px;">
+          <button type="button" id="btn-crop-mode-toggle" class="btn outline">表示切替：全体</button>
+          <span class="val-display" style="align-self:center; font-size:0.8rem; color:var(--text-secondary);">ホイールでズーム、右ドラッグで移動</span>
+        </div>
+        <div style="display:flex; gap: 8px;">
+          <button type="button" id="btn-crop-cancel" class="btn">キャンセル</button>
+          <button type="button" id="btn-crop-save" class="btn primary">決定して適用</button>
+        </div>
+      </div>
+      <div class="crop-canvas-container" id="crop-container">
+        <canvas id="crop-canvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

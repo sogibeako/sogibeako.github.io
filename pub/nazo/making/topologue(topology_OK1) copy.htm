@@ -1,0 +1,2055 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>位相ローグライク最小試作</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --panel: #171a22;
+      --border: #2a3140;
+      --text: #e6e9ef;
+      --muted: #9aa4b2;
+      --accent: #8bd5ca;
+      --accent-2: #f5c2e7;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #1a1f2b 0%, var(--bg) 60%);
+      color: var(--text);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: min(100%, 1000px);
+      display: grid;
+      grid-template-columns: minmax(320px, 520px) 1fr;
+      gap: 18px;
+    }
+
+    .panel {
+      background: color-mix(in srgb, var(--panel) 90%, black 10%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .28);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: rgba(255, 255, 255, .02);
+    }
+
+    .title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      color: var(--accent);
+    }
+
+    .subtle {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .screen-wrap {
+      padding: 16px;
+      overflow: auto;
+    }
+
+    label input[type="checkbox"] {
+      margin-right: 8px;
+      transform: translateY(1px);
+    }
+
+    pre#screen {
+      margin: 0;
+      line-height: 1.15;
+      font-size: 18px;
+      min-height: 18em;
+      white-space: pre;
+      color: #dbe4ff;
+    }
+
+    .log-screen {
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      font-size: 13px;
+      background: rgba(0, 0, 0, 0.2);
+      height: 140px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 2px;
+      overflow: hidden;
+    }
+
+    .side {
+      display: grid;
+      gap: 18px;
+    }
+
+    .controls {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .row {
+      display: grid;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    select,
+    button {
+      background: #11151d;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      transition: transform .05s ease, border-color .15s ease, background .15s ease;
+    }
+
+    button:hover {
+      border-color: #4b5770;
+      background: #151b25;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .stats {
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat {
+      background: rgba(255, 255, 255, .03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .stat-key {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 14px;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .legend {
+      padding: 16px;
+      display: grid;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .legend code {
+      color: var(--accent-2);
+      background: rgba(255, 255, 255, .03);
+      padding: 1px 5px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    .notes {
+      padding: 16px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 860px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      pre#screen {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <div class="title">位相ローグライク最小試作</div>
+          <div class="subtle">矢印キー / WASD で移動　・ . で待機</div>
+        </div>
+        <div class="subtle" id="statusText">ready</div>
+      </div>
+      <div class="screen-wrap">
+        <pre id="screen"></pre>
+      </div>
+      <div class="log-screen" id="log"></div>
+    </section>
+
+    <div class="side">
+      <section class="panel">
+        <div class="panel-header">
+          <div class="title">設定</div>
+        </div>
+        <div class="controls">
+          <div class="row">
+            <label for="topologySelect">topology</label>
+            <select id="topologySelect">
+              <option value="plane">plane</option>
+              <option value="torus" selected>torus</option>
+              <option value="mobius-horizontal">mobius-horizontal</option>
+              <option value="klein-horizontal">klein-horizontal</option>
+              <option value="double-twist">double-twist</option>
+              <option value="quarter-clockwise">quarter-clockwise</option>
+              <option value="quarter-counterclockwise">quarter-counterclockwise</option>
+              <option value="quarter-clockwise-twist">quarter-clockwise-twist</option>
+              <option value="quarter-counterclockwise-twist">quarter-counterclockwise-twist</option>
+            </select>
+          </div>
+          <div class="row">
+            <label for="mapSelect">baseMap</label>
+            <select id="mapSelect">
+              <option value="open4" selected>4x4 all floor</option>
+              <option value="loop8">8x8 loop playground</option>
+              <option value="asym8">8x8 asymmetric test</option>
+              <option value="open11">11x11 all floor</option>
+              <option value="open12">12x12 all floor</option>
+              <option value="torus12">12x12 asymmetric testr</option>
+            </select>
+          </div>
+          <div class="row">
+            <label><input type="checkbox" id="tiledMapToggle" /> タイル貼り表示</label>
+          </div>
+          <div class="row">
+            <label><input type="checkbox" id="breadcrumbsToggle" checked /> パンくずを表示</label>
+          </div>
+          <div class="row">
+            <label><input type="checkbox" id="memoryToggle" checked /> 既踏 / 既視を表示</label>
+          </div>
+          <div class="row">
+            <label><input type="checkbox" id="lightScrollToggle" /> 「あかりの巻物」モード</label>
+          </div>
+          <button id="resetButton">再生成 / リセット</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div class="title">真世界デバッグ</div>
+        </div>
+        <div class="screen-wrap">
+          <pre id="worldDebug"></pre>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div class="title">内部状態</div>
+        </div>
+        <div class="stats" id="stats"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div class="title">凡例</div>
+        </div>
+        <div class="legend">
+          <div><code>@</code> 現在地</div>
+          <div><code>d</code> 犬 追跡者</div>
+          <div><code>f</code> 猫 うろつき中</div>
+          <div><code>z</code> 猫 睡眠中</div>
+          <div><code>%</code> 犬の食料</div>
+          <div><code>*</code> 最近の足跡</div>
+          <div><code>·</code> 既踏</div>
+          <div><code>,</code> 既視</div>
+          <div><code>.</code> 現在見えている床</div>
+          <div><code>#</code> 壁</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <div class="title">メモ</div>
+        </div>
+        <div class="notes">
+          これは「真の空間」と「いま見えている局所地図」を分けた最小試作です。<br>
+          特に <strong>torus</strong> では、左へ歩き続けると過去の足跡が思わぬ方向に再登場しやすくなります。<br>
+          <strong>mobius-horizontal</strong> では、横境界をまたぐたびに <code>flipY</code> が反転します。
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    // =========================
+    // グローバル定数
+    // =========================
+    const DIRS = ["N", "E", "S", "W"]; // 方向定義
+    const DIR_DELTAS = {               // 方向と移動の関係 
+      N: { dx: 0, dy: -1 },
+      E: { dx: 1, dy: 0 },
+      S: { dx: 0, dy: 1 },
+      W: { dx: -1, dy: 0 },
+    };
+
+    // ==========================
+    // DOM (Document Object Model)
+    // HTMLのid=ほにゃほにゃを持つ要素を取ってきて定数に格納。
+    // 例えば直下のは「HTMLのid="screen"を持つ要素を取ってきてscreenELに格納。
+    // ==========================
+    const screenEl = document.getElementById("screen"); // 画面表示用の要素
+    const statsEl = document.getElementById("stats");   // 内部状態表示用の要素
+    const logEl = document.getElementById("log");       // ログ表示用の要素
+    const worldDebugEl = document.getElementById("worldDebug"); // 真世界デバッグ表示用の要素
+    const statusTextEl = document.getElementById("statusText"); // 上部ステータス表示用の要素
+
+    const topologySelectEl = document.getElementById("topologySelect"); // topology選択欄
+    const mapSelectEl = document.getElementById("mapSelect");           // マップ選択欄
+    const resetButtonEl = document.getElementById("resetButton");       // リセットボタン
+
+    const tiledMapToggleEl = document.getElementById("tiledMapToggle"); // タイル貼り表示切替
+    const breadcrumbsToggleEl = document.getElementById("breadcrumbsToggle"); // パンくず表示切替
+    const memoryToggleEl = document.getElementById("memoryToggle");           // 既踏/既視表示切替
+    const lightScrollToggleEl = document.getElementById("lightScrollToggle"); // あかりの巻物モード切替
+
+    tiledMapToggleEl.addEventListener("change", () => {
+      game.renderOptions.tiledMapMode = tiledMapToggleEl.checked; // チェック状態を描画設定へ反映
+      redraw();
+    });
+
+    // ==========================
+    // 純粋な小関数（他に依存しない）
+    // ==========================
+
+    function rotateDir(dir, rot) {      // 方向の回転, dir を rot だけ90度単位で回転して返す
+      const i = DIRS.indexOf(dir);
+      return DIRS[(i + rot + 4) % 4];
+    }
+
+    function makeNodeId(x, y, width) {  // 2次元座標 (x,y) から一意な nodeID を計算して割り振り
+      return y * width + x;
+    }
+
+    function rotatePointInTile(x, y, width, height, rot) {          // 現在位置、マップの大きさ、rot を受け取ってタイルを描画？
+      switch ((rot % 4 + 4) % 4) {
+        case 0: return { x, y };
+        case 1: return { x: width - 1 - y, y: x };
+        case 2: return { x: width - 1 - x, y: height - 1 - y };
+        case 3: return { x: y, y: height - 1 - x };
+        default: return { x, y };
+      }
+    }
+
+    function inverseRotatePointInTile(x, y, width, height, rot) {   // rotatePointIntile() の逆回転版
+      switch ((rot % 4 + 4) % 4) {
+        case 0: return { x, y };
+        case 1: return { x: y, y: width - 1 - x };
+        case 2: return { x: width - 1 - x, y: height - 1 - y };
+        case 3: return { x: height - 1 - y, y: x };
+        default: return { x, y };
+      }
+    }
+
+    function mapInputDirToGraphDir(inputDir, topoState) { // inputDir と topoStateを受け取ってグラフを変更？
+      let dir = inputDir;
+
+      const flipX = !!topoState?.flipX;
+      const flipY = !!topoState?.flipY;
+      const rot = topoState?.rot ?? 0;
+
+      if (flipY) {
+        if (dir === "N") dir = "S";
+        else if (dir === "S") dir = "N";
+      }
+
+      if (flipX) {
+        if (dir === "E") dir = "W";
+        else if (dir === "W") dir = "E";
+      }
+
+      dir = rotateDir(dir, rot);
+      return dir;
+    }
+
+    function projectDirToLocalOffset(dir, topoState) { // dir と topoStateを受け取って、flipX、flipY、localDirを作用させる？
+      const rot = topoState?.rot ?? 0;
+      const flipX = !!topoState?.flipX;
+      const flipY = !!topoState?.flipY;
+
+      let localDir = rotateDir(dir, -rot);
+
+      if (flipX) {
+        if (localDir === "E") localDir = "W";
+        else if (localDir === "W") localDir = "E";
+      }
+
+      if (flipY) {
+        if (localDir === "N") localDir = "S";
+        else if (localDir === "S") localDir = "N";
+      }
+
+      switch (localDir) {
+        case "N": return { dx: 0, dy: -1 };
+        case "E": return { dx: 1, dy: 0 };
+        case "S": return { dx: 0, dy: 1 };
+        case "W": return { dx: -1, dy: 0 };
+        default: return { dx: 0, dy: 0 };
+      }
+    }
+
+
+
+    // ===========================
+    // データ構造クラス（何を持っているかが中心のもの）
+    // ===========================
+    class BaseMap {
+      constructor(width, height, tiles) {
+        this.width = width;
+        this.height = height;
+        this.tiles = tiles;
+      }
+
+      isInBounds(x, y) {
+        return x >= 0 && x < this.width && y >= 0 && y < this.height;
+      }
+
+      getTile(x, y) {
+        if (!this.isInBounds(x, y)) return null;
+        return this.tiles[y][x];
+      }
+
+      isFloor(x, y) {
+        return this.getTile(x, y) === "floor";
+      }
+
+      isWall(x, y) {
+        return this.getTile(x, y) === "wall";
+      }
+
+      static fromAscii(lines) {
+        const height = lines.length;
+        const width = lines[0].length;
+        const tiles = lines.map(row =>
+          [...row].map(ch => (ch === "#" ? "wall" : "floor"))
+        );
+        return new BaseMap(width, height, tiles);
+      }
+    }
+
+    class TwistedLoopTopology {
+      constructor({
+        wrapX = true,
+        wrapY = true,
+        twistX = false, // 左右境界をまたぐと flipY を反転
+        twistY = false, // 上下境界をまたぐと flipX を反転
+        name = "twisted-loop",
+      } = {}) {
+        this.name = name;
+        this.wrapX = wrapX;
+        this.wrapY = wrapY;
+        this.twistX = twistX;
+        this.twistY = twistY;
+      }
+
+      initialState() {
+        return { flipX: false, flipY: false };
+      }
+
+      resolveStep(x, y, dir, topoState, width, height) {
+        const { dx, dy } = DIR_DELTAS[dir];
+        let nx = x + dx;
+        let ny = y + dy;
+        const nextTopoState = {
+          flipX: !!topoState?.flipX,
+          flipY: !!topoState?.flipY,
+        };
+
+        let wrappedX = false;
+        let wrappedY = false;
+
+        // 左右境界
+        if (nx < 0) {
+          if (!this.wrapX) {
+            return { blocked: true, x, y, topoState, transform: null };
+          }
+          nx = width - 1;
+          wrappedX = true;
+        } else if (nx >= width) {
+          if (!this.wrapX) {
+            return { blocked: true, x, y, topoState, transform: null };
+          }
+          nx = 0;
+          wrappedX = true;
+        }
+
+        // 上下境界
+        if (ny < 0) {
+          if (!this.wrapY) {
+            return { blocked: true, x, y, topoState, transform: null };
+          }
+          ny = height - 1;
+          wrappedY = true;
+        } else if (ny >= height) {
+          if (!this.wrapY) {
+            return { blocked: true, x, y, topoState, transform: null };
+          }
+          ny = 0;
+          wrappedY = true;
+        }
+
+        // ひねり適用
+        if (wrappedX && this.twistX) {
+          ny = height - 1 - ny;
+          nextTopoState.flipY = !nextTopoState.flipY;
+        }
+
+        if (wrappedY && this.twistY) {
+          nx = width - 1 - nx;
+          nextTopoState.flipX = !nextTopoState.flipX;
+        }
+
+        return {
+          blocked: false,
+          x: nx,
+          y: ny,
+          topoState: nextTopoState,
+          transform: {
+            type: "twisted-wrap",
+            wrappedX,
+            wrappedY,
+            flipX: nextTopoState.flipX,
+            flipY: nextTopoState.flipY,
+          },
+        };
+      }
+    }
+
+    class PlaneTopology {
+      constructor() {
+        this.name = "plane";
+      }
+
+      initialState() {
+        return {};
+      }
+
+      resolveStep(x, y, dir, topoState, width, height) {
+        const { dx, dy } = DIR_DELTAS[dir];
+        const nx = x + dx;
+        const ny = y + dy;
+
+        if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
+          return { blocked: true, x, y, topoState, transform: null };
+        }
+
+        return {
+          blocked: false,
+          x: nx,
+          y: ny,
+          topoState,
+          transform: { type: "normal" },
+        };
+      }
+    }
+
+    class TorusTopology {
+      constructor() {
+        this.name = "torus";
+      }
+
+      initialState() {
+        return {};
+      }
+
+      resolveStep(x, y, dir, topoState, width, height) {
+        const { dx, dy } = DIR_DELTAS[dir];
+        return {
+          blocked: false,
+          x: (x + dx + width) % width,
+          y: (y + dy + height) % height,
+          topoState,
+          transform: { type: "wrap" },
+        };
+      }
+    }
+
+    class MobiusHorizontalTopology {
+      constructor() {
+        this.name = "mobius-horizontal";
+      }
+
+      initialState() {
+        return { flipY: false };
+      }
+
+      resolveStep(x, y, dir, topoState, width, height) {
+        const { dx, dy } = DIR_DELTAS[dir];
+        let nx = x + dx;
+        let ny = y + dy;
+        const nextTopoState = { ...topoState };
+        let transform = { type: "normal", flipY: false };
+
+        if (ny < 0 || ny >= height) {
+          return { blocked: true, x, y, topoState, transform: null };
+        }
+
+        if (nx < 0) {
+          nx = width - 1;
+          ny = height - 1 - ny;
+          nextTopoState.flipY = !nextTopoState.flipY;
+          transform = { type: "mobius-wrap", flipY: true };
+        } else if (nx >= width) {
+          nx = 0;
+          ny = height - 1 - ny;
+          nextTopoState.flipY = !nextTopoState.flipY;
+          transform = { type: "mobius-wrap", flipY: true };
+        }
+
+        return {
+          blocked: false,
+          x: nx,
+          y: ny,
+          topoState: nextTopoState,
+          transform,
+        };
+      }
+    }
+
+    class QuarterTurnTopology {
+      constructor({ turn = "clockwise", twist = false, name = "quarter-turn" } = {}) {
+        this.turn = turn;
+        this.twist = twist;
+        this.name = name;
+      }
+
+      initialState() {
+        return { rot: 0 };
+      }
+
+      resolveStep(x, y, dir, topoState, width, height) {
+        const { dx, dy } = DIR_DELTAS[dir];
+        let nx = x + dx;
+        let ny = y + dy;
+
+        const nextTopoState = { rot: topoState?.rot ?? 0 };
+
+        // 通常範囲内ならそのまま進む
+        if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+          return {
+            blocked: false,
+            x: nx,
+            y: ny,
+            topoState: nextTopoState,
+            transform: { type: "normal" },
+          };
+        }
+
+        let fromEdge = null;
+        let t = 0;
+
+        // 出た辺と、その辺上の位置 t を求める
+        if (ny < 0) {
+          fromEdge = "N";
+          t = x;
+        } else if (nx >= width) {
+          fromEdge = "E";
+          t = y;
+        } else if (ny >= height) {
+          fromEdge = "S";
+          t = width - 1 - x;
+        } else if (nx < 0) {
+          fromEdge = "W";
+          t = height - 1 - y;
+        }
+
+        // twist があるなら辺上パラメータを反転
+        const edgeLen = (fromEdge === "N" || fromEdge === "S") ? width : height;
+        if (this.twist) {
+          t = edgeLen - 1 - t;
+        }
+
+        // 接続先辺を決める
+        const toEdge = this.turn === "clockwise"
+          ? rotateDir(fromEdge, 1)
+          : rotateDir(fromEdge, -1);
+
+        // 接続先辺の格子座標へ配置
+        ({ x: nx, y: ny } = this.placeOnEdge(toEdge, t, width, height));
+
+        // 局所向きを更新
+        nextTopoState.rot =
+          this.turn === "clockwise"
+            ? (nextTopoState.rot + 3) % 4
+            : (nextTopoState.rot + 1) % 4;
+
+        return {
+          blocked: false,
+          x: nx,
+          y: ny,
+          topoState: nextTopoState,
+          transform: {
+            type: "quarter-turn-wrap",
+            fromEdge,
+            toEdge,
+            twist: this.twist,
+            rot: nextTopoState.rot,
+          },
+        };
+      }
+
+      placeOnEdge(edge, t, width, height) {
+        switch (edge) {
+          case "N": return { x: t, y: 0 };
+          case "E": return { x: width - 1, y: t };
+          case "S": return { x: width - 1 - t, y: height - 1 };
+          case "W": return { x: 0, y: height - 1 - t };
+          default: return { x: 0, y: 0 };
+        }
+      }
+    }
+
+    class WorldNode {
+      constructor({ id, x, y, terrain }) {
+        this.id = id;
+        this.x = x;
+        this.y = y;
+        this.terrain = terrain;
+        this.neighbors = { N: null, E: null, S: null, W: null };
+      }
+    }
+
+    class WorldGraph {
+      constructor(baseMap) {
+        this.baseMap = baseMap;
+        this.nodes = new Map();
+      }
+
+      addNode(node) {
+        this.nodes.set(node.id, node);
+      }
+
+      getNode(nodeId) {
+        return this.nodes.get(nodeId) || null;
+      }
+
+      hasNode(nodeId) {
+        return this.nodes.has(nodeId);
+      }
+    }
+
+
+
+    function buildWorldGraph(baseMap, topology) {
+      const graph = new WorldGraph(baseMap);
+
+      for (let y = 0; y < baseMap.height; y++) {
+        for (let x = 0; x < baseMap.width; x++) {
+          if (!baseMap.isFloor(x, y)) continue;
+          const nodeId = makeNodeId(x, y, baseMap.width);
+          graph.addNode(new WorldNode({ id: nodeId, x, y, terrain: "floor" }));
+        }
+      }
+
+      for (const node of graph.nodes.values()) {
+        for (const dir of DIRS) {
+          const result = topology.resolveStep(
+            node.x,
+            node.y,
+            dir,
+            topology.initialState(),
+            baseMap.width,
+            baseMap.height
+          );
+
+          if (result.blocked || !baseMap.isFloor(result.x, result.y)) {
+            node.neighbors[dir] = null;
+            continue;
+          }
+
+          const toNodeId = makeNodeId(result.x, result.y, baseMap.width);
+          if (!graph.hasNode(toNodeId)) {
+            node.neighbors[dir] = null;
+            continue;
+          }
+
+          node.neighbors[dir] = {
+            to: toNodeId,
+            transform: result.transform,
+          };
+        }
+      }
+
+      return graph;
+    }
+
+    class PlayerState {
+      constructor(nodeId, topoState = {}, facing = "N") {
+        this.nodeId = nodeId;
+        this.topoState = topoState;
+        this.facing = facing;
+      }
+    }
+
+    class ExplorationState {
+      constructor(startNodeId) {
+        this.visitedSet = new Set([startNodeId]);
+        this.seenSet = new Set([startNodeId]);
+        this.trail = [startNodeId];
+      }
+
+      recordVisit(nodeId) {
+        this.visitedSet.add(nodeId);
+        this.seenSet.add(nodeId);
+        this.trail.push(nodeId);
+      }
+
+      markSeen(nodeId) {
+        this.seenSet.add(nodeId);
+      }
+
+      buildRecentTrailSet(length = 8) {
+        return new Set(this.trail.slice(-length));
+      }
+    }
+
+    function movePlayer(playerState, graph, topology, dir) {
+      const currentNode = graph.getNode(playerState.nodeId);
+      if (!currentNode) return false;
+
+      const result = topology.resolveStep(
+        currentNode.x,
+        currentNode.y,
+        dir,
+        playerState.topoState,
+        graph.baseMap.width,
+        graph.baseMap.height
+      );
+
+      if (result.blocked || !graph.baseMap.isFloor(result.x, result.y)) {
+        return false;
+      }
+
+      const nextNodeId = makeNodeId(result.x, result.y, graph.baseMap.width);
+      if (!graph.hasNode(nextNodeId)) return false;
+
+      playerState.nodeId = nextNodeId;
+      playerState.topoState = result.topoState;
+      playerState.facing = dir;
+      return true;
+    }
+
+    function waitTurn() {
+      game.turn += 1;
+      updateActors(game);
+      redraw();
+    }
+
+
+    class ChartCell {
+      constructor({ nodeId, localX, localY, dist, topoState }) {
+        this.nodeId = nodeId;
+        this.localX = localX;
+        this.localY = localY;
+        this.dist = dist;
+        this.topoState = topoState;
+      }
+    }
+
+    class LocalChart {
+      constructor(viewRadius) {
+        this.viewRadius = viewRadius;
+        this.chartMap = new Map();
+        this.wallMap = new Map();
+        this.chartDistMap = new Map();
+        this.wallDistMap = new Map();
+      }
+
+      key(x, y) {
+        return `${x},${y}`;
+      }
+
+      set(localX, localY, chartCell) {
+        const k = this.key(localX, localY);
+        const nextDist = chartCell.dist;
+
+        const wallDist = this.wallDistMap.get(k);
+        if (wallDist !== undefined && wallDist <= nextDist) {
+          return;
+        }
+
+        const prevDist = this.chartDistMap.get(k);
+        if (prevDist === undefined || nextDist < prevDist) {
+          this.chartMap.set(k, chartCell);
+          this.chartDistMap.set(k, nextDist);
+        }
+      }
+
+      get(localX, localY) {
+        return this.chartMap.get(this.key(localX, localY)) || null;
+      }
+
+      setWall(localX, localY, dist) {
+        const k = this.key(localX, localY);
+
+        const prevWallDist = this.wallDistMap.get(k);
+        if (prevWallDist === undefined || dist < prevWallDist) {
+          this.wallMap.set(k, true);
+          this.wallDistMap.set(k, dist);
+        }
+
+        const cellDist = this.chartDistMap.get(k);
+        if (cellDist !== undefined && dist <= cellDist) {
+          this.chartMap.delete(k);
+          this.chartDistMap.delete(k);
+        }
+      }
+
+      isWall(localX, localY) {
+        return this.wallMap.has(this.key(localX, localY));
+      }
+    }
+
+    function shouldReplaceChartCell(prevCell, nextCell) {
+      if (!prevCell) return true;
+      if (nextCell.dist < prevCell.dist) return true;
+      return false;
+    }
+
+
+    class TiledChartCell {
+      constructor({ nodeId, localX, localY, tileX, tileY, rot }) {
+        this.nodeId = nodeId;
+        this.localX = localX;
+        this.localY = localY;
+        this.tileX = tileX;
+        this.tileY = tileY;
+        this.rot = rot;
+        this.priority = Math.abs(tileX) + Math.abs(tileY);
+      }
+    }
+
+    class TiledChart {
+      constructor(viewRadiusX, viewRadiusY) {
+        this.viewRadiusX = viewRadiusX;
+        this.viewRadiusY = viewRadiusY;
+        this.chartMap = new Map();
+        this.wallMap = new Map();
+      }
+
+      key(x, y) {
+        return `${x},${y}`;
+      }
+
+      set(localX, localY, cell) {
+        const k = this.key(localX, localY);
+
+        // すでに壁がある場所には床を置かない
+        if (this.wallMap.has(k)) return;
+
+        const prev = this.chartMap.get(k);
+        if (!prev || cell.priority < prev.priority) {
+          this.chartMap.set(k, cell);
+        }
+      }
+
+      get(localX, localY) {
+        return this.chartMap.get(this.key(localX, localY)) || null;
+      }
+
+      setWall(localX, localY, priority = 0) {
+        const k = this.key(localX, localY);
+        const prevWall = this.wallMap.get(k);
+
+        // より優先度の高い壁だけ残す
+        if (prevWall === undefined || priority < prevWall) {
+          this.wallMap.set(k, priority);
+        }
+
+        // 壁が置かれたら床表示は消す
+        this.chartMap.delete(k);
+      }
+
+      isWall(localX, localY) {
+        return this.wallMap.has(this.key(localX, localY));
+      }
+    }
+
+    function getQuarterTurnTileNeighbor(tileX, tileY, tileRot, dir, topologyName) {
+      let nextTileX = tileX;
+      let nextTileY = tileY;
+      let nextRot = tileRot;
+
+      const isClockwise = topologyName === "quarter-clockwise" || topologyName === "quarter-clockwise-twist";
+      const isCounterclockwise = topologyName === "quarter-counterclockwise" || topologyName === "quarter-counterclockwise-twist";
+
+      if (!isClockwise && !isCounterclockwise) {
+        switch (dir) {
+          case "N": nextTileY -= 1; break;
+          case "E": nextTileX += 1; break;
+          case "S": nextTileY += 1; break;
+          case "W": nextTileX -= 1; break;
+        }
+        return { tileX: nextTileX, tileY: nextTileY, rot: nextRot };
+      }
+
+      const delta = isClockwise ? 3 : 1;
+
+      switch (dir) {
+        case "N":
+          nextTileY -= 1;
+          nextRot = (tileRot + delta) % 4;
+          break;
+        case "E":
+          nextTileX += 1;
+          nextRot = (tileRot + delta) % 4;
+          break;
+        case "S":
+          nextTileY += 1;
+          nextRot = (tileRot + delta) % 4;
+          break;
+        case "W":
+          nextTileX -= 1;
+          nextRot = (tileRot + delta) % 4;
+          break;
+      }
+
+      return { tileX: nextTileX, tileY: nextTileY, rot: nextRot };
+    }
+
+    function buildTiledChart(graph, playerState, topology, tileRadius = 1) {
+      const baseMap = graph.baseMap;
+      const width = baseMap.width;
+      const height = baseMap.height;
+
+      const viewRadiusX = width * tileRadius + Math.floor(width / 2);
+      const viewRadiusY = height * tileRadius + Math.floor(height / 2);
+
+      const tiledChart = new TiledChart(viewRadiusX, viewRadiusY);
+
+      const centerNode = graph.getNode(playerState.nodeId);
+      if (!centerNode) return tiledChart;
+
+      const tiles = [];
+      const seenTiles = new Set();
+
+      const queue = [{
+        tileX: 0,
+        tileY: 0,
+        rot: playerState.topoState?.rot ?? 0,
+      }];
+
+      while (queue.length > 0) {
+        const current = queue.shift();
+        const key = `${current.tileX},${current.tileY},${current.rot}`;
+        if (seenTiles.has(key)) continue;
+        seenTiles.add(key);
+
+        if (
+          Math.abs(current.tileX) > tileRadius ||
+          Math.abs(current.tileY) > tileRadius
+        ) {
+          continue;
+        }
+
+        tiles.push(current);
+
+        for (const dir of DIRS) {
+          queue.push(getQuarterTurnTileNeighbor(
+            current.tileX,
+            current.tileY,
+            current.rot,
+            dir,
+            topology.name
+          ));
+        }
+      }
+
+      for (const tile of tiles) {
+        for (let wy = 0; wy < height; wy++) {
+          for (let wx = 0; wx < width; wx++) {
+            const rotated = rotatePointInTile(wx, wy, width, height, tile.rot);
+
+            const localX =
+              tile.tileX * width + (rotated.x - centerNode.x);
+            const localY =
+              tile.tileY * height + (rotated.y - centerNode.y);
+
+            const nodeId = makeNodeId(wx, wy, width);
+
+            const priority = Math.abs(tile.tileX) + Math.abs(tile.tileY);
+
+            if (!baseMap.isFloor(wx, wy)) {
+              tiledChart.setWall(localX, localY, priority);
+              continue;
+            }
+
+            if (!graph.hasNode(nodeId)) {
+              tiledChart.setWall(localX, localY);
+              continue;
+            }
+
+            tiledChart.set(localX, localY, new TiledChartCell({
+              nodeId,
+              localX,
+              localY,
+              tileX: tile.tileX,
+              tileY: tile.tileY,
+              rot: tile.rot,
+            }));
+          }
+        }
+      }
+
+      return tiledChart;
+    }
+
+    function rotateDirLocal(dir, rot) {
+      return rotateDir(dir, rot);
+    }
+
+    function buildLocalChart(graph, playerState, topology, viewRadius = 6) {
+      const localChart = new LocalChart(viewRadius);
+
+      const queue = [
+        new ChartCell({
+          nodeId: playerState.nodeId,
+          localX: 0,
+          localY: 0,
+          dist: 0,
+          topoState: { ...playerState.topoState },
+        })
+      ];
+
+      const seenStates = new Set();
+
+      while (queue.length > 0) {
+        const current = queue.shift();
+
+        if (
+          Math.abs(current.localX) > viewRadius ||
+          Math.abs(current.localY) > viewRadius ||
+          current.dist > viewRadius
+        ) {
+          continue;
+        }
+
+        const stateKey = [
+          current.nodeId,
+          current.localX,
+          current.localY,
+          JSON.stringify(current.topoState),
+        ].join("|");
+
+        if (seenStates.has(stateKey)) continue;
+        seenStates.add(stateKey);
+
+        const prevCell = localChart.get(current.localX, current.localY);
+        if (shouldReplaceChartCell(prevCell, current)) {
+          localChart.set(current.localX, current.localY, current);
+        } else {
+          continue;
+        }
+
+        const node = graph.getNode(current.nodeId);
+        if (!node) continue;
+
+        for (const dir of DIRS) {
+          const offset = projectDirToLocalOffset(dir, current.topoState);
+          const nextLocalX = current.localX + offset.dx;
+          const nextLocalY = current.localY + offset.dy;
+
+          const currentWorldNode = graph.getNode(current.nodeId);
+          const stepResult = topology.resolveStep(
+            currentWorldNode.x,
+            currentWorldNode.y,
+            dir,
+            current.topoState,
+            graph.baseMap.width,
+            graph.baseMap.height
+          );
+
+          const nextNodeId = makeNodeId(stepResult.x, stepResult.y, graph.baseMap.width);
+
+          if (stepResult.blocked) {
+            localChart.setWall(nextLocalX, nextLocalY, current.dist + 1);
+            continue;
+          }
+
+          if (!graph.baseMap.isFloor(stepResult.x, stepResult.y)) {
+            localChart.setWall(nextLocalX, nextLocalY, current.dist + 1);
+            continue;
+          }
+
+          if (!graph.hasNode(nextNodeId)) {
+            localChart.setWall(nextLocalX, nextLocalY, current.dist + 1);
+            continue;
+          }
+
+          queue.push(new ChartCell({
+            nodeId: nextNodeId,
+            localX: nextLocalX,
+            localY: nextLocalY,
+            dist: current.dist + 1,
+            topoState: stepResult.topoState,
+          }));
+        }
+      }
+
+      return localChart;
+    }
+
+    function getNodeGlyph({ nodeId, playerState, explorationState, recentTrailSet }) {
+      if (nodeId === playerState.nodeId) return "@";
+      if (recentTrailSet.has(nodeId)) return "*";
+      if (explorationState.visitedSet.has(nodeId)) return "·";
+      if (explorationState.seenSet.has(nodeId)) return ",";
+      return ".";
+    }
+
+    function renderTrueWorld(game) {
+      const baseMap = game.baseMap;
+      const rows = [];
+      const foodNodeSet = new Set(
+        game.foods.filter(food => food.amount > 0).map(food => food.nodeId)
+      );
+
+      for (let y = 0; y < baseMap.height; y++) {
+        let row = "";
+        for (let x = 0; x < baseMap.width; x++) {
+          if (!baseMap.isFloor(x, y)) {
+            row += "#";
+            continue;
+          }
+
+          const nodeId = makeNodeId(x, y, baseMap.width);
+
+          if (nodeId === game.playerState.nodeId) {
+            row += "@";
+          } else if (game.actors.dog && nodeId === game.actors.dog.nodeId) {
+            row += "d";
+          } else if (game.actors.cat && nodeId === game.actors.cat.nodeId) {
+            row += game.actors.cat.sleepTurns > 0 ? "z" : "f";
+          } else if (foodNodeSet.has(nodeId)) {
+            row += "%";
+          } else if (game.explorationState.visitedSet.has(nodeId)) {
+            row += "·";
+          } else if (game.explorationState.seenSet.has(nodeId)) {
+            row += ",";
+          } else {
+            row += ".";
+          }
+        }
+        rows.push(row);
+      }
+
+      return rows.join("\n");
+    }
+
+    function renderChart(localChart, playerState, explorationState, actors = {}, foods = [], renderOptions = {}) {
+      const radiusX = localChart.viewRadiusX ?? localChart.viewRadius ?? 6;
+      const radiusY = localChart.viewRadiusY ?? localChart.viewRadius ?? 6;
+      const recentTrailSet = explorationState.buildRecentTrailSet(8);
+      const rows = [];
+      const actorGlyphMap = new Map();
+      const foodNodeSet = new Set(foods.filter(food => food.amount > 0).map(food => food.nodeId));
+
+      const showBreadcrumbs = renderOptions.showBreadcrumbs ?? true;
+      const showMemory = renderOptions.showMemory ?? true;
+
+      if (actors.dog) actorGlyphMap.set(actors.dog.nodeId, "d");
+      if (actors.cat) actorGlyphMap.set(actors.cat.nodeId, actors.cat.sleepTurns > 0 ? "z" : "f");
+
+      for (let y = -radiusY; y <= radiusY; y++) {
+        let row = "";
+        for (let x = -radiusX; x <= radiusX; x++) {
+          const chartCell = localChart.get(x, y);
+          if (chartCell) {
+            const nodeId = chartCell.nodeId;
+
+            if (nodeId === playerState.nodeId) {
+              row += "@";
+            } else if (actorGlyphMap.has(nodeId)) {
+              row += actorGlyphMap.get(nodeId);
+            } else if (foodNodeSet.has(nodeId)) {
+              row += "%";
+            } else if (showBreadcrumbs && recentTrailSet.has(nodeId)) {
+              row += "*";
+            } else if (showMemory && explorationState.visitedSet.has(nodeId)) {
+              row += "·";
+            } else if (showMemory && explorationState.seenSet.has(nodeId)) {
+              row += ",";
+            } else {
+              row += ".";
+            }
+          } else if (localChart.isWall(x, y)) {
+            row += "#";
+          } else {
+            row += " ";
+          }
+        }
+        rows.push(row);
+      }
+
+      return rows.join("\n");
+    }
+
+
+    function getValidNeighborNodeIds(graph, nodeId) {
+      const node = graph.getNode(nodeId);
+      if (!node) return [];
+      const result = [];
+      for (const dir of DIRS) {
+        const edge = node.neighbors[dir];
+        if (edge) result.push(edge.to);
+      }
+      return result;
+    }
+
+    function pickActorStartNodeId(baseMap, graph, forbiddenSet, preferEdge = false) {
+      const candidates = [];
+
+      for (const node of graph.nodes.values()) {
+        const isEdge =
+          node.x === 0 ||
+          node.y === 0 ||
+          node.x === baseMap.width - 1 ||
+          node.y === baseMap.height - 1;
+
+        if (forbiddenSet.has(node.id)) continue;
+        if (!preferEdge || isEdge) candidates.push(node.id);
+      }
+
+      const pool =
+        candidates.length > 0
+          ? candidates
+          : [...graph.nodes.keys()].filter(id => !forbiddenSet.has(id));
+
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    function addLog(game, message) {
+      game.log.push(`[${game.turn}] ${message}`);
+      if (game.log.length > 6) game.log.shift();
+    }
+
+    function petSelf(game) {
+      addLog(game, "あなたはあなた @ を撫でた。")
+    }
+
+    function swapWithActor(game, actorKind) {
+      const actor = game.actors[actorKind];
+      if (!actor) return false;
+
+      const prevPlayerNodeId = game.playerState.nodeId;
+      const actorNodeId = actor.nodeId;
+
+      actor.nodeId = prevPlayerNodeId;
+      game.playerState.nodeId = actorNodeId;
+      game.explorationState.recordVisit(game.playerState.nodeId);
+
+      return true;
+    }
+
+    function petActor(game, actorKind) {
+      if (actorKind === "dog") addLog(game, "あなたは犬 d を撫でながらすれ違った。");
+      if (actorKind === "cat") addLog(game, "あなたは猫 f を撫でながらすれ違った。");
+    }
+
+    function actorTouchesPlayer(game, actorKind) {
+      if (actorKind === "dog") addLog(game, "犬 d はあなたにじゃれついた。");
+      if (actorKind === "cat") addLog(game, "猫 f はあなたの足元にすり寄った。");
+    }
+
+    function findDistance(graph, startNodeId, targetNodeId, blockedSet = new Set(), maxDistance = Infinity) {
+      if (startNodeId === targetNodeId) return 0;
+      const queue = [{ nodeId: startNodeId, dist: 0 }];
+      const visited = new Set([startNodeId]);
+
+      while (queue.length > 0) {
+        const cur = queue.shift();
+        if (cur.dist >= maxDistance) continue;
+        for (const next of getValidNeighborNodeIds(graph, cur.nodeId)) {
+          if (blockedSet.has(next) && next !== targetNodeId) continue;
+          if (visited.has(next)) continue;
+          if (next === targetNodeId) return cur.dist + 1;
+          visited.add(next);
+          queue.push({ nodeId: next, dist: cur.dist + 1 });
+        }
+      }
+      return Infinity;
+    }
+
+    function chooseFarthestNeighbor(graph, startNodeId, avoidNodeId, blockedSet = new Set()) {
+      const neighbors = getValidNeighborNodeIds(graph, startNodeId).filter(id => !blockedSet.has(id));
+      if (neighbors.length === 0) return startNodeId;
+
+      let bestNodeId = neighbors[0];
+      let bestDist = -1;
+      for (const next of neighbors) {
+        const dist = findDistance(graph, next, avoidNodeId, new Set(), 12);
+        if (dist > bestDist) {
+          bestDist = dist;
+          bestNodeId = next;
+        }
+      }
+      return bestNodeId;
+    }
+
+    function findNextStepToward(graph, startNodeId, targetNodeId, blockedSet = new Set()) {
+      if (startNodeId === targetNodeId) return startNodeId;
+      // 移動可能な隣接ノードを取得（障害物／他キャラクターのいる場所を除く）
+      const neighbors = getValidNeighborNodeIds(graph, startNodeId).filter(id => !blockedSet.has(id));
+      if (neighbors.length === 0) return startNodeId; // 動ける場所がなければ留まる
+      let bestNodeId = startNodeId;
+      let minDist = Infinity;
+      // 各隣接ノードからターゲットまでの距離を測り、一番近いルートを選ぶ
+      for (const next of neighbors) {
+        if (next === targetNodeId) return next; // 隣がターゲットなら即決定
+        const dist = findDistance(graph, next, targetNodeId, blockedSet);
+        if (dist < minDist) {
+          minDist = dist;
+          bestNodeId = next;
+        }
+      }
+      // もしターゲットへの経路が見つからなければ、ランダムにうろつく
+      if (minDist === Infinity && neighbors.length > 0) {
+        return neighbors[Math.floor(Math.random() * neighbors.length)];
+      }
+      return bestNodeId;
+    }
+
+    function maybeSpawnFood(game) {
+      if (Math.random() >= 0.05) return;
+
+      const forbidden = new Set([
+        game.playerState.nodeId,
+        game.actors.dog?.nodeId,
+        game.actors.cat?.nodeId,
+        ...game.foods.filter(food => food.amount > 0).map(food => food.nodeId),
+      ]);
+
+      const candidates = [...game.worldGraph.nodes.keys()].filter(id => !forbidden.has(id));
+      if (candidates.length === 0) return;
+
+      const nodeId = candidates[Math.floor(Math.random() * candidates.length)];
+      game.foods.push({ nodeId, amount: 5 });
+    }
+
+    function getClosestFoodTarget(game, dogNodeId) {
+      const activeFoods = game.foods.filter(food => food.amount > 0);
+      if (activeFoods.length === 0) return null;
+
+      let best = null;
+      for (const food of activeFoods) {
+        const distance = findDistance(game.worldGraph, dogNodeId, food.nodeId);
+        if (!best || distance < best.distance) {
+          best = { nodeId: food.nodeId, distance };
+        }
+      }
+      return best;
+    }
+
+
+
+    function updateDog(game) {
+      const dog = game.actors.dog;
+      const cat = game.actors.cat;
+      if (!dog) return;
+
+      if (dog.scaredTurns > 0) {
+        const blocked = new Set([game.playerState.nodeId]);
+        const nextNodeId = chooseFarthestNeighbor(
+          game.worldGraph,
+          dog.nodeId,
+          cat?.nodeId ?? game.playerState.nodeId,
+          blocked
+        );
+
+        if (nextNodeId === game.playerState.nodeId) {
+          addLog(game, "犬 d はあなたにじゃれついた。");
+        } else {
+          dog.nodeId = nextNodeId;
+        }
+
+        dog.scaredTurns -= 1;
+        return;
+      }
+
+      const playerDist = findDistance(game.worldGraph, dog.nodeId, game.playerState.nodeId, new Set(), 3);
+      if (playerDist <= 1 && Math.random() < 0.35) {
+        addLog(game, "犬 d『ワンワン！』");
+        return;
+      }
+
+      const foodHere = game.foods.find(food => food.nodeId === dog.nodeId && food.amount > 0);
+      if (foodHere) {
+        foodHere.amount -= 1;
+        if (foodHere.amount === 0) {
+          addLog(game, "犬 d は食料 % を食べ尽くした。");
+          addLog(game, "犬 d は満足そうに溜息をついた。");
+          return;
+        }
+      }
+
+      if (cat) {
+        const catFoodHere = game.foods.find(food => food.nodeId === cat.nodeId && food.amount > 0);
+        const catDist = findDistance(game.worldGraph, dog.nodeId, cat.nodeId, new Set(), 2);
+        if (catFoodHere && catDist <= 1) {
+          dog.scaredTurns = 2;
+          const nextNodeId = chooseFarthestNeighbor(
+            game.worldGraph,
+            dog.nodeId,
+            cat.nodeId,
+            new Set([game.playerState.nodeId])
+          );
+          if (nextNodeId !== game.playerState.nodeId) {
+            dog.nodeId = nextNodeId;
+          }
+          addLog(game, "猫 f は食料を守って犬 d を追い払った。");
+          addLog(game, "猫 f『シャーッ！』");
+          addLog(game, "犬 d『クゥーン。』");
+          return;
+        }
+      }
+
+      const blocked = new Set();
+      if (cat) blocked.add(cat.nodeId);
+
+      const foodTarget = getClosestFoodTarget(game, dog.nodeId);
+      const playerDistance = findDistance(game.worldGraph, dog.nodeId, game.playerState.nodeId, blocked);
+      const foodDistance = foodTarget ? foodTarget.distance : Infinity;
+      const targetNodeId = foodTarget && foodDistance <= playerDistance
+        ? foodTarget.nodeId
+        : game.playerState.nodeId;
+
+      const nextNodeId = findNextStepToward(game.worldGraph, dog.nodeId, targetNodeId, blocked);
+
+      if (nextNodeId === game.playerState.nodeId) {
+        actorTouchesPlayer(game, "dog");
+        redraw();
+        return;
+      }
+
+      dog.nodeId = nextNodeId;
+    }
+
+    function chooseCatExplorationTarget(game, cat) {
+      const neighbors = getValidNeighborNodeIds(game.worldGraph, cat.nodeId)
+        .filter(id => id !== game.playerState.nodeId && id !== game.actors.dog?.nodeId);
+      if (neighbors.length === 0) return cat.nodeId;
+
+      const unvisited = neighbors.filter(id => !cat.visitedSet.has(id));
+      const poolA = unvisited.length > 0 ? unvisited : neighbors.filter(id => id !== cat.lastNodeId);
+      const pool = poolA.length > 0 ? poolA : neighbors;
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    function updateCat(game) {
+      const cat = game.actors.cat;
+      if (!cat) return;
+
+      if (cat.sleepTurns > 0) {
+        cat.sleepTurns -= 1;
+        cat.sleepiness = Math.max(0, cat.sleepiness - 1);
+        if (cat.sleepTurns === 0) addLog(game, "猫 f はのそりと起きた。");
+        return;
+      }
+
+      const foodHere = game.foods.find(food => food.nodeId === cat.nodeId && food.amount > 0);
+      if (foodHere) {
+        foodHere.amount -= 1;
+        cat.sleepiness = Math.max(0, cat.sleepiness - 2);
+        if (foodHere.amount === 0) {
+          addLog(game, "猫 f は食料 % を平らげた。");
+          addLog(game, "猫 f は満足げに毛づくろいした。")
+        }
+        return;
+      }
+
+      const playerDist = findDistance(game.worldGraph, cat.nodeId, game.playerState.nodeId, new Set(), 3);
+      if (playerDist <= 1 && Math.random() < 0.4) {
+        addLog(game, "猫 f『ニャーン。』");
+        if (Math.random() < 0.5) {
+          cat.sleepiness = Math.min(12, cat.sleepiness + 1); // 毎ターン50%抽選、眠気+1
+        }
+        return;
+      }
+
+      cat.sleepiness = Math.min(12, cat.sleepiness + 1);
+
+      if (cat.sleepiness >= 8) {
+        const sleepChance = 0.03 * (cat.sleepiness - 8);
+        if (Math.random() < sleepChance) {
+          const maxSleep = 3 + Math.floor(cat.sleepiness);
+          cat.sleepTurns = 1 + Math.floor(Math.random() * maxSleep);
+          actorTouchesPlayer(game, "cat")
+          redraw();
+          return;
+        }
+      }
+
+      const adjacentFood = getValidNeighborNodeIds(game.worldGraph, cat.nodeId)
+        .find(id => game.foods.some(food => food.nodeId === id && food.amount > 0));
+
+      const nextNodeId = adjacentFood ?? chooseCatExplorationTarget(game, cat);
+
+      if (nextNodeId === game.playerState.nodeId) {
+        addLog(game, "猫 f はあなたの足元にすり寄った。");
+        return;
+      }
+      cat.lastNodeId = cat.nodeId;
+      cat.nodeId = nextNodeId;
+      cat.visitedSet.add(cat.nodeId);
+    }
+
+    function cleanupFoods(game) {
+      game.foods = game.foods.filter(food => food.amount > 0);
+    }
+
+    function updateActors(game) {
+      maybeSpawnFood(game);
+      updateDog(game);
+      updateCat(game);
+      cleanupFoods(game);
+    }
+
+    function createBaseMap(kind) {
+      switch (kind) {
+        case "open4":
+          return BaseMap.fromAscii([
+            "....",
+            "....",
+            "....",
+            "....",
+          ]);
+        case "loop8":
+          return BaseMap.fromAscii([
+            "........",
+            "..#...#.",
+            "..#.....",
+            "........",
+            "###..###",
+            "........",
+            "..##....",
+            "........",
+          ]);
+        case "asym8":
+          return BaseMap.fromAscii([
+            "........",
+            ".##.....",
+            "...#....",
+            ".....#..",
+            "..#.....",
+            "....###.",
+            ".....#..",
+            "........",
+          ]);
+        case "open11":
+          return BaseMap.fromAscii([
+            "...........",
+            "...........",
+            "...........",
+            "...........",
+            "...........",
+            "...........",
+            "...........",
+            "...........",
+            "...........",
+            "...........",
+            "...........",
+          ]);
+        case "open12":
+          return BaseMap.fromAscii([
+            "............",
+            "............",
+            "............",
+            "............",
+            "............",
+            "............",
+            "............",
+            "............",
+            "............",
+            "............",
+            "............",
+            "............",
+          ]);
+        case "torus12":
+          return BaseMap.fromAscii([
+            "............",
+            "..#.....#...",
+            "....#.......",
+            ".#......##..",
+            "............",
+            "...##.......",
+            ".......#....",
+            ".....#......",
+            "..##.....#..",
+            ".........#..",
+            "...#....###.",
+            "......#.....",
+          ]);
+        case "open16":
+          return BaseMap.fromAscii([
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+            "................",
+          ]);
+        default:
+          return BaseMap.fromAscii([
+            "....",
+            "....",
+            "....",
+            "....",
+          ]);
+      }
+    }
+
+    function createTopology(kind) {
+      switch (kind) {
+        case "plane":
+          return new PlaneTopology();
+
+        case "torus":
+          return new TorusTopology();
+
+        case "mobius-horizontal":
+          return new MobiusHorizontalTopology();
+
+        case "klein-horizontal":
+          return new TwistedLoopTopology({
+            wrapX: true,
+            wrapY: true,
+            twistX: true,
+            twistY: false,
+            name: "klein-horizontal",
+          });
+
+        case "double-twist":
+          return new TwistedLoopTopology({
+            wrapX: true,
+            wrapY: true,
+            twistX: true,
+            twistY: true,
+            name: "double-twist",
+          });
+
+        case "quarter-clockwise":
+          return new QuarterTurnTopology({
+            turn: "clockwise",
+            twist: false,
+            name: "quarter-clockwise",
+          });
+
+        case "quarter-counterclockwise":
+          return new QuarterTurnTopology({
+            turn: "counterclockwise",
+            twist: false,
+            name: "quarter-counterclockwise",
+          });
+
+        case "quarter-clockwise-twist":
+          return new QuarterTurnTopology({
+            turn: "clockwise",
+            twist: true,
+            name: "quarter-clockwise-twist",
+          });
+
+        case "quarter-counterclockwise-twist":
+          return new QuarterTurnTopology({
+            turn: "counterclockwise",
+            twist: true,
+            name: "quarter-counterclockwise-twist",
+          });
+
+        default:
+          return new TorusTopology();
+      }
+    }
+
+    function findStartNodeId(baseMap) {
+      const cx = Math.floor(baseMap.width / 2);
+      const cy = Math.floor(baseMap.height / 2);
+      if (baseMap.isFloor(cx, cy)) return makeNodeId(cx, cy, baseMap.width);
+
+      for (let y = 0; y < baseMap.height; y++) {
+        for (let x = 0; x < baseMap.width; x++) {
+          if (baseMap.isFloor(x, y)) return makeNodeId(x, y, baseMap.width);
+        }
+      }
+      throw new Error("No floor tile found.");
+    }
+
+
+
+    const game = {
+      baseMap: null,
+      topology: null,
+      worldGraph: null,
+      playerState: null,
+      explorationState: null,
+      localChart: null,
+      viewRadius: 6,
+      renderOptions: {
+        showBreadcrumbs: true,
+        showMemory: true,
+        lightScrollMode: false,
+        tiledMapMode: false,
+      },
+      actors: {
+        dog: null,
+        cat: null,
+      },
+      foods: [],
+      turn: 0,
+      log: [],
+    };
+
+    function getCurrentViewRadius() {
+      return game.renderOptions.lightScrollMode ? 10 : 6;
+    }
+
+    function buildCurrentChart() {
+      if (game.renderOptions.tiledMapMode) {
+        return buildTiledChart(game.worldGraph, game.playerState, game.topology, 1);
+      }
+
+      const radius = getCurrentViewRadius();
+      return buildLocalChart(game.worldGraph, game.playerState, game.topology, radius);
+    }
+
+    function updateSeenFromChart() {
+      game.localChart = buildCurrentChart();
+      for (const chartCell of game.localChart.chartMap.values()) {
+        game.explorationState.markSeen(chartCell.nodeId);
+      }
+    }
+
+    function redraw() {
+      updateSeenFromChart();
+      screenEl.textContent = renderChart(
+        game.localChart,
+        game.playerState,
+        game.explorationState,
+        game.actors,
+        game.foods,
+        game.renderOptions
+      );
+      const currentNode = game.worldGraph.getNode(game.playerState.nodeId);
+      const stats = [
+        ["topology", game.topology.name],
+        ["nodeId", String(game.playerState.nodeId)],
+        ["world(x,y)", currentNode ? `${currentNode.x}, ${currentNode.y}` : "-"],
+        ["rot", String(game.playerState.topoState?.rot ?? 0)],
+        ["flipX", String(!!game.playerState.topoState?.flipX)],
+        ["flipY", String(!!game.playerState.topoState?.flipY)],
+        ["trail length", String(game.explorationState.trail.length)],
+        ["visited", String(game.explorationState.visitedSet.size)],
+        ["dog d", game.actors.dog ? `${game.actors.dog.nodeId} / scared=${game.actors.dog.scaredTurns}` : "-"],
+        ["cat f", game.actors.cat ? `${game.actors.cat.nodeId} / sleep=${game.actors.cat.sleepTurns} / drowsy=${game.actors.cat.sleepiness}` : "-"],
+        ["foods %", String(game.foods.filter(food => food.amount > 0).length)],
+      ];
+
+      statsEl.innerHTML = stats.map(([k, v]) => `
+        <div class="stat">
+          <div class="stat-key">${k}</div>
+          <div class="stat-value">${v}</div>
+        </div>
+      `).join("");
+
+      logEl.innerHTML = game.log.length > 0 ? game.log.map((line, i) => `
+        <div style="color: ${i === game.log.length - 1 ? 'var(--text)' : 'var(--muted)'};">${line}</div>
+      `).join("") : '<div style="color: var(--muted);">まだ静かです。</div>';
+
+      worldDebugEl.textContent = renderTrueWorld(game);
+    }
+
+    function resetGame() {
+      game.renderOptions.showBreadcrumbs = breadcrumbsToggleEl.checked;
+      game.renderOptions.showMemory = memoryToggleEl.checked;
+      game.renderOptions.lightScrollMode = lightScrollToggleEl.checked;
+      game.renderOptions.tiledMapMode = tiledMapToggleEl.checked;
+
+      game.baseMap = createBaseMap(mapSelectEl.value);
+      game.topology = createTopology(topologySelectEl.value);
+      game.worldGraph = buildWorldGraph(game.baseMap, game.topology);
+
+      const startNodeId = findStartNodeId(game.baseMap);
+      game.playerState = new PlayerState(startNodeId, game.topology.initialState(), "N");
+      game.explorationState = new ExplorationState(startNodeId);
+      game.turn = 0;
+      game.foods = [];
+      game.log = [];
+
+      const forbidden = new Set([startNodeId]);
+      const dogNodeId = pickActorStartNodeId(game.baseMap, game.worldGraph, forbidden, true);
+      forbidden.add(dogNodeId);
+      const catNodeId = pickActorStartNodeId(game.baseMap, game.worldGraph, forbidden, false);
+
+      game.actors = {
+        dog: { kind: "dog", nodeId: dogNodeId, scaredTurns: 0 },
+        cat: { kind: "cat", nodeId: catNodeId, sleepTurns: 0, sleepiness: 0, lastNodeId: null, visitedSet: new Set([catNodeId]) },
+      };
+
+      addLog(game, "犬 d と猫 f がマップに現れた。");
+
+      statusTextEl.textContent = `map=${mapSelectEl.value} / topology=${game.topology.name}`;
+      redraw();
+    }
+
+    function getNextNodeIdForMove(nodeId, topoState, dir, graph, topology) {
+      const currentNode = graph.getNode(nodeId);
+      if (!currentNode) return null;
+
+      const result = topology.resolveStep(
+        currentNode.x,
+        currentNode.y,
+        dir,
+        topoState,
+        graph.baseMap.width,
+        graph.baseMap.height
+      );
+
+      if (result.blocked || !graph.baseMap.isFloor(result.x, result.y)) {
+        return null;
+      }
+
+      const nextNodeId = makeNodeId(result.x, result.y, graph.baseMap.width);
+      if (!graph.hasNode(nextNodeId)) return null;
+
+      return nextNodeId;
+    }
+
+    function step(inputDir) {
+      const graphDir = mapInputDirToGraphDir(inputDir, game.playerState.topoState);
+      const nextNodeId = getNextNodeIdForMove(
+        game.playerState.nodeId,
+        game.playerState.topoState,
+        graphDir,
+        game.worldGraph,
+        game.topology
+      );
+
+      if (nextNodeId !== null) {
+        if (nextNodeId === game.playerState.nodeId) {
+          petSelf(game);
+          redraw();
+          return;
+        }
+
+        if (game.actors.dog && nextNodeId === game.actors.dog.nodeId) {
+          petActor(game, "dog");
+          if (swapWithActor(game, "dog")) {
+            game.turn += 1;
+            updateActors(game);
+          }
+          redraw();
+          return;
+        }
+
+        if (game.actors.cat && nextNodeId === game.actors.cat.nodeId) {
+          petActor(game, "cat");
+          if (swapWithActor(game, "cat")) {
+            game.turn += 1;
+            updateActors(game);
+          }
+          redraw();
+          return;
+        }
+      }
+
+      const moved = movePlayer(game.playerState, game.worldGraph, game.topology, graphDir);
+      if (moved) {
+        game.explorationState.recordVisit(game.playerState.nodeId);
+        game.turn += 1;
+        updateActors(game);
+      }
+      redraw();
+    }
+
+    window.addEventListener("keydown", (e) => {
+      const key = e.key.toLowerCase();
+      if (["arrowup", "arrowright", "arrowdown", "arrowleft", "w", "a", "s", "d", "."].includes(key)) {
+        e.preventDefault();
+      }
+
+      if (key === "arrowup" || key === "w") step("N");
+      else if (key === "arrowright" || key === "d") step("E");
+      else if (key === "arrowdown" || key === "s") step("S");
+      else if (key === "arrowleft" || key === "a") step("W");
+      else if (key === ".") waitTurn();
+    }, { passive: false });
+
+    breadcrumbsToggleEl.addEventListener("change", () => {
+      game.renderOptions.showBreadcrumbs = breadcrumbsToggleEl.checked;
+      redraw();
+    });
+
+    memoryToggleEl.addEventListener("change", () => {
+      game.renderOptions.showMemory = memoryToggleEl.checked;
+      redraw();
+    });
+
+    lightScrollToggleEl.addEventListener("change", () => {
+      game.renderOptions.lightScrollMode = lightScrollToggleEl.checked;
+      redraw();
+    });
+
+    topologySelectEl.addEventListener("change", resetGame);
+    mapSelectEl.addEventListener("change", resetGame);
+    resetButtonEl.addEventListener("click", resetGame);
+
+
+    resetGame();
+  </script>
+</body>
+
+</html>

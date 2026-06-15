@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Monzo Comma Lattice</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="workspace" aria-label="Monzo lattice workspace">
+      <header class="topbar">
+        <div>
+          <h1>Monzo Comma Lattice</h1>
+          <p>2^a * 3^b * 5^c * 7^d * 11^e * 13^f as a projected pitch-class plane</p>
+        </div>
+        <div class="metric-strip">
+          <span><b id="pointCount">0</b> intervals</span>
+          <span><b id="commaCount">0</b> commas</span>
+          <span><b id="edoCount">31</b>-EDO</span>
+        </div>
+      </header>
+
+      <div class="board-frame">
+        <div class="view-tools" aria-label="View controls">
+          <button id="zoomOut" type="button" title="Zoom out">-</button>
+          <span id="zoomValue">240%</span>
+          <button id="zoomIn" type="button" title="Zoom in">+</button>
+          <button id="resetZoom" type="button" title="Center on 1/1">1/1</button>
+        </div>
+        <svg id="latticeSvg" role="img" aria-label="Projected monzo comma lattice"></svg>
+      </div>
+    </section>
+
+    <aside class="panel" aria-label="Controls">
+      <section class="control-section">
+        <h2>Plane</h2>
+        <div class="control-grid">
+          <label>
+            <span>X axis</span>
+            <select id="xAxis"></select>
+          </label>
+          <label>
+            <span>Y axis</span>
+            <select id="yAxis"></select>
+          </label>
+        </div>
+        <div class="segmented" role="group" aria-label="Presets">
+          <button type="button" data-plane="3,5" class="active">3-5</button>
+          <button type="button" data-plane="3,7">3-7</button>
+          <button type="button" data-plane="5,7">5-7</button>
+          <button type="button" data-plane="3,11">3-11</button>
+        </div>
+      </section>
+
+      <section class="control-section">
+        <h2>EDO</h2>
+        <label class="toggle-line">
+          <input id="edoEnabled" type="checkbox" checked>
+          <span>Plot EDO steps</span>
+        </label>
+        <div class="control-grid">
+          <label>
+            <span>Division</span>
+            <input id="edoValue" type="number" min="5" max="200" value="31">
+          </label>
+          <label>
+            <span>Interval labels</span>
+            <select id="labelMode">
+              <option value="ratio">Ratio</option>
+              <option value="monzo">Monzo</option>
+              <option value="none">Hidden</option>
+            </select>
+          </label>
+        </div>
+        <div id="primeMap" class="prime-map"></div>
+      </section>
+
+      <section class="control-section">
+        <h2>Comma Lines</h2>
+        <div id="commaList" class="comma-list"></div>
+      </section>
+
+      <section class="control-section">
+        <h2>Lattice</h2>
+        <div class="control-grid">
+          <label>
+            <span>Basis A</span>
+            <select id="basisA"></select>
+          </label>
+          <label>
+            <span>Basis B</span>
+            <select id="basisB"></select>
+          </label>
+        </div>
+        <label class="toggle-line">
+          <input id="latticeEnabled" type="checkbox" checked>
+          <span>Show generated grid</span>
+        </label>
+      </section>
+    </aside>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>

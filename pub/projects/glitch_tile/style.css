@@ -1,0 +1,99 @@
+:root {
+    --bg-color: #000;
+    --ui-bg: rgba(0, 0, 0, 0.8);
+    --text-color: #eee;
+    --accent-color: #00ff00;
+    --font-family: 'Courier New', Courier, monospace;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: var(--bg-color);
+    font-family: var(--font-family);
+    color: var(--text-color);
+}
+
+canvas {
+    display: block;
+    /* Removes bottom margin/scrollbar */
+}
+
+.ui-overlay {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: var(--ui-bg);
+    padding: 20px;
+    border: 1px solid #333;
+    border-radius: 8px;
+    backdrop-filter: blur(5px);
+    max-width: 300px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    transition: opacity 0.3s;
+}
+
+.ui-overlay:hover {
+    opacity: 1;
+}
+
+.ui-hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+h1 {
+    font-size: 1.2rem;
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--accent-color);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.control-group {
+    margin-bottom: 15px;
+}
+
+.control-group label {
+    display: block;
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+}
+
+input[type="range"] {
+    width: 100%;
+    background: transparent;
+    cursor: pointer;
+}
+
+/* Upload Button Styling */
+input[type="file"] {
+    display: none;
+}
+
+.upload-btn {
+    display: inline-block;
+    padding: 8px 12px;
+    background: #333;
+    border: 1px solid #555;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background 0.2s, color 0.2s;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.upload-btn:hover {
+    background: var(--accent-color);
+    color: #000;
+    border-color: var(--accent-color);
+}
+
+input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+}

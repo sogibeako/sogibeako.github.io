@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Symbolic Math Calculator</title>
+<meta name="description" content="シンボリック数式計算ツール — 10種類の数学的変換">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+MathJax={tex:{inlineMath:[['$','$']],displayMath:[['$$','$$']]},svg:{fontCache:'global'}};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+<script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/all.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0a0e1a;--bg2:#111827;--card:rgba(17,24,39,0.75);--glass:rgba(139,92,246,0.06);
+--border:rgba(139,92,246,0.18);--text:#e2e8f0;--text2:#94a3b8;--muted:#64748b;
+--accent:#8b5cf6;--accent2:#06b6d4;--grad:linear-gradient(135deg,#8b5cf6,#06b6d4);
+--danger:#ef4444;--success:#10b981;--r:12px;--rs:8px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
+background-image:radial-gradient(circle at 20% 50%,rgba(139,92,246,0.04) 0%,transparent 50%),
+radial-gradient(circle at 80% 20%,rgba(6,182,212,0.04) 0%,transparent 50%)}
+.container{max-width:960px;margin:0 auto;padding:20px}
+header{text-align:center;padding:30px 0 20px}
+header h1{font-size:1.8rem;font-weight:700;background:var(--grad);-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.02em}
+header p{color:var(--text2);font-size:0.85rem;margin-top:6px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+padding:20px;margin-bottom:16px;backdrop-filter:blur(12px)}
+.card h2{font-size:0.8rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);
+margin-bottom:12px;font-weight:600}
+.input-row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:100px}
+.field.full{min-width:100%;flex-basis:100%}
+.field label{font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em}
+.field input,.field textarea,.field select{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+border-radius:var(--rs);padding:10px 12px;color:var(--text);font-family:'JetBrains Mono',monospace;
+font-size:0.9rem;outline:none;transition:border-color 0.2s}
+.field input:focus,.field textarea:focus{border-color:var(--accent)}
+.field textarea{resize:vertical;min-height:60px}
+.toggle-row{display:flex;gap:8px;align-items:center;margin-top:8px}
+.toggle-btn{font-size:0.7rem;padding:4px 10px;border-radius:20px;border:1px solid var(--border);
+background:transparent;color:var(--text2);cursor:pointer;transition:all 0.2s}
+.toggle-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.ops-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media(max-width:600px){.ops-grid{grid-template-columns:repeat(2,1fr)}}
+.op-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px;
+border-radius:var(--r);border:1px solid var(--border);background:var(--glass);color:var(--text);
+cursor:pointer;transition:all 0.25s;position:relative}
+.op-btn::before{content:'';position:absolute;inset:0;border-radius:inherit;background:var(--grad);opacity:0;transition:opacity 0.3s;pointer-events:none}
+.op-btn:hover::before{opacity:0.12}
+.op-btn:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 25px rgba(139,92,246,0.15)}
+.op-btn:active{transform:translateY(0)}
+.op-btn[data-tip]::after{content:attr(data-tip);position:absolute;bottom:102%;left:50%;width:max-content;max-width:180px;
+transform:translateX(-50%) translateY(4px);background:rgba(15,23,42,0.95);border:1px solid var(--accent);color:var(--text);
+padding:8px 12px;border-radius:var(--rs);font-size:0.65rem;line-height:1.4;text-align:left;white-space:pre-wrap;
+opacity:0;visibility:hidden;pointer-events:none;z-index:100;transition:all 0.2s ease 0.3s;
+box-shadow:0 4px 15px rgba(0,0,0,0.5);font-family:sans-serif;font-weight:normal;letter-spacing:normal;text-transform:none}
+.op-btn[data-tip]:hover::after{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+.op-btn .icon{font-size:1.3rem;position:relative;z-index:1}
+.op-btn .label{font-size:0.65rem;color:var(--text2);position:relative;z-index:1;white-space:nowrap}
+.op-btn .code{font-size:0.75rem;font-weight:600;font-family:'JetBrains Mono',monospace;
+position:relative;z-index:1}
+.params-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:10px}
+#result-area{min-height:80px;position:relative}
+.result-content{animation:fadeUp 0.4s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.result-block{background:rgba(139,92,246,0.05);border:1px solid rgba(139,92,246,0.12);
+border-radius:var(--rs);padding:16px 20px;margin-bottom:10px}
+.result-block .def-label{font-size:0.65rem;color:var(--accent);text-transform:uppercase;
+letter-spacing:0.06em;margin-bottom:8px}
+.result-block .math-display{font-size:1.1rem;overflow-x:auto;padding:4px 0}
+.steps-list{list-style:none;padding:0}
+.steps-list li{padding:10px 14px;border-left:2px solid var(--border);margin-left:8px;
+margin-bottom:2px;font-size:0.85rem;transition:border-color 0.2s}
+.steps-list li:hover{border-left-color:var(--accent)}
+.step-desc{color:var(--muted);font-size:0.7rem;margin-bottom:4px}
+.history-item{padding:12px;border-radius:var(--rs);border:1px solid rgba(255,255,255,0.04);
+margin-bottom:6px;cursor:pointer;transition:all 0.2s;font-size:0.8rem}
+.history-item:hover{background:rgba(139,92,246,0.06);border-color:var(--border)}
+.history-item .hi-op{font-size:0.6rem;color:var(--accent);font-weight:600;text-transform:uppercase}
+.history-item .hi-expr{color:var(--text2);font-family:'JetBrains Mono',monospace;font-size:0.75rem;margin-top:2px}
+.empty-state{color:var(--muted);text-align:center;padding:30px;font-size:0.85rem}
+.error-msg{color:var(--danger);background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);
+border-radius:var(--rs);padding:12px;font-size:0.85rem}
+.loading{display:inline-block;width:18px;height:18px;border:2px solid var(--border);
+border-top-color:var(--accent);border-radius:50%;animation:spin 0.6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.presets-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.preset{font-size:0.65rem;padding:3px 8px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);
+background:rgba(255,255,255,0.02);color:var(--text2);cursor:pointer;
+font-family:'JetBrains Mono',monospace;transition:all 0.2s}
+.preset:hover{border-color:var(--accent);color:var(--text)}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<h1>✦ Symbolic Math Calculator</h1>
+<p>シンボリック数式計算ツール — 10種類の数学的変換</p>
+</header>
+
+<div class="card" id="input-card">
+<h2>入力</h2>
+<div class="input-row">
+<div class="field full">
+<label>数式 Expression</label>
+<textarea id="expr-input" placeholder="例: x^2 + 3*x + 2, sin(x)/x, e^(-t^2)" spellcheck="false">1/(x^2-1)</textarea>
+</div>
+</div>
+<div class="input-row" style="margin-top:8px">
+<div class="field"><label>変数</label><input id="var-input" value="x"></div>
+<div class="field"><label>微分/展開の次数</label><input id="order-input" type="number" value="1" min="1" max="20"></div>
+<div class="field"><label>展開中心 a</label><input id="center-input" value="0"></div>
+<div class="field"><label>下限</label><input id="lower-input" value="0"></div>
+<div class="field"><label>上限</label><input id="upper-input" value="1"></div>
+</div>
+<div class="input-row" style="margin-top:8px">
+<div class="field"><label>入力変数 (変換)</label><input id="tvar-input" value="t"></div>
+<div class="field"><label>出力変数 (変換)</label><input id="svar-input" value="s"></div>
+</div>
+<div class="toggle-row">
+<button class="toggle-btn active" id="toggle-normal" onclick="setInputMode('normal')">通常入力</button>
+<button class="toggle-btn" id="toggle-latex" onclick="setInputMode('latex')">LaTeX入力</button>
+</div>
+<div class="presets-row">
+<span style="font-size:0.65rem;color:var(--muted);padding:3px 0">例:</span>
+<button class="preset" onclick="setExpr('1/(x^2-1)')">1/(x²−1)</button>
+<button class="preset" onclick="setExpr('sin(x)*cos(x)')">sin·cos</button>
+<button class="preset" onclick="setExpr('x^2*e^x')">x²eˣ</button>
+<button class="preset" onclick="setExpr('e^(-t^2)')">e^(−t²)</button>
+<button class="preset" onclick="setExpr('log(x)/(1+x^2)')">log/(1+x²)</button>
+<button class="preset" onclick="setExpr('1/(x^3-x)')">1/(x³−x)</button>
+</div>
+</div>
+
+<div class="card">
+<h2>操作 Operations</h2>
+<div class="ops-grid">
+<button class="op-btn" onclick="compute('PCD')" data-tip="数式を簡単な分数の和に分解します"><span class="icon">📐</span><span class="code">PCD{}</span><span class="label">部分分数分解</span></button>
+<button class="op-btn" onclick="compute('D')" data-tip="指定した変数での導関数を求めます"><span class="icon">∂</span><span class="code">D{}</span><span class="label">微分</span></button>
+<button class="op-btn" onclick="compute('I')" data-tip="解析的な不定積分を求めます"><span class="icon">∫</span><span class="code">I{}</span><span class="label">不定積分</span></button>
+<button class="op-btn" onclick="compute('DI')" data-tip="[下限]〜[上限]の範囲で定積分を計算します"><span class="icon">∫ₐᵇ</span><span class="code">DI{}</span><span class="label">定積分</span></button>
+<button class="op-btn" onclick="compute('TE')" data-tip="関数を [展開中心 a] の周りで多項式に近似展開します&#10;(特異点を持たない関数向け)"><span class="icon">Σ</span><span class="code">TE{}</span><span class="label">テイラー展開</span></button>
+<button class="op-btn" onclick="compute('LE')" data-tip="x=a の極(特異点)を許容し、負の冪乗を含めて展開します&#10;例: 1/(x*sin(x))"><span class="icon">∮</span><span class="code">LE{}</span><span class="label">ローラン展開</span></button>
+<button class="op-btn" onclick="compute('FT')" data-tip="関数を周波数領域に順変換します [出力変数 s]"><span class="icon">𝓕</span><span class="code">FT{}</span><span class="label">フーリエ変換</span></button>
+<button class="op-btn" onclick="compute('LT')" data-tip="微分方程式の解析などに使う順変換です [出力変数 s]"><span class="icon">ℒ</span><span class="code">LT{}</span><span class="label">ラプラス変換</span></button>
+<button class="op-btn" onclick="compute('MT')" data-tip="スケール不変な順変換です [出力変数 s]"><span class="icon">𝓜</span><span class="code">MT{}</span><span class="label">メリン変換</span></button>
+<button class="op-btn" onclick="compute('IFT')" data-tip="周波数領域から元の時間関数に逆変換します [出力変数 t]"><span class="icon">𝓕⁻¹</span><span class="code">IFT{}</span><span class="label">逆フーリエ変換</span></button>
+<button class="op-btn" onclick="compute('ILT')" data-tip="s領域から元の関数(t)に戻します [出力変数 t]"><span class="icon">ℒ⁻¹</span><span class="code">ILT{}</span><span class="label">逆ラプラス変換</span></button>
+<button class="op-btn" onclick="compute('IMT')" data-tip="メリン変換の逆を実行します [出力変数 t]"><span class="icon">𝓜⁻¹</span><span class="code">IMT{}</span><span class="label">逆メリン変換</span></button>
+<button class="op-btn" onclick="compute('PE')" data-tip="√(x)や分数冪を含むような、テイラー展開不可能な分岐をもつ関数を展開します"><span class="icon">√</span><span class="code">PE{}</span><span class="label">ピュイズー級数</span></button>
+<button class="op-btn" onclick="compute('HE')" data-tip="【最強の汎拡張展開】&#10;無理数冪や未知の一般特異性の指数を内部で自動推定し、他の手段では展開できない式も展開します"><span class="icon">𝕳</span><span class="code">HE{}</span><span class="label">ハーン級数</span></button>
+</div>
+</div>
+
+<div class="card" id="result-card">
+<h2>結果 Result</h2>
+<div id="result-area"><div class="empty-state">操作ボタンを押して計算を実行</div></div>
+</div>
+
+<div class="card">
+<h2>履歴 History</h2>
+<div id="history-area"><div class="empty-state">まだ計算履歴はありません</div></div>
+</div>
+</div>
+
+<script>
+// ===== Global State =====
+let inputMode = 'normal';
+let history = [];
+
+function setInputMode(mode) {
+    inputMode = mode;
+    document.getElementById('toggle-normal').classList.toggle('active', mode === 'normal');
+    document.getElementById('toggle-latex').classList.toggle('active', mode === 'latex');
+}
+function setExpr(e) { document.getElementById('expr-input').value = e; }
+function getExpr() {
+    let e = document.getElementById('expr-input').value.trim();
+    if (inputMode === 'latex') { try { e = nerdamer.convertFromLaTeX(e); } catch(ex) {} }
+    return e;
+}
+function getVar() { return document.getElementById('var-input').value.trim() || 'x'; }
+function getOrder() { return parseInt(document.getElementById('order-input').value) || 1; }
+function getCenter() { return document.getElementById('center-input').value.trim() || '0'; }
+function getLower() { return document.getElementById('lower-input').value.trim() || '0'; }
+function getUpper() { return document.getElementById('upper-input').value.trim() || '1'; }
+function getTVar() { return document.getElementById('tvar-input').value.trim() || 't'; }
+function getSVar() { return document.getElementById('svar-input').value.trim() || 's'; }
+
+// ===== LaTeX helpers =====
+function toTeX(expr) {
+    try { return nerdamer.convertToLaTeX(String(expr)); } catch(e) { return String(expr); }
+}
+function safe(fn) { try { return fn(); } catch(e) { return null; } }
+function factorial(n) { let r=1; for(let i=2;i<=n;i++) r*=i; return r; }
+
+// ===== Render =====
+function renderResult(op, input, result) {
+    const area = document.getElementById('result-area');
+    let html = '<div class="result-content">';
+
+    // Main result
+    html += '<div class="result-block"><div class="def-label">' + op.title + '</div>';
+    html += '<div class="math-display">$$' + result.latex + '$$</div></div>';
+
+    // Steps
+    if (result.steps && result.steps.length > 0) {
+        html += '<div style="margin-top:10px"><div class="def-label" style="font-size:0.65rem;color:var(--muted);margin-bottom:6px">計算ステップ</div>';
+        html += '<ul class="steps-list">';
+        result.steps.forEach(s => {
+            html += '<li><div class="step-desc">' + s.desc + '</div>';
+            html += '<div>$' + s.latex + '$</div></li>';
+        });
+        html += '</ul></div>';
+    }
+
+    // Error
+    if (result.error) {
+        html += '<div class="error-msg">' + result.error + '</div>';
+    }
+    html += '</div>';
+    area.innerHTML = html;
+
+    // History
+    history.unshift({ op: op.code, expr: input, result: result.latex, time: new Date().toLocaleTimeString() });
+    renderHistory();
+
+    // MathJax render
+    if (window.MathJax && MathJax.typesetPromise) {
+        MathJax.typesetPromise([area]).catch(()=>{});
+    }
+}
+
+function renderHistory() {
+    const area = document.getElementById('history-area');
+    if (history.length === 0) { area.innerHTML = '<div class="empty-state">まだ計算履歴はありません</div>'; return; }
+    area.innerHTML = history.slice(0, 20).map(h =>
+        '<div class="history-item" onclick="setExpr(\'' + h.expr.replace(/'/g,"\\'") + '\')">' +
+        '<div class="hi-op">' + h.op + ' — ' + h.time + '</div>' +
+        '<div class="hi-expr">' + h.expr + '</div></div>'
+    ).join('');
+}
+
+// ===== OP NAMES =====
+const OP_META = {
+    PCD: { code:'PCD{}', title:'部分分数分解 Partial Fraction Decomposition' },
+    D:   { code:'D{}',   title:'微分 Differentiation' },
+    I:   { code:'I{}',   title:'不定積分 Indefinite Integral' },
+    DI:  { code:'DI{}',  title:'定積分 Definite Integral' },
+    TE:  { code:'TE{}',  title:'テイラー展開 Taylor Expansion' },
+    LE:  { code:'LE{}',  title:'ローラン展開 Laurent Expansion' },
+    FT:  { code:'FT{}',  title:'フーリエ変換 Fourier Transform' },
+    LT:  { code:'LT{}',  title:'ラプラス変換 Laplace Transform' },
+    MT:  { code:'MT{}',  title:'メリン変換 Mellin Transform' },
+    IFT: { code:'IFT{}', title:'逆フーリエ変換 Inverse Fourier Transform' },
+    ILT: { code:'ILT{}', title:'逆ラプラス変換 Inverse Laplace Transform' },
+    IMT: { code:'IMT{}', title:'逆メリン変換 Inverse Mellin Transform' },
+    PE:  { code:'PE{}',  title:'ピュイズー級数 Puiseux Series' },
+    HE:  { code:'HE{}',  title:'ハーン級数 Hahn Series' },
+};
+
+// ===== COMPUTE DISPATCHER =====
+function compute(op) {
+    const expr = getExpr();
+    if (!expr) return;
+    const area = document.getElementById('result-area');
+    area.innerHTML = '<div style="text-align:center;padding:20px"><div class="loading"></div></div>';
+    setTimeout(() => {
+        try {
+            let result;
+            switch(op) {
+                case 'PCD': result = doPCD(expr); break;
+                case 'D':   result = doDiff(expr); break;
+                case 'I':   result = doInteg(expr); break;
+                case 'DI':  result = doDefInt(expr); break;
+                case 'TE':  result = doTaylor(expr); break;
+                case 'LE':  result = doLaurent(expr); break;
+                case 'FT':  result = doFourier(expr); break;
+                case 'LT':  result = doLaplace(expr); break;
+                case 'MT':  result = doMellin(expr); break;
+                case 'IFT': result = doInvFourier(expr); break;
+                case 'ILT': result = doInvLaplace(expr); break;
+                case 'IMT': result = doInvMellin(expr); break;
+                case 'PE':  result = doPuiseux(expr); break;
+                case 'HE':  result = doHahn(expr); break;
+                default: result = { latex:'?', steps:[], error:'Unknown operation' };
+            }
+            renderResult(OP_META[op], expr, result);
+        } catch(e) {
+            area.innerHTML = '<div class="error-msg">計算エラー: ' + e.message + '</div>';
+        }
+    }, 50);
+}
+
+// ===== 1. PCD: Partial Fraction Decomposition =====
+function doPCD(expr) {
+    const v = getVar(), steps = [];
+    steps.push({ desc: '元の式', latex: toTeX(expr) });
+    // Factor denominator
+    try {
+        const factored = nerdamer('factor(' + expr + ')').toString();
+        if (factored !== expr) steps.push({ desc: '因数分解', latex: toTeX(factored) });
+    } catch(e) {}
+    // Partial fractions
+    const r = nerdamer('partfrac(' + expr + ',' + v + ')');
+    const rStr = r.toString(), rTeX = r.toTeX ? r.toTeX() : toTeX(rStr);
+    steps.push({ desc: '部分分数分解の結果', latex: rTeX });
+    return { latex: rTeX, steps };
+}
+
+// ===== 2. D: Differentiation =====
+function doDiff(expr) {
+    const v = getVar(), n = getOrder(), steps = [];
+    steps.push({ desc: '元の式 f(' + v + ')', latex: toTeX(expr) });
+    let cur = expr;
+    for (let i = 1; i <= n; i++) {
+        // Check product rule display
+        const expanded = safe(() => nerdamer('expand(' + cur + ')').toString()) || cur;
+        const r = nerdamer('diff(' + cur + ',' + v + ')');
+        cur = r.toString();
+        const tex = r.toTeX ? r.toTeX() : toTeX(cur);
+        steps.push({ desc: 'f' + ("'".repeat(Math.min(i,3))) + (i>3?'^{('+i+')}':'') + '(' + v + ')', latex: tex });
+    }
+    // Simplify
+    let simplified;
+    try { simplified = nerdamer('simplify(' + cur + ')'); } catch(e) { simplified = nerdamer(cur); }
+    const finalTeX = simplified.toTeX ? simplified.toTeX() : toTeX(simplified.toString());
+    if (n > 1 || finalTeX !== steps[steps.length-1].latex) {
+        steps.push({ desc: '簡約化', latex: finalTeX });
+    }
+    return { latex: finalTeX, steps };
+}
+
+// ===== 3. I: Indefinite Integral =====
+function doInteg(expr) {
+    const v = getVar(), steps = [];
+    steps.push({ desc: '元の式', latex: '\\int ' + toTeX(expr) + '\\, d' + v });
+    const r = nerdamer('integrate(' + expr + ',' + v + ')');
+    const rTeX = (r.toTeX ? r.toTeX() : toTeX(r.toString())) + ' + C';
+    steps.push({ desc: '不定積分の結果', latex: rTeX });
+    return { latex: rTeX, steps };
+}
+
+// ===== 4. DI: Definite Integral =====
+function doDefInt(expr) {
+    const v = getVar(), lo = getLower(), hi = getUpper(), steps = [];
+    steps.push({ desc: '定積分', latex: '\\int_{' + lo + '}^{' + hi + '} ' + toTeX(expr) + '\\, d' + v });
+    // Get antiderivative
+    try {
+        const anti = nerdamer('integrate(' + expr + ',' + v + ')');
+        steps.push({ desc: '原始関数 F(' + v + ')', latex: anti.toTeX ? anti.toTeX() : toTeX(anti.toString()) });
+    } catch(e) {}
+    const r = nerdamer('defint(' + expr + ',' + lo + ',' + hi + ',' + v + ')');
+    const rStr = r.toString();
+    let rTeX = r.toTeX ? r.toTeX() : toTeX(rStr);
+    // Try to evaluate numerically
+    try {
+        const numVal = nerdamer(rStr).evaluate().text();
+        if (numVal !== rStr) steps.push({ desc: '数値評価', latex: '\\approx ' + numVal });
+    } catch(e) {}
+    steps.push({ desc: '定積分の結果', latex: rTeX });
+    return { latex: rTeX, steps };
+}
+
+// ===== 5. TE: Taylor Expansion =====
+function doTaylor(expr) {
+    const v = getVar(), a = getCenter(), n = getOrder(), steps = [];
+    steps.push({ desc: 'テイラー展開の定義', latex: 'f(' + v + ') = \\sum_{k=0}^{n} \\frac{f^{(k)}(' + a + ')}{k!}(' + v + '-' + a + ')^k' });
+    let terms = [], deriv = expr;
+    for (let k = 0; k <= n; k++) {
+        if (k > 0) deriv = nerdamer('diff(' + deriv + ',' + v + ')').toString();
+        let coeff;
+        try { coeff = nerdamer(deriv).sub(v, a); } catch(e) { coeff = nerdamer('subst(' + deriv + ',' + v + ',' + a + ')'); }
+        const cStr = coeff.toString();
+        const cVal = safe(() => nerdamer(cStr).evaluate().text()) || cStr;
+        const fk = factorial(k);
+        if (cVal !== '0' && cVal !== 0) {
+            const termCoeff = (fk === 1) ? cVal : cVal + '/' + fk;
+            const xPart = (k === 0) ? '' : (a === '0' ? v + '^' + k : '(' + v + '-' + a + ')^' + k);
+            terms.push({ k, coeff: cVal, factorial: fk, term: (k === 0) ? termCoeff : '(' + termCoeff + ')*' + xPart });
+            steps.push({ desc: 'k=' + k + ': f^{(' + k + ')}(' + a + ')=' + cVal + ', \\; k!=' + fk, latex: '\\frac{' + toTeX(cVal) + '}{' + fk + '}' + (k > 0 ? (a === '0' ? v + '^{' + k + '}' : '(' + v + '-' + a + ')^{' + k + '}') : '') });
+        }
+    }
+    // Build result
+    let termsLatex = [];
+    terms.sort((a,b) => a.k - b.k).forEach(t => {
+        let tTex = '';
+        try { tTex = nerdamer('simplify(' + t.term + ')').toTeX(); }
+        catch(e) { tTex = toTeX(t.term); }
+        if (tTex !== '0' && tTex !== '0.0') termsLatex.push(tTex);
+    });
+    let resultExprStr = termsLatex.join(' + ').replace(/\+ -/g, '- ');
+    if (!resultExprStr) resultExprStr = '0';
+    let rTeX = resultExprStr + ' + O(' + (a === '0' ? v : '(' + v + '-' + a + ')') + '^{' + (n+1) + '})';
+    steps.push({ desc: '展開結果 (次数 ' + n + ')', latex: rTeX });
+    return { latex: rTeX, steps };
+}
+
+// ===== 5.5 LE: Laurent Expansion =====
+function doLaurent(expr) {
+    const xV = getVar(), aVal = getCenter(), order = getOrder();
+    return computeLaurentSeries(expr, xV, aVal, order);
+}
+
+function computeLaurentSeries(expr, xV, aVal, order) {
+    const steps = [];
+    const u = 'u_var'; // dummy var
+    let G;
+    try {
+        G = nerdamer(expr).sub(xV, '(' + u + '+' + aVal + ')');
+    } catch(e) { return { latex: '?', error: '解析に失敗しました。' }; }
+
+    // Estimate pole order M
+    let M = 0;
+    for (let m = 0; m <= 15; m++) {
+        try {
+            let testExpr = nerdamer('simplify((' + G.text() + ')*' + u + '^' + m + ')');
+            let lim = nerdamer('limit(' + testExpr.text() + ',' + u + ',0)').text();
+            if (lim !== 'Infinity' && lim !== '-Infinity' && lim !== 'NaN' && lim !== 'undefined') {
+                M = m;
+                break;
+            }
+        } catch(e) {
+            try {
+                let testExpr = nerdamer('(' + G.text() + ')*' + u + '^' + m);
+                let val = testExpr.sub(u, '0').evaluate().text();
+                if (val !== 'Infinity' && val !== '-Infinity' && val !== 'NaN' && val !== 'null') {
+                    M = m;
+                    break;
+                }
+            } catch(ex) {}
+        }
+    }
+
+    steps.push({ desc: '補助関数の構築 (極の位数 M=' + M + ')', latex: 'g(u) = f(u+' + aVal + ') \\cdot u^{' + M + '}' });
+
+    // Compute Taylor of G * u^M to order + M
+    let taylorTerms = [];
+    try {
+        let gText = nerdamer('simplify((' + G.text() + ')*' + u + '^' + M + ')').text();
+        let tayNode = nerdamer('taylor(' + gText + ',' + u + ',0,' + (order + M) + ')');
+        
+        let tayStr = tayNode.text();
+        if (tayStr.includes('taylor')) {
+            // Nerdamer native taylor failed; fallback to manual limit-based derivatives
+            let deriv = gText;
+            for (let k = 0; k <= order + M; k++) {
+                if (k > 0) deriv = nerdamer('diff(' + deriv + ',' + u + ')').text();
+                try {
+                    let lim = nerdamer('limit(' + deriv + ',' + u + ',0)').text();
+                    if (lim !== 'NaN' && lim !== 'undefined' && lim !== 'Infinity' && lim !== '-Infinity') {
+                        let cf = nerdamer('(' + lim + ')/' + factorial(k)).evaluate().text();
+                        if (cf !== '0') {
+                            taylorTerms.push({ n: k, term: cf + '*' + u + '^' + k });
+                        }
+                    }
+                } catch(e) {}
+            }
+        } else {
+            if (tayStr.startsWith('[')) tayStr = tayStr.slice(1, -1);
+            let sumStr = tayStr.split(',').join('+');
+            if (!sumStr) sumStr = '0';
+            
+            const expanded = nerdamer('expand(' + sumStr + ')').text();
+            const sumList = splitSum(expanded);
+            sumList.forEach(t => {
+                const powMatch = t.match(new RegExp(u + '\\^(\\d+)'));
+                let n = powMatch ? parseInt(powMatch[1]) : (t.includes(u) ? 1 : 0);
+                taylorTerms.push({ n: n, term: t });
+            });
+        }
+    } catch(e) {
+        return { latex: '?', error: 'テイラー展開ステップでエラー: ' + e.message };
+    }
+
+    // Adjust powers
+    let laurentTerms = taylorTerms.map(t => {
+        let newPow = t.n - M;
+        let newTerm = nerdamer('simplify((' + t.term + ')/(' + u + '^' + M + '))').text();
+        let backSub = nerdamer(newTerm).sub(u, '(' + xV + '-' + aVal + ')').text();
+        return { n: newPow, term: backSub };
+    });
+
+    laurentTerms.sort((a,b) => a.n - b.n);
+
+    let latexTerms = [];
+    laurentTerms.forEach(t => {
+        let tTex = '';
+        try { tTex = nerdamer('simplify(' + t.term + ')').toTeX(); }
+        catch(e) { tTex = toTeX(t.term); }
+        if (tTex !== '0') latexTerms.push(tTex);
+    });
+    
+    let formatStr = latexTerms.join(' + ').replace(/\+ -/g, '- ');
+    if (!formatStr) formatStr = '0';
+    
+    let centerStr = aVal === '0' ? xV : '(' + xV + '-' + aVal + ')';
+    let oTerm = 'O(' + centerStr + '^{' + (order+1) + '})';
+    steps.push({ desc: 'ローラン展開結果', latex: formatStr + ' + ' + oTerm });
+    return { latex: formatStr + ' + ' + oTerm, steps, terms: laurentTerms };
+}
+
+// ===== 6. FT: Fourier Transform =====
+function doFourier(expr) {
+    const tV = getTVar(), wV = getSVar(), steps = [];
+    steps.push({ desc: 'フーリエ変換の定義', latex: '\\mathcal{F}\\{f(' + tV + ')\\}(' + wV + ') = \\int_{-\\infty}^{\\infty} f(' + tV + ') e^{-i' + wV + tV + '} \\, d' + tV });
+    steps.push({ desc: '入力', latex: 'f(' + tV + ') = ' + toTeX(expr) });
+
+    // Table of known transforms
+    const ft = matchFourierTransform(expr, tV, wV);
+    if (ft) {
+        ft.steps.forEach(s => steps.push(s));
+        steps.push({ desc: '結果', latex: ft.latex });
+        return { latex: ft.latex, steps };
+    }
+
+    // Try linearity: split into sum
+    try {
+        const expanded = nerdamer('expand(' + expr + ')').toString();
+        const sumTerms = splitSum(expanded);
+        if (sumTerms.length > 1) {
+            steps.push({ desc: '線形性を適用: 和に分解', latex: toTeX(expanded) });
+            let resultParts = [];
+            for (const term of sumTerms) {
+                const sub = matchFourierTransform(term, tV, wV);
+                if (sub) {
+                    resultParts.push(sub.latex);
+                    steps.push({ desc: '\\mathcal{F}\\{' + toTeX(term) + '\\}', latex: sub.latex });
+                } else {
+                    const fallback = '\\int_{-\\infty}^{\\infty} ' + toTeX(term) + ' e^{-i' + wV + tV + '} d' + tV;
+                    resultParts.push(fallback);
+                }
+            }
+            const combined = resultParts.join(' + ');
+            return { latex: combined, steps };
+        }
+    } catch(e) {}
+
+    // Fallback: show definition
+    const defLatex = '\\int_{-\\infty}^{\\infty} ' + toTeX(expr) + ' e^{-i' + wV + tV + '} \\, d' + tV;
+    steps.push({ desc: '閉じた形では求められません。積分定義を表示します。', latex: defLatex });
+    return { latex: defLatex, steps };
+}
+
+function matchFourierTransform(expr, tV, wV) {
+    const s = nerdamer(expr).toString();
+    const w = wV;
+
+    // Constant
+    if (!s.includes(tV)) {
+        return { latex: '2\\pi \\cdot ' + toTeX(s) + ' \\cdot \\delta(' + w + ')', steps: [{ desc: '定数のフーリエ変換', latex: '\\mathcal{F}\\{c\\} = 2\\pi c \\, \\delta(\\omega)' }] };
+    }
+
+    // e^(-a*t^2) Gaussian
+    try {
+        // Check if expr = C * e^(-a*t^2)
+        const logD2 = nerdamer('diff(diff(log(' + expr + '),' + tV + '),' + tV + ')').toString();
+        if (!logD2.includes(tV)) {
+            const logD1 = nerdamer('diff(log(' + expr + '),' + tV + ')').toString();
+            const logD1at0 = nerdamer(logD1).sub(tV, '0').toString();
+            if (logD1at0 === '0') {
+                const a = nerdamer('(-1/2)*(' + logD2 + ')').toString();
+                const C = nerdamer(expr).sub(tV, '0').toString();
+                const Cpart = (C === '1') ? '' : (C === '-1' ? '-' : toTeX(C) + ' \\cdot ');
+                const Apart = toTeX(a);
+                const latex = Cpart + '\\sqrt{\\frac{\\pi}{' + Apart + '}} \\, e^{-' + w + '^2/(4' + (Apart === '1' ? '' : ' \\cdot ' + Apart) + ')}';
+                return { latex, steps: [{ desc: 'ガウス関数のフーリエ変換', latex: '\\mathcal{F}\\{e^{-a' + tV + '^2}\\} = \\sqrt{\\frac{\\pi}{a}} e^{-\\omega^2/(4a)}' }] };
+            }
+        }
+    } catch(e) {}
+
+    // sin(a*t)
+    try {
+        const sinM = s.match(new RegExp('^sin\\((.+)\\)$'));
+        if (sinM) {
+            const arg = sinM[1];
+            const dArg = nerdamer('diff(' + arg + ',' + tV + ')').toString();
+            if (!dArg.includes(tV)) {
+                return { latex: '-i\\pi\\left[\\delta(' + w + '+' + toTeX(dArg) + ') - \\delta(' + w + '-' + toTeX(dArg) + ')\\right]',
+                    steps: [{ desc: 'sin関数のフーリエ変換', latex: '\\mathcal{F}\\{\\sin(a' + tV + ')\\} = -i\\pi[\\delta(\\omega+a)-\\delta(\\omega-a)]' }] };
+            }
+        }
+    } catch(e) {}
+
+    // cos(a*t)
+    try {
+        const cosM = s.match(new RegExp('^cos\\((.+)\\)$'));
+        if (cosM) {
+            const arg = cosM[1];
+            const dArg = nerdamer('diff(' + arg + ',' + tV + ')').toString();
+            if (!dArg.includes(tV)) {
+                return { latex: '\\pi\\left[\\delta(' + w + '-' + toTeX(dArg) + ') + \\delta(' + w + '+' + toTeX(dArg) + ')\\right]',
+                    steps: [{ desc: 'cos関数のフーリエ変換', latex: '\\mathcal{F}\\{\\cos(a' + tV + ')\\} = \\pi[\\delta(\\omega-a)+\\delta(\\omega+a)]' }] };
+            }
+        }
+    } catch(e) {}
+
+    // e^(a*t) — pure exponential
+    try {
+        const ld = nerdamer('diff(log(' + expr + '),' + tV + ')').toString();
+        if (!ld.includes(tV)) {
+            const C = nerdamer(expr).sub(tV, '0').toString();
+            return { latex: '2\\pi \\cdot ' + toTeX(C) + '\\cdot \\delta(' + w + ' + i \\cdot' + toTeX(ld) + ')',
+                steps: [{ desc: '指数関数のフーリエ変換(分布)', latex: '\\mathcal{F}\\{e^{a' + tV + '}\\} = 2\\pi\\delta(\\omega + ia)' }] };
+        }
+    } catch(e) {}
+
+    // 1/(t^2 + a^2) Lorentzian
+    try {
+        const inv = nerdamer('simplify(1/(' + expr + '))').toString();
+        const d2 = nerdamer('simplify(diff(diff(' + inv + ',' + tV + '),' + tV + '))').toString();
+        if (!d2.includes(tV) && d2 !== '0') {
+            const C = nerdamer('2/(' + d2 + ')').toString();
+            const K = nerdamer('simplify((' + inv + ') - (' + d2 + '/2)*' + tV + '^2)').toString();
+            if (!K.includes(tV)) {
+                // If aSq is positive purely
+                const aSq = nerdamer('simplify((' + C + ')*(' + K + '))').toString();
+                const a = nerdamer('sqrt(' + aSq + ')').toString();
+                const aTex = a === '1' ? '' : toTeX(a);
+                const Ctex = C === '1' ? '' : (C === '-1' ? '-' : toTeX(C) + ' \\cdot ');
+                const latex = Ctex + (aTex ? '\\frac{\\pi}{' + aTex + '}' : '\\pi') + ' \\, e^{-' + (aTex || '') + '|' + w + '|}';
+                return { latex, steps: [{ desc: 'ローレンツ関数のフーリエ変換', latex: '\\mathcal{F}\\{\\frac{1}{t^2+a^2}\\} = \\frac{\\pi}{a}e^{-a|\\omega|}' }] };
+            }
+        }
+    } catch(e) {}
+
+    // t^n
+    try {
+        const deg = nerdamer('deg(' + expr + ',' + tV + ')').toString();
+        if (/^\d+$/.test(deg)) {
+            const n = parseInt(deg);
+            const coeff = nerdamer('coeff(' + expr + ',' + tV + ',' + n + ')').toString();
+            if (n >= 1) {
+                return { latex: toTeX(coeff) + ' \\cdot 2\\pi (i)^{' + n + '} \\delta^{(' + n + ')}(' + w + ')',
+                    steps: [{ desc: '冪関数のフーリエ変換', latex: '\\mathcal{F}\\{' + tV + '^n\\} = 2\\pi i^n \\delta^{(n)}(\\omega)' }] };
+            }
+        }
+    } catch(e) {}
+
+    return null;
+}
+
+function splitSum(expr) {
+    // Split expression by + at top level (respecting parentheses)
+    const parts = []; let depth = 0, cur = '';
+    for (let i = 0; i < expr.length; i++) {
+        const c = expr[i];
+        if (c === '(' || c === '[') depth++;
+        else if (c === ')' || c === ']') depth--;
+        if ((c === '+' || c === '-') && depth === 0 && i > 0) {
+            if (cur.trim()) parts.push(cur.trim());
+            cur = c === '-' ? '-' : '';
+        } else { cur += c; }
+    }
+    if (cur.trim()) parts.push(cur.trim());
+    return parts;
+}
+
+// ===== 7. LT: Laplace Transform =====
+function doLaplace(expr) {
+    const tV = getTVar(), sV = getSVar(), steps = [];
+    steps.push({ desc: 'ラプラス変換の定義', latex: '\\mathcal{L}\\{f(' + tV + ')\\}(' + sV + ') = \\int_0^{\\infty} f(' + tV + ') e^{-' + sV + tV + '} \\, d' + tV });
+    steps.push({ desc: '入力', latex: 'f(' + tV + ') = ' + toTeX(expr) });
+    try {
+        const r = nerdamer('laplace(' + expr + ',' + tV + ',' + sV + ')');
+        const rTeX = r.toTeX ? r.toTeX() : toTeX(r.toString());
+        steps.push({ desc: 'ラプラス変換の結果', latex: rTeX });
+        return { latex: rTeX, steps };
+    } catch(e) {
+        // Fallback: try via integration
+        try {
+            const integrand = '(' + expr + ')*e^(-' + sV + '*' + tV + ')';
+            const r = nerdamer('integrate(' + integrand + ',' + tV + ')');
+            const rTeX = r.toTeX ? r.toTeX() : toTeX(r.toString());
+            steps.push({ desc: '積分による計算 (近似)', latex: rTeX });
+            return { latex: rTeX, steps };
+        } catch(e2) {
+            const def = '\\int_0^{\\infty} ' + toTeX(expr) + ' e^{-' + sV + tV + '} \\, d' + tV;
+            steps.push({ desc: '閉じた形では計算できませんでした', latex: def });
+            return { latex: def, steps, error: 'nerdamerではこの変換を計算できません: ' + e.message };
+        }
+    }
+}
+
+// ===== 8. MT: Mellin Transform =====
+function doMellin(expr) {
+    const xV = getTVar() || 'x', sV = getSVar(), steps = [];
+    steps.push({ desc: 'メリン変換の定義', latex: '\\mathcal{M}\\{f(' + xV + ')\\}(' + sV + ') = \\int_0^{\\infty} ' + xV + '^{' + sV + '-1} f(' + xV + ') \\, d' + xV });
+    steps.push({ desc: '入力', latex: 'f(' + xV + ') = ' + toTeX(expr) });
+
+    // Try known Mellin transforms
+    const mt = matchMellinTransform(expr, xV, sV);
+    if (mt) {
+        mt.steps.forEach(s => steps.push(s));
+        return { latex: mt.latex, steps };
+    }
+
+    // Try direct integration
+    try {
+        const integrand = xV + '^(' + sV + '-1)*(' + expr + ')';
+        const r = nerdamer('integrate(' + integrand + ',' + xV + ')');
+        const rTeX = r.toTeX ? r.toTeX() : toTeX(r.toString());
+        steps.push({ desc: '積分による計算', latex: rTeX });
+        return { latex: rTeX, steps };
+    } catch(e) {
+        const def = '\\int_0^{\\infty} ' + xV + '^{' + sV + '-1} \\cdot ' + toTeX(expr) + ' \\, d' + xV;
+        steps.push({ desc: '閉じた形では計算できませんでした', latex: def });
+        return { latex: def, steps };
+    }
+}
+
+function matchMellinTransform(expr, xV, sV) {
+    const s = nerdamer(expr).toString();
+
+    // e^(-x) -> Gamma(s)
+    try {
+        if (s === 'e^(-' + xV + ')' || s === 'e^(-1*' + xV + ')' || nerdamer(expr + '+e^(-' + xV + ')').toString() === '0') {
+            // Not exact string match, try algebraic check
+        }
+        const test = nerdamer('simplify((' + expr + ')-e^(-' + xV + '))').toString();
+        if (test === '0') {
+            return { latex: '\\Gamma(' + sV + ')', steps: [{ desc: '既知の変換', latex: '\\mathcal{M}\\{e^{-' + xV + '}\\} = \\Gamma(' + sV + ')' }] };
+        }
+    } catch(e) {}
+
+    // 1/(1+x) -> pi/sin(pi*s)
+    try {
+        const test = nerdamer('simplify((' + expr + ')-1/(1+' + xV + '))').toString();
+        if (test === '0') {
+            return { latex: '\\frac{\\pi}{\\sin(\\pi ' + sV + ')}', steps: [{ desc: '既知の変換 (0 < Re(s) < 1)', latex: '\\mathcal{M}\\{\\frac{1}{1+' + xV + '}\\} = \\frac{\\pi}{\\sin(\\pi s)}' }] };
+        }
+    } catch(e) {}
+
+    // sin(x) -> Gamma(s)*sin(pi*s/2)
+    try {
+        if (s === 'sin(' + xV + ')') {
+            return { latex: '\\Gamma(' + sV + ')\\sin\\left(\\frac{\\pi ' + sV + '}{2}\\right)', steps: [{ desc: '既知の変換', latex: '\\mathcal{M}\\{\\sin(' + xV + ')\\} = \\Gamma(s)\\sin(\\pi s/2)' }] };
+        }
+    } catch(e) {}
+
+    // cos(x) -> Gamma(s)*cos(pi*s/2)
+    try {
+        if (s === 'cos(' + xV + ')') {
+            return { latex: '\\Gamma(' + sV + ')\\cos\\left(\\frac{\\pi ' + sV + '}{2}\\right)', steps: [{ desc: '既知の変換', latex: '\\mathcal{M}\\{\\cos(' + xV + ')\\} = \\Gamma(s)\\cos(\\pi s/2)' }] };
+        }
+    } catch(e) {}
+
+    // e^(-x^2) -> Gamma(s/2)/2
+    try {
+        const test = nerdamer('simplify((' + expr + ')-e^(-' + xV + '^2))').toString();
+        if (test === '0') {
+            return { latex: '\\frac{1}{2}\\Gamma\\left(\\frac{' + sV + '}{2}\\right)', steps: [{ desc: '既知の変換', latex: '\\mathcal{M}\\{e^{-' + xV + '^2}\\} = \\frac{1}{2}\\Gamma(s/2)' }] };
+        }
+    } catch(e) {}
+
+    // ln(1+ax) -> pi / (s * sin(pi*s)) * a^-s
+    try {
+        const d1 = nerdamer('diff(' + expr + ',' + xV + ')').toString();
+        const invD1 = nerdamer('simplify(1/(' + d1 + '))').toString();
+        const d2 = nerdamer('simplify(diff(' + invD1 + ',' + xV + '))').toString();
+        if (!d2.includes(xV) && d2 !== '0') {
+            const K = nerdamer('simplify((' + invD1 + ') - (' + d2 + ')*' + xV + ')').toString();
+            if (!K.includes(xV)) {
+                // Check if f(0) == 0
+                const f0 = nerdamer(expr).sub(xV, '0').toString();
+                if (f0 === '0') {
+                    const C = nerdamer('1/(' + K + ')').toString();
+                    const a = nerdamer('simplify((' + d2 + ')/(' + K + '))').toString();
+                    
+                    const Ctex = C === '1' ? '' : (C === '-1' ? '-' : toTeX(C));
+                    const aTex = a === '1' ? '' : toTeX(a) + '^{-' + sV + '} ';
+                    const latex = Ctex + aTex + '\\frac{\\pi}{' + sV + '\\sin(\\pi ' + sV + ')}';
+                    return { latex, steps: [{ desc: '対数関数のメリン変換 (-1 < Re(s) < 0)', latex: '\\mathcal{M}\\{\\ln(1+ax)\\} = \\frac{\\pi}{s\\sin(\\pi s)}a^{-s}' }] };
+                }
+            }
+        }
+    } catch(e) {}
+
+    return null;
+}
+
+// ===== 9. PE: Puiseux Series =====
+function doPuiseux(expr) {
+    const xV = getVar(), aVal = getCenter(), order = getOrder();
+    const steps = [];
+    steps.push({ desc: 'ピュイズー級数展開 (ローラン展開ベース)', latex: '' });
+
+    // Generalized base: substitute x = t^n -> Laurent -> t = x^(1/n)
+    let bestN = 1;
+    try {
+        let testStr = nerdamer(expr).text();
+        let testDiff = nerdamer('diff(' + expr + ',' + xV + ')').text();
+        let allStr = expr + ' ' + testStr + ' ' + testDiff;
+        if (allStr.includes('sqrt(') || allStr.includes('^1/2') || allStr.includes('^(1/2)')) { bestN = 2; }
+        if (allStr.includes('^1/3') || allStr.includes('^(1/3)')) { bestN = 3; }
+        if (allStr.includes('^1/4') || allStr.includes('^(1/4)')) { bestN = 4; }
+    } catch(e) {}
+
+    const t = 't_var';
+    let subExprText = '';
+    try {
+        let subExpr = nerdamer(expr).sub(xV, '(' + t + '^' + bestN + '+' + aVal + ')');
+        subExprText = subExpr.text();
+        if (bestN === 2) {
+            subExprText = subExprText.split('abs(' + t + ')').join(t);
+            subExprText = subExprText.split('sqrt(' + t + '^2)').join(t);
+            subExprText = subExprText.split('((' + t + ')^2)^(1/2)').join(t);
+            subExprText = subExprText.split('(' + t + '^2)^(1/2)').join(t);
+        }
+    } catch(e) { return { latex: '?', error: 'パースエラー' }; }
+
+    steps.push({ desc: '置換: ' + xV + ' = t^{' + bestN + '} + ' + aVal, latex: 'g(t) = ' + toTeX(subExprText) });
+
+    // Use Laurent expansion on g(t) around 0
+    let laurentRes = computeLaurentSeries(subExprText, t, '0', order * bestN);
+    if (laurentRes.error) return laurentRes;
+
+    let latexTerms = [];
+    laurentRes.terms.forEach(termObj => {
+        let backSub = nerdamer(termObj.term).sub(t, '(' + xV + '-' + aVal + ')^(1/' + bestN + ')').text();
+        try {
+            let tTex = nerdamer('simplify(' + backSub + ')').toTeX();
+            if (tTex !== '0') latexTerms.push(tTex);
+        } catch(e) { latexTerms.push(toTeX(backSub)); }
+        
+    });
+
+    let formatStr = latexTerms.join(' + ').replace(/\+ -/g, '- ');
+    if (!formatStr) formatStr = '0';
+    
+    steps.push({ desc: '逆置換と結果', latex: formatStr + ' + \\dots' });
+    return { latex: formatStr + ' + \\dots', steps };
+}
+
+// ===== 10. HE: Hahn Series =====
+function doHahn(expr) {
+    const xV = getVar(), aVal = getCenter(), order = getOrder();
+    const steps = [];
+    
+    steps.push({ desc: 'ハーン級数の構築 (ローラン展開ベース)', latex: '' });
+    const u = 'u_var';
+    let G;
+    try { G = nerdamer(expr).sub(xV, '(' + u + '+' + aVal + ')'); } 
+    catch(e) { return { latex: '?', error: 'パースエラー' }; }
+
+    let gamma = 0, C = '0';
+    for (let count=0; count<30; count++) {
+        let gtest = count / 2;
+        try {
+            let lim1 = nerdamer('limit((' + G.text() + ')*' + u + '^' + gtest + ',' + u + ',0)').text();
+            if (lim1 !== '0' && lim1 !== 'Infinity' && lim1 !== '-Infinity' && lim1 !== 'NaN' && lim1 !== 'undefined') {
+                gamma = -gtest; C = lim1; break;
+            }
+            let lim2 = nerdamer('limit((' + G.text() + ')/' + u + '^' + gtest + ',' + u + ',0)').text();
+            if (lim2 !== '0' && lim2 !== 'Infinity' && lim2 !== '-Infinity' && lim2 !== 'NaN' && lim2 !== 'undefined') {
+                gamma = gtest; C = lim2; break;
+            }
+        } catch(e) {}
+    }
+
+    if (C !== '0') {
+        steps.push({ desc: '先頭項の抽出', latex: 'c_0 u^{\\gamma} = ' + toTeX(C) + ' \\cdot ' + (aVal==='0'?xV:'('+xV+'-'+aVal+')') + '^{' + gamma + '}' });
+        let H_text = nerdamer('simplify((' + G.text() + ')/(' + C + '*' + u + '^' + gamma + '))').text();
+
+        // Hahn generalized tail expansion using Puiseux substitution logic
+        let bestN = 1;
+        try {
+            let allStr = H_text + ' ' + expr;
+            if (allStr.includes('sqrt(') || allStr.includes('^1/2') || allStr.includes('^(1/2)')) { bestN = 2; }
+            if (allStr.includes('^1/3') || allStr.includes('^(1/3)')) { bestN = 3; }
+            if (allStr.includes('^1/4') || allStr.includes('^(1/4)')) { bestN = 4; }
+        } catch(e) {}
+
+        const t = 't_var';
+        let subExprText = H_text;
+        if (bestN > 1) {
+            steps.push({ desc: '分数冪の解消 (置換)', latex: 'u = t^{' + bestN + '}' });
+            try { 
+                subExprText = nerdamer(H_text).sub(u, '(' + t + '^' + bestN + ')').text(); 
+                if (bestN === 2) {
+                    subExprText = subExprText.split('abs(' + t + ')').join(t);
+                    subExprText = subExprText.split('sqrt(' + t + '^2)').join(t);
+                    subExprText = subExprText.split('((' + t + ')^2)^(1/2)').join(t);
+                    subExprText = subExprText.split('(' + t + '^2)^(1/2)').join(t);
+                }
+            } catch(e) {}
+        }
+
+        let varForL = bestN > 1 ? t : u;
+        let laurentRes = computeLaurentSeries(subExprText, varForL, '0', order * bestN);
+        let latexTerms = [];
+        if (laurentRes.terms) {
+            laurentRes.terms.forEach(termObj => {
+                let termInU = termObj.term;
+                if (bestN > 1) {
+                    termInU = nerdamer(termInU).sub(t, '(' + u + ')^(1/' + bestN + ')').text();
+                }
+                let mult = nerdamer('simplify((' + termInU + ')*' + C + '*' + u + '^' + gamma + ')').text();
+                let backsub = nerdamer(mult).sub(u, '(' + xV + '-' + aVal + ')').text();
+                try {
+                    let tTex = nerdamer('simplify(' + backsub + ')').toTeX();
+                    if (tTex !== '0') latexTerms.push(tTex);
+                } catch(e) { latexTerms.push(toTeX(backsub)); }
+            });
+            let formatStr = latexTerms.join(' + ').replace(/\+ -/g, '- ');
+            if (!formatStr) formatStr = '0';
+            
+            steps.push({ desc: '一般化冪級数の統合結果', latex: formatStr + ' + \\dots' });
+            return { latex: formatStr + ' + \\dots', steps };
+        }
+    }
+
+    steps.push({ desc: '抽出失敗', latex: 'ローラン展開の直接適用にフォールバックします' });
+    return computeLaurentSeries(expr, xV, aVal, order);
+}
+
+// ===== 11. Inverse Transforms =====
+function doInvFourier(expr) {
+    const wV = getSVar(), tV = getTVar(), steps = [];
+    steps.push({ desc: '逆フーリエ変換の定義', latex: '\\mathcal{F}^{-1}\\{F(' + wV + ')\\}(' + tV + ') = \\frac{1}{2\\pi}\\int_{-\\infty}^{\\infty} F(' + wV + ') e^{i\\' + wV + ' ' + tV + '} \\, d\\' + wV });
+    steps.push({ desc: '入力', latex: 'F(' + wV + ') = ' + toTeX(expr) });
+
+    const ift = matchInverseFourier(expr, wV, tV);
+    if (ift) {
+        ift.steps.forEach(s => steps.push(s));
+        steps.push({ desc: '結果', latex: ift.latex });
+        return { latex: ift.latex, steps };
+    }
+    
+    try {
+        const expanded = nerdamer('expand(' + expr + ')').text();
+        const sumTerms = splitSum(expanded);
+        if (sumTerms.length > 1) {
+            steps.push({ desc: '線形性を適用: 和に分解', latex: toTeX(expanded) });
+            let resultParts = [];
+            for (const term of sumTerms) {
+                const sub = matchInverseFourier(term, wV, tV);
+                if (sub) resultParts.push(sub.latex);
+                else resultParts.push('\\frac{1}{2\\pi}\\int ' + toTeX(term) + ' e^{i' + wV + tV + '} d' + wV);
+            }
+            return { latex: resultParts.join(' + '), steps };
+        }
+    } catch(e) {}
+
+    const defLatex = '\\frac{1}{2\\pi}\\int_{-\\infty}^{\\infty} ' + toTeX(expr) + ' e^{i' + wV + tV + '} \\, d' + wV;
+    steps.push({ desc: '閉じた形では求められません。積分定義を表示します。', latex: defLatex });
+    return { latex: defLatex, steps };
+}
+function matchInverseFourier(expr, wV, tV) {
+    const F = nerdamer(expr);
+    if (F.text().includes('delta(')) {
+        return { latex: '\\frac{1}{2\\pi}', steps: [{ desc: 'デルタ関数の逆変換', latex: '\\mathcal{F}^{-1}\\{\\delta(\\omega)\\} = \\frac{1}{2\\pi}' }] };
+    }
+    try {
+         const logF = nerdamer('log(' + F.text() + ')');
+         const d2 = nerdamer('diff(diff('+logF.text()+','+wV+'),'+wV+')').text();
+         if (d2 === '0') {
+             let d1 = nerdamer('abs(diff('+logF.text()+','+wV+'))').text(); 
+             let aTex = toTeX(d1);
+             let latex = '\\frac{' + aTex + '}{\\pi(' + tV + '^2 + ' + aTex + '^2)}';
+             return { latex, steps: [{desc: '指数関数の逆フーリエ', latex: '\\mathcal{F}^{-1}\\{e^{-a|\\omega|}\\} = \\frac{a}{\\pi(t^2+a^2)}'}]};
+         }
+    } catch(e) {}
+    return null;
+}
+
+function doInvLaplace(expr) {
+    const sV = getSVar(), tV = getTVar(), steps = [];
+    steps.push({ desc: '逆ラプラス変換の定義', latex: '\\mathcal{L}^{-1}\\{F(' + sV + ')\\}(\\' + tV + ') = \\frac{1}{2\\pi i}\\int_{c-i\\infty}^{c+i\\infty} F(' + sV + ') e^{' + sV + ' ' + tV + '} \\, d' + sV });
+    steps.push({ desc: '入力', latex: 'F(' + sV + ') = ' + toTeX(expr) });
+
+    const ilt = matchInverseLaplace(expr, sV, tV);
+    if (ilt) {
+        ilt.steps.forEach(s => steps.push(s));
+        steps.push({ desc: '結果', latex: ilt.latex });
+        return { latex: ilt.latex, steps };
+    }
+
+    try {
+        const expanded = nerdamer('expand(' + expr + ')').text();
+        const sumTerms = splitSum(expanded);
+        if (sumTerms.length > 1) {
+            steps.push({ desc: '線形性を適用: 和に分解', latex: toTeX(expanded) });
+            let resultParts = [];
+            for (const term of sumTerms) {
+                const sub = matchInverseLaplace(term, sV, tV);
+                if (sub) resultParts.push(sub.latex);
+                else resultParts.push('\\frac{1}{2\\pi i}\\int ' + toTeX(term) + ' e^{' + sV + tV + '} d' + sV);
+            }
+            return { latex: resultParts.join(' + '), steps };
+        }
+    } catch(e) {}
+
+    const defLatex = '\\frac{1}{2\\pi i}\\int_{c-i\\infty}^{c+i\\infty} ' + toTeX(expr) + ' e^{' + sV + tV + '} \\, d' + sV;
+    steps.push({ desc: '閉じた形では求められません。積分定義を表示します。', latex: defLatex });
+    return { latex: defLatex, steps };
+}
+function matchInverseLaplace(expr, sV, tV) {
+    // 1/s^n -> t^(n-1)/(n-1)!
+    try {
+        let invNode = nerdamer('1/(' + expr + ')');
+        let diffNode = nerdamer('diff(' + invNode.text() + ',' + sV + ')');
+        if (diffNode.text() !== '0' && nerdamer('simplify('+diffNode.text()+'-('+invNode.text()+'/'+sV+'))').text() === '0') {
+            return { latex: '1', steps: [{desc: '1/sの逆ラプラス変換', latex: '\\mathcal{L}^{-1}\\{1/s\\} = 1'}] };
+        }
+    } catch(e) {}
+    
+    // Check if nerdamer native ilt exists
+    try {
+        let nat = nerdamer('ilt(' + expr + ',' + sV + ',' + tV + ')');
+        if (nat.text() !== 'ilt(' + expr + ',' + sV + ',' + tV + ')') {
+            return { latex: nat.toTeX(), steps: [{ desc: 'Nerdamer組み込み逆ラプラス変換', latex: '\\mathcal{L}^{-1}\\{' + toTeX(expr) + '\\}' }]};
+        }
+    } catch(e) {}
+
+    return null;
+}
+
+function doInvMellin(expr) {
+    const sV = getSVar(), xV = getTVar(), steps = []; 
+    steps.push({ desc: '逆メリン変換の定義', latex: '\\mathcal{M}^{-1}\\{F(' + sV + ')\\}(\\' + xV + ') = \\frac{1}{2\\pi i}\\int_{c-i\\infty}^{c+i\\infty} F(' + sV + ') ' + xV + '^{-' + sV + '} \\, d' + sV });
+    steps.push({ desc: '入力', latex: 'F(' + sV + ') = ' + toTeX(expr) });
+
+    const imt = matchInverseMellin(expr, sV, xV);
+    if (imt) {
+        imt.steps.forEach(s => steps.push(s));
+        steps.push({ desc: '結果', latex: imt.latex });
+        return { latex: imt.latex, steps };
+    }
+
+    try {
+        const expanded = nerdamer('expand(' + expr + ')').text();
+        const sumTerms = splitSum(expanded);
+        if (sumTerms.length > 1) {
+            steps.push({ desc: '線形性を適用: 和に分解', latex: toTeX(expanded) });
+            let resultParts = [];
+            for (const term of sumTerms) {
+                const sub = matchInverseMellin(term, sV, xV);
+                if (sub) resultParts.push(sub.latex);
+                else resultParts.push('\\frac{1}{2\\pi i}\\int ' + toTeX(term) + ' ' + xV + '^{-' + sV + '} d' + sV);
+            }
+            return { latex: resultParts.join(' + '), steps };
+        }
+    } catch(e) {}
+
+    const defLatex = '\\frac{1}{2\\pi i}\\int_{c-i\\infty}^{c+i\\infty} ' + toTeX(expr) + ' ' + xV + '^{-' + sV + '} \\, d' + sV;
+    steps.push({ desc: '閉じた形では求められません。積分定義を表示します。', latex: defLatex });
+    return { latex: defLatex, steps };
+}
+function matchInverseMellin(expr, sV, xV) {
+    let txt;
+    try { txt = nerdamer('simplify(' + expr + ')').text(); } catch(e) { txt = nerdamer(expr).text(); }
+    if (txt === 'Gamma(' + sV + ')') return { latex: 'e^{-' + xV + '}', steps: [{desc:'既知のガンマ関数の逆変換', latex:'\\mathcal{M}^{-1}\\{\\Gamma(s)\\} = e^{-x}'}] };
+    if (txt === 'pi*csc(pi*' + sV + ')' || txt === 'pi/sin(pi*' + sV + ')') return { latex: '\\frac{1}{1+' + xV + '}', steps: [{desc:'既知の三角関数の逆変換', latex:'\\mathcal{M}^{-1}\\{\\pi/\\sin(\\pi s)\\} = \\frac{1}{1+x}'}] };
+    if (txt === '(1/2)*Gamma(' + sV + '/2)' || txt === 'Gamma(' + sV + '/2)/2') return { latex: 'e^{-' + xV + '^2}', steps:[{desc:'既知のガウス関数の逆変換', latex:'\\mathcal{M}^{-1}\\{\\Gamma(s/2)/2\\} = e^{-x^2}'}]};
+    return null;
+}
+
+// ===== Helpers =====
+function simplifyFraction(num, den) {
+    const g = gcd(Math.abs(num), Math.abs(den));
+    const n2 = num / g, d2 = den / g;
+    return d2 === 1 ? String(n2) : n2 + '/' + d2;
+}
+function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+function roundCoeff(c) {
+    if (Math.abs(c - Math.round(c)) < 1e-10) return String(Math.round(c));
+    for (let d = 2; d <= 120; d++) {
+        const n = Math.round(c * d);
+        if (Math.abs(c - n/d) < 1e-10) {
+            const g2 = gcd(Math.abs(n), d);
+            return (n/g2) + '/' + (d/g2);
+        }
+    }
+    return c.toFixed(6);
+}
+function formatCoeffForLatex(c, hasVar) {
+    const s = roundCoeff(c);
+    if (!hasVar) return s;
+    if (s === '1') return '';
+    if (s === '-1') return '-';
+    if (s.includes('/')) return '\\frac{' + s.split('/')[0] + '}{' + s.split('/')[1] + '}';
+    return s;
+}
+
+// ===== Keyboard Shortcuts =====
+document.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 'Enter') { compute('D'); e.preventDefault(); }
+});
+</script>
+</body>
+</html>

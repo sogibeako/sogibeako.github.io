@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>実装位相論：計算機上の空間構造に関する数学的基礎</title>
+    <link rel="stylesheet" href="../../style/diary_style.css">
+    <script>
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="p_left">現在位置 : <a href="nazo.html"><b>ホーム</b></a>
+            ＞ <a href="20250804.htm">実装位相論について</a></div>
+        <h1>実装位相論：計算機上の空間構造に関する数学的基礎</h1>
+        <div class="p_left">
+            <p><strong>Implementation Topology: Mathematical Foundations of Spatial Structures in Computational
+                    Systems</strong></p>
+            <p style="text-align: right;">水原（Mizuhara）</p>
+
+            <hr>
+
+            <h2>概要（Abstract）</h2>
+            <p>本稿では「<strong>実装位相論</strong>（Implementation
+                Topology）」の数学的基礎を定式化する。実装位相論とは、計算機システムやゲーム実装における配列構造・境界条件・座標変換・バグ挙動などからいかにして空間の位相的性質が立ち上がるかを研究する立場である。
+            </p>
+            <p>本稿の主要な貢献は以下の通りである：</p>
+            <ol>
+                <li>ゲーム空間を<strong>離散ファイバーバンドル</strong>として定式化し、境界条件の実装が位相的性質を生成するメカニズムを明らかにする。</li>
+                <li><strong>局所ラップ命令の変換問題</strong>——空間の接続規則が局所データとして存在し、それに線形変換を施した場合に大域構造がどう変化するか——に対し、離散接続のホロノミーによる解析を与える。
+                </li>
+                <li>バグや範囲外参照による「<strong>メモリの海</strong>」を、ファイバーバンドルの<strong>特異ファイバー</strong>として理論化する。</li>
+                <li>接続規則の動的変更を<strong>離散力学系</strong>として捉え、位相空間上のアトラクター構造を分析する。</li>
+            </ol>
+            <p><strong>キーワード</strong>：実装位相、離散ファイバーバンドル、ホロノミー、境界条件、離散接続、位相遷移力学系</p>
+
+            <hr>
+
+            <h2>1. 序論</h2>
+
+            <h3>1.1 動機</h3>
+            <p>二次元ゲームマップは、プレイヤーにとって「二次元空間」として知覚されるが、その実装は一次元メモリ列上の構造に過ぎない。座標 $(x, y)$ は</p>
+            <p>$$ \text{index} = y \cdot W + x $$</p>
+            <p>により一次元添字に変換され、隣接関係は添字の算術的操作によって定義される。この事実は、空間が先験的に与えられた容器ではなく、<strong>接続規則の実装によって構成される効果</strong>であることを示唆する。
+            </p>
+            <p>とりわけ注目すべきは、空間の位相的性質——トーラス、メビウスの帯、クラインの壺など——が、マップ端における<strong>境界条件（ラップ命令）の実装</strong>によって完全に決定されることである。さらに、実装上はこれらの境界条件が空間全体に一様に適用されるとは限らず、<strong>座標ごとのテーブルやセル属性として局所化</strong>されている場合がある。
+            </p>
+            <p>本稿ではこの観察を出発点として、ゲーム空間の数学的構造を定式化する。</p>
+
+            <h3>1.2 用語と背景：ラップ命令・メモリの海・フラグマイニング</h3>
+            <p>本稿で繰り返し登場する概念を、具体例とともに導入する。</p>
+
+            <p><strong>ラップ命令（境界条件）</strong>。多くの二次元ゲームでは、マップの端に到達したプレイヤーの座標を反対側に送り返す処理が実装されている。たとえば幅 $W = 4$ のマップで右端 $x =
+                3$ からさらに右に進むと $x = 0$ に戻る——これが<strong>ラップ命令</strong>である。上下左右の両方でラップすればトーラス、右端のラップ時に $y$ 座標を $H - 1 - y$
+                に反転させればメビウスの帯になる。空間の位相はラップ命令の書き方だけで決まるのであり、「ドーナツ型」の形を意識する必要はない。</p>
+
+            <p><strong>メモリの海</strong>。ゲームのマップデータは、計算機のメモリ上に一次元の配列として格納されている。正規の座標（たとえば $0 \le x < 64$, $0 \le y <
+                    42$）に対応するメモリ領域にはマップの地形やキャラクタが書き込まれているが、正規範囲の<em>
+                    外側</em>にもメモリは延々と続いている。バグにより座標がマップ外に飛び出すと、プレイヤーは地形データでもキャラクタデータでもない——イベントフラグやプログラムコードが格納されている——メモリ領域を「歩く」ことになる。このメモリ上の正規外の広大な領域を、本稿では<strong>メモリの海</strong>と呼ぶ。
+            </p>
+
+            <p><strong>フラグマイニング</strong>。スーパーファミコン版『不思議のダンジョン2
+                風来のシレン』には、特定のバグ操作によってキャラクタの座標を正規範囲の外へ飛ばせる技法が知られている。メモリの海に到達したキャラクタは、本来別の用途に使われているメモリ——たとえばイベントの進行状況を管理する<em>イベントフラグ</em>——を「地形」や「敵キャラ」として読んでしまう。ここで敵を倒したりアイテムを置いたりする操作は、対応するメモリのバイトを書き換える操作に等しい。つまり、<strong>ゲーム内の通常の行動が、ゲームの進行状態やパラメータそのものを書き換える</strong>。この技法が<strong>フラグマイニング</strong>であり、さらにプログラムコード領域に到達すればゲームのルール自体を書き換える<strong>任意コード実行</strong>にまで至る。
+            </p>
+
+            <h3>1.3 問題設定の直観的説明</h3>
+            <p>以上の背景を踏まえ、本稿が取り組む問題を具体例で示す。</p>
+
+            <p><strong>例1：トーラスからメビウスの帯へ</strong>。下図のような $4 \times 3$ のマップを考える。</p>
+            <pre>
+. . . .
+. . . .
+. . . .
+</pre>
+            <p>このマップの右端と左端をそのまま繋ぐ（$x = 3$ の右 $\to$ $x = 0$）と、水平方向にループする円筒になる。上端と下端も同様に繋げばトーラスである。</p>
+            <p>ここで、右端のラップ命令を「$x = 3$ の右に進むと $x = 0$ に移るが、同時に $y$ を $H - 1 - y$
+                に反転させる」と<em>1行だけ</em>書き換えてみる。この瞬間、空間はメビウスの帯に変わる。プレイヤーが右端を越えて左端へ移動したとき、上下が逆転した世界に出る。もう一度右端を越えると、もう一度反転して元に戻る。
+            </p>
+
+            <blockquote>
+                <p>このたった1箇所のラップ命令の変更が、空間全体の位相的性質を根本的に変えた。ラップ命令は数行のコードに過ぎないが、その効果は空間の大域構造に及ぶ。</p>
+            </blockquote>
+
+            <p><strong>例2：ラップ命令が「マスの属性」として空間の中に存在する場合</strong>。通常、ラップ命令はマップ全体に対して一律に定義される。しかし実装上は、各マスが「このマスから右に進んだ先はどこか」を個別に持つことができる。たとえば、マップの一角にある祠のタイルに「ここから北に進むと180度回転して南から出る」というラップ命令を埋め込めば、その祠だけが局所的なメビウスのねじれを持つことになる。
+            </p>
+
+            <p>ここで本稿の中心的な問いが生じる：</p>
+            <blockquote>
+                <p><strong>この祠のラップ命令を書き換えたら、空間全体の位相はどう変わるか？</strong></p>
+                <p>たとえば、メモリの海でこのラップ命令に対応するバイトに到達し、フラグマイニングの要領で値を書き換えたとする。祠のねじれが消えたら、メビウスの帯だったはずの空間はトーラスに変わるのか？
+                    それとも、他の場所のねじれが残って部分的にしか変わらないのか？ あるいは、一箇所のねじれの消去が別の場所のねじれをかえって生み出すことはあるのか？</p>
+            </blockquote>
+
+            <p><strong>例3：フラグマイニングとしてのラップ命令書き換え</strong>。シレンの実例に則して考える。マップの境界条件パラメータがメモリ上のアドレス <code>0x02</code>
+                に格納されているとする（値 $1$ = torus, $2$ = möbius, $3$ = klein …）。フラグマイニングにより異常座標を経由してこのアドレスに到達し、値を $1 \to 2$
+                に書き換える。プレイヤーが正規マップに戻ると、空間はトーラスからメビウスの帯に変わっている。プレイヤーは「空間内を歩く」という通常の操作だけで、<strong>空間そのものの位相を書き換えた</strong>ことになる。
+            </p>
+
+            <p>本稿は、こうした操作を数学的に定式化する。ラップ命令をファイバーバンドルの<strong>接続</strong>として捉え、その書き換えを<strong>ホロノミーの変化</strong>として解析することで、「局所的なラップ命令の変換が大域的な位相構造にどう影響するか」に対する定量的な答えを与える。
+            </p>
+
+            <h3>1.4 本稿の構成</h3>
+            <ul>
+                <li>§2：離散空間の基本構造を導入する。</li>
+                <li>§3：境界条件による位相生成のメカニズムを離散ファイバーバンドルとして定式化する。</li>
+                <li>§4：局所ラップ命令の変換問題をホロノミーの言葉で解析する（本稿の中心定理）。</li>
+                <li>§5：バグ空間とメモリの海を特異ファイバーとして理論化する。</li>
+                <li>§6：位相遷移力学系を定義し、アトラクター構造を分析する。</li>
+                <li>§7：応用と今後の展望を述べる。</li>
+            </ul>
+
+            <hr>
+
+            <h2>2. 離散空間の基本構造</h2>
+
+            <h3>2.1 基底グラフ</h3>
+            <p><strong>定義 2.1</strong>（基底グラフ）。有限連結グラフ $G = (V, E)$ を<strong>基底グラフ</strong>と呼ぶ。ここで $V$ はノード（マス）の集合、$E$
+                は辺（隣接関係）の集合である。</p>
+            <p>典型的には、$W \times H$ の格子グラフを考える：</p>
+            <p>$$ V = \{(x, y) \mid 0 \le x < W,\ 0 \le y < H\} $$</p>
+                    <p>$$ E = \{((x_1, y_1), (x_2, y_2)) \mid |x_1 - x_2| + |y_1 - y_2| = 1\} $$</p>
+                    <p>ここで辺は方向ラベル $d \in D = \{N, E, S, W\}$ を持つ有向辺とする。</p>
+
+                    <p><strong>定義 2.2</strong>（方向群）。方向の集合 $D = \{N, E, S, W\}$ 上の操作として、90度回転 $\rho: D \to D$ を</p>
+                    <p>$$ \rho(N) = E, \quad \rho(E) = S, \quad \rho(S) = W, \quad \rho(W) = N $$</p>
+                    <p>と定義する。$\rho$ は位数4の巡回群 $\mathbb{Z}/4\mathbb{Z}$ の生成元であり、$\langle \rho \rangle \cong
+                        \mathbb{Z}/4\mathbb{Z}$ が方向群を成す。</p>
+
+                    <h3>2.2 状態空間と遷移</h3>
+                    <p><strong>定義 2.3</strong>（topoState空間）。有限集合 $S$ を<strong>topoState空間</strong>と呼び、$s \in S$
+                        を<strong>局所位相状態</strong>と呼ぶ。</p>
+                    <p>例えば、<code>topologue_v05.htm</code> の実装では：</p>
+                    <p>$$ S = \{(\text{flipX}, \text{flipY}, \text{rot}) \mid \text{flipX}, \text{flipY} \in \{0, 1\},\
+                        \text{rot} \in \mathbb{Z}/4\mathbb{Z}\} $$</p>
+                    <p>であり、$|S| = 2 \times 2 \times 4 = 16$ である。</p>
+
+                    <p><strong>定義 2.4</strong>（拡張状態）。$v \in V$ と $s \in S$ の対 $(v, s)$ を<strong>拡張状態</strong>と呼ぶ。拡張状態空間は
+                        $V \times S$ である。</p>
+
+                    <hr>
+
+                    <h2>3. 離散ファイバーバンドルとしてのゲーム空間</h2>
+
+                    <h3>3.1 トポロジー関数</h3>
+                    <p><strong>定義 3.1</strong>（トポロジー関数）。<strong>トポロジー関数</strong>とは、写像</p>
+                    <p>$$ \Phi: V \times S \times D \to V \times S $$</p>
+                    <p>であって、各 $(v, s, d)$ に対して「ノード $v$ で状態 $s$ のとき、方向 $d$ に1歩進んだ先」を返すものである。</p>
+                    <p>$\Phi$ は2つの成分に分解される：</p>
+                    <p>$$ \Phi(v, s, d) = (\phi_V(v, s, d),\ \phi_S(v, s, d)) $$</p>
+                    <p>ここで $\phi_V$ は次のノード、$\phi_S$ は次の局所位相状態を返す。</p>
+
+                    <p><strong>例 3.2</strong>（トーラス）。$W \times H$ 格子上のトーラストポロジーは：</p>
+                    <p>$$ \phi_V((x, y), s, E) = ((x + 1) \bmod W,\ y) $$</p>
+                    <p>$$ \phi_S((x, y), s, E) = s $$</p>
+                    <p>状態 $s$ が変化しないことは、トーラスが向き付け可能であることの反映である。</p>
+
+                    <p><strong>例 3.3</strong>（メビウスの帯）。水平メビウスの帯では：</p>
+                    <p>$$ \phi_V((W-1, y), s, E) = (0,\ H - 1 - y) $$</p>
+                    <p>$$ \phi_S((W-1, y), s, E) = s \oplus \text{flipY} $$</p>
+                    <p>ここで $\oplus$ はフリップの反転操作である。状態 $s$ の <code>flipY</code>
+                        成分が境界通過ごとに反転することが、メビウスの帯の<strong>非向き付け可能性</strong>を捉えている。</p>
+
+                    <h3>3.2 ファイバーバンドルの構成</h3>
+                    <p>トポロジー関数 $\Phi$ は、離散的なファイバーバンドルの<strong>接続（connection）</strong>に対応する。</p>
+
+                    <p><strong>定義 3.4</strong>（離散ファイバーバンドル）。組 $(G, S, \Phi)$ を<strong>離散ファイバーバンドル</strong>と呼ぶ。ここで：</p>
+                    <ul>
+                        <li>$G = (V, E)$：基底グラフ（底空間）</li>
+                        <li>$S$：ファイバー（各ノード上の局所状態空間）</li>
+                        <li>$\Phi$：接続（辺ごとの遷移規則）</li>
+                    </ul>
+                    <p>全空間は $V \times S$ であり、射影 $\pi: V \times S \to V$ は $\pi(v, s) = v$ で定義される。</p>
+
+                    <p><strong>定義 3.5</strong>（遷移写像）。辺 $e = (v_1, v_2) \in E$（方向 $d$）に対して、<strong>遷移写像</strong></p>
+                    <p>$$ g_e: S \to S, \quad g_e(s) = \phi_S(v_1, s, d) $$</p>
+                    <p>を定義する。$g_e$ はファイバー $S$ 上の変換であり、接続の具体的な表現である。</p>
+
+                    <p><strong>命題 3.6</strong>。トポロジー関数 $\Phi$ が一様（すべてのノードで同じ規則）である場合、遷移写像 $g_e$ は辺の方向 $d$ のみに依存し、出発ノード
+                        $v$ には依存しない。</p>
+                    <blockquote>
+                        <p>このとき、非境界辺の遷移写像は恒等写像 $g_e = \text{id}_S$
+                            であり、境界辺のみが非自明な遷移写像を持つ。これは、「位相的性質は境界条件によって決まる」という直観の数学的表現である。</p>
+                    </blockquote>
+
+                    <h3>3.3 構造群</h3>
+                    <p><strong>定義 3.7</strong>（構造群）。遷移写像の全体が生成する群</p>
+                    <p>$$ \mathcal{G} = \langle g_e \mid e \in E \rangle \le \text{Aut}(S) $$</p>
+                    <p>を離散ファイバーバンドルの<strong>構造群</strong>と呼ぶ。</p>
+
+                    <p><strong>例 3.8</strong>。</p>
+                    <div class="inner_wrapper">
+                        <div class="grid-table">
+                            <div class="cell-header">トポロジー</div>
+                            <div class="cell-header">構造群 $\mathcal{G}$</div>
+                            <div class="cell-header">生成元</div>
+
+                            <div class="cell">plane</div>
+                            <div class="cell">$\{e\}$</div>
+                            <div class="cell">なし</div>
+
+                            <div class="cell">torus</div>
+                            <div class="cell">$\{e\}$</div>
+                            <div class="cell">なし</div>
+
+                            <div class="cell">möbius</div>
+                            <div class="cell">$\mathbb{Z}/2\mathbb{Z}$</div>
+                            <div class="cell">flipY</div>
+
+                            <div class="cell">klein</div>
+                            <div class="cell">$\mathbb{Z}/2\mathbb{Z}$</div>
+                            <div class="cell">flipY</div>
+
+                            <div class="cell">double-twist</div>
+                            <div class="cell">$\mathbb{Z}/2\mathbb{Z} \times \mathbb{Z}/2\mathbb{Z}$</div>
+                            <div class="cell">flipX, flipY</div>
+
+                            <div class="cell">quarter-turn</div>
+                            <div class="cell">$\mathbb{Z}/4\mathbb{Z}$</div>
+                            <div class="cell">rot</div>
+                        </div>
+                    </div>
+
+                    <p>構造群が自明（$\mathcal{G} = \{e\}$）であることは、空間が<strong>向き付け可能かつ位相的に自明なファイバー構造</strong>を持つことに対応する。</p>
+
+                    <hr>
+
+                    <h2>4. ホロノミーと局所ラップ命令の変換問題</h2>
+                    <p>本節は本稿の中心部分であり、「空間の性質を指定するラップ命令が空間の局所に存在しているとき、それを変換するとどうなるか」という問いに数学的に答える。</p>
+
+                    <h3>4.1 ホロノミー</h3>
+                    <p><strong>定義 4.1</strong>（離散経路）。基底グラフ $G$ 上の<strong>経路</strong> $\gamma$ とは、辺の系列</p>
+                    <p>$$ \gamma = (e_1, e_2, \ldots, e_n), \quad e_i = (v_{i-1}, v_i) $$</p>
+                    <p>のことである。$v_0 = v_n$ のとき、$\gamma$ を<strong>閉経路（ループ）</strong>と呼ぶ。</p>
+
+                    <p><strong>定義 4.2</strong>（ホロノミー）。閉経路 $\gamma = (e_1, \ldots, e_n)$
+                        の<strong>ホロノミー</strong>とは、遷移写像の合成</p>
+                    <p>$$ \text{Hol}(\gamma) = g_{e_n} \circ g_{e_{n-1}} \circ \cdots \circ g_{e_1} \in \mathcal{G} $$
+                    </p>
+                    <p>のことである。</p>
+
+                    <p><strong>直観的意味</strong>。プレイヤーが経路 $\gamma$ を一周したとき、<code>topoState</code>
+                        がどう変化するかを表す。$\text{Hol}(\gamma) = \text{id}$ ならば一周しても状態が変わらず、$\text{Hol}(\gamma) \ne \text{id}$
+                        ならば「同じ場所に戻ったのに世界が変わっている」体験が生じる。</p>
+
+                    <p><strong>例 4.3</strong>（メビウスの帯のホロノミー）。$W \times H$ のメビウスの帯で、$y = 0$ の行を左端から右端まで歩き、境界をまたいで左端に戻る経路
+                        $\gamma$ を考える。</p>
+                    <p>$$ \text{Hol}(\gamma) = \text{flipY} \ne \text{id} $$</p>
+                    <p>したがって、1周で上下が反転する。2周すると $\text{Hol}(\gamma)^2 = \text{id}$ となり、元に戻る。</p>
+
+                    <p><strong>例 4.4</strong>（quarter-turn のホロノミー）。正方格子 $(W = H)$ で quarter-clockwise
+                        トポロジーの場合、1辺を横断する経路のホロノミーは $\text{rot}(+1)$。4辺を順に通る経路のホロノミーは：</p>
+                    <p>$$ \text{Hol}(\gamma_{\text{4辺}}) = \rho^3 \circ \rho^3 \circ \rho^3 \circ \rho^3 = \rho^{12} =
+                        \rho^0 = \text{id} $$</p>
+                    <p>4周で元に戻る。</p>
+
+                    <h3>4.2 ホロノミー群と基本群の関係</h3>
+                    <p><strong>定義 4.5</strong>（ホロノミー群）。基点 $v_0 \in V$ を固定したとき、すべての閉経路のホロノミーが成す群</p>
+                    <p>$$ \text{Hol}_{v_0} = \{\text{Hol}(\gamma) \mid \gamma \text{ は } v_0 \text{ を基点とする閉経路}\} $$</p>
+                    <p>を<strong>ホロノミー群</strong>と呼ぶ。</p>
+
+                    <p><strong>定理 4.6</strong>（ホロノミー群と基本群）。離散ファイバーバンドル $(G, S, \Phi)$ のホロノミー群について、以下が成り立つ：</p>
+                    <p>$$ \text{Hol}_{v_0} \cong \text{Im}\left(\pi_1(G, v_0) \xrightarrow{\text{Hol}}
+                        \mathcal{G}\right) $$</p>
+                    <p>ここで $\pi_1(G, v_0)$ はグラフ $G$ の基本群であり、$\text{Hol}$ はホロノミー準同型である。</p>
+                    <blockquote>
+                        <p><strong>証明の概略</strong>。閉経路 $\gamma$ のホモトピー類 $[\gamma] \in \pi_1(G, v_0)$ に対して
+                            $\text{Hol}([\gamma]) = \text{Hol}(\gamma)$ が well-defined であることを示す。接続 $\Phi$
+                            は辺のみに依存するので、ホモトピックな経路は同じホロノミーを与える。□</p>
+                    </blockquote>
+
+                    <p><strong>系 4.7</strong>。基底グラフ $G$ が木（$\pi_1(G) = \{e\}$）ならば、ホロノミー群は自明であり、ファイバーバンドルは自明化される。</p>
+                    <blockquote>
+                        <p>これは「穴のない空間ではすべての閉路が可縮であり、一周しても状態は変わらない」ことの定式化である。ゲーム空間で位相的に非自明な体験が生じるためには、基底グラフに<strong>穴</strong>（非自明な閉路）が必要である。
+                        </p>
+                    </blockquote>
+
+                    <h3>4.3 局所ラップ命令の変換定理</h3>
+                    <p>いよいよ中心問題に取り組む。</p>
+                    <p><strong>問い</strong>。接続規則（ラップ命令）が「空間全体に一様に」ではなく「各ノードに局所的に」定義されている場合、個々の接続規則に変換 $T$
+                        を施すと大域的なホロノミーはどう変化するか。</p>
+
+                    <p><strong>定義 4.8</strong>（局所接続）。<strong>局所接続</strong>とは、各辺 $e \in E$ に対して個別に定義された遷移写像</p>
+                    <p>$$ \{g_e\}_{e \in E}, \quad g_e: S \to S $$</p>
+                    <p>の族のことである。一様な接続は、$g_e$ が辺の方向のみに依存する特殊な場合である。</p>
+
+                    <p><strong>定義 4.9</strong>（接続の変換）。変換 $T: \text{Aut}(S) \to \text{Aut}(S)$ が与えられたとき、辺 $e$ の接続を $T$
+                        で変換した<strong>変換接続</strong>を</p>
+                    <p>$$ g'_e = T(g_e) $$</p>
+                    <p>と定義する。$T$ が群の自己同型（$T \in \text{Aut}(\mathcal{G})$）である場合を<strong>線形変換</strong>と呼ぶ。</p>
+
+                    <p><strong>定理 4.10</strong>（局所ラップ命令の変換定理）。$T \in \text{Aut}(\mathcal{G})$ を構造群の自己同型とする。すべての辺の接続を一様に
+                        $T$ で変換したとき、ホロノミーは次のように変化する：</p>
+                    <p>$$ \text{Hol}'(\gamma) = T(\text{Hol}(\gamma)) $$</p>
+                    <blockquote>
+                        <p><strong>証明</strong>。$\gamma = (e_1, \ldots, e_n)$ とする。</p>
+                        <p>$$ \text{Hol}'(\gamma) = g'_{e_n} \circ \cdots \circ g'_{e_1} = T(g_{e_n}) \circ \cdots \circ
+                            T(g_{e_1}) $$</p>
+                        <p>$T$ が群の自己同型であるから、$T(a \circ b) = T(a) \circ T(b)$ が成り立ち、</p>
+                        <p>$$ = T(g_{e_n} \circ \cdots \circ g_{e_1}) = T(\text{Hol}(\gamma)) $$</p>
+                        <p>□</p>
+                    </blockquote>
+
+                    <p><strong>系 4.11</strong>。$T \in \text{Aut}(\mathcal{G})$ による一様変換は、ホロノミー群を自己同型で写す：</p>
+                    <p>$$ \text{Hol}'_{v_0} = T(\text{Hol}_{v_0}) $$</p>
+                    <p>特に、$T$ が内部自己同型（$T(g) = hgh^{-1}$）ならば $\text{Hol}'_{v_0} = \text{Hol}_{v_0}$（共役であるが群として同型）。</p>
+
+                    <p><strong>系 4.12</strong>（位相不変量の保存）。一様な自己同型変換 $T$ のもとで、ホロノミー群の位数 $|\text{Hol}_{v_0}|$
+                        は不変である。したがって、空間の「ねじれの総量」は保存される。</p>
+                    <blockquote>
+                        <p><strong>物理的直観</strong>。すべてのラップ命令に同じ変換を施しても、空間の全体的なねじれ構造は変わらない。変わるのはねじれの「向き」や「種類」であり、「量」ではない。
+                        </p>
+                    </blockquote>
+
+                    <h3>4.4 局所的な部分変換</h3>
+                    <p>一様でない変換、すなわち一部の辺のみの接続を変更した場合はより複雑である。</p>
+
+                    <p><strong>定理 4.13</strong>（局所変換によるホロノミー変化）。辺 $e_0$ の接続のみを $g_{e_0} \mapsto g'_{e_0}$ と変更した場合、$e_0$
+                        を含む閉経路 $\gamma$ のホロノミーは：</p>
+                    <p>$$ \text{Hol}'(\gamma) = g_{e_n} \circ \cdots \circ g'_{e_0} \circ \cdots \circ g_{e_1} $$</p>
+                    <p>特に $\delta = g'_{e_0} \circ g_{e_0}^{-1}$ とおくと：</p>
+                    <p>$$ \text{Hol}'(\gamma) = P \cdot \delta \cdot P^{-1} \cdot \text{Hol}(\gamma) $$</p>
+                    <p>ここで $P = g_{e_n} \circ \cdots \circ g_{e_{k+1}}$ は $e_0$ より後の遷移写像の合成である。</p>
+                    <blockquote>
+                        <p><strong>意味</strong>。局所的な接続の変更は、ホロノミーに対して<strong>共役変換</strong>として作用する。これは、局所ラップ命令の書き換えが大域的な位相を変えうるが、その変化は元のホロノミーと新しい要素
+                            $\delta$ の「組み合わせ方」で決まることを示す。</p>
+                    </blockquote>
+
+                    <p><strong>定理 4.14</strong>（ホロノミーの完全消去）。辺 $e_0$ の接続を適切に選ぶことで、特定の閉経路 $\gamma_0$
+                        のホロノミーを消去（$\text{Hol}'(\gamma_0) = \text{id}$ に）できるための必要十分条件は：</p>
+                    <p>$$ g'_{e_0} = (g_{e_n} \circ \cdots \circ g_{e_{k+1}})^{-1} \circ (g_{e_{k-1}} \circ \cdots \circ
+                        g_{e_1})^{-1} $$</p>
+                    <blockquote>
+                        <p><strong>含意</strong>。メモリの海でラップ命令に対応するバイトを書き換えることで、空間のねじれを局所的に「解消」できる。しかし、一つの閉経路のホロノミーを消去すると、その辺を共有する他の閉経路のホロノミーが変化しうる。
+                        </p>
+                    </blockquote>
+
+                    <hr>
+
+                    <h2>5. メモリの海：特異ファイバーと範囲外参照</h2>
+
+                    <h3>5.1 正規空間と拡張空間</h3>
+                    <p><strong>定義 5.1</strong>（正規空間と拡張空間）。正規空間を $V_{\text{reg}} = \{(x, y) \mid 0 \le x < W,\ 0 \le y <
+                            H\}$、拡張空間を $V_{\text{ext}}=\{(x, y) \mid 0 \le x < 256,\ 0 \le y < 256\}$ とする。</p>
+                            <p><strong>メモリの海</strong>とは $V_{\text{ext}} \setminus V_{\text{reg}}$
+                                のことであり、正規空間の外側に広がる異常座標の領域である。</p>
+
+                            <h3>5.2 レイヤー束としてのメモリ</h3>
+                            <p><strong>定義 5.2</strong>（レイヤー束）。メモリ配列 $M$ は、$L$ 個のレイヤーの直積として表現される：</p>
+                            <p>$$ M = M_0 \times M_1 \times \cdots \times M_{L-1} $$</p>
+                            <p>ここで各 $M_i$ は $256 \times 256$ のバイト配列であり、$M_i[x][y]$ が座標 $(x, y)$ のレイヤー $i$ の値を返す。</p>
+                            <p>正規空間 $V_{\text{reg}}$ 内では、各レイヤーは以下の意味を持つ：</p>
+
+                            <div class="inner_wrapper">
+                                <div class="grid-table-4">
+                                    <div class="cell-header">レイヤー</div>
+                                    <div class="cell-header">意味</div>
+                                    <div class="cell-header">値 $0$ の意味</div>
+                                    <div class="cell-header">値 $128$ の意味</div>
+
+                                    <div class="cell">$M_0$</div>
+                                    <div class="cell">地形</div>
+                                    <div class="cell">床</div>
+                                    <div class="cell">—</div>
+
+                                    <div class="cell">$M_1$</div>
+                                    <div class="cell">キャラクタ</div>
+                                    <div class="cell">キャラ0号（プレイヤー）</div>
+                                    <div class="cell">空</div>
+
+                                    <div class="cell">$M_2$</div>
+                                    <div class="cell">アイテム</div>
+                                    <div class="cell">アイテム0号</div>
+                                    <div class="cell">空</div>
+
+                                    <div class="cell">$M_3$</div>
+                                    <div class="cell">イベント属性</div>
+                                    <div class="cell">—</div>
+                                    <div class="cell">—</div>
+                                </div>
+                            </div>
+
+                            <h3>5.3 壁先接続と準同型の崩壊</h3>
+                            <p><strong>定義
+                                    5.3</strong>（壁先接続）。正規空間の境界辺を越えた先——すなわちメモリの海にある座標——のレイヤー値は、物理的に隣接する別のデータ領域のバイトとして読み出される。
+                            </p>
+                            <p>この構造を定式化する。メモリを一次元配列 $\mathcal{M}: \{0, 1, \ldots, N-1\} \to \{0, \ldots, 255\}$
+                                と見なすとき、正規空間のキャラクタレイヤーのアドレスは：</p>
+                            <p>$$ \text{addr}_1(x, y) = \text{base}_1 + y \cdot 256 + x $$</p>
+                            <p>である。$x \ge W$ または $y \ge H$ のとき、$\text{addr}_1(x, y)$ は $M_1$ の正規領域を超え、物理的に隣接するイベントフラグ領域
+                                $M_{\text{flag}}$ やトポロジーパラメータ領域 $M_{\text{topo}}$ に到達する。</p>
+
+                            <p><strong>命題 5.4</strong>（レイヤー準同型の崩壊）。正規空間内では、座標 $(x, y)$
+                                に対して各レイヤーの値は独立に定義される。しかしメモリの海では、あるレイヤーの「値」が別のレイヤー（または別の用途のデータ）のバイトを参照するため、レイヤー間の独立性（準同型）が崩壊する。
+                            </p>
+                            <blockquote>
+                                <p><strong>これがフラグマイニングの数学的本質である</strong>。キャラクタレイヤーの操作（「キャラを倒す」$= M_1[x][y] \leftarrow
+                                    128$）が、物理的に同じアドレスのイベントフラグ $M_{\text{flag}}[k]$ を書き換えることで、空間の規則自体を変更する。</p>
+                            </blockquote>
+
+                            <h3>5.4 特異ファイバー</h3>
+                            <p><strong>定義 5.5</strong>（特異ファイバー）。ノード $v \in V_{\text{ext}} \setminus V_{\text{reg}}$
+                                の<strong>ファイバー</strong> $\pi^{-1}(v)$ を<strong>特異ファイバー</strong>と呼ぶ。特異ファイバーでは：</p>
+                            <ol>
+                                <li>遷移写像 $g_e$ が定義されない（壁先接続のため別の規則が適用される）。</li>
+                                <li>レイヤー間の意味論的整合性が失われている。</li>
+                                <li>ファイバーの「意味」が正規空間内とは異なる。</li>
+                            </ol>
+
+                            <p><strong>命題 5.6</strong>（特異ファイバーの分類）。メモリの海の特異ファイバーは、参照先のデータ種別に応じて以下のように分類される：</p>
+                            <div class="inner_wrapper">
+                                <div class="grid-table">
+                                    <div class="cell-header">種類</div>
+                                    <div class="cell-header">参照先</div>
+                                    <div class="cell-header">ゲーム上の見え方</div>
+
+                                    <div class="cell">未使用領域型</div>
+                                    <div class="cell">ゼロ埋めメモリ</div>
+                                    <div class="cell">キャラ0号の幽霊が大量に見える</div>
+
+                                    <div class="cell">フラグ干渉型</div>
+                                    <div class="cell">イベントフラグ</div>
+                                    <div class="cell">操作するとイベントが発生/消失する</div>
+
+                                    <div class="cell">パラメータ干渉型</div>
+                                    <div class="cell">トポロジーパラメータ</div>
+                                    <div class="cell">操作すると空間の位相が変化する</div>
+
+                                    <div class="cell">コード侵入型</div>
+                                    <div class="cell">プログラムコード</div>
+                                    <div class="cell">操作するとゲームのルール自体が変化する</div>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <h2>6. 位相遷移力学系</h2>
+
+                            <h3>6.1 状態空間と遷移関数</h3>
+                            <p><strong>定義 6.1</strong>（位相遷移力学系）。トポロジーの有限集合 $\mathcal{T} = \{t_0, t_1, \ldots, t_{n-1}\}$
+                                と、<strong>変換操作</strong>の集合 $\mathcal{O}$ が与えられたとき、遷移関数</p>
+                            <p>$$ F: \mathcal{T} \times \mathcal{O} \to \mathcal{T} $$</p>
+                            <p>を定義する。各操作 $o \in \mathcal{O}$ に対して $F_o: \mathcal{T} \to \mathcal{T}$, $F_o(t) = F(t, o)$
+                                とおく。</p>
+                            <p><strong>例 6.2</strong>。<code>topologue_v05.htm</code> の場合：$\mathcal{T} = \{\text{plane},
+                                \text{torus}, \text{mobius}, \text{klein}, \text{double-twist}, \text{quarter-cw},
+                                \text{quarter-ccw}, \text{quarter-cw-twist}, \text{quarter-ccw-twist}\}$
+                                であり、$|\mathcal{T}| = 9$。</p>
+
+                            <h3>6.2 軌道とアトラクター</h3>
+                            <p><strong>定義 6.3</strong>（軌道）。初期トポロジー $t_0 \in \mathcal{T}$ と操作列 $(o_1, o_2, \ldots)$
+                                に対して、<strong>軌道</strong>を</p>
+                            <p>$$ t_0 \xrightarrow{o_1} t_1 \xrightarrow{o_2} t_2 \xrightarrow{o_3} \cdots $$</p>
+                            <p>と定義する。$\mathcal{T}$ が有限であるから、軌道は必ず有限ステップで周期軌道に入る。</p>
+
+                            <p><strong>定義 6.4</strong>（不動点・周期軌道・アトラクター）。</p>
+                            <ul>
+                                <li><strong>不動点</strong>：$F_o(t) = t$ なる $t$。「この操作をしても位相が変わらない状態」。</li>
+                                <li><strong>周期 $p$ の軌道</strong>：$F_o^p(t) = t$ かつ $F_o^k(t) \ne t$ ($0 < k < p$)。</li>
+                                <li><strong>アトラクター</strong>：すべての初期状態からの軌道が最終的に到達する周期軌道の集合。</li>
+                                <li><strong>アトラクター盆地</strong>：あるアトラクターに到達するすべての初期状態の集合。</li>
+                            </ul>
+
+                            <p><strong>定理 6.5</strong>（アトラクターの存在）。$|\mathcal{T}| < \infty$ であるから、任意の操作 $o$ による力学系
+                                    $(\mathcal{T}, F_o)$ は少なくとも1つの周期軌道を持つ。</p>
+
+                                    <h3>6.3 可逆性と情報損失</h3>
+                                    <p><strong>定義 6.6</strong>（可逆性）。操作 $o$ が<strong>可逆</strong>であるとは、$F_o: \mathcal{T}
+                                        \to \mathcal{T}$ が全単射であることをいう。</p>
+                                    <p><strong>命題 6.7</strong>。$F_o$
+                                        が全単射でない場合、異なるトポロジーが同じトポロジーに収束しうる。これはトポロジー遷移における<strong>情報損失</strong>であり、元の空間がどれであったかを復元できない。
+                                    </p>
+                                    <blockquote>
+                                        <p><strong>物理的含意</strong>。メモリの海でトポロジーパラメータを書き換える操作は一般に非可逆である。一度特定のトポロジーに変更すると、元のトポロジーの情報は失われる。これは熱力学的不可逆性の離散的アナロジーと見なせる。
+                                        </p>
+                                    </blockquote>
+
+                                    <hr>
+
+                                    <h2>7. 応用と展望</h2>
+
+                                    <h3>7.1 ポータル理論との統合</h3>
+                                    <p>optozorax
+                                        のポータル研究は、ポータルが空間に<strong>線形変換</strong>（回転・鏡映・スケーリング・剪断）を施すことを示した。これは本稿の枠組みでは、遷移写像
+                                        $g_e$ が $\text{GL}(2, \mathbb{R})$ の元として表現されることに対応する。</p>
+                                    <p>離散版では、遷移写像は構造群 $\mathcal{G} \le \text{Aut}(S)$ の元であり、$\mathcal{G}$ が
+                                        $\text{GL}(2, \mathbb{Z})$ の有限部分群と同型である場合を「離散線形ポータル」と呼ぶことができる。</p>
+                                    <p><strong>今後の問い</strong>：ポータルのテレポーテーション次数（§3の拡張として定義可能）は、ファイバーバンドルの被覆空間とどのように対応するか。
+                                    </p>
+
+                                    <h3>7.2 離散ガウス・ボネの定理</h3>
+                                    <p>離散接続のホロノミーについて、微分幾何のガウス・ボネの定理に対応する等式が期待される。</p>
+                                    <p><strong>予想 7.1</strong>（離散ガウス・ボネ）。基底グラフ $G$
+                                        のすべての「面」（最小閉路）のホロノミーの「総和」は、基底グラフのオイラー標数 $\chi(G)$ と構造群 $\mathcal{G}$ の性質に制約される。
+                                    </p>
+                                    <p>具体的には、回転型の接続について、各面 $f$ の局所ホロノミー角 $\theta_f$ が</p>
+                                    <p>$$ \sum_{f \in F} \theta_f = 2\pi \chi(G) $$</p>
+                                    <p>を満たす離散版が成り立つと予想される。</p>
+
+                                    <h3>7.3 存在論の離散化</h3>
+                                    <p>§5の レイヤー束は、ゲームにおける「存在」の多層性を捉えている。各レイヤーが独立な「存在の次元」を提供し、レイヤー間の整合性の崩壊が「半存在」を生む。</p>
+                                    <p>これは哲学的には、存在が二値（ある/ない）ではなく、<strong>複数の独立な判定基準の直積</strong>として構造化されることを意味する。</p>
+                                    <p>$$ \text{Existence}(e) = (\text{logical}(e), \text{visual}(e),
+                                        \text{collision}(e), \text{agency}(e)) \in \{0, 1\}^4 $$</p>
+                                    <p>16種類の「存在様態」が理論的に可能であり、これらの分類と相互関係の解明は今後の課題である。</p>
+
+                                    <h3>7.4 実装位相論の方法論的意義</h3>
+                                    <p>本稿で展開した理論は、トポロジーを「図形の形」からではなく「<strong>実装上の接続規則</strong>」から理解するという方法論的転換に基づいている。この立場では：
+                                    </p>
+                                    <ul>
+                                        <li>位相空間は先験的に与えられるのではなく、接続規則から<strong>構成</strong>される。</li>
+                                        <li>バグや異常系は破綻ではなく、空間を成立させていた規則の<strong>露出</strong>である。</li>
+                                        <li>コード領域侵入は「空間の外」ではなく、空間を生成している<strong>メタ規則への到達</strong>である。</li>
+                                    </ul>
+                                    <p>したがって、実装位相論は「世界の中を歩く学問」ではない。<strong>世界を世界らしく見せていた縫い目を読む学問</strong>である。</p>
+
+                                    <hr>
+
+                                    <h2>付録 A：主要な記号</h2>
+                                    <div class="inner_wrapper">
+                                        <div class="grid-table-2">
+                                            <div class="cell-header">記号</div>
+                                            <div class="cell-header">意味</div>
+
+                                            <div class="cell">$G = (V, E)$</div>
+                                            <div class="cell">基底グラフ</div>
+
+                                            <div class="cell">$D = \{N, E, S, W\}$</div>
+                                            <div class="cell">方向集合</div>
+
+                                            <div class="cell">$S$</div>
+                                            <div class="cell">topoState空間（ファイバー）</div>
+
+                                            <div class="cell">$\Phi: V \times S \times D \to V \times S$</div>
+                                            <div class="cell">トポロジー関数（接続）</div>
+
+                                            <div class="cell">$g_e: S \to S$</div>
+                                            <div class="cell">辺 $e$ の遷移写像</div>
+
+                                            <div class="cell">$\mathcal{G}$</div>
+                                            <div class="cell">構造群</div>
+
+                                            <div class="cell">$\text{Hol}(\gamma)$</div>
+                                            <div class="cell">閉経路 $\gamma$ のホロノミー</div>
+
+                                            <div class="cell">$\pi_1(G, v_0)$</div>
+                                            <div class="cell">基本群</div>
+
+                                            <div class="cell">$V_{\text{reg}}, V_{\text{ext}}$</div>
+                                            <div class="cell">正規空間、拡張空間</div>
+
+                                            <div class="cell">$\mathcal{T}$</div>
+                                            <div class="cell">トポロジーの有限集合</div>
+
+                                            <div class="cell">$F_o: \mathcal{T} \to \mathcal{T}$</div>
+                                            <div class="cell">位相遷移関数</div>
+                                        </div>
+                                    </div>
+
+                                    <h2>付録 B：<code>topologue_v05.htm</code> との対応</h2>
+                                    <div class="inner_wrapper">
+                                        <div class="grid-table-2">
+                                            <div class="cell-header">数学的概念</div>
+                                            <div class="cell-header">実装上の対応</div>
+
+                                            <div class="cell">基底グラフ $G$</div>
+                                            <div class="cell"><code>WorldGraph</code> クラス</div>
+
+                                            <div class="cell">ノード $v \in V$</div>
+                                            <div class="cell"><code>WorldNode</code> クラス</div>
+
+                                            <div class="cell">ファイバー $S$</div>
+                                            <div class="cell"><code>topoState</code> オブジェクト
+                                                (<code>{flipX, flipY, rot}</code>)</div>
+
+                                            <div class="cell">接続 $\Phi$</div>
+                                            <div class="cell">
+                                                <code>resolveStep(x, y, dir, topoState, width, height)</code></div>
+
+                                            <div class="cell">遷移写像 $g_e$</div>
+                                            <div class="cell"><code>resolveStep</code> の <code>topoState</code> 更新部分
+                                            </div>
+
+                                            <div class="cell">ホロノミー計算</div>
+                                            <div class="cell"><code>topoState</code> の逐次更新の追跡</div>
+
+                                            <div class="cell">局所地図（被覆空間の切片）</div>
+                                            <div class="cell"><code>buildLocalChart()</code> の BFS</div>
+
+                                            <div class="cell">被覆空間</div>
+                                            <div class="cell"><code>buildTiledChart()</code> の複数タイル展開</div>
+
+                                            <div class="cell">特異ファイバー</div>
+                                            <div class="cell">メモリの海の異常座標セル</div>
+                                        </div>
+                                    </div>
+
+                                    <hr>
+
+                                    <h2>参考資料</h2>
+                                    <ol>
+                                        <li><code>opportunity.md</code> — 実装位相論の研究テーマ集（本プロジェクト）</li>
+                                        <li><code>memo.md</code> — SFCシレンにおけるフラグマイニングと任意コード実行の解説書き起こし</li>
+                                        <li><code>optozorax.md</code> — Ilya (optozorax) によるポータルの幾何学的分析（動画書き起こし）</li>
+                                        <li><code>topologue_v05.htm</code> — 位相ローグライク最小試作（本プロジェクト実装）</li>
+                                        <li>Thurston, W. P. — <em>Three-Dimensional Geometry and Topology</em>,
+                                            Princeton University Press, 1997.</li>
+                                        <li>Brakke, K. — <em>PolyCut</em>, 1997. (ポータル形状のシミュレーションプログラム)</li>
+                                        <li>Nakahara, M. — <em>Geometry, Topology and Physics</em>, 2nd ed., CRC Press,
+                                            2003.</li>
+                                    </ol>
+        </div>
+    </div>
+</body>
+
+</html>

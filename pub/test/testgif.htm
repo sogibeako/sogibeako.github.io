@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Tiny GIF Test</title>
+    <style>
+        body {
+            background-color: #999999 ;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        const hexText = `
+47494638396102000200810000000000
+FFFFFF00000000000021FF0B4E455453
+43415045322E30030100000021F90409
+140000002C0000000002000200000807
+000104080020200021F9040914000000
+2C000000000200020081000000FFFFFF
+00000000000008070003000010202000
+3B
+`;
+
+        const clean = hexText.replace(/\s+/g, "");
+        const bytes = new Uint8Array(clean.length / 2);
+
+        for (let i = 0; i < bytes.length; i++) {
+            bytes[i] = parseInt(clean.slice(i * 2, i * 2 + 2), 16);
+        }
+
+        const blob = new Blob([bytes], { type: "image/gif" });
+        const url = URL.createObjectURL(blob);
+
+        const img = document.createElement("img");
+        img.src = url;
+
+        // 2x2だと小さすぎるので拡大表示
+        img.width = 200;
+        img.height = 200;
+        img.style.imageRendering = "pixelated";
+
+        document.body.appendChild(img);
+    </script>
+</body>
+</html>

@@ -1,0 +1,1060 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Synth1 + Formula Synth Integrated</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --panel2: #f1f5f9;
+      --line: #cbd5e1;
+      --ink: #172033;
+      --sub: #5b6577;
+      --accent: #0f766e;
+      --accent2: #b45309;
+      --danger: #be123c;
+      --shadow: 0 1px 2px rgba(15, 23, 42, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 3;
+    }
+    .topbar {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 12px 18px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    h1 { margin: 0; font-size: 19px; letter-spacing: 0; }
+    h2 { margin: 0 0 10px; font-size: 15px; }
+    a { color: var(--accent); }
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(320px, 1.1fr) minmax(320px, .9fr);
+      gap: 14px;
+    }
+    .band {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+    .stack { display: grid; gap: 14px; }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 12px;
+      align-items: end;
+    }
+    label {
+      display: grid;
+      gap: 4px;
+      color: var(--sub);
+      font-size: 12px;
+      min-width: 92px;
+    }
+    label.inline {
+      display: flex;
+      min-width: auto;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel2);
+    }
+    input, select, textarea, button {
+      font: inherit;
+    }
+    input[type="number"], input[type="range"], select, textarea {
+      width: 100%;
+    }
+    input[type="number"], select {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 7px 8px;
+      background: #fff;
+      color: var(--ink);
+    }
+    input[type="range"] { min-width: 120px; }
+    textarea {
+      min-height: 118px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 9px 10px;
+      background: #fff;
+      color: var(--ink);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+    }
+    button {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 11px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    button.warn {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+    .hint, .status {
+      color: var(--sub);
+      font-size: 12px;
+    }
+    .status.ok { color: var(--accent); }
+    .status.err { color: var(--danger); }
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 210px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th, td {
+      border-top: 1px solid var(--line);
+      padding: 5px 7px;
+      text-align: right;
+    }
+    th:first-child, td:first-child { text-align: left; }
+    .small { min-width: 70px; }
+    .formula-muted textarea {
+      background: #eef2f7;
+      color: #64748b;
+    }
+    .formula-muted h2::after {
+      content: "  sine partials active";
+      color: var(--accent2);
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .formula-editor {
+      width: 100%;
+      margin-top: 10px;
+    }
+    .meter {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--sub);
+      font-size: 12px;
+    }
+    @media (max-width: 900px) {
+      .grid, .row2 { grid-template-columns: 1fr; }
+      header { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <h1>Synth1 + Formula Synth Integrated</h1>
+      <div class="controls">
+        <button id="generate" class="primary">Generate</button>
+        <button id="stopAll">Stop</button>
+        <button id="panic" class="warn">Panic</button>
+        <button id="exportWav">Export WAV</button>
+        <button id="shareUrl">Share URL</button>
+        <span id="status" class="status">Ready</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="grid">
+    <div class="stack">
+      <section class="band">
+        <h2>Global</h2>
+        <div class="controls">
+          <label>Safety
+            <select id="safety">
+              <option value="soft">Soft tanh</option>
+              <option value="clip">Clip</option>
+            </select>
+          </label>
+          <label>Sampling
+            <select id="virtSR">
+              <option>48000</option><option>24000</option><option>16000</option><option>12000</option>
+              <option>8000</option><option>6000</option><option>4000</option><option>2000</option>
+            </select>
+          </label>
+          <label>Gain
+            <input id="masterGain" type="number" min="0" max="1" step="0.01" value="0.25">
+          </label>
+          <label>Polyphony
+            <input id="polyphony" type="number" min="1" max="16" step="1" value="8">
+          </label>
+          <label>Base Hz
+            <input id="baseHz" type="number" min="1" max="20000" step="0.1" value="440">
+          </label>
+        </div>
+        <p class="hint">Keyboard: a row is the base scale, q row is +5 degrees, number row is +10 degrees, z row is -5 degrees.</p>
+      </section>
+
+      <section class="band">
+        <h2>Synth1 Osc</h2>
+        <div class="controls">
+          <label>Osc1
+            <select id="osc1Wave"><option>saw</option><option>sine</option><option>triangle</option><option>square</option><option value="formula1">formula 1</option><option value="formula2">formula 2</option></select>
+          </label>
+          <label>Osc2
+            <select id="osc2Wave"><option>saw</option><option>triangle</option><option>square</option><option>noise</option><option value="formula1">formula 1</option><option value="formula2">formula 2</option></select>
+          </label>
+          <label>Mix
+            <input id="oscMix" type="range" min="0" max="1" step="0.01" value="0.5">
+          </label>
+          <label>Osc2 Semi
+            <input id="osc2Semi" type="number" min="-36" max="36" step="1" value="0">
+          </label>
+          <label>Osc2 Fine
+            <input id="osc2Fine" type="number" min="-100" max="100" step="1" value="0">
+          </label>
+          <label>Pulse Width
+            <input id="pulseWidth" type="range" min="0.05" max="0.95" step="0.01" value="0.5">
+          </label>
+          <label>Sub Wave
+            <select id="subWave"><option>square</option><option>sine</option><option>triangle</option><option>saw</option><option value="formula1">formula 1</option><option value="formula2">formula 2</option></select>
+          </label>
+          <label>Sub Level
+            <input id="subLevel" type="range" min="0" max="1" step="0.01" value="0">
+          </label>
+          <label>Sub Oct
+            <select id="subOct"><option value="-1">-1</option><option value="0">0</option></select>
+          </label>
+          <label>Key Shift
+            <input id="keyShift" type="number" min="-36" max="36" step="1" value="0">
+          </label>
+          <label>Fine Tune
+            <input id="fineTune" type="number" min="-100" max="100" step="1" value="0">
+          </label>
+          <label>FM
+            <input id="fmAmount" type="range" min="0" max="1" step="0.01" value="0">
+          </label>
+          <label class="inline"><input id="ring" type="checkbox"> Ring</label>
+          <label class="inline"><input id="sync" type="checkbox"> Sync</label>
+        </div>
+      </section>
+
+      <section class="band" id="formulaPanel">
+        <h2>Formula Osc Tables</h2>
+        <div class="controls">
+          <label class="inline"><input id="dcBlock" type="checkbox" checked> DC block</label>
+        </div>
+        <label class="formula-editor">Formula 1
+          <textarea id="expr1">tanh(3*(2*ph-1))</textarea>
+        </label>
+        <label class="formula-editor">Formula 2
+          <textarea id="expr2">sin(2*pi*ph)</textarea>
+        </label>
+        <p class="hint">Choose formula 1 or formula 2 from Osc1/Osc2/Sub Wave. Press Generate after editing formulas. Symbols: ph, t, sr, pi, e. Last non-assignment line is output.</p>
+      </section>
+
+      <section class="band">
+        <h2>Partials</h2>
+        <div class="controls">
+          <label class="inline"><input id="partialsEnabled" type="checkbox" checked> Enabled</label>
+          <label>Wave
+            <select id="partialWave"><option value="table">table</option><option value="sine">sine</option></select>
+          </label>
+          <label>Level <input id="partialsLevel" type="range" min="0" max="1" step="0.01" value="1"></label>
+        </div>
+        <textarea id="partials"># ratio amp
+1 1
+#2 0.5
+#3 0.33
+#4 0.25</textarea>
+        <p class="hint">Each active line is ratio amp. Ratios can be expressions such as 3/2 or pow(2, 7/12). Symbols i, k, K are available.</p>
+      </section>
+    </div>
+
+    <div class="stack">
+      <section class="band">
+        <h2>Envelope / Filter</h2>
+        <div class="row2">
+          <div>
+            <h2>Amp ADSR</h2>
+            <div class="controls">
+              <label>A <input id="ampA" type="number" min="0" max="10" step="0.01" value="0.01"></label>
+              <label>D <input id="ampD" type="number" min="0" max="10" step="0.01" value="0.10"></label>
+              <label>S <input id="ampS" type="number" min="0" max="1" step="0.01" value="0.50"></label>
+              <label>R <input id="ampR" type="number" min="0" max="10" step="0.01" value="0.30"></label>
+            </div>
+          </div>
+          <div>
+            <h2>Filter</h2>
+            <div class="controls">
+              <label>Type
+                <select id="filterType"><option>LP12</option><option>LP24</option><option>HP12</option><option>BP12</option><option>Off</option></select>
+              </label>
+              <label>Cutoff <input id="cutoff" type="number" min="20" max="20000" step="10" value="2000"></label>
+              <label>Cutoff Fader <input id="cutoffSlider" type="range" min="0" max="1" step="0.001" value="0.666"></label>
+              <label>Res <input id="resonance" type="number" min="0.1" max="20" step="0.1" value="1"></label>
+              <label>Res Fader <input id="resonanceSlider" type="range" min="0.1" max="20" step="0.01" value="1"></label>
+              <label>Sat <input id="saturation" type="range" min="0" max="1" step="0.01" value="0"></label>
+              <label>Env Amt <input id="filterEnvAmount" type="number" min="-1" max="1" step="0.01" value="0"></label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="band">
+        <h2>Mod Envelope</h2>
+        <div class="controls">
+          <label>A <input id="modA" type="number" min="0" max="10" step="0.01" value="0.01"></label>
+          <label>D <input id="modD" type="number" min="0" max="10" step="0.01" value="0.20"></label>
+          <label>Amount <input id="modAmount" type="number" min="-1" max="1" step="0.01" value="0"></label>
+          <label>Dest
+            <select id="modDest"><option value="off">off</option><option value="osc2">osc2 pitch</option><option value="fm">FM</option><option value="pw">pulse width</option></select>
+          </label>
+        </div>
+      </section>
+
+      <section class="band">
+        <h2>Scale</h2>
+        <textarea id="scale">100.
+200.
+300.
+400.
+500.
+600.
+700.
+800.
+900.
+1000.
+1100.
+1200.</textarea>
+        <div class="controls">
+          <button id="parseScale">Parse Scale</button>
+          <span id="scaleStatus" class="status"></span>
+        </div>
+        <div style="max-height:170px;overflow:auto;margin-top:10px">
+          <table id="scaleTable">
+            <thead><tr><th>#</th><th>Ratio</th><th>Cents</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="band">
+        <h2>Preview</h2>
+        <div class="row2">
+          <canvas id="wave"></canvas>
+          <canvas id="spec"></canvas>
+        </div>
+        <p class="meter">Preview note: <span id="previewHz">440 Hz</span></p>
+      </section>
+
+      <section class="band">
+        <h2>WAV Export</h2>
+        <div class="controls">
+          <label>Step <input id="exportStep" type="number" step="1" value="0"></label>
+          <label>Duration <input id="exportDur" type="number" min="0.1" max="120" step="0.1" value="5"></label>
+          <label>SR
+            <select id="exportSR"><option>48000</option><option>44100</option></select>
+          </label>
+          <label class="inline"><input id="normalize" type="checkbox"> Normalize</label>
+          <label>Fade ms <input id="fadeMs" type="number" min="0" max="200" step="1" value="5"></label>
+        </div>
+      </section>
+    </div>
+  </main>
+
+<script>
+(() => {
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+  const status = $("status");
+  let table = new Float32Array(2048);
+  let table2 = new Float32Array(2048);
+  let scale = { degrees: [1], period: 2 };
+  let ctx = null;
+  let node = null;
+  let workletUrl = null;
+  const saveKey = "synth1_formula_integrated_state_v1";
+
+  const allowed = {
+    sin: Math.sin, cos: Math.cos, tan: Math.tan,
+    asin: Math.asin, acos: Math.acos, atan: Math.atan,
+    exp: Math.exp, log: Math.log, pow: Math.pow,
+    sqrt: x => x >= 0 ? Math.sqrt(x) : NaN,
+    abs: Math.abs, sign: Math.sign, floor: Math.floor, ceil: Math.ceil, round: Math.round,
+    min: Math.min, max: Math.max, tanh: Math.tanh,
+    step: x => x >= 0 ? 1 : 0,
+    pi: Math.PI, e: Math.E
+  };
+
+  function setStatus(text, ok = true) {
+    status.textContent = text;
+    status.className = "status " + (ok ? "ok" : "err");
+  }
+
+  function stripComment(line) {
+    return line.replace(/(#|\/\/).*$/, "").trim();
+  }
+
+  function evalFormula(expr, scope) {
+    const names = Object.keys(allowed).concat(Object.keys(scope));
+    const vals = names.map(k => Object.prototype.hasOwnProperty.call(scope, k) ? scope[k] : allowed[k]);
+    if (!/^[\s\w\d+\-*/%^().,<>!=?:]+$/.test(expr)) throw new Error("Formula contains unsupported characters");
+    const jsExpr = expr.replace(/\^/g, "**");
+    return Function(...names, `"use strict"; return (${jsExpr});`)(...vals);
+  }
+
+  function compileFormulaTable(textareaId) {
+    const src = $(textareaId).value;
+    const lines = src.split(/\r?\n/).map(stripComment).filter(Boolean);
+    if (!lines.length) throw new Error("Formula is empty");
+    const assigns = [];
+    const exprs = [];
+    for (const line of lines) {
+      const m = line.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)$/);
+      if (m) assigns.push([m[1], m[2]]);
+      else exprs.push(line);
+    }
+    if (!exprs.length) throw new Error("Formula needs an output expression");
+    const outExpr = exprs[exprs.length - 1];
+    const virtSR = +$("virtSR").value || 48000;
+    const next = new Float32Array(2048);
+    for (let i = 0; i < next.length; i++) {
+      const scope = { ph: i / next.length, t: i / virtSR, sr: virtSR };
+      for (const [name, expr] of assigns) {
+        scope[name] = +evalFormula(expr, scope);
+        if (!Number.isFinite(scope[name])) scope[name] = 0;
+      }
+      let y = +evalFormula(outExpr, scope);
+      next[i] = Number.isFinite(y) ? y : 0;
+    }
+    if ($("dcBlock").checked) {
+      let sum = 0;
+      for (const y of next) sum += y;
+      const mean = sum / next.length;
+      for (let i = 0; i < next.length; i++) next[i] -= mean;
+    }
+    return next;
+  }
+
+  function compileTables() {
+    table = compileFormulaTable("expr1");
+    table2 = compileFormulaTable("expr2");
+    return table;
+  }
+
+  function parsePartials() {
+    const raw = $("partials").value.split(/\r?\n/).map(stripComment).filter(Boolean);
+    const out = [];
+    const K = raw.length || 1;
+    raw.forEach((line, i) => {
+      const tok = line.split(/[,\s]+/).filter(Boolean);
+      if (tok.length < 2) return;
+      const scope = { i, k: i + 1, K };
+      const ratio = +evalFormula(tok[0], scope);
+      const amp = +evalFormula(tok[1], scope);
+      if (Number.isFinite(ratio) && ratio > 0 && Number.isFinite(amp) && amp >= 0) out.push(ratio, amp);
+    });
+    if (!out.length) out.push(1, 1);
+    return new Float32Array(out);
+  }
+
+  function parseScaleText() {
+    const lines = $("scale").value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    if (!lines.length) throw new Error("Scale data is empty");
+    const ratioOf = s => {
+      if (s.includes("/")) {
+        const [p, q] = s.split("/").map(Number);
+        if (!Number.isFinite(p) || !Number.isFinite(q) || q === 0) throw new Error("Bad ratio: " + s);
+        return p / q;
+      }
+      const cents = Number(s);
+      if (!Number.isFinite(cents)) throw new Error("Bad cents: " + s);
+      return Math.pow(2, cents / 1200);
+    };
+    const ratios = lines.map(ratioOf);
+    const period = ratios[ratios.length - 1];
+    const body = ratios.slice(0, -1);
+    const degrees = [];
+    if (!body.length || Math.abs(body[0] - 1) > 1e-9) degrees.push(1);
+    for (const r of body) if (Math.abs(r - 1) > 1e-9) degrees.push(r);
+    scale = { degrees, period };
+    rebuildScaleTable();
+    $("scaleStatus").textContent = `${degrees.length} degrees, period ${period.toFixed(5)}`;
+  }
+
+  function rebuildScaleTable() {
+    const tbody = $("scaleTable").querySelector("tbody");
+    tbody.innerHTML = "";
+    scale.degrees.forEach((r, i) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${i}</td><td>${r.toFixed(6)}</td><td>${(1200 * Math.log2(r)).toFixed(3)}</td>`;
+      tbody.appendChild(tr);
+    });
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>period</td><td>${scale.period.toFixed(6)}</td><td>${(1200 * Math.log2(scale.period)).toFixed(3)}</td>`;
+    tbody.appendChild(tr);
+  }
+
+  const keyMap = {
+    a:0,s:1,d:2,f:3,g:4,h:5,j:6,k:7,l:8,";":9,":":9,
+    q:5,w:6,e:7,r:8,t:9,y:10,u:11,i:12,o:13,p:14,"[":15,"]":16,
+    "1":10,"2":11,"3":12,"4":13,"5":14,"6":15,"7":16,"8":17,"9":18,"0":19,"-":20,"=":21,
+    z:-5,x:-4,c:-3,v:-2,b:-1,n:0,m:1,",":2,".":3,"/":4,"?":4
+  };
+
+  function noteFreq(step) {
+    const degrees = scale.degrees;
+    const L = degrees.length;
+    const idx = ((step % L) + L) % L;
+    const oct = Math.floor((step - idx) / L);
+    const semi = (+$("keyShift").value || 0) / 12;
+    const fine = (+$("fineTune").value || 0) / 1200;
+    const base = +$("baseHz").value || 440;
+    const f = base * degrees[idx] * Math.pow(scale.period, oct) * Math.pow(2, semi + fine);
+    return Math.max(1, Math.min(20000, f));
+  }
+
+  function tableAt(src, ph) {
+    ph -= Math.floor(ph);
+    const x = ph * src.length;
+    const i0 = x | 0;
+    const frac = x - i0;
+    return src[i0 % src.length] + (src[(i0 + 1) % src.length] - src[i0 % src.length]) * frac;
+  }
+
+  function waveAt(wave, ph, pw) {
+    ph -= Math.floor(ph);
+    if (wave === "formula1") return tableAt(table, ph);
+    if (wave === "formula2") return tableAt(table2, ph);
+    if (wave === "sine") return Math.sin(2 * Math.PI * ph);
+    if (wave === "triangle") return 1 - 4 * Math.abs(ph - 0.5);
+    if (wave === "square") return ph < pw ? 1 : -1;
+    if (wave === "noise") return Math.random() * 2 - 1;
+    return 2 * ph - 1;
+  }
+
+  class Filter {
+    constructor(sr, type, cutoff, q, sat) {
+      this.sr = sr; this.type = type; this.cutoff = cutoff; this.q = q; this.sat = sat;
+      this.ic1eq = 0; this.ic2eq = 0; this.ic1eqB = 0; this.ic2eqB = 0;
+    }
+    one(x, stageB) {
+      if (this.type === "Off") return x;
+      const cutoff = Math.max(20, Math.min(this.sr / 2.1, this.cutoff));
+      const g = Math.tan(Math.PI * cutoff / this.sr);
+      const k = 1 / Math.max(0.1, this.q);
+      const a1 = 1 / (1 + g * (g + k));
+      const a2 = g * a1;
+      const a3 = g * a2;
+      let ic1 = stageB ? this.ic1eqB : this.ic1eq;
+      let ic2 = stageB ? this.ic2eqB : this.ic2eq;
+      const v3 = x - ic2;
+      const v1 = a1 * ic1 + a2 * v3;
+      const v2 = ic2 + a2 * ic1 + a3 * v3;
+      ic1 = 2 * v1 - ic1;
+      ic2 = 2 * v2 - ic2;
+      if (stageB) { this.ic1eqB = ic1; this.ic2eqB = ic2; }
+      else { this.ic1eq = ic1; this.ic2eq = ic2; }
+      if (this.type === "HP12") return x - k * v1 - v2;
+      if (this.type === "BP12") return v1;
+      return v2;
+    }
+    process(x) {
+      const drive = 1 + this.sat * 8;
+      x = Math.tanh(x * drive) / Math.tanh(drive);
+      let y = this.one(x, false);
+      if (this.type === "LP24") y = this.one(y, true);
+      return y;
+    }
+  }
+
+  function getState() {
+    return {
+      safety: $("safety").value,
+      virtSR: +$("virtSR").value || 48000,
+      masterGain: +$("masterGain").value || 0.25,
+      polyphony: Math.max(1, Math.min(16, +$("polyphony").value || 8)),
+      partialsEnabled: $("partialsEnabled").checked,
+      partialsLevel: +$("partialsLevel").value || 0,
+      partialWave: $("partialWave").value,
+      synthEnabled: true,
+      osc1Wave: $("osc1Wave").value,
+      osc2Wave: $("osc2Wave").value,
+      subWave: $("subWave").value,
+      subOct: +$("subOct").value || -1,
+      oscMix: +$("oscMix").value,
+      osc2Semi: +$("osc2Semi").value || 0,
+      osc2Fine: +$("osc2Fine").value || 0,
+      pulseWidth: +$("pulseWidth").value,
+      subLevel: +$("subLevel").value,
+      fmAmount: +$("fmAmount").value,
+      ring: $("ring").checked,
+      sync: $("sync").checked,
+      ampA: +$("ampA").value || 0,
+      ampD: +$("ampD").value || 0,
+      ampS: +$("ampS").value || 0,
+      ampR: +$("ampR").value || 0,
+      filterType: $("filterType").value,
+      cutoff: +$("cutoff").value || 2000,
+      resonance: +$("resonance").value || 1,
+      saturation: +$("saturation").value || 0,
+      filterEnvAmount: +$("filterEnvAmount").value || 0,
+      modA: +$("modA").value || 0,
+      modD: +$("modD").value || 0,
+      modAmount: +$("modAmount").value || 0,
+      modDest: $("modDest").value
+    };
+  }
+
+  function collectUiState() {
+    const data = {};
+    for (const el of document.querySelectorAll("input,select,textarea")) {
+      if (!el.id) continue;
+      data[el.id] = el.type === "checkbox" ? el.checked : el.value;
+    }
+    return data;
+  }
+
+  function applyUiState(data) {
+    if (!data || typeof data !== "object") return;
+    for (const [id, value] of Object.entries(data)) {
+      const el = $(id);
+      if (!el) continue;
+      if (el.type === "checkbox") el.checked = !!value;
+      else el.value = String(value);
+    }
+  }
+
+  function encodeState(data) {
+    return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  }
+
+  function decodeState(text) {
+    return JSON.parse(decodeURIComponent(escape(atob(text))));
+  }
+
+  function saveState() {
+    try { localStorage.setItem(saveKey, JSON.stringify(collectUiState())); } catch {}
+  }
+
+  function restoreState() {
+    try {
+      const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
+      const packed = hash.get("s");
+      if (packed) {
+        applyUiState(decodeState(packed));
+        return;
+      }
+      const stored = localStorage.getItem(saveKey);
+      if (stored) applyUiState(JSON.parse(stored));
+    } catch (e) {
+      console.warn("State restore failed", e);
+    }
+  }
+
+  function cutoffToSlider(hz) {
+    const v = Math.max(20, Math.min(20000, +hz || 2000));
+    return (Math.log(v / 20) / Math.log(20000 / 20)).toFixed(3);
+  }
+
+  function sliderToCutoff(v) {
+    return Math.round(20 * Math.pow(20000 / 20, Math.max(0, Math.min(1, +v || 0))));
+  }
+
+  function syncFilterControls(source) {
+    if (source === "cutoffSlider") $("cutoff").value = sliderToCutoff($("cutoffSlider").value);
+    if (source === "cutoff") {
+      $("cutoff").value = Math.max(20, Math.min(20000, +$("cutoff").value || 2000));
+      $("cutoffSlider").value = cutoffToSlider($("cutoff").value);
+    }
+    if (source === "resonanceSlider") $("resonance").value = (+$("resonanceSlider").value).toFixed(2);
+    if (source === "resonance") {
+      $("resonance").value = Math.max(0.1, Math.min(20, +$("resonance").value || 1));
+      $("resonanceSlider").value = $("resonance").value;
+    }
+  }
+
+  let livePreviewTimer = null;
+  function updateLiveParams(source) {
+    syncFilterControls(source);
+    saveState();
+    sendStateToWorklet();
+    clearTimeout(livePreviewTimer);
+    livePreviewTimer = setTimeout(updatePreview, 120);
+  }
+
+  function envAt(t, releasedAt, releaseStart, s) {
+    if (releasedAt >= 0) {
+      const u = Math.max(0, t - releasedAt);
+      return releaseStart * Math.max(0, 1 - u / Math.max(0.001, s.ampR));
+    }
+    if (t < s.ampA) return t / Math.max(0.001, s.ampA);
+    if (t < s.ampA + s.ampD) {
+      const p = (t - s.ampA) / Math.max(0.001, s.ampD);
+      return 1 + (s.ampS - 1) * p;
+    }
+    return s.ampS;
+  }
+
+  function modEnvAt(t, s) {
+    if (s.modDest === "off" || s.modAmount === 0) return 0;
+    if (t < s.modA) return s.modAmount * t / Math.max(0.001, s.modA);
+    if (t < s.modA + s.modD) return s.modAmount * (1 - (t - s.modA) / Math.max(0.001, s.modD));
+    return 0;
+  }
+
+  function renderOffline(freq, seconds, sr, state, partials) {
+    const n = Math.floor(seconds * sr);
+    const out = new Float32Array(n);
+    const voice = { p1:0, p2:0, pSub:0, pPart:new Float32Array(partials.length / 2) };
+    const filter = new Filter(sr, state.filterType, state.cutoff, state.resonance, state.saturation);
+    let hold = 0, holdCount = 0;
+    const holdStep = Math.max(1, sr / Math.max(1, state.virtSR));
+    let holdNext = 0;
+    let partAmpSum = 0;
+    for (let k = 0; k < partials.length / 2; k++) partAmpSum += partials[k * 2 + 1];
+    const partNorm = partAmpSum > 0 ? 1 / partAmpSum : 1;
+    for (let i = 0; i < n; i++) {
+      const t = i / sr;
+      const mod = modEnvAt(t, state);
+      let y = 0, active = 0;
+      if (state.partialsEnabled) {
+        let py = 0;
+        for (let k = 0; k < partials.length / 2; k++) {
+          const ratio = partials[k * 2], amp = partials[k * 2 + 1];
+          const fk = freq * ratio;
+          if (fk <= 0 || fk >= sr * .5) continue;
+          voice.pPart[k] = (voice.pPart[k] + fk / sr) % 1;
+          let s;
+          if (state.partialWave === "sine") {
+            s = Math.sin(2 * Math.PI * voice.pPart[k]);
+          } else {
+            const x = voice.pPart[k] * table.length;
+            const i0 = x | 0, frac = x - i0;
+            s = table[i0 % table.length] + (table[(i0 + 1) % table.length] - table[i0 % table.length]) * frac;
+          }
+          py += amp * s;
+        }
+        y += state.partialsLevel * py * partNorm;
+        active += state.partialsLevel;
+      }
+      const osc2Bend = (state.modDest === "osc2" ? mod * 24 : 0);
+      const fm = state.fmAmount + (state.modDest === "fm" ? mod : 0);
+      const pw = Math.max(.05, Math.min(.95, state.pulseWidth + (state.modDest === "pw" ? mod * .25 : 0)));
+      const osc2Ratio = Math.pow(2, (state.osc2Semi + osc2Bend) / 12 + state.osc2Fine / 1200);
+      const osc2Raw = waveAt(state.osc2Wave, voice.p2, pw);
+      const inc1 = freq / sr * (1 + Math.max(0, fm) * 2 * osc2Raw);
+      voice.p1 += inc1;
+      const wrapped = voice.p1 >= 1;
+      voice.p1 -= Math.floor(voice.p1);
+      if (state.sync && wrapped) voice.p2 = 0;
+      voice.p2 = (voice.p2 + freq * osc2Ratio / sr) % 1;
+      voice.pSub = (voice.pSub + freq * Math.pow(2, state.subOct) / sr) % 1;
+      const o1 = waveAt(state.osc1Wave, voice.p1, pw);
+      const o2 = waveAt(state.osc2Wave, voice.p2, pw);
+      let sy = o1 * (1 - state.oscMix) + o2 * state.oscMix;
+      if (state.ring) sy = o1 * o2;
+      sy = (sy + state.subLevel * waveAt(state.subWave, voice.pSub, pw)) / (1 + state.subLevel);
+      y += sy;
+      active += 1;
+      if (active > 0) y /= active;
+      if (holdCount <= 0) { hold = y; holdCount += holdStep; holdNext = hold; }
+      holdCount -= 1;
+      y = holdNext;
+      y = state.safety === "soft" ? Math.tanh(y) : Math.max(-1, Math.min(1, y));
+      const fenv = state.filterEnvAmount * envAt(t, -1, 0, state);
+      filter.cutoff = state.cutoff * Math.pow(2, fenv * 4);
+      y = filter.process(y);
+      y *= envAt(t, -1, 0, state) * state.masterGain;
+      out[i] = y;
+    }
+    return out;
+  }
+
+  function drawLine(canvas, xs, ys) {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+    canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+    const c = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+    c.clearRect(0, 0, W, H);
+    c.strokeStyle = "#cbd5e1";
+    c.beginPath(); c.moveTo(0, H / 2); c.lineTo(W, H / 2); c.stroke();
+    let min = Infinity, max = -Infinity;
+    for (const y of ys) { if (y < min) min = y; if (y > max) max = y; }
+    const peak = Math.max(Math.abs(min), Math.abs(max), 0.001);
+    c.strokeStyle = "#0f766e";
+    c.lineWidth = 2 * dpr;
+    c.beginPath();
+    ys.forEach((y, i) => {
+      const x = i / Math.max(1, ys.length - 1) * W;
+      const yy = H / 2 - y / peak * (H * .42);
+      if (i) c.lineTo(x, yy); else c.moveTo(x, yy);
+    });
+    c.stroke();
+  }
+
+  function fftMag(samples, sr) {
+    const N = 2048;
+    const re = new Float64Array(N), im = new Float64Array(N);
+    for (let i = 0; i < N; i++) re[i] = (samples[i] || 0) * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1)));
+    for (let j = 0, i = 1; i < N; i++) {
+      let bit = N >> 1;
+      for (; j & bit; bit >>= 1) j ^= bit;
+      j ^= bit;
+      if (i < j) { [re[i], re[j]] = [re[j], re[i]]; [im[i], im[j]] = [im[j], im[i]]; }
+    }
+    for (let len = 2; len <= N; len <<= 1) {
+      const ang = -2 * Math.PI / len;
+      for (let i = 0; i < N; i += len) {
+        for (let k = 0; k < len / 2; k++) {
+          const ca = Math.cos(ang * k), sa = Math.sin(ang * k);
+          const tr = re[i + k + len / 2] * ca - im[i + k + len / 2] * sa;
+          const ti = re[i + k + len / 2] * sa + im[i + k + len / 2] * ca;
+          re[i + k + len / 2] = re[i + k] - tr; im[i + k + len / 2] = im[i + k] - ti;
+          re[i + k] += tr; im[i + k] += ti;
+        }
+      }
+    }
+    const y = [];
+    for (let k = 0; k < N / 2; k++) y.push(20 * Math.log10(Math.hypot(re[k], im[k]) * 2 / N + 1e-9));
+    return y;
+  }
+
+  function drawSpectrum(canvas, mags) {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+    canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+    const c = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+    c.clearRect(0, 0, W, H);
+    c.strokeStyle = "#b45309";
+    c.lineWidth = 2 * dpr;
+    c.beginPath();
+    mags.forEach((db, i) => {
+      const x = i / Math.max(1, mags.length - 1) * W;
+      const y = H - Math.max(0, Math.min(1, (db + 90) / 90)) * H;
+      if (i) c.lineTo(x, y); else c.moveTo(x, y);
+    });
+    c.stroke();
+  }
+
+  function updatePreview() {
+    try {
+      const st = getState();
+      $("formulaPanel").classList.toggle("formula-muted", st.partialWave === "sine" && st.partialsEnabled);
+      const partials = parsePartials();
+      const f = noteFreq(+$("exportStep").value || 0);
+      $("previewHz").textContent = f.toFixed(2) + " Hz";
+      const audio = renderOffline(f, 0.12, 48000, st, partials);
+      const showN = Math.min(audio.length, Math.floor(48000 * 0.05));
+      drawLine($("wave"), null, Array.from(audio.slice(0, showN)));
+      drawSpectrum($("spec"), fftMag(audio, 48000));
+      sendToWorklet();
+    } catch (e) {
+      setStatus(e.message || String(e), false);
+    }
+  }
+
+  const workletCode = `
+class F {
+  constructor(sr, type, cutoff, q, sat){this.sr=sr;this.type=type;this.cutoff=cutoff;this.q=q;this.sat=sat;this.a=0;this.b=0;this.c=0;this.d=0}
+  one(x,b){if(this.type==="Off")return x; const cf=Math.max(20,Math.min(this.sr/2.1,this.cutoff)); const g=Math.tan(Math.PI*cf/this.sr), k=1/Math.max(.1,this.q), a1=1/(1+g*(g+k)), a2=g*a1, a3=g*a2; let i1=b?this.c:this.a, i2=b?this.d:this.b; const v3=x-i2, v1=a1*i1+a2*v3, v2=i2+a2*i1+a3*v3; i1=2*v1-i1; i2=2*v2-i2; if(b){this.c=i1;this.d=i2}else{this.a=i1;this.b=i2} if(this.type==="HP12")return x-k*v1-v2; if(this.type==="BP12")return v1; return v2}
+  process(x){const drive=1+this.sat*8; x=Math.tanh(x*drive)/Math.tanh(drive); let y=this.one(x,false); if(this.type==="LP24")y=this.one(y,true); return y}
+}
+function tabAt(tab,ph){ph-=Math.floor(ph); const x=ph*tab.length,i0=x|0,fr=x-i0; return tab[i0%tab.length]+(tab[(i0+1)%tab.length]-tab[i0%tab.length])*fr}
+function wave(w,ph,pw,t1,t2){ph-=Math.floor(ph); if(w==="formula1")return tabAt(t1,ph); if(w==="formula2")return tabAt(t2,ph); if(w==="sine")return Math.sin(2*Math.PI*ph); if(w==="triangle")return 1-4*Math.abs(ph-.5); if(w==="square")return ph<pw?1:-1; if(w==="noise")return Math.random()*2-1; return 2*ph-1}
+function ampEnv(t,v,s){if(v.rel>=0){const u=Math.max(0,t-v.rel);return v.relLevel*Math.max(0,1-u/Math.max(.001,s.ampR))} if(t<s.ampA)return t/Math.max(.001,s.ampA); if(t<s.ampA+s.ampD){const p=(t-s.ampA)/Math.max(.001,s.ampD);return 1+(s.ampS-1)*p} return s.ampS}
+function modEnv(t,s){if(s.modDest==="off"||s.modAmount===0)return 0; if(t<s.modA)return s.modAmount*t/Math.max(.001,s.modA); if(t<s.modA+s.modD)return s.modAmount*(1-(t-s.modA)/Math.max(.001,s.modD)); return 0}
+class P extends AudioWorkletProcessor {
+  constructor(){super(); this.s={masterGain:.25,virtSR:48000,safety:"soft",polyphony:8}; this.table=new Float32Array(2048); this.table2=new Float32Array(2048); for(let i=0;i<2048;i++){this.table[i]=Math.sin(2*Math.PI*i/2048); this.table2[i]=Math.sin(2*Math.PI*i/2048)} this.partials=new Float32Array([1,1]); this.voices=[]; this.port.onmessage=e=>{const d=e.data||{}; if(d.type==="state")this.s=d.state; if(d.type==="table")this.table=d.table; if(d.type==="table2")this.table2=d.table; if(d.type==="partials")this.partials=d.partials; if(d.type==="noteOn")this.noteOn(d.key,d.freq); if(d.type==="noteOff")this.noteOff(d.key); if(d.type==="stop")this.voices=[]}}
+  noteOn(key,freq){this.voices=this.voices.filter(v=>v.key!==key); while(this.voices.length>=Math.max(1,this.s.polyphony||8))this.voices.shift(); this.voices.push({key,freq,t:0,rel:-1,relLevel:0,p1:0,p2:0,ps:0,pp:new Float32Array(this.partials.length/2),filter:new F(sampleRate,this.s.filterType||"LP12",this.s.cutoff||2000,this.s.resonance||1,this.s.saturation||0),hold:0,hc:0})}
+  noteOff(key){for(const v of this.voices){if(v.key===key&&v.rel<0){v.relLevel=ampEnv(v.t,v,this.s);v.rel=v.t}}}
+  process(inputs,outputs){const out=outputs[0][0], sr=sampleRate, st=this.s, tab=this.table, tab2=this.table2, part=this.partials; let sumAmp=0; for(let k=0;k<part.length/2;k++)sumAmp+=part[k*2+1]; const pn=sumAmp>0?1/sumAmp:1; for(let i=0;i<out.length;i++){let mix=0; for(const v of this.voices){const t=v.t; let y=0, active=0, freq=v.freq; const me=modEnv(t,st); if(st.partialsEnabled){let py=0; for(let k=0;k<part.length/2;k++){const fk=freq*part[k*2], a=part[k*2+1]; if(fk<=0||fk>=sr*.5)continue; v.pp[k]=(v.pp[k]+fk/sr)%1; let s; if(st.partialWave==="sine")s=Math.sin(2*Math.PI*v.pp[k]); else s=tabAt(tab,v.pp[k]); py+=a*s} y+=(st.partialsLevel||0)*py*pn; active+=st.partialsLevel||0} const bend=st.modDest==="osc2"?me*24:0, fm=(st.fmAmount||0)+(st.modDest==="fm"?me:0), pw=Math.max(.05,Math.min(.95,(st.pulseWidth||.5)+(st.modDest==="pw"?me*.25:0))); const ratio=Math.pow(2,((st.osc2Semi||0)+bend)/12+(st.osc2Fine||0)/1200); const o2r=wave(st.osc2Wave,v.p2,pw,tab,tab2); v.p1+=freq/sr*(1+Math.max(0,fm)*2*o2r); const wr=v.p1>=1; v.p1-=Math.floor(v.p1); if(st.sync&&wr)v.p2=0; v.p2=(v.p2+freq*ratio/sr)%1; v.ps=(v.ps+freq*Math.pow(2,st.subOct||-1)/sr)%1; const o1=wave(st.osc1Wave,v.p1,pw,tab,tab2), o2=wave(st.osc2Wave,v.p2,pw,tab,tab2); let sy=o1*(1-(st.oscMix||0))+o2*(st.oscMix||0); if(st.ring)sy=o1*o2; sy=(sy+(st.subLevel||0)*wave(st.subWave,v.ps,pw,tab,tab2))/(1+(st.subLevel||0)); y+=sy; active+=1; if(active>0)y/=active; const hs=Math.max(1,sr/Math.max(1,st.virtSR||48000)); if(v.hc<=0){v.hold=y;v.hc+=hs} v.hc-=1; y=v.hold; y=st.safety==="soft"?Math.tanh(y):Math.max(-1,Math.min(1,y)); v.filter.type=st.filterType||"LP12"; v.filter.cutoff=(st.cutoff||2000)*Math.pow(2,(st.filterEnvAmount||0)*ampEnv(t,v,st)*4); v.filter.q=st.resonance||1; v.filter.sat=st.saturation||0; y=v.filter.process(y); const env=ampEnv(t,v,st); mix+=y*env*(st.masterGain||.25); v.t+=1/sr} out[i]=mix} this.voices=this.voices.filter(v=>v.rel<0||v.t-v.rel<Math.max(.001,st.ampR||.3)+.05); return true}
+}
+registerProcessor("integrated-synth", P);
+`;
+
+  async function ensureAudio() {
+    if (node) return;
+    ctx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000, latencyHint: "interactive" });
+    workletUrl = URL.createObjectURL(new Blob([workletCode], { type: "text/javascript" }));
+    await ctx.audioWorklet.addModule(workletUrl);
+    node = new AudioWorkletNode(ctx, "integrated-synth", { numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [1] });
+    node.connect(ctx.destination);
+    sendToWorklet();
+  }
+
+  function sendToWorklet() {
+    if (!node) return;
+    const st = getState();
+    node.port.postMessage({ type: "state", state: st });
+    node.port.postMessage({ type: "table", table: new Float32Array(table) });
+    node.port.postMessage({ type: "table2", table: new Float32Array(table2) });
+    node.port.postMessage({ type: "partials", partials: parsePartials() });
+  }
+
+  function sendStateToWorklet() {
+    if (!node) return;
+    node.port.postMessage({ type: "state", state: getState() });
+  }
+
+  function isEditing() {
+    const el = document.activeElement;
+    if (!el) return false;
+    if (el.tagName === "TEXTAREA" || el.tagName === "SELECT") return true;
+    if (el.tagName !== "INPUT") return false;
+    const passThroughTypes = new Set(["range", "checkbox", "radio", "button", "submit"]);
+    return !passThroughTypes.has(el.type);
+  }
+
+  async function noteOn(key, step) {
+    await ensureAudio();
+    if (ctx.state !== "running") await ctx.resume();
+    sendStateToWorklet();
+    node.port.postMessage({ type: "noteOn", key, freq: noteFreq(step) });
+  }
+  function noteOff(key) {
+    if (node) node.port.postMessage({ type: "noteOff", key });
+  }
+
+  function floatToWav(samples, sr) {
+    const buf = new ArrayBuffer(44 + samples.length * 2);
+    const dv = new DataView(buf);
+    let p = 0;
+    const s = x => { for (let i = 0; i < x.length; i++) dv.setUint8(p++, x.charCodeAt(i)); };
+    const u32 = x => { dv.setUint32(p, x, true); p += 4; };
+    const u16 = x => { dv.setUint16(p, x, true); p += 2; };
+    s("RIFF"); u32(36 + samples.length * 2); s("WAVEfmt "); u32(16); u16(1); u16(1); u32(sr); u32(sr * 2); u16(2); u16(16); s("data"); u32(samples.length * 2);
+    for (let i = 0; i < samples.length; i++, p += 2) {
+      const v = Math.max(-1, Math.min(1, samples[i]));
+      dv.setInt16(p, v < 0 ? v * 32768 : v * 32767, true);
+    }
+    return new Blob([buf], { type: "audio/wav" });
+  }
+
+  function exportWav() {
+    try {
+      compileTables();
+      const sr = +$("exportSR").value || 48000;
+      const dur = Math.max(.1, +$("exportDur").value || 5);
+      const st = getState();
+      const partials = parsePartials();
+      const audio = renderOffline(noteFreq(+$("exportStep").value || 0), dur, sr, st, partials);
+      const fade = Math.floor(sr * Math.max(0, +$("fadeMs").value || 0) / 1000);
+      for (let i = 0; i < Math.min(fade, audio.length); i++) {
+        audio[i] *= i / Math.max(1, fade);
+        audio[audio.length - 1 - i] *= i / Math.max(1, fade);
+      }
+      if ($("normalize").checked) {
+        let peak = 0;
+        for (const y of audio) peak = Math.max(peak, Math.abs(y));
+        if (peak > 0) for (let i = 0; i < audio.length; i++) audio[i] *= .999 / peak;
+      }
+      const url = URL.createObjectURL(floatToWav(audio, sr));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `integrated_${Math.round(noteFreq(+$("exportStep").value || 0))}Hz_${dur}s.wav`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      setStatus("WAV exported");
+    } catch (e) { setStatus(e.message || String(e), false); }
+  }
+
+  function regenerate() {
+    try {
+      compileTables();
+      parseScaleText();
+      updatePreview();
+      setStatus("Generated");
+    } catch (e) { setStatus(e.message || String(e), false); }
+  }
+
+  $("generate").onclick = regenerate;
+  $("parseScale").onclick = () => { try { parseScaleText(); updatePreview(); setStatus("Scale parsed"); } catch (e) { setStatus(e.message || String(e), false); } };
+  $("stopAll").onclick = () => { if (node) node.port.postMessage({ type: "stop" }); };
+  $("panic").onclick = async () => { if (node) node.port.postMessage({ type: "stop" }); if (ctx) { await ctx.close(); ctx = null; node = null; } };
+  $("exportWav").onclick = exportWav;
+  $("shareUrl").onclick = async () => {
+    const url = new URL(location.href);
+    url.hash = "s=" + encodeState(collectUiState());
+    try {
+      await navigator.clipboard.writeText(url.toString());
+      setStatus("Share URL copied");
+    } catch {
+      history.replaceState(null, "", url);
+      setStatus("Share URL written to address bar");
+    }
+  };
+
+  for (const el of document.querySelectorAll("input,select,textarea")) {
+    el.addEventListener("change", () => { saveState(); updatePreview(); });
+    if (el.type === "range" || el.tagName === "TEXTAREA") el.addEventListener("input", () => {
+      clearTimeout(el._t);
+      el._t = setTimeout(() => { saveState(); updatePreview(); }, 180);
+    });
+  }
+  for (const id of ["cutoff", "cutoffSlider", "resonance", "resonanceSlider", "filterType", "saturation", "filterEnvAmount"]) {
+    $(id).addEventListener("input", e => updateLiveParams(e.target.id));
+    $(id).addEventListener("change", e => updateLiveParams(e.target.id));
+  }
+
+  window.addEventListener("keydown", e => {
+    if (e.repeat || isEditing()) return;
+    const step = keyMap[e.key.toLowerCase()];
+    if (step == null) return;
+    e.preventDefault();
+    noteOn(e.key, step);
+  });
+  window.addEventListener("keyup", e => noteOff(e.key));
+  window.addEventListener("blur", () => { if (node) node.port.postMessage({ type: "stop" }); });
+
+  restoreState();
+  syncFilterControls("cutoff");
+  syncFilterControls("resonance");
+  regenerate();
+})();
+</script>
+</body>
+</html>

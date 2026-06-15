@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hangul Typing Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="game-container">
+    
+    <!-- Title Screen -->
+    <div id="title-screen" class="screen active">
+      <h1>ハングルタイピング (Easy Mode)</h1>
+      <p>韓国語キーボード配列を覚えるためのタイピングゲームです。</p>
+      <div class="checkbox-wrap">
+        <input type="checkbox" id="ime-sim-toggle" checked>
+        <label for="ime-sim-toggle">英語配列のままハングル入力する (IME内蔵モード)</label>
+      </div>
+      <button id="start-btn" class="primary">スタート (10問)</button>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen">
+      <header>
+        <h1>Hangul Typing</h1>
+        <div class="status">問題 <span id="current-q">1</span> / 10</div>
+      </header>
+
+      <div class="question-area">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; position: relative;">
+          <div class="prompt" id="q-prompt">ㄱ</div>
+          <button id="speak-btn" class="icon-btn" title="発音を聞く">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="details">
+          <div class="roman" id="q-roman">g / k</div>
+          <div class="desc" id="q-desc">軽いカ行・ガ行系の音</div>
+        </div>
+      </div>
+
+      <div class="input-area">
+        <!-- autocomplete off to prevent browser interference -->
+        <input type="text" id="user-input" autocomplete="off" spellcheck="false" placeholder="____" autofocus>
+        <div class="feedback" id="feedback-area"></div>
+      </div>
+
+      <!-- On-Screen Keyboard -->
+      <div class="keyboard" id="keyboard">
+        <div class="key-row">
+          <div class="key" data-key="Q"><span class="eng">Q</span><span class="kor">ㅂ</span></div>
+          <div class="key" data-key="W"><span class="eng">W</span><span class="kor">ㅈ</span></div>
+          <div class="key" data-key="E"><span class="eng">E</span><span class="kor">ㄷ</span></div>
+          <div class="key" data-key="R"><span class="eng">R</span><span class="kor">ㄱ</span></div>
+          <div class="key" data-key="T"><span class="eng">T</span><span class="kor">ㅅ</span></div>
+          <div class="key" data-key="Y"><span class="eng">Y</span><span class="kor">ㅛ</span></div>
+          <div class="key" data-key="U"><span class="eng">U</span><span class="kor">ㅕ</span></div>
+          <div class="key" data-key="I"><span class="eng">I</span><span class="kor">ㅑ</span></div>
+          <div class="key" data-key="O"><span class="eng">O</span><span class="kor">ㅐ</span></div>
+          <div class="key" data-key="P"><span class="eng">P</span><span class="kor">ㅔ</span></div>
+        </div>
+        <div class="key-row">
+          <div class="key" data-key="A"><span class="eng">A</span><span class="kor">ㅁ</span></div>
+          <div class="key" data-key="S"><span class="eng">S</span><span class="kor">ㄴ</span></div>
+          <div class="key" data-key="D"><span class="eng">D</span><span class="kor">ㅇ</span></div>
+          <div class="key" data-key="F"><span class="eng">F</span><span class="kor">ㄹ</span></div>
+          <div class="key" data-key="G"><span class="eng">G</span><span class="kor">ㅎ</span></div>
+          <div class="key" data-key="H"><span class="eng">H</span><span class="kor">ㅗ</span></div>
+          <div class="key" data-key="J"><span class="eng">J</span><span class="kor">ㅓ</span></div>
+          <div class="key" data-key="K"><span class="eng">K</span><span class="kor">ㅏ</span></div>
+          <div class="key" data-key="L"><span class="eng">L</span><span class="kor">ㅣ</span></div>
+        </div>
+        <div class="key-row">
+          <div class="key" data-key="Z"><span class="eng">Z</span><span class="kor">ㅋ</span></div>
+          <div class="key" data-key="X"><span class="eng">X</span><span class="kor">ㅌ</span></div>
+          <div class="key" data-key="C"><span class="eng">C</span><span class="kor">ㅊ</span></div>
+          <div class="key" data-key="V"><span class="eng">V</span><span class="kor">ㅍ</span></div>
+          <div class="key" data-key="B"><span class="eng">B</span><span class="kor">ㅠ</span></div>
+          <div class="key" data-key="N"><span class="eng">N</span><span class="kor">ㅜ</span></div>
+          <div class="key" data-key="M"><span class="eng">M</span><span class="kor">ㅡ</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div id="results-screen" class="screen">
+      <div class="results-card">
+        <h2>結果</h2>
+        <p>正解数: <span id="res-correct">8</span> / 10</p>
+        <p>正答率: <span id="res-accuracy">80</span>%</p>
+        <div style="margin: 1.5rem 0; font-size: 1rem; color: var(--text-secondary);">
+          <p>よく間違えたキー:</p>
+          <div id="res-mistakes" style="font-weight: 600; color: var(--error-color); margin-top: 0.5rem; font-size: 1.25rem;"></div>
+        </div>
+        <button id="retry-btn" class="primary">もう一度プレイ</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="questions.js"></script>
+  <script src="hangul_ime.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

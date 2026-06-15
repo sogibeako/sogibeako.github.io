@@ -1,0 +1,410 @@
+
+<html>
+<head>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>* Mathematical Pattern *</title>
+  <style>
+    body {
+      font-size: 1rem;
+      color: fff;
+      background-color: #111822; /* 青っぽい背景色 */
+      margin-left: 20px;
+      margin-top: 20px;
+      padding: 0;
+      line-height: 1.6;
+    }
+    a {
+      color: fff;
+    }
+    h1 {
+      background-color: #609aa0;  /* 秋雨 */
+      color: black;               /* 文字は黒でよい */
+      padding: 0.5em;             /* 内側の余白で見た目よく */
+    }
+    h2 {
+      background-color: #609aa0;  /* 秋雨 */
+      color: black;               /* 文字は黒でよい */
+      padding: 0.5em;             /* 内側の余白で見た目よく */
+    }
+    hr {
+      border-width: 2px 0 0 0; /* 線の太さ */
+      border-style: dashed; /* 線の種類 */
+      border-color: #609aa0 /* 線の色 */
+    }
+    .br-sp {
+      display: none;
+    }
+    pre, pre code {
+      background-color: #bbbbbb;
+      color: #000;
+      padding: 0.5em;
+      display: block;
+      overflow-x: auto;
+      border-radius: 4px;
+      font-family: "Courier New", Courier, monospace;
+    }
+    code {
+      background-color: #bbbbbb;
+      color: #000;
+      padding: 0.1em 0.3em;
+      border-radius: 3px;
+      font-family: "Courier New", Courier, monospace;
+      display: inline-block;
+      line-height: 1.2;
+    }
+    @media screen and (max-width: 600px) {
+      body {
+        font-size: 0.7rem;
+      }
+      .grid-table, .grid-table2 {
+        grid-template-columns: 1fr;
+      }
+      .br-sp {
+        display: inline;
+      }
+}
+  </style>
+
+<script src="https://cdn.jsdelivr.net/npm/mathjs@12.4.2/lib/browser/math.js"></script>
+
+</head>
+<body>
+
+<div class="p_left">現在位置 : <a href="../index.html">ホーム</a>　＞　JSS Project　＞　<a href="0004_mathPattern.htm"><b>#004</b></a></div>
+<br><hr><br>
+
+
+<!-- 数式入力 -->
+<label for="formulaInput">Custom Z Formula:</label><br>
+<input type="text" id="formulaInput" size="80"
+ value="max(bitXor(floor(r*16),5)/16 , abs(sin(theta*8) * r))">
+ <br>
+ <button id="redrawButton">🔄 描画</button>
+ <br><br>
+
+<label for="tileCountSelector">Tile Count:</label>
+<select id="tileCountSelector">
+  <option value="1">1</option>
+  <option value="2" selected>4 (2x2)</option>
+  <option value="4">16 (4x4)</option>
+</select>
+ 
+<label for="paletteSelector">Color Palette:</label>
+<select id="paletteSelector">
+  <option value="hue">Hue Rainbow</option>
+  <option value="grayscale">Grayscale</option>
+  <option value="pastel">Pastel</option>
+  <option value="psychedelic">Psychedelic</option>
+  <option value="fireAndIce">FireAndIce</option>
+  <option value="solarFlare">SolarFlare</option>
+  <option value="oceanDepths">OceanDepths</option>
+  <option value="neonPulse">NeonPulse</option>
+  <option value="desertMirage">DesertMirage</option>
+  <option value="noisyRainbow">NoisyRainbow</option>
+  <option value="kudenoToUteki">KudenoToUteki</option>
+  <option value="kudenoStripe">KudenoStripe</option>
+  <option value="kudenoContrast">KudenoContrast</option>
+  <option value="kudenoContrastNoisy">KudenoContrastNoisy</option>
+</select>
+<br>
+
+<canvas id="patternCanvas" width="600" height="600"></canvas>
+<script>
+const formulaInput = document.getElementById("formulaInput");
+const canvas = document.getElementById("patternCanvas");
+const ctx = canvas.getContext("2d");
+const paletteSelector = document.getElementById("paletteSelector");
+const tileCountSelector = document.getElementById("tileCountSelector");
+
+const width = canvas.width;
+const height = canvas.height;
+const range = 2;
+
+const userFormula = formulaInput.value;
+
+// math.jsの読み込み
+math.import({
+  bitOr: function (a, b) {
+    return (a | b) | 0;
+  },
+  bitAnd: function (a, b) {
+    return (a & b) | 0;
+  },
+  bitXor: function (a, b) {
+    return (a ^ b) | 0;
+  },
+  bitNot: function (a) {
+    return (~a) | 0;
+  }
+}, { override: true });
+
+let z;
+try {
+  z = eval(userFormula); // nx, ny は文脈上ここで使える
+} catch (e) {
+  z = 0; // 式エラー時のフォールバック
+}
+
+
+// カラーパレット関数一覧
+const palettes = {
+  hue: z => `hsl(${((z + 1) / 2) * 360}, 90%, 50%)`,
+  grayscale: z => {
+    const v = ((z + 1) / 2) * 255;
+    return `rgb(${v}, ${v}, ${v})`;
+  },
+  pastel: z => {
+    const hue = ((z + 1) / 2) * 360;
+    return `hsl(${hue}, 40%, 80%)`;
+  },
+  psychedelic: z => {
+    const hue = ((Math.sin(z * 10) + 1) / 2) * 360;
+    return `hsl(${hue}, 100%, 50%)`;
+  },
+  fireAndIce: z => {
+  const t = (z + 1) / 2;
+  const r = Math.round(255 * t);
+  const g = Math.round(255 * (1 - t));
+  const b = Math.round(255 * Math.abs(0.5 - t) * 2);
+  return `rgb(${r}, ${g}, ${b})`;
+  },
+  solarFlare: z => {
+  const t = (z + 1) / 2;
+  const hue = 40 + 40 * Math.sin(t * Math.PI * 3); // オレンジ系で揺れる
+  const sat = 90;
+  const light = 40 + 30 * Math.cos(t * Math.PI);
+  return `hsl(${hue}, ${sat}%, ${light}%)`;
+  },
+  oceanDepths: z => {
+  const t = (z + 1) / 2;
+  const r = Math.round(0 + t * 20);
+  const g = Math.round(50 + t * 80);
+  const b = Math.round(100 + t * 155);
+  return `rgb(${r}, ${g}, ${b})`;
+  },
+  neonPulse: z => {
+  const t = (z + 1) / 2;
+  const r = Math.round(128 + 127 * Math.sin(10 * t * Math.PI));
+  const g = Math.round(128 + 127 * Math.cos(10 * t * Math.PI));
+  const b = Math.round(128 + 127 * Math.sin(20 * t * Math.PI));
+  return `rgb(${r}, ${g}, ${b})`;
+  },
+  desertMirage: z => {
+  const t = (z + 1) / 2;
+  const hue = 30 + 40 * t; // 砂色 → 黄緑
+  const sat = 60;
+  const light = 70 - 20 * t;
+  return `hsl(${hue}, ${sat}%, ${light}%)`;
+  },
+  noisyRainbow: z => {
+  const t = (z + 1) / 2;
+  const noise = (Math.sin(z * 30 + t * 1000) + 1) / 2; // ノイズ
+  const hue = ((t + noise * 0.1) % 1) * 360;
+  return `hsl(${hue}, 90%, 60%)`;
+  },
+  kudenoToUteki: z => {
+    const t = (z + 1) / 2;
+    if (t < 1 / 3) {
+      return interpolateColor("#111822", "#609aa0", t * 3);
+    } else if (t < 2 / 3) {
+      return interpolateColor("#609aa0", "#9ec8d1", (t - 1 / 3) * 3);
+    } else {
+      return interpolateColor("#9ec8d1", "#bfe3f6", (t - 2 / 3) * 3);
+    }
+  },
+  kudenoStripe: z => {
+    const t = (z + 1) / 2;
+    const stripes = 12;
+    const index = Math.floor(t * stripes) % 3;
+    return ["#111822", "#609aa0", "#9ec8d1"][index];
+  },
+  kudenoContrast: z => {
+  const t = (z + 1) / 2;
+  // 基本は kudenoToUteki ベースのカラーグラデーション
+  let baseColor;
+  if (t < 1 / 3) {
+    baseColor = interpolateColor("#111822", "#609aa0", t * 3);
+  } else if (t < 2 / 3) {
+    baseColor = interpolateColor("#609aa0", "#9ec8d1", (t - 1 / 3) * 3);
+  } else {
+    baseColor = interpolateColor("#9ec8d1", "#bfe3f6", (t - 2 / 3) * 3);
+  }
+  // 明暗のコントラストを加えるため、明度調整
+  const brightnessFactor = 0.6 + 0.4 * Math.sin(z * Math.PI); // 0.2~1.0 の波
+  const c = baseColor.match(/\d+/g).map(Number);
+  const r = Math.min(255, Math.round(c[0] * brightnessFactor));
+  const g = Math.min(255, Math.round(c[1] * brightnessFactor));
+  const b = Math.min(255, Math.round(c[2] * brightnessFactor));
+  return `rgb(${r}, ${g}, ${b})`;
+  },
+  kudenoContrastNoisy: z => {
+  const t = (z + 1) / 2;
+  // ベースカラー（kudenoToUteki風グラデーション）
+  let baseColor;
+  if (t < 1 / 3) {
+    baseColor = interpolateColor("#111822", "#609aa0", t * 3);
+  } else if (t < 2 / 3) {
+    baseColor = interpolateColor("#609aa0", "#9ec8d1", (t - 1 / 3) * 3);
+  } else {
+    baseColor = interpolateColor("#9ec8d1", "#bfe3f6", (t - 2 / 3) * 3);
+  }
+  // ノイズ風揺らぎ：zの高周波 + tベースの微細変動
+  const noise = 0.9 + 0.2 * Math.sin(z * 20 + t * 100); // 0.7〜1.1くらい
+  // 明暗ノイズを適用
+  const c = baseColor.match(/\d+/g).map(Number);
+  const r = Math.min(255, Math.round(c[0] * noise));
+  const g = Math.min(255, Math.round(c[1] * noise));
+  const b = Math.min(255, Math.round(c[2] * noise));
+  return `rgb(${r}, ${g}, ${b})`;
+  }
+};
+
+function interpolateColor(color1, color2, t) {
+  const c1 = parseInt(color1.slice(1), 16);
+  const c2 = parseInt(color2.slice(1), 16);
+  const r1 = (c1 >> 16) & 0xFF, g1 = (c1 >> 8) & 0xFF, b1 = c1 & 0xFF;
+  const r2 = (c2 >> 16) & 0xFF, g2 = (c2 >> 8) & 0xFF, b2 = c2 & 0xFF;
+
+  const r = Math.round(r1 + (r2 - r1) * t);
+  const g = Math.round(g1 + (g2 - g1) * t);
+  const b = Math.round(b1 + (b2 - b1) * t);
+
+  return `rgb(${r}, ${g}, ${b})`;
+};
+
+// drawPattern の前にグローバルで式をコンパイル
+function compileFormula() {
+  try {
+    compiledFormula = math.compile(formulaInput.value);
+  } catch (e) {
+    compiledFormula = null;
+    console.error("数式のパースに失敗しました:", e);
+    alert("数式のパースに失敗しました。\n\n内容を確認してください。\n" + e.message);
+  }
+}
+
+
+// 描画関数
+let evaluationErrorShown = false;
+
+function drawPattern(offsetX, offsetY, cellWidth, cellHeight, flipX, flipY) {
+  ctx.save();
+  ctx.translate(offsetX + (flipX ? cellWidth : 0), offsetY + (flipY ? cellHeight : 0));
+  ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+
+  const paletteFunc = palettes[paletteSelector.value];
+
+  for (let y = 0; y < cellHeight; y++) {
+    for (let x = 0; x < cellWidth; x++) {
+      const nx = ((x - cellWidth / 2) / cellWidth) * range;
+      const ny = ((y - cellHeight / 2) / cellHeight) * range;
+      const r = Math.sqrt(nx * nx + ny * ny);
+      const theta = Math.atan2(ny, nx);
+
+      let z = 0;
+      if (compiledFormula) {
+        try {
+          z = compiledFormula.evaluate({ nx, ny, r, theta });
+        } catch (e) {
+          z = 0;
+          if (!evaluationErrorShown) {
+            alert("数式の評価中にエラーが発生しました。\n\n" + e.message);
+            evaluationErrorShown = true;
+          }
+        }
+      }
+
+      ctx.fillStyle = paletteFunc(z);
+      ctx.fillRect(x, y, 1, 1);
+    }
+  }
+
+  ctx.restore();
+}
+
+
+function drawAllQuadrants() {
+  const tileCount = parseInt(tileCountSelector.value); // 1, 2, or 4
+  const tileX = tileCount;
+  const tileY = tileCount;
+  const cellWidth = width / tileX;
+  const cellHeight = height / tileY;
+
+  ctx.clearRect(0, 0, width, height);
+
+  for (let i = 0; i < tileY; i++) {
+    for (let j = 0; j < tileX; j++) {
+      const offsetX = j * cellWidth;
+      const offsetY = i * cellHeight;
+      const flipX = j % 2 === 1;
+      const flipY = i % 2 === 1;
+      drawPattern(offsetX, offsetY, cellWidth, cellHeight, flipX, flipY);
+    }
+  }
+}
+
+document.getElementById("redrawButton").addEventListener("click", () => {
+  compileFormula();     // 数式を事前にパース
+  drawAllQuadrants();   // 再描画
+});
+
+// パレット・タイル・数式変更時に再描画
+// formulaInput.addEventListener("input", drawAllQuadrants); コメントアウト
+paletteSelector.addEventListener("change", drawAllQuadrants);
+tileCountSelector.addEventListener("change", drawAllQuadrants);
+
+// 初期描画
+drawAllQuadrants();
+</script>
+
+<br><br><hr><br>
+
+<details>
+  <summary><strong>■ 数式チュートリアル（math.js）</strong></summary>
+  <div style="padding: 0.5em 1em;">
+    <h3>使える変数</h3>
+    <ul>
+      <li><code>nx</code>, <code>ny</code>：正規化座標（−1〜+1）</li>
+      <li><code>r</code>：距離 <code>sqrt(nx^2 + ny^2)</code></li>
+      <li><code>theta</code>：偏角 <code>atan2(ny, nx)</code></li>
+    </ul>
+
+    <h3>基本演算</h3>
+    <p>
+      <li><code>+</code>（可算）</li>
+      <li><code>-</code>（減算）</li>
+      <li><code>*</code>（乗算）</li>
+      <li><code>/</code>（除算）</li>
+      <li><code>mod</code>（剰余）</li>
+      <li><code>^</code>（累乗）</li>
+      <li><code>sin()</code>（正弦）</li>
+      <li><code>cos()</code>（余弦）</li>
+      <li><code>tan()</code>（正接）</li>
+      <li><code>sqrt()</code>（平方根）</li>
+      <li><code>abs()</code>（絶対値）</li>
+      <li><code>max(f,g,...)</code>（最大値）</li> 
+      <li><code>min(f,g,...)</code>（最小値）</li>
+      <li><code>floor()</code>（床関数）</li>
+      <li><code>ceil()</code>（天井関数）</li>
+      <li><code>round()</code>（四捨五入）</li>
+      </p>
+
+    <h3>ビット演算（整数に使う）</h3>
+    <p><code>bitAnd</code>, <code>bitOr</code>, <code>bitXor</code></p>
+    ※floor(r*16)などで整数に変換してからの使用を推奨
+    <br>
+    <h3>式の例</h3>
+    <ul>
+      <li><code>sin(nx * ny)</code>：チェック柄</li>
+      <li><code>cos(r * 10 + theta * 3)</code>：スパイラル</li>
+      <li><code>bitAnd(floor(nx * 10), 3) / 3</code>：ビット縞模様</li>
+      <li><code>(bitXor(floor(nx*16),2) + bitXor(floor(ny*16),2))/12</code>：ドット絵風パターン</li>
+    </ul>
+
+  </div>
+</details>
+
+</body>
+</html>

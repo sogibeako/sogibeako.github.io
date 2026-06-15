@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>* column * // 湫埜と雨滴 </title>
+    <style>
+        /* 色は出来るだけ、SB Creative出版『日本の美しい色と言葉』から取っていく。 */
+        /* 当ページはp256『しとしと』 */
+        /* 氷雨 #e3e8f1 */
+        /* 俄雨 #6290b1 */
+        /* 長雨 #afd3e6 */
+        /* 秋雨 #609aa0 */
+        /* 五月雨 #9ec8d1 */
+        body {
+            font-size: 1rem;
+            background-color: #111822;
+            /* 青っぽい背景色 */
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        h1 {
+            background-color: #609aa0;
+            /* 秋雨 175,211,230*/
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.5em;
+            /* 内側の余白で見た目よく */
+        }
+
+        h2 {
+            background-color: #609aa0;
+            /* 秋雨 */
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.5em;
+            /* 内側の余白で見た目よく */
+        }
+
+        .p_left {
+            text-align: left;
+        }
+
+        .wrapper {
+            max-width: 700px;
+            width: 80%;
+            margin: 50px auto;
+            padding: 20px;
+            border: 0px solid #111;
+            background-color: #afd3e6;
+            /* 長雨 */
+            font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+        }
+
+        .inner_wrapper {
+            width: 600px;
+            margin: 10px auto;
+            padding: 20px;
+            border: 1px solid #111;
+            background-color: #ffffee;
+            font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", sans-serif;
+        }
+
+        .grid-table {
+            display: grid;
+            grid-template-columns: 90px 240px;
+            gap: 2px;
+        }
+
+        .grid-table2 {
+            display: grid;
+            grid-template-columns: 90px 240px 120px;
+            gap: 2px;
+        }
+
+        .grid-table3 {
+            display: grid;
+            grid-template-columns: 90px 90px 120px;
+            gap: 2px;
+        }
+
+        .cell {
+            border: 0px solid #cccccc;
+            padding: 4px 8px;
+            background-color: #eeeeee;
+            line-break: strict;
+            /* 日本語の自然な改行ルールに従う */
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .cell-blue {
+            border: 0px solid #aaaaff;
+            padding: 4px 8px;
+            background-color: #ddddff;
+            line-break: strict;
+            /* 日本語の自然な改行ルールに従う */
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        img.top-image {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        hr {
+            border-width: 2px 0 0 0;
+            /* 線の太さ */
+            border-style: dashed;
+            /* 線の種類 */
+            border-color: #609aa0
+                /* 線の色 */
+        }
+
+        .br-sp {
+            display: none;
+        }
+
+        pre,
+        pre code {
+            background-color: #bbbbbb;
+            color: #000;
+            padding: 0.5em;
+            display: block;
+            overflow-x: auto;
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+        }
+
+        code {
+            background-color: #bbbbbb;
+            color: #000;
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+            font-family: "Courier New", Courier, monospace;
+            display: inline-block;
+            line-height: 1.2;
+        }
+
+        @media screen and (max-width: 600px) {
+            body {
+                font-size: 0.7rem;
+            }
+
+            h1,
+            h2 {
+                font-size: 1rem;
+            }
+
+            .wrapper,
+            .inner_wrapper {
+                width: 95%;
+                padding: 10px;
+                word-wrap: break-word;
+                box-sizing: border-box;
+            }
+
+            .grid-table {
+                grid-template-columns: 50px 200px;
+
+            }
+
+            .grid-table2 {
+                grid-template-columns: 50px 200px 100px;
+            }
+
+            .grid-table3 {
+                grid-template-columns: 50px 50px 100px;
+            }
+
+            .br-sp {
+                display: inline;
+            }
+        }
+    </style>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="p_left">現在位置 : <a href="../../index.html"><b>ホーム</b></a>
+            ＞ <a href="../columnIndex.htm" title="いとしいしとぉ（それは「ゴラム」）"><b>コラム</b></a>
+            ＞ <a href="20250804.htm">純正律について</a></div>
+        <h1>純正律について</h1>
+        <div class="p_left">
+            <h2>1. 12平均律について</h2>
+            12半音からなるオクターブを持つ<b>12平均律</b>において、完全五度は7半音となる。
+            ドを0とし、ド#を1とし……という対応関係を考えた時、ソが7に対応することを確認してみよう。<br>
+            <br>
+            <img src="src/piano.png" width="100%" alt="ピアノ模式図。鍵盤上に「中央ドを0とし、1oct上のドを12とする対応関係を赤字機械彫刻用標準書体で付す"><br>
+            <br>
+            7と12が互いに素であるため、完全五度は12回積層することによって12平均律上の音名を網羅しつつドへと回帰するを得る。（これを<u title="英雄の旅じゃないよ">Circle of
+                5th</u>という）<br>
+            <br>
+            <img src="src/5th.png" width="80%">
+            <br>
+            しかしこうした「音階」というものがなぜ存在するのかについて考察する人は、音楽家にも実は多くないように思う。<br>
+            <br>
+            それを考察するために、まずは、和音や音階などの起源ともされる「倍音」という現象に注目してみよう。
+            倍音をふんだんに含むヴァイオリンやトランペット（ノコギリ波、SawWaveと呼ばれる波形に近い）を聞いた時、
+            注意深く耳を澄ませると、
+            <u title="半分ウソ。執筆者も体調が悪いと聞き取れない">
+                基音である音よりオクターブ上の完全五度や、
+                二オクターブ上の長三度と言った音を聞き取ることができる。</u><br>
+            <br>
+            ある単音の楽音現象には、基音というものが存在する。
+            基音の定義は、「音の中で一番周波数の低い音で、音の基本となる音」である、とするのが一般的だ。
+            「えっ、じゃあエレキベースにハイパスフィルターを掛けた場合は？」など<u title="残響知覚とか下方倍音列とか……">気になること</u>もあるが、
+            ここでは基音の定義には深く踏み入らず、単に「楽器にアサインされた音名で、かつ、もっともそれらしく聞こえる音」辺りの気持ちとする</u>。<br>
+            <br>
+            その周波数を仮に 1 と置いた時、倍音とはまさに、2 や 3 や 4 …といった周波数を持つ音のことだ。
+            各倍音の音量バランスが、楽音の音色（ヴァイオリンらしさ、トランペットらしさ）を決定する。
+            また、そうした倍音の集まりのことを倍音列という。<br>
+            <br>
+            ある音 1 に対して有理数倍で表現された音高のことを、<b>「純正音程」</b>と言う。
+            基音1/1に対する倍音列に属す音程は、2/1, 3/1, 4/1, ……などと表記することが出来るため、
+            純正音程の一種である。こうした「純正音程」というのは、12平均律の音程と比較して「うなり」を持たない。
+            そのため、12平均律の音程と比較してとても調和して聞こえる
+            <u title="
+YouTubeとかでは（ハ長調ラ音を432Hzとする流派と共に）
+スピリチュアル系の人達が好むこともあるようでもあるが、
+そちらについては恥ずかしながら詳しくは知らない。
+混ぜ物を嫌うオーガニック界隈と相性が良いのだろうことは察する。
+ギターのコーラスエフェクトなどは却ってうなりを楽しむものだと思うのだが。
+">
+                とされる。</u><br>
+            <br>
+            純正音程を要素とするセットによって音階を構築したもののことを、12平均律に対して<b>「純正律」</b>と呼ぶ。
+            実際は純正律と12平均律の他に、ピタゴラス音律や1/4-ミーントーン、
+            ヴェルクマイスター音律、キルンベルガー第3と言った様々な調律法が存在するのだが、
+            今回の話では純正律と12平均律に焦点を絞って解説する。<br>
+            <br>
+            <h2>2. 倍音列</h2>
+            倍音の存在について知ると、次は「では各倍音はどのような音程なのか？」ということが気になりはじめる。
+            この章では、1～8倍音までがどのような音程となるのかを紹介していく。<br>
+            <br>
+            簡単のため、1倍音、つまり基音をドと置く。2倍音は基音のオクターブ上である。
+            オクターブのオクターブ上は、2倍音の2倍音となるため、2*2 = 4, すなわち4倍音となる。
+            同様の操作を繰り返すことによって、2^n（ただしnは整数）と置いた時、
+            それはすべて基音をオクターブ上下させたセットの要素となる。
+            つまり、ある音のnオクターブ上の音とは、その音の周波数を 2^n 倍した音だと言うことがわかる。<br>
+            <br>
+            <div class="grid-table">
+                <div class="cell p_left">1倍音</div>
+                <div class="cell p_left">ド（基音）</div>
+                <div class="cell-blue p_left">2倍音</div>
+                <div class="cell-blue p_left">ド（1オクターブ上）</div>
+                <div class="cell p_left">3倍音</div>
+                <div class="cell p_left">？？？？</div>
+                <div class="cell-blue p_left">4倍音</div>
+                <div class="cell-blue p_left">ド（2オクターブ上）</div>
+                <div class="cell p_left">5倍音</div>
+                <div class="cell p_left">？？？？</div>
+                <div class="cell-blue p_left">6倍音</div>
+                <div class="cell-blue p_left">？？？？</div>
+                <div class="cell p_left">7倍音</div>
+                <div class="cell p_left">？？？？</div>
+                <div class="cell-blue p_left">8倍音</div>
+                <div class="cell-blue p_left">ド（3オクターブ上）</div>
+            </div><br>
+            ここからは12平均律と微細なズレが出るため、「セント」という表記を導入する。
+            と言っても特段身構える必要はなく、1セントとは、半音の1/100のことである。
+            100セントで1半音、700セントで7半音=完全五度、1200セントで12半音=1オクターブだ。<br>
+            <br>
+            セントは対数スケールで定義されており、次のような式で与えられる：
+            <p style="text-align: center;">
+                \( \text{セント値} = 1200 \cdot \log_{2}\left( \frac{f_2}{f_1} \right) \)
+            </p>
+            今回は \( f_{1} = 1 \) を所与として、\( f_{2} \) に色々な数字を入れていくことによって、各倍音のセント数を計算できる。
+            実地に計算したい場合は、 <a href="https://www.google.com/">Google</a> の検索欄に <code>1200*log_{2}(f)</code> と置いて、
+            <code>f</code> に気になる値を入れればよい。<br>
+            <br>
+            <div class="grid-table2">
+                <div class="cell p_left">1倍音</div>
+                <div class="cell p_left">ド（基音）</div>
+                <div class="cell p_left">0cents</div>
+                <div class="cell-blue p_left">2倍音</div>
+                <div class="cell-blue p_left">ド（1オクターブ上）</div>
+                <div class="cell-blue p_left">1200cents</div>
+                <div class="cell p_left">3倍音</div>
+                <div class="cell p_left">ソ（1オクターブ上）</div>
+                <div class="cell p_left">1901.955cents</div>
+                <div class="cell-blue p_left">4倍音</div>
+                <div class="cell-blue p_left">ド（2オクターブ上）</div>
+                <div class="cell-blue p_left">2400cents</div>
+                <div class="cell p_left">5倍音</div>
+                <div class="cell p_left">ちょっと低いミ（2オクターブ上）</div>
+                <div class="cell p_left">2786.313cents</div>
+                <div class="cell-blue p_left">6倍音</div>
+                <div class="cell-blue p_left">ソ（2オクターブ上）</div>
+                <div class="cell-blue p_left">3101.955cents</div>
+                <div class="cell p_left">7倍音</div>
+                <div class="cell p_left">だいぶ低いシb（2オクターブ上）</div>
+                <div class="cell p_left">3368.825cents</div>
+                <div class="cell-blue p_left">8倍音</div>
+                <div class="cell-blue p_left">ド（3オクターブ上）</div>
+                <div class="cell-blue p_left">3600cents</div>
+            </div><br>
+            これで、倍音列の音程が得られた。興味のある向きは、是非
+            <a
+                href="https://sevish.com/scaleworkshop/?n=harmonicSeries1-8&l=2F1_3F1_4F1_5F1_6F1_7F1_8F1&version=2.5.7">ScaleWorkshop</a>
+            （Made by <a href="https://www.youtube.com/sevish">Sevish</a>）
+            にアクセスしてみて頂きたい。第1から第8までの倍音列を構成しておいたので、<code>A</code>から<code>K</code>まで、気ままにキーボードを叩いて倍音列の響きを楽しんでみて欲しい。<br>
+            <br>
+            <h2>3. 純正長和音と純正律</h2>
+            4倍音、5倍音、6倍音にあたる音程を同時に鳴らした和音 4:5:6 は<strong>「純正長和音」</strong>と呼ばれる。基音1をドとした場合、4はド、5はミ、6はソに当たる。
+            長和音は非常に好ましい響きであり、特に純正長和音は、「三和音」関係におけるある種のイデアのようなものだと考えられているようだ。<br>
+            <br>
+            純正長和音はセント表記ではおよそ ド - ミ - ソ = 0 - 386 - 702 という音程で表現され、
+            12平均律、すなわち通常の長和音 0 - 400 - 700 と比べて、長三度が微妙に（1/6半音ほど）狭く、完全五度がほんのわずか広い。<br>
+            <br>
+            あるいは、12平均律の長和音が、4 : 5.04 : 6 という微妙な比率を持っていると言い直してもいいかもしれない。
+            12平均律の長三度 4 : 5:04 は、例えば基音ラ440Hzに対しては554Hzという周波数として与えられる。
+            差音として4.00に対する1.04、114Hzという周波数が人間の耳の中で自然発生するのだが、
+            これはラよりも61cents、すなわち三分音ほど高い「微分音」となる。
+            つまり、差音を考えた時、<b>基音ラに対して、2オクターブ下のラの三分音上という微妙な音（＝うなり）を、微小な音量で与えてしまうのが12平均律の長三度関係</b>だ。<br>
+            <br>
+            それに対して、純正律の長三度 4:5 は、基音ラ440Hzに対して550Hzという周波数として与えられる。差音としては 1 が与えられ、
+            これはまさに2オクターブ下のラそのものである。
+            このように音程関係がシンプルであるがために、純正長和音はより優れている、とする考え方がある。
+            となると、出来れば音階を全て純正長和音で構成してみたくなるというのが人情というものだ。<br>
+            <br>
+            <div class="grid-table">
+                <div class="cell p_left">ド</div>
+                <div class="cell p_left">4</div>
+                <div class="cell-blue p_left">ミ</div>
+                <div class="cell-blue p_left">5</div>
+                <div class="cell p_left">ソ</div>
+                <div class="cell p_left">6</div>
+            </div>
+            <br>
+            音階とはオクターブを1周期とし、後者に行く程音程が上がっていくという順序関係を持つセリー(series)のことである。
+            そのため、今後登場する音程を全てオクターブ内に収めるために、有理数比を導入しよう。
+            1オクターブは基音に対して2倍の高さを持つ音程であったから、基音から1オクターブ内に収まる純正音程は全て、1/1以上かつ、2/1を下回るもののとなる。
+            数学っぽく括弧を付けて言うと \( \frac{p}{q} \in \lbrack \frac{1}{1}, \frac{2}{1}) \) と表記できるような \( \frac{p}{q} \)
+            を求めていく格好だ。
+            悩みそうだが話は簡単で、<strong>純正音程に2を掛ける操作が1オクターブ上を取る操作、2で割る操作が1オクターブ下を取る操作に対応する</strong>。
+            <br>
+            <br>
+            たとえば第5倍音をオクターブ内に収めることを考える。これに対しては、分母に4を選んで 5/4(=1.25) とするのがよい。
+            2を選んで 5/2(=2.5) とするのでは数値として 2/1 を上回ってしまい、5/8(=0.675)だと 1/1 を下回ってしまう。
+            このよう<strong>ある音程 p/q を1オクターブ内に「正規化」する操作</strong>は、今後純正音程を考えていくに当たって、数えきれないほど行うことになるので、習慣づけておくべきだ。<br>
+            <br>
+            <div class="grid-table3">
+                <div class="cell p_left">ド</div>
+                <div class="cell p_left">1/1</div>
+                <div class="cell p_left">0cents</div>
+                <div class="cell-blue p_left">ミ</div>
+                <div class="cell-blue p_left">5/4</div>
+                <div class="cell-blue p_left">386cents</div>
+                <div class="cell p_left">ソ</div>
+                <div class="cell p_left">3/2</div>
+                <div class="cell p_left">702cents</div>
+            </div>
+            <br>
+            この表記法によると、純正長和音は 1/1 : 5/4 : 3/2 と表記できることが分かる。
+            全体の分母を4に均せば、4/4 : 5/4 : 6/4 であり、
+            分母の4を外せば依然として 4:5:6 という比率が保たれているままであることを確かめられる。
+            セントは、同じく<a href="https://www.google.com/">Google</a> の検索欄に
+            <code>1200*log_{2}(5/4)</code> などと入力して計算すれば、出てくる。<br>
+            <br>
+            さて、音階を構成するには当然これだけでは足らない。
+            主和音すなわち<strong>トニック C△</strong>を定義したのだから、
+            属和音すなわち<strong>ドミナント G△</strong> と、
+            下属和音すなわち<strong>サブドミナント F△</strong>が求められるのは自然なことだ。
+            これが定義されていれば、長調における基本的なケーデンス C△ → F△ → G△ → C△ を実現できるのだから
+            （短調好きの同士には今しばらくお待ちいただきたい）。<br>
+            <br>
+            G△ = ソシレは、ソ = 3/2 の上に構成される長和音だ。
+            構成自体は簡単で、3/2 に対する長三和音関係 1/1 : 5/4 : 3/2 を再度考えればよい。
+            ソに対する長三度は、<br>
+            <p style="text-align: center;">\( \frac{3}{2} \times \frac{5}{4} = \frac{15}{8} \)</p>
+            といった積で与えられる。つまり、 15/8 こそがソの長三度上のシである。こういった、
+            <strong>完全五度 + 長三度といった音程同士の和は、純正音程においては積として表される</strong>という感覚が、
+            私の（あまりこなれているとは言い難い）文で、なんとか読者に伝わると欲しい。<br>
+            <br>
+            同様にして、レはソの完全五度上であるから、<br>
+            <p style="text-align: center;">\( \frac{3}{2} \times \frac{3}{2} = \frac{9}{4} \)</p>
+            となる。これは、中央ド = 1/1 から見ると長九度上となっていてオクターブ＝完全八度よりも高くなっている。
+            そのため、2で除して、9/8とすればオクターブ内に収まる。<br>
+            <br>
+            <div class="grid-table3">
+                <div class="cell p_left">ド</div>
+                <div class="cell p_left">1/1</div>
+                <div class="cell p_left">0cents</div>
+                <div class="cell-blue p_left">レ</div>
+                <div class="cell-blue p_left">9/8</div>
+                <div class="cell-blue p_left">204cents</div>
+                <div class="cell p_left">ミ</div>
+                <div class="cell p_left">5/4</div>
+                <div class="cell p_left">386cents</div>
+                <div class="cell-blue p_left">ソ</div>
+                <div class="cell-blue p_left">3/2</div>
+                <div class="cell-blue p_left">702cents</div>
+                <div class="cell p_left">シ</div>
+                <div class="cell p_left">15/8</div>
+                <div class="cell p_left">1088cents</div>
+            </div>
+            <br>
+            続けて、F△のために、ファやラを定義する。
+            特にファは、せっかく純正音程による完全五度を定義したのだから、ドの純正完全五度下でなければ切ない。
+            逆数を取って ファ = 2/3 としておけば、その上の完全五度 = 3/2 を与えた時に、
+            <p style="text-align: center" ;>\( \frac{2}{3} \times \frac{3}{2} = \frac{1}{1} = ド\)</p>
+            となり、丁度 1/1 = ドと等しくなる。
+            ただし2/3 では同じくオクターブ下のファになってしまうので、今度は2倍、4/3 としておけばオクターブ内に収まる。<br>
+            <br>
+            ラは 4/3 の長三度上、すなわち　<br>
+            <p style="text-align: center;">\( \frac{4}{3} \times \frac{5}{4} = \frac{5}{3} \)</p center>
+            <br>
+            となる。余裕があれば、与えられたF△やG△の比率が、4:5:6 と等しくなっていることを確認されたい。
+            ただし、G△について考える時は、ソ : シ : レ = 3/2 : 15/8 : 9/8とするのではなく、レのみオクターブ上の9/4となることには留意。しつこいようだが、
+            <b>オクターブを上げることは有理数に2を掛けること、オクターブを下げることは有理数を2で除すること</b>、という感覚を身に着けるのがよい。<br>
+            <br>
+            <div class="grid-table3">
+                <div class="cell p_left">ド</div>
+                <div class="cell p_left">1/1</div>
+                <div class="cell p_left">0cents</div>
+                <div class="cell-blue p_left">レ</div>
+                <div class="cell-blue p_left">9/8</div>
+                <div class="cell-blue p_left">204cents</div>
+                <div class="cell p_left">ミ</div>
+                <div class="cell p_left">5/4</div>
+                <div class="cell p_left">386cents</div>
+                <div class="cell-blue p_left">ファ</div>
+                <div class="cell-blue p_left">4/3</div>
+                <div class="cell-blue p_left">498cents</div>
+                <div class="cell p_left">ソ</div>
+                <div class="cell p_left">3/2</div>
+                <div class="cell p_left">702cents</div>
+                <div class="cell-blue p_left">ラ</div>
+                <div class="cell-blue p_left">5/3</div>
+                <div class="cell-blue p_left">884cents</div>
+                <div class="cell p_left">シ</div>
+                <div class="cell p_left">15/8</div>
+                <div class="cell p_left">1088cents</div>
+                <div class="cell-blue p_left">ド</div>
+                <div class="cell-blue p_left">2/1</div>
+                <div class="cell-blue p_left">1200cents</div>
+            </div>
+            <br>
+            これで、純正律における長音階が完成した。全て有理数で書かれているせいか、
+            どことなく魔術的というかピタゴラス教団的というか、ドキドキと心躍る感じがある。<br>
+            <br>
+            同様に、黒鍵部分についても導入していこう。まずは短3度 ミ♭ を導入する。
+            実は既に短三度が登場しており、ミ-ソ間、ラ-ド間、シ-レ間だ。
+            これらは全て、ドミソ、ファラド、ソシレと言った、それぞれ4:5:6の関係にある和音の後半部であり、
+            6/5であることがわかる。<br>
+            <br>
+            先ほどもやった通り、この関係をファ 4/3 や ソ 3/2 に掛けていけば自然と、<br>
+            <p style="text-align: center;">
+                \( \text{ラ♭} = \frac{4}{3} \times \frac{6}{5} = \frac{8}{5} \)<br>
+                <br>
+                \( \text{シ♭} = \frac{3}{2} \times \frac{6}{5} = \frac{9}{5} \)<br>
+            </p>
+            といった関係が確かめられる。<br>
+            <br>
+            <div class="grid-table3">
+                <div class="cell p_left">ド</div>
+                <div class="cell p_left">1/1</div>
+                <div class="cell p_left">0cents</div>
+                <div class="cell-blue p_left">レ</div>
+                <div class="cell-blue p_left">9/8</div>
+                <div class="cell-blue p_left">204cents</div>
+                <div class="cell p_left">ミ♭</div>
+                <div class="cell p_left">6/5</div>
+                <div class="cell p_left">316cents</div>
+                <div class="cell-blue p_left">ミ</div>
+                <div class="cell-blue p_left">5/4</div>
+                <div class="cell-blue p_left">386cents</div>
+                <div class="cell p_left">ファ</div>
+                <div class="cell p_left">4/3</div>
+                <div class="cell p_left">498cents</div>
+                <div class="cell-blue p_left">ソ</div>
+                <div class="cell-blue p_left">3/2</div>
+                <div class="cell-blue p_left">702cents</div>
+                <div class="cell p_left">ラ♭</div>
+                <div class="cell p_left">8/5</div>
+                <div class="cell p_left">813cents</div>
+                <div class="cell-blue p_left">ラ</div>
+                <div class="cell-blue p_left">5/3</div>
+                <div class="cell-blue p_left">884cents</div>
+                <div class="cell p_left">シ♭</div>
+                <div class="cell p_left">9/5</div>
+                <div class="cell p_left">1018cents</div>
+                <div class="cell-blue p_left">シ</div>
+                <div class="cell-blue p_left">15/8</div>
+                <div class="cell-blue p_left">1088cents</div>
+                <div class="cell p_left">ド</div>
+                <div class="cell p_left">2/1</div>
+                <div class="cell p_left">1/1</div>
+            </div>
+            <br>
+            ここまで来たら、レ♭ や ファ#を求めることは決してわがままではあるまい。<br>
+            <br>
+            ファ#を求める理由をとりあえずリディア旋法に置くのであれば、ファ#は D△ = レファ#ラを構成するためのものであり、
+            レ = 9/8 の長三度上、すなわち<br>
+            <p style="text-align: center;">\( \text{ファ♯} = \frac{9}{8} \times \frac{5}{4} = \frac{45}{32} \)</p>
+            であるのが望ましい。これはシ = 15/8 の完全五度上とも一致する（計算は省く）。<br>
+            <br>
+            レ♭は、フリュギア旋法に由来を置くとしよう。ミ = 5/4 から見た ファ = 4/3 こそがまさに、ド = 1/1 から見た レ♭ = p/q である。つまり
+            <p style="text-align: center;">\( \frac{5}{4} : \frac{4}{3} = \frac{1}{1} : \frac{p}{q} \)</p>
+            を解けばよく、要するに<br>
+            <p style="text-align: center;">\( \text{レ♭} = \frac{p}{q} = \frac{4}{3} \times \frac{4}{5} = \frac{16}{15}
+                \)</p>
+            となる。かくして<u title="どうでもいいのだが、cssでgridを打つのがキツい(w 何か方策を考えたい">12音を求める長い旅は終わり</u>、ここに<br>
+            <br>
+            <div class="grid-table3">
+                <div class="cell p_left">ド</div>
+                <div class="cell p_left">1/1</div>
+                <div class="cell p_left">0cents</div>
+                <div class="cell-blue p_left">レ♭</div>
+                <div class="cell-blue p_left">16/15</div>
+                <div class="cell-blue p_left">112cents</div>
+                <div class="cell p_left">レ</div>
+                <div class="cell p_left">9/8</div>
+                <div class="cell p_left">204cents</div>
+                <div class="cell-blue p_left">ミ♭</div>
+                <div class="cell-blue p_left">6/5</div>
+                <div class="cell-blue p_left">316cents</div>
+                <div class="cell p_left">ミ</div>
+                <div class="cell p_left">5/4</div>
+                <div class="cell p_left">386cents</div>
+                <div class="cell-blue p_left">ファ</div>
+                <div class="cell-blue p_left">4/3</div>
+                <div class="cell-blue p_left">498cents</div>
+                <div class="cell p_left">ファ#</div>
+                <div class="cell p_left">45/32</div>
+                <div class="cell p_left">590cents</div>
+                <div class="cell-blue p_left">ソ</div>
+                <div class="cell-blue p_left">3/2</div>
+                <div class="cell-blue p_left">702cents</div>
+                <div class="cell p_left">ラ♭</div>
+                <div class="cell p_left">8/5</div>
+                <div class="cell p_left">813cents</div>
+                <div class="cell-blue p_left">ラ</div>
+                <div class="cell-blue p_left">5/3</div>
+                <div class="cell-blue p_left">884cents</div>
+                <div class="cell p_left">シ♭</div>
+                <div class="cell p_left">9/5</div>
+                <div class="cell p_left">1018cents</div>
+                <div class="cell-blue p_left">シ</div>
+                <div class="cell-blue p_left">15/8</div>
+                <div class="cell-blue p_left">1088cents</div>
+                <div class="cell p_left">ド</div>
+                <div class="cell p_left">2/1</div>
+                <div class="cell p_left">1200cents</div>
+            </div>
+            <br>
+            という対応関係が得られた。これこそが「純正律」である。
+            同じく<a
+                href="https://sevish.com/scaleworkshop/?n=JustIntonation%285-limit%29&l=gFf_9F8_6F5_5F4_4F3_19Fw_3F2_8F5_5F3_9F5_fF8_2F1_&version=2.5.7">ScaleWorkshop</a>に
+            出来上がった12音純正律の音階を作成しておいたので、実地に演奏して、聞き心地を体験してみてほしい。<br>
+            <br>
+            <br>
+            <br>
+            <h2>4. 閏（うるう）とコンマ</h2>
+            唐突だが、太陽暦に言う<b>「閏」</b>というものについて考えてみよう。
+            一年は365日とされるが、実際には4年に1度、
+            4の倍数の年すなわち夏季オリンピックの年に、2月29日という余分な一日を追加する必要がある。
+            この「一日を追加する」操作のことを閏と言い、年のことを、閏年と言うのであった。<br>
+            <br>
+            これは、地球という天体の持つ<b>公転（一年を司る周期）</b>と
+            <b>自転（一昼夜を司る周期）の365倍</b>の間に、0.2564……日といった
+            微妙な差が存在するという事情に拠る。閏年を与えなかった場合、
+            4年に1日ずつ、春分・夏至・秋分・冬至が後ろへとずれ込んでいってしまう。<br>
+            <br>
+            純正律に登場する「コンマ」とは、まさにこの「ズレ」のようなものである。
+
+
+
+        </div>
+</body>
+
+</html>

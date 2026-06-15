@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASCII Tetris v0.4</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app-container">
+        <div id="left-panel">
+            <pre id="title-display"></pre>
+            <div id="game-container" style="display: none;">
+                <div id="main-view">
+                    <pre id="game-display"></pre>
+                </div>
+                <div id="info-panel">
+                    <div id="score-box">SCORE: <span id="score">0</span></div>
+                    <div id="level-box">LEVEL: <span id="level">1</span></div>
+                    <div id="lines-box">LINES: <span id="lines">0</span></div>
+                    <div id="time-box">TIME: <span id="time">00:00:00</span></div>
+                    <div id="speed-box">SPEED: <span id="speed">0.1</span>G</div>
+                    <div id="next-box">NEXT:
+                        <pre id="next-display"></pre>
+                    </div>
+                    <div id="hold-box">HOLD:
+                        <pre id="hold-display"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="instructions-panel">
+            <h3>CONTROLS</h3>
+            <ul class="inst-list">
+                <li><span class="key">← →</span> Move / (Title) Level</li>
+                <li><span class="key">↓</span> Soft Drop (5G) / Lock</li>
+                <li><span class="key">↑</span> Sonic Drop (Instant)</li>
+                <li><span class="key">Z / X</span> Rotate Left / Right</li>
+                <li><span class="key">C</span> Hold Piece</li>
+            </ul>
+
+            <h3>MODES</h3>
+            <div class="mode-desc">
+                <strong>MODE A: FROZEN BLOCKS</strong><br>
+                LV1300以降、時間経過と共にブロックが凍結し消えなくなります。
+            </div>
+            <div class="mode-desc">
+                <strong>MODE B: RISING GARBAGE</strong><br>
+                LV500以降、床が定期的に上昇します。生き抜こう！
+            </div>
+            <div class="mode-desc">
+                <strong>MODE C: POLYOMINOES</strong><br>
+                LV1000以降、ペント、ヘキソ、ヘプトミノなどが登場。
+                LV1000以降はラインが揃うと上下一列が誘爆して消えます。
+            </div>
+
+            <div class="secret-hint">
+                <small>* <span class="key">A</span>+<span class="key">B</span> を押しっぱなしで<span class="key">ENTER</span>で、
+                    隠しモードを有効にできます。</small>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>

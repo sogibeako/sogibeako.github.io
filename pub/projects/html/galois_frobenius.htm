@@ -1,0 +1,1732 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ガロア理論からフロベニウスへ * 湫埜と雨滴 *</title>
+    <style>
+        /* 色は出来るだけ、SB Creative出版『日本の美しい色と言葉』から取っていく。 */
+        /* 当ページはp256『しとしと』 */
+        /* 氷雨 #e3e8f1 */
+        /* 俄雨 #6290b1 */
+        /* 長雨 #afd3e6 */
+        /* 秋雨 #609aa0 */
+        /* 五月雨 #9ec8d1 */
+
+        body {
+            font-size: 1rem;
+            background-color: #111822;
+            margin: 0;
+            padding: 0;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        h1 {
+            background-color: #609aa0;
+            color: black;
+            padding: 0.5em;
+        }
+
+        h2 {
+            background-color: #6290b1;
+            color: black;
+            padding: 0.2em;
+        }
+
+        h3 {
+            background-color: #fde5c5;
+            color: black;
+            padding: 0.1em;
+        }
+
+        .wrapper {
+            max-width: 700px;
+            width: 80%;
+            margin: 50px auto;
+            padding: 20px;
+            border: 0px solid #111;
+            background-color: #afd3e6;
+            font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+        }
+
+        .inner_wrapper {
+            width: 600px;
+            margin: 10px auto;
+            padding: 20px;
+            border: 1px solid #111;
+            background-color: #ffffee;
+            font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", sans-serif;
+        }
+
+        .eqwrap {
+            overflow-x: auto;
+            margin: 0.5em 0;
+        }
+
+        hr {
+            border-width: 2px 0 0 0;
+            border-style: dashed;
+            border-color: #609aa0;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1em 0;
+        }
+
+        table th,
+        table td {
+            border: 1px solid #666;
+            padding: 0.4em 0.6em;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #9ec8d1;
+        }
+
+        ol {
+            font-weight: bold;
+        }
+
+        ol li {
+            font-weight: normal;
+        }
+
+        .p_left {
+            text-align: left;
+        }
+
+        details {
+            margin: 1em 0;
+            padding: 0.5em;
+            border: 1px solid #609aa0;
+            border-radius: 4px;
+            background-color: #e3e8f1;
+        }
+
+        details summary {
+            cursor: pointer;
+            font-weight: bold;
+            color: #333;
+        }
+
+        @media screen and (max-width: 600px) {
+            body {
+                font-size: 0.7rem;
+            }
+
+            h1,
+            h2 {
+                font-size: 1rem;
+            }
+
+            .wrapper,
+            .inner_wrapper {
+                width: 95%;
+                padding: 10px;
+                word-wrap: break-word;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="p_left">
+            現在位置 : <a href="../index.html">ホーム</a> ＞ Diary ＞
+            <a href="galois_frobenius.htm"><b>ガロア理論からフロベニウスへ</b></a>
+        </div>
+        <hr />
+
+        <h1>ガロア理論からフロベニウスへ——自己冪等数から始まる旅</h1>
+
+        自己冪等数（automorphic number）——つまり、自乗しても末尾が変わらない数——を眺めていたら、
+        いつの間にかガロア理論と \( p \)-進数論の深みにはまっていました。
+        結論から言えば、「一つのものが複数に分裂するとき、冪等元が現れる」という構造が、
+        代数のあちこちに潜んでいる、ということがわかってきました。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 1. ガロア理論 ===== -->
+        <h2>1. ガロア理論：方程式の対称性を見る</h2>
+
+        <h3>1.1 体の拡大＝方程式を解くこと</h3>
+        有理数 \( \mathbb{Q} \) の中で \( x^2 - 2 = 0 \) は解けません。
+        \( \sqrt{2} \) を添加して \( \mathbb{Q}(\sqrt{2}) \) に行くと解ける。
+        「体を拡大する」ステップが「方程式を一つ解く」ことに対応します。<br />
+        <br />
+
+        <h3>1.2 自己同型＝「根の区別のつかなさ」</h3>
+        \( \mathbb{Q}(\sqrt{2}) \) の中で \( \sqrt{2} \) を \( -\sqrt{2} \) に取り替えても、
+        体としての算術は全く壊れません。
+        使うのは \( (\sqrt{2})^2 = 2 \) という事実だけで、
+        \( (-\sqrt{2})^2 = 2 \) も成り立つから。<br /><br />
+
+        この「構造を保つ変換」が<strong>自己同型（automorphism）</strong>。
+        \( i \) と \( -i \) の区別がつかないのも同じことです。<br />
+        <br />
+
+        <h3>1.3 ガロア群＝自己同型の全体</h3>
+        拡大 \( K/\mathbb{Q} \) の自己同型で、\( \mathbb{Q} \) の元を動かさないもの全体を集めると群になる。
+        これが<strong>ガロア群</strong> \( \mathrm{Gal}(K/\mathbb{Q}) \) です。<br />
+        <br />
+
+        <h3>1.4 ガロア対応</h3>
+        <div class="eqwrap">
+            \[ \text{体の拡大の中間体} \quad \longleftrightarrow \quad \text{ガロア群の部分群} \]
+        </div>
+        が一対一に対応する。体が大きいほど対応する群は小さい
+        （根を区別できるようになるほど対称性が減る）。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 2. 二次方程式 ===== -->
+        <h2>2. 二次方程式の具体例</h2>
+
+        <h3>2.1 \( x^2 - 2 = 0 \)</h3>
+        <ul>
+            <li>根：\( \sqrt{2},\ -\sqrt{2} \)</li>
+            <li>体の拡大：\( \mathbb{Q} \subset \mathbb{Q}(\sqrt{2}) \)</li>
+            <li>ガロア群：\( \sigma: \sqrt{2} \mapsto -\sqrt{2} \)、
+                \( \mathrm{Gal} \cong \mathbb{Z}/2\mathbb{Z} \)</li>
+        </ul>
+
+        <h3>2.2 \( x^2 + 1 = 0 \)</h3>
+        <ul>
+            <li>根：\( i,\ -i \)</li>
+            <li>体の拡大：\( \mathbb{Q} \subset \mathbb{Q}(i) \)</li>
+            <li>ガロア群：\( \sigma: i \mapsto -i \)、
+                \( \mathrm{Gal} \cong \mathbb{Z}/2\mathbb{Z} \)</li>
+        </ul>
+        ガロア群の側から見れば 2.1 と区別がつきません。
+        ただし \( \mathbb{Q}(\sqrt{2}) \subset \mathbb{R} \) だが
+        \( \mathbb{Q}(i) \not\subset \mathbb{R} \) という違いは群では捉えられない。<br />
+        <br />
+
+        <h3>2.3 二つの二次方程式を同時に：\( x^2-2=0 \) と \( x^2-3=0 \)</h3>
+        体の拡大：\( \mathbb{Q} \subset \mathbb{Q}(\sqrt{2}, \sqrt{3}) \)。
+        基底：\( \{1, \sqrt{2}, \sqrt{3}, \sqrt{6}\} \)、拡大次数 4。<br /><br />
+
+        \( \sqrt{6} \) が「おまけ」として自動的に現れるのが面白い。<br /><br />
+
+        ガロア群は \( \sqrt{2} \) と \( \sqrt{3} \) の符号を独立に変える4つの元：<br />
+        <table>
+            <tr>
+                <th>元</th>
+                <th>\( \sqrt{2} \)</th>
+                <th>\( \sqrt{3} \)</th>
+                <th>\( \sqrt{6} \)</th>
+            </tr>
+            <tr>
+                <td>\( e \)</td>
+                <td>\( + \)</td>
+                <td>\( + \)</td>
+                <td>\( + \)</td>
+            </tr>
+            <tr>
+                <td>\( \sigma \)</td>
+                <td>\( - \)</td>
+                <td>\( + \)</td>
+                <td>\( - \)</td>
+            </tr>
+            <tr>
+                <td>\( \tau \)</td>
+                <td>\( + \)</td>
+                <td>\( - \)</td>
+                <td>\( - \)</td>
+            </tr>
+            <tr>
+                <td>\( \sigma\tau \)</td>
+                <td>\( - \)</td>
+                <td>\( - \)</td>
+                <td>\( + \)</td>
+            </tr>
+        </table>
+        <div class="eqwrap">
+            \[ \mathrm{Gal}(\mathbb{Q}(\sqrt{2},\sqrt{3})/\mathbb{Q}) \cong V_4 = \mathbb{Z}/2\mathbb{Z} \times
+            \mathbb{Z}/2\mathbb{Z} \]
+        </div>
+
+        ガロア対応をまとめると：<br />
+        <table>
+            <tr>
+                <th>部分群</th>
+                <th>固定される中間体</th>
+            </tr>
+            <tr>
+                <td>\( \{e\} \)</td>
+                <td>\( \mathbb{Q}(\sqrt{2},\sqrt{3}) \)</td>
+            </tr>
+            <tr>
+                <td>\( \{e, \sigma\} \)</td>
+                <td>\( \mathbb{Q}(\sqrt{3}) \)</td>
+            </tr>
+            <tr>
+                <td>\( \{e, \tau\} \)</td>
+                <td>\( \mathbb{Q}(\sqrt{2}) \)</td>
+            </tr>
+            <tr>
+                <td>\( \{e, \sigma\tau\} \)</td>
+                <td>\( \mathbb{Q}(\sqrt{6}) \)</td>
+            </tr>
+            <tr>
+                <td>\( V_4 \)</td>
+                <td>\( \mathbb{Q} \)</td>
+            </tr>
+        </table>
+        隠れた中間体 \( \mathbb{Q}(\sqrt{6}) \) の存在をガロア対応が教えてくれる！<br />
+        <br />
+
+        <h3>2.4 円分体：\( x^2 + x + 1 = 0 \)（1の原始3乗根）</h3>
+        <ul>
+            <li>根：\( \omega = \frac{-1+\sqrt{-3}}{2} \)、\( \bar{\omega} = \frac{-1-\sqrt{-3}}{2} \)</li>
+            <li>\( \mathbb{Q}(\omega) = \mathbb{Q}(\sqrt{-3}) \)</li>
+            <li>ガロア群：\( \sigma: \omega \mapsto \omega^2 = \bar{\omega} \)、
+                \( \mathrm{Gal} \cong \mathbb{Z}/2\mathbb{Z} \)</li>
+        </ul>
+        一般に、1の原始 \( n \) 乗根 \( \zeta_n \) に対して
+        \( \mathrm{Gal}(\mathbb{Q}(\zeta_n)/\mathbb{Q}) \cong (\mathbb{Z}/n\mathbb{Z})^{\times} \)。
+        各自己同型は \( \zeta_n \mapsto \zeta_n^k \)（\( \gcd(k,n)=1 \)）の形をしています。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 3. 三次方程式 ===== -->
+        <h2>3. 三次方程式の具体例</h2>
+
+        <h3>3.1 \( x^3 - 2 = 0 \)：ガロア群 \( S_3 \)</h3>
+        根は \( \sqrt[3]{2},\ \omega\sqrt[3]{2},\ \omega^2\sqrt[3]{2} \)。<br /><br />
+
+        \( \mathbb{Q}(\sqrt[3]{2}) \) だけでは根が全部入りません（\( \omega \) がない）。
+        分解体は \( K = \mathbb{Q}(\sqrt[3]{2}, \omega) \)、\( [K:\mathbb{Q}] = 6 \)。<br /><br />
+
+        \( \mathrm{Gal}(K/\mathbb{Q}) \cong S_3 \) の元は以下の6つ：<br />
+        <table>
+            <tr>
+                <th>元</th>
+                <th>\( \sqrt[3]{2} \mapsto \)</th>
+                <th>\( \omega \mapsto \)</th>
+            </tr>
+            <tr>
+                <td>\( e \)</td>
+                <td>\( \sqrt[3]{2} \)</td>
+                <td>\( \omega \)</td>
+            </tr>
+            <tr>
+                <td>\( \sigma \)</td>
+                <td>\( \omega\sqrt[3]{2} \)</td>
+                <td>\( \omega \)</td>
+            </tr>
+            <tr>
+                <td>\( \sigma^2 \)</td>
+                <td>\( \omega^2\sqrt[3]{2} \)</td>
+                <td>\( \omega \)</td>
+            </tr>
+            <tr>
+                <td>\( \tau \)</td>
+                <td>\( \sqrt[3]{2} \)</td>
+                <td>\( \omega^2 \)</td>
+            </tr>
+            <tr>
+                <td>\( \sigma\tau \)</td>
+                <td>\( \omega\sqrt[3]{2} \)</td>
+                <td>\( \omega^2 \)</td>
+            </tr>
+            <tr>
+                <td>\( \sigma^2\tau \)</td>
+                <td>\( \omega^2\sqrt[3]{2} \)</td>
+                <td>\( \omega^2 \)</td>
+            </tr>
+        </table>
+
+        ガロア対応では、\( \mathbb{Q}(\omega) \) に対応する
+        \( A_3 = \{e, \sigma, \sigma^2\} \) は<strong>正規部分群</strong>（→ ガロア拡大）だが、
+        \( \mathbb{Q}(\sqrt[3]{2}) \) に対応する \( \{e, \tau\} \) は正規でない（→ ガロア拡大でない）。<br /><br />
+
+        方程式を解く過程：\( S_3 \supset A_3 \supset \{e\} \)。
+        まず判別式の平方根（\( \omega \) を得る）、次に立方根。
+        カルダノの公式の構造そのものです。<br />
+        <br />
+
+        <h3>3.2 \( x^3 - 3x - 1 = 0 \)：ガロア群 \( A_3 \)</h3>
+        判別式 \( \Delta = 81 = 9^2 \)（完全平方）。根は全て実数。<br /><br />
+
+        \( \sqrt{\Delta} \in \mathbb{Q} \) なので平方根のステップが不要。<br />
+        <div class="eqwrap">
+            \[ \mathrm{Gal}(K/\mathbb{Q}) \cong A_3 \cong \mathbb{Z}/3\mathbb{Z} \]
+        </div>
+        中間体なし。根を一つ添加すれば残りも自動的に入ります。<br />
+        <br />
+
+        <h3>3.3 二つの三次方程式の比較</h3>
+        <table>
+            <tr>
+                <th></th>
+                <th>\( x^3 - 2 = 0 \)</th>
+                <th>\( x^3 - 3x - 1 = 0 \)</th>
+            </tr>
+            <tr>
+                <td>判別式</td>
+                <td>\( -108 \)（非平方）</td>
+                <td>\( 81 = 9^2 \)（完全平方）</td>
+            </tr>
+            <tr>
+                <td>ガロア群</td>
+                <td>\( S_3 \)（非可換、位数6）</td>
+                <td>\( A_3 \cong \mathbb{Z}/3\mathbb{Z} \)（位数3）</td>
+            </tr>
+            <tr>
+                <td>根の性質</td>
+                <td>実1つ＋複素2つ</td>
+                <td>全て実数</td>
+            </tr>
+            <tr>
+                <td>解くのに必要な操作</td>
+                <td>\( \sqrt{} \) と \( \sqrt[3]{} \)</td>
+                <td>\( \sqrt[3]{} \) のみ</td>
+            </tr>
+        </table>
+        判別式が完全平方かどうかで、ガロア群が \( S_3 \) か \( A_3 \) かが分かれる——
+        これは結構驚きだった。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 4. 可解性 ===== -->
+        <h2>4. 方程式の可解性と群の可解性</h2>
+
+        <h3>4.1 「冪根で解ける」とは</h3>
+        体の拡大を一段ずつ積む：
+        <div class="eqwrap">
+            \[ \mathbb{Q} \subset K_1 \subset K_2 \subset \cdots \subset K_n \ni \text{解} \]
+        </div>
+        各ステップ \( K_i \subset K_{i+1} \) が「\( n \) 乗根を一つ添加する」形であること。<br /><br />
+
+        ガロア対応により、群の側では部分群の列
+        \( G \supset H_1 \supset H_2 \supset \cdots \supset \{e\} \) に対応し、
+        各段の商 \( H_i/H_{i+1} \) が<strong>巡回群</strong>であることが条件。
+        こういう群を<strong>可解群</strong>といいます。<br />
+        <br />
+
+        <h3>4.2 2次〜4次方程式のガロア群は可解</h3>
+        <table>
+            <tr>
+                <th>次数</th>
+                <th>ガロア群</th>
+                <th>組成列</th>
+                <th>各段の操作</th>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>\( S_2 \)</td>
+                <td>\( \mathbb{Z}/2 \supset \{e\} \)</td>
+                <td>\( \sqrt{} \)</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>\( S_3 \)</td>
+                <td>\( S_3 \supset A_3 \supset \{e\} \)</td>
+                <td>\( \sqrt{},\ \sqrt[3]{} \)</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>\( S_4 \)</td>
+                <td>\( S_4 \supset A_4 \supset V_4 \supset \mathbb{Z}/2 \supset \{e\} \)</td>
+                <td>\( \sqrt{},\ \sqrt[3]{},\ \sqrt{},\ \sqrt{} \)</td>
+            </tr>
+        </table>
+        4次方程式ではレゾルベント3次方程式を解くステップ（\( A_4/V_4 \cong \mathbb{Z}/3\mathbb{Z} \)）がある。
+        4つの根からペアの積の和 \( \theta_1 = \alpha_1\alpha_2 + \alpha_3\alpha_4 \) 等を作り、
+        それらが満たす3次方程式を解きます。<br />
+        <br />
+
+        <h3>4.3 5次方程式が解けない理由</h3>
+        一般5次方程式のガロア群は \( S_5 \)。<br />
+        <div class="eqwrap">
+            \[ S_5 \supset A_5 \supset \{e\} \]
+        </div>
+        \( A_5 \) は<strong>単純群</strong>（自明でない正規部分群を持たない）。
+        位数60で、非可換な単純群としては最小です。<br /><br />
+
+        \( A_5 \) から \( \{e\} \) に降りる途中の足場がないので、
+        \( S_5 \) は可解群ではない。
+        だから<strong>一般5次方程式には冪根による解の公式が存在しない</strong>。<br />
+        <br />
+
+        <h3>4.4 \( A_5 \) はなぜ単純群か</h3>
+        \( A_5 \) の共役類のサイズ：\( 1, 20, 15, 12, 12 \)。<br /><br />
+
+        正規部分群は共役類の合併かつ位数は60の約数でなければならないが、
+        \( 1+20=21 \), \( 1+15=16 \), ... といくら足しても60の約数にならない。
+        この「算術的偶然」が \( A_5 \) の単純性を保証します。<br /><br />
+
+        \( A_4 \) には \( V_4 \) というクッションがあったのに、
+        \( A_5 \) にはそれがない。<strong>ここに4次と5次の断崖がある。</strong><br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 5. 有限体 ===== -->
+        <h2>5. 有限体上のガロア理論とフロベニウス</h2>
+
+        <h3>5.1 \( \mathbb{F}_p \) 上の二次方程式</h3>
+        同じ \( x^2 - 2 = 0 \) でも、どの世界で考えるかで状況が変わる：<br />
+        <table>
+            <tr>
+                <th>基礎体</th>
+                <th>\( \sqrt{2} \) は？</th>
+                <th>ガロア群</th>
+            </tr>
+            <tr>
+                <td>\( \mathbb{Q} \)</td>
+                <td>存在しない</td>
+                <td>\( \mathbb{Z}/2\mathbb{Z} \)</td>
+            </tr>
+            <tr>
+                <td>\( \mathbb{F}_5 \)</td>
+                <td>存在しない</td>
+                <td>\( \mathbb{Z}/2\mathbb{Z} \)（フロベニウス生成）</td>
+            </tr>
+            <tr>
+                <td>\( \mathbb{F}_7 \)</td>
+                <td>\( 3 \) として存在する</td>
+                <td>\( \{e\} \)</td>
+            </tr>
+        </table>
+
+        <h3>5.2 フロベニウス写像</h3>
+        \( \mathbb{F}_p \) 上のガロア群の生成元は<strong>フロベニウス</strong>
+        \( \varphi: x \mapsto x^p \) です。<br /><br />
+
+        例：\( \mathbb{F}_3 \) 上で \( \alpha^2 = -1 \) とすると、
+        <div class="eqwrap">
+            \[ \varphi(\alpha) = \alpha^3 = \alpha^2 \cdot \alpha = (-1)\alpha = -\alpha \]
+        </div>
+        複素共役 \( i \mapsto -i \) と同じ役割を、\( x \mapsto x^p \) が果たす。<br /><br />
+
+        一般に \( \mathrm{Gal}(\mathbb{F}_{p^n}/\mathbb{F}_p) \cong \mathbb{Z}/n\mathbb{Z} \) で、
+        フロベニウスが生成元。
+        有限体の世界では<strong>全ての対称性がフロベニウスの冪</strong>です。<br />
+        <br />
+
+        <h3>5.3 素数の分裂とフロベニウス</h3>
+        \( \mathbb{Q} \) のガロア拡大の中で、各素数 \( p \) がどう振る舞うかをフロベニウスが支配する。
+        \( x^2 - 2 = 0 \) が \( \bmod\ p \) で解けるか
+        （\( 2 \) が \( \bmod\ p \) で平方剰余か）のパターンを支配するのが<strong>二次の相互法則</strong>。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 6. p-進整数環 ===== -->
+        <h2>6. \( p \)-進整数環と射影極限</h2>
+
+        <h3>6.1 \( p \)-進整数 \( \mathbb{Z}_p \)</h3>
+        左に無限に桁が伸びる \( p \) 進表記の数全体。射影極限として：
+        <div class="eqwrap">
+            \[ \mathbb{Z}_p = \varprojlim_n \mathbb{Z}/p^n\mathbb{Z} \]
+        </div>
+        「\( \bmod\ p^n \) で整合的な選び方を、全ての \( n \) について同時に満たすもの」。<br />
+        <br />
+
+        <h3>6.2 \( \mathbb{Z}_{p^a} \cong \mathbb{Z}_p \)：素数冪進は素数進と同じ</h3>
+        \( \ldots 003_{(4)} = \ldots 000011_{(2)} \) のように桁の束ね方が違うだけ。
+        射影極限の列を間引いても、行き着く先は同じ。<br />
+        <br />
+
+        <h3>6.3 合成数の場合：中国剰余定理</h3>
+        \( n \) が異なる素因子を持つとき、直積に分解する：
+        <div class="eqwrap">
+            \[ \mathbb{Z}_{10} \cong \mathbb{Z}_2 \times \mathbb{Z}_5, \quad
+            \mathbb{Z}_6 \cong \mathbb{Z}_2 \times \mathbb{Z}_3 \]
+        </div>
+        \( p \)-進数論で素数だけを考えれば十分な理由：
+        素数冪は新しいものを生まず、合成数は素数の直積に分解されるから。<br />
+        <br />
+
+        <h3>6.4 フロベニウスの「持ち上げ」</h3>
+        \( \bmod\ p \) でのフロベニウスを \( \mathbb{Z}/p^2\mathbb{Z} \),
+        \( \mathbb{Z}/p^3\mathbb{Z} \), ... と持ち上げ、
+        \( \mathbb{Z}_p \) 上のフロベニウスリフトを考える。
+        \( p \)-進整数環は「フロベニウスを段階的に持ち上げるための足場」です。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 7. 冪等元・零因子 ===== -->
+        <h2>7. 冪等元・零因子——全ての始まり</h2>
+
+        <h3>7.1 自己冪等数の発見</h3>
+        \( 5, 25, 625, 90625, \ldots \) は自乗すると末尾が自分自身になる。
+        10-進整数として無限に伸ばすと：
+        <div class="eqwrap">
+            \[ P = \ldots 918212890625, \quad Q = \ldots 081787109376 \]
+            \[ P + Q = \ldots 000000000001 = 1 \]
+        </div>
+        <br />
+
+        <h3>7.2 冪等元は零因子</h3>
+        \( z^2 = z \) かつ \( z \neq 0, 1 \) なら \( z(z-1) = 0 \)。
+        \( P \cdot Q = 0 \)。<br /><br />
+
+        ゼロでないのに、掛けるとゼロになるものがいる——これは環が「一枚岩」でないことの証です。<br />
+        <br />
+
+        <h3>7.3 零因子の人工的な添加</h3>
+        <table>
+            <tr>
+                <th>添加するもの</th>
+                <th>環</th>
+                <th>零因子の型</th>
+            </tr>
+            <tr>
+                <td>\( \varepsilon^2 = 0 \)（二重数）</td>
+                <td>\( \mathbb{R}[x]/(x^2) \)</td>
+                <td>冪零型</td>
+            </tr>
+            <tr>
+                <td>\( j^2 = 1 \)（分裂複素数）</td>
+                <td>\( \mathbb{R}[x]/(x^2-1) \cong \mathbb{R} \times \mathbb{R} \)</td>
+                <td>冪等型</td>
+            </tr>
+            <tr>
+                <td>\( i^2 = -1 \)（複素数）</td>
+                <td>\( \mathbb{R}[x]/(x^2+1) = \mathbb{C} \)</td>
+                <td>なし（体）</td>
+            </tr>
+        </table>
+
+        \( f(x) \) が既約なら体（零因子なし）、
+        相異因子に分解なら冪等型、重根なら冪零型。<br /><br />
+
+        <details>
+            <summary>前に日記でやった行列の話とのつながり</summary><br />
+            \( j = \begin{pmatrix}0&1\\1&0\end{pmatrix} \) の固有値は \( \pm 1 \) で、
+            射影行列 \( P_1 = \frac{I+j}{2} \), \( P_2 = \frac{I-j}{2} \) がまさに冪等元。
+            分裂複素数の「分裂」は、直積 \( \mathbb{R} \times \mathbb{R} \) への分解のことだった。<br /><br />
+        </details>
+        <br />
+
+        <h3>7.4 \( n \)-進整数環での冪等元</h3>
+        <table>
+            <tr>
+                <th>\( n \) の型</th>
+                <th>零因子</th>
+                <th>非自明な冪等元</th>
+            </tr>
+            <tr>
+                <td>素数 \( p \)</td>
+                <td>なし</td>
+                <td>なし</td>
+            </tr>
+            <tr>
+                <td>素数冪 \( p^a \)（\( a \geq 2 \)）</td>
+                <td>あり</td>
+                <td>なし</td>
+            </tr>
+            <tr>
+                <td>相異な素因子が2つ以上</td>
+                <td>あり</td>
+                <td>あり</td>
+            </tr>
+        </table>
+        素数冪では \( z(z-1)=0 \) で \( z \) と \( z-1 \) が互いに素
+        （一方が \( p \)-進単元）なので非自明な冪等元は存在しません。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 8. 素数の分裂と冪等元 ===== -->
+        <h2>8. 素数の分裂と冪等元——円環の完成</h2>
+
+        <h3>8.1 ガロア拡大における素数の振る舞い</h3>
+        体を拡大したとき、素数の因子分解は3通り：<br />
+        <table>
+            <tr>
+                <th>型</th>
+                <th>様子</th>
+                <th>零因子の型</th>
+            </tr>
+            <tr>
+                <td>分裂</td>
+                <td>\( p = \mathfrak{p}_1 \mathfrak{p}_2 \cdots \)（異なる素イデアルに分解）</td>
+                <td>冪等型</td>
+            </tr>
+            <tr>
+                <td>惰性</td>
+                <td>\( p \) がそのまま素</td>
+                <td>なし（体）</td>
+            </tr>
+            <tr>
+                <td>分岐</td>
+                <td>\( p = \mathfrak{p}^2 \)（重複）</td>
+                <td>冪零型</td>
+            </tr>
+        </table>
+
+        <h3>8.2 具体例：ガウス整数での5の分裂</h3>
+        \( \mathbb{Z}[i] \) の中で \( 5 = (2+i)(2-i) \) と分裂。中国剰余定理から：
+        <div class="eqwrap">
+            \[ \mathbb{Z}[i]/(5) \cong \mathbb{F}_5 \times \mathbb{F}_5 \]
+        </div>
+        直積が現れ、非自明な冪等元が存在する。<br />
+        <br />
+
+        <h3>8.3 全てに共通する構造</h3>
+        <table>
+            <tr>
+                <th>状況</th>
+                <th>分裂</th>
+                <th>冪等元</th>
+            </tr>
+            <tr>
+                <td>\( \mathbb{Z}_{10} \)</td>
+                <td>\( 10 = 2 \times 5 \)</td>
+                <td>\( P, Q \)</td>
+            </tr>
+            <tr>
+                <td>分裂複素数</td>
+                <td>\( x^2-1 = (x-1)(x+1) \)</td>
+                <td>\( \frac{1 \pm j}{2} \)</td>
+            </tr>
+            <tr>
+                <td>\( \mathbb{Z}[i] \) での5</td>
+                <td>\( 5 = (2+i)(2-i) \)</td>
+                <td>\( \bmod\ 5 \) での冪等元</td>
+            </tr>
+            <tr>
+                <td>\( \mathbb{R}[x]/(f(x)) \)</td>
+                <td>\( f \) が相異因子に分解</td>
+                <td>中国剰余定理の冪等元</td>
+            </tr>
+        </table>
+        <strong>「一つのものが複数に分裂するとき、冪等元が現れる」</strong>——
+        そしてどの素数がどう分裂するかを、ガロア群のフロベニウス元が決定する。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 9. まとめ ===== -->
+        <h2>9. 見えてきた景色</h2>
+
+        自己冪等数の遊びから始まって、たどり着いた景色はこうだった：<br /><br />
+
+        <ul>
+            <li><strong>冪等元と零因子</strong>は、環が直積に分解する（＝整域でない）ことの痕跡</li>
+            <li><strong>中国剰余定理</strong>が、合成数の \( n \)-進整数環を素数 \( p \)-進の直積に分解する</li>
+        </ul>
+
+        <ul>
+            <li><strong>ガロア理論</strong>は、方程式の対称性を群として捉え、体の拡大と群の部分群を対応させる</li>
+            <li><strong>フロベニウス</strong>は有限体のガロア群を生成する唯一の元で、\( x \mapsto x^p \) という操作</li>
+        </ul>
+
+        <ul>
+            <li><strong>素数の分裂</strong>をフロベニウスが支配し、分裂が起きるとき冪等元が現れる</li>
+            <li>\( p \)-<strong>進整数環</strong>は、各 \( \mathbb{Z}/p^n\mathbb{Z} \) での情報を射影極限として保存し、
+                フロベニウスを持ち上げる足場になる</li>
+        </ul>
+
+        <br />
+        自己冪等数 \( \ldots 918212890625 \) の中に、ガロア理論と \( p \)-進数論の核心が宿っていた。<br />
+        <br />
+
+        <hr /><br />
+
+        ……書いてて思ったのですが、
+        これは前に日記で書いた「2×2行列に複素数や分解型複素数を埋め込む」話と完全に地続きで、
+        分裂複素数 \( j^2 = 1 \) → 直積分解 \( \mathbb{R} \times \mathbb{R} \) → 冪等元 \( P_1, P_2 \) → 射影行列
+        ……という筋は、まさにこのガロア理論の話の \( \mathbb{R} \) 版なんですね。<br /><br />
+
+        こういう「一見バラバラに見えたものが繋がっている」瞬間が一番楽しいです。<br /><br />
+
+        前回の発散級数の記事では「離散と連続のズレ」がテーマでしたが、
+        今回は「分裂と冪等」でした。
+        どちらも、ある対象を分解したときに「余分なもの」が現れる話で、
+        そこに深い構造が隠れている、という点では通じるところがありそうです。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 10. 零因子探索 ===== -->
+        <h2>10. 零因子を見つける＝因数分解</h2>
+        <p>ある零因子を持った環が与えられた時に、それを計算する上手い方法はあるのでしょうか？<br />
+            結論から言えば、<strong>零因子を見つけることと素イデアル分解（因数分解）は深く関係（ほぼ等価）しています。</strong></p>
+
+        基本的な方針：<br />
+        零因子を見つける ＝ 直積分解を見つける ＝ 非自明な冪等元 \( e \) を見つける。<br />
+        もし \( e \) が見つかれば \( R \cong Re \times R(1-e) \) と分解でき、
+        逆に直積分解が見つかれば冪等元が手に入ります。
+        だから問題は「環の直積分解をどう見つけるか」に帰着します。<br />
+        <br />
+
+        <table>
+            <tr>
+                <th>環</th>
+                <th>零因子を見つけるには</th>
+                <th>使う道具</th>
+            </tr>
+            <tr>
+                <td>\( \mathbb{Z}/n\mathbb{Z} \)</td>
+                <td>\( n \) を素因数分解</td>
+                <td>整数の素因数分解</td>
+            </tr>
+            <tr>
+                <td>\( k[x]/(f(x)) \)</td>
+                <td>\( f(x) \) を因数分解</td>
+                <td>ユークリッド互除法</td>
+            </tr>
+            <tr>
+                <td>\( \mathbb{Z}_K/(p) \)</td>
+                <td>最小多項式を \( \mathbb{F}_p \) 上で因数分解</td>
+                <td>デデキントの定理</td>
+            </tr>
+        </table>
+        どの場合も<strong>「何かを因数分解して、中国剰余定理で冪等元を構成する」</strong>という同じパターンです。
+        逆に言えば、零因子や冪等元を見つけることの難しさは、因数分解の難しさに等しいとも言えます
+        （RSA暗号が安全なのはまさにこの困難さに依存しています）。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 11. 具体的な計算 ===== -->
+        <h2>11. 具体的な計算：中国剰余定理（CRT）</h2>
+
+        <h3>11.1 \( \mathbb{Z}/10\mathbb{Z} \) の場合</h3>
+        \( 10 = 2 \times 5 \) と素因数分解できます。中国剰余定理より：
+        <div class="eqwrap">
+            \[ \mathbb{Z}/10\mathbb{Z} \cong \mathbb{Z}/2\mathbb{Z} \times \mathbb{Z}/5\mathbb{Z} \]
+        </div>
+        この同型直積の側では、冪等元は自明です。
+        \( (1, 0)^2 = (1, 0) \)、\( (0, 1)^2 = (0, 1) \)。
+        これに対応する \( \mathbb{Z}/10\mathbb{Z} \) 側の元を見つければよい。<br />
+        <br />
+        拡張ユークリッド互除法を使います。
+        \( 5s + 2t = 1 \) を満たす \( s, t \) を見つけると、
+        \( 5s \) は「5の倍数かつ \( 2t+1 \)（2で割って1余る）」、つまり \( (1, 0) \) に対応する成分になります
+        （逆に \( 2t \) は \( (0, 1) \) に対応）。<br />
+        <br />
+        \( 5(1) + 2(-2) = 1 \) なので、\( s=1, t=-2 \)。
+        <ul>
+            <li>\( e_1 = 5s = 5 \)。確かに \( 5^2 = 25 \equiv 5 \pmod{10} \)。</li>
+            <li>\( e_2 = 2t = -4 \equiv 6 \)。確かに \( 6^2 = 36 \equiv 6 \pmod{10} \)。</li>
+        </ul>
+        合わせて \( 5 + 6 = 11 \equiv 1 \)、\( 5 \times 6 = 30 \equiv 0 \)。
+        直積分解に対応する直交した冪等元が得られました。<br />
+        <br />
+
+        <h3>11.2 \( \mathbb{Z}/30\mathbb{Z} \) の場合</h3>
+        \( 30 = 2 \times 3 \times 5 \) なので \( \mathbb{Z}/2\mathbb{Z} \times \mathbb{Z}/3\mathbb{Z} \times
+        \mathbb{Z}/5\mathbb{Z} \)。
+        3成分あるから非自明な冪等元は \( 2^3 - 2 = 6 \) 個あります。<br />
+        <br />
+        例えば \( (1, 0, 0) \)。mod 3 で 0、mod 5 で 0、mod 2 で 1。
+        つまり15の倍数で奇数のもの…… \( 15 \)。<br />
+        <ul>
+            <li>\( (1, 0, 0) \to 15 \)　（\( 15^2 = 225 = 30 \times 7 + 15 \equiv 15 \)）</li>
+            <li>\( (0, 1, 0) \to 10 \)　（\( 10^2 = 100 \equiv 10 \)）</li>
+            <li>\( (0, 0, 1) \to 6 \)　（\( 6^2 = 36 \equiv 6 \)）</li>
+        </ul>
+        これらを組み合わせれば残りも出ます。
+        \( (1, 1, 0) \to 15 + 10 = 25 \)、
+        \( (1, 0, 1) \to 15 + 6 = 21 \)、
+        \( (0, 1, 1) \to 10 + 6 = 16 \)。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 12. 多項式環での実践 ===== -->
+        <h2>12. 多項式環での実践</h2>
+
+        <h3>12.1 実数係数 \( \mathbb{R}[x] \) での例</h3>
+        <table>
+            <tr>
+                <th>多項式</th>
+                <th>分解</th>
+                <th>環の構造</th>
+                <th>型</th>
+            </tr>
+            <tr>
+                <td>\( x^2 - 1 \)</td>
+                <td>\( (x-1)(x+1) \)</td>
+                <td>\( \mathbb{R} \times \mathbb{R} \)</td>
+                <td>分裂（Split）</td>
+            </tr>
+            <tr>
+                <td>\( x^2 \)</td>
+                <td>\( x \cdot x \)</td>
+                <td>二重数 \( \mathbb{D} \)</td>
+                <td>分岐（Ramified）</td>
+            </tr>
+            <tr>
+                <td>\( x^2 + 1 \)</td>
+                <td>既約</td>
+                <td>\( \mathbb{C} \)</td>
+                <td>惰性（Inert）</td>
+            </tr>
+        </table>
+        分裂する場合、冪等元はラグランジュ補間（あるいは部分分数分解）で構成できます。
+        \( \frac{1}{2}(1+x) \) と \( \frac{1}{2}(1-x) \) ですね（これは \( x \) を行列の \( j \) に置き換えれば射影行列になります）。<br />
+        <br />
+
+        <h3>12.2 有限体係数での例</h3>
+        基礎体が変わると、「既約」かどうかの判定が変わるのが面白いところ。
+        <ul>
+            <li>\( \mathbb{Q}[x]/(x^3-x) \cong \mathbb{Q} \times \mathbb{Q} \times \mathbb{Q} \) （3つに完全分裂）</li>
+            <li>\( \mathbb{F}_2[x]/(x^3+x+1) \cong \mathbb{F}_8 \) （既約なので拡大体になる。零因子なし）</li>
+            <li>\( \mathbb{F}_5[x]/(x^2+1) \cong \mathbb{F}_5 \times \mathbb{F}_5 \)
+                （\( 2^2 \equiv -1 \) なので \( (x-2)(x-3) \) と分裂する）</li>
+        </ul>
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 13. 幾何学的直感 ===== -->
+        <h2>13. 幾何学的直感：Spec(Z)と被覆空間</h2>
+
+        <h3>13.1 素イデアル＝点</h3>
+        ここまでの話を幾何学的に見ると、とてつもない景色が広がっています。
+        \( \mathbb{Z} \) の素数 \( p \) を「点」だと思い、その上に多項式の環が「乗っかっている」と考えます（ファイバー束）。<br />
+        <br />
+        <div class="eqwrap">
+            Spec(Z): (2) (3) (5) (7) (11) ...<br>
+            │ │ │ │ │ <br>
+            \(x^2+1\): 分岐 惰性 分裂 惰性 惰性 ...
+        </div>
+        <br />
+        各「点」の上で多項式の運命が異なる。分裂したり、しなかったり。
+        これを図示すると、\( \mathrm{Spec}(\mathbb{Z}[i]) \to \mathrm{Spec}(\mathbb{Z}) \) という写像は
+        「2重被覆」になっています。<br />
+        <ul>
+            <li><strong>分裂 (5)</strong>：ファイバーが2点ある（\( \mathbb{Z}[i]/(5) \cong \mathbb{F}_5 \times \mathbb{F}_5
+                \)）。シートが離れている。</li>
+            <li><strong>惰性 (3)</strong>：ファイバーが1点（\( \mathbb{Z}[i]/(3) \cong \mathbb{F}_9 \)）。ただし点は「太く」なっている（2次拡大）。</li>
+            <li><strong>分岐 (2)</strong>：ファイバーがくっついて1点（\( \mathbb{Z}[i]/(2) \cong \mathbb{F}_2[\varepsilon] \)）。分岐点。</li>
+        </ul>
+
+        <h3>13.2 幾何との対応</h3>
+        これはリーマン面の理論（トポロジー）と完全にパラレルです。<br />
+        <table>
+            <tr>
+                <th>代数（整数論）</th>
+                <th>幾何（被覆空間）</th>
+            </tr>
+            <tr>
+                <td>素イデアルの分裂・惰性</td>
+                <td>ファイバーの本数</td>
+            </tr>
+            <tr>
+                <td>フロベニウス写像</td>
+                <td>モノドロミー（基点の周りを一周する操作）</td>
+            </tr>
+            <tr>
+                <td>ガロア群</td>
+                <td>被覆変換群（基本群の作用）</td>
+            </tr>
+            <tr>
+                <td>イデアル類群</td>
+                <td>ファイバー束のねじれ（メビウスの帯的）</td>
+            </tr>
+        </table>
+        例えば \( \mathbb{Z}[\sqrt{-5}] \) のように素因数分解の一意性が成り立たない（類数が1でない）環は、
+        幾何学的には「バンドルがねじれている」状態に対応します。
+        局所的には直積に見えるのに、大域的にはねじれていて、輪っかとして繋がらない（単項イデアルにならない）。<br />
+        <br />
+        代数は「離散的」に見えるのに、その上に豊かなトポロジー（空間的性質）が存在する。
+        これが、現代数学（スキーム論）が見ている景色なんですね。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 14. 分裂・惰性・分岐をゼロから ===== -->
+        <h2>14. 分裂・惰性・分岐をゼロから</h2>
+        <p>フロベニウスの具体例に入る前に、「分裂・惰性・分岐とは何か」をゼロから整理しておきましょう。
+            具体的な多項式を色々な素数 \( p \) で見ることから始めます。</p>
+
+        <h3>14.1 一番素朴な出発点：\( x^2 + 1 \) を色々な mod で見る</h3>
+        多項式 \( f(x) = x^2 + 1 \) が、各 mod \( p \) でどのように振る舞うか見てみましょう。<br />
+        <br />
+        <strong>mod 5：</strong>
+        <div class="eqwrap">
+            \[ x^2 + 1 \equiv (x-2)(x-3) \pmod{5} \]
+        </div>
+        バラバラの因子に分かれました。根が2つ見つかりました: \( x=2, 3 \)。<br />
+        <br />
+        <strong>mod 3：</strong><br />
+        \( x^2+1 \) は因数分解できません。\( 0^2+1=1 \), \( 1^2+1=2 \), \( 2^2+1=2 \) で、どれも 0 にならない。
+        根が見つかりませんが「壊れた」わけではなく、\( \mathbb{F}_9 \) まで広げれば根があります。<br />
+        <br />
+        <strong>mod 2：</strong>
+        <div class="eqwrap">
+            \[ x^2 + 1 \equiv (x+1)^2 \pmod{2} \]
+        </div>
+        因数分解はできましたが、同じ因子が重なっています。根は \( x=1 \) の1つだけ。
+        本来2次だから根が2つあるはずなのに、2つが衝突して1つになった。<br />
+        <br />
+        これが3つの型です：
+        <table>
+            <tr>
+                <th>mod \( p \)</th>
+                <th>\( x^2+1 \) の様子</th>
+                <th>名前</th>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>\( (x-2)(x-3) \)（異なる因子に分解）</td>
+                <td>分裂（Split）</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>既約のまま</td>
+                <td>惰性（Inert）</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>\( (x+1)^2 \)（重複した因子）</td>
+                <td>分岐（Ramify）</td>
+            </tr>
+        </table>
+
+        <h3>14.2 もう一つの例：\( x^2 - 5 \)</h3>
+        <table>
+            <tr>
+                <th>mod \( p \)</th>
+                <th>\( x^2-5 \) の様子</th>
+                <th>型</th>
+            </tr>
+            <tr>
+                <td>11</td>
+                <td>\( (x-4)(x-7) \)（分裂）</td>
+                <td>分裂（\( 4^2=16\equiv 5 \)）</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>既約</td>
+                <td>惰性</td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>\( x^2 \equiv x^2 \)（0に重なる）</td>
+                <td>分岐</td>
+            </tr>
+        </table>
+        \( p=5 \) では \( x^2-5 \equiv x^2 \pmod 5 \) になって、根が \( 0 \) に重なります。
+        これは偶然ではなく、多項式の判別式が 0 になる素数で分岐が起きます。
+        \( x^2-5 \) の判別式は \( 20 = 4 \times 5 \) で、\( p=2 \) と \( p=5 \) で分岐。<br />
+        <br />
+
+        <h3>14.3 整数環の言葉に翻訳： \( \mathbb{Z}[i] \) での素数</h3>
+        \( \mathbb{Z}[\sqrt{-1}] = \mathbb{Z}[i] \) で素数 \( p \) がどうなるかを見ます。<br />
+        <br />
+        <strong>分裂（\( p=5 \)）：</strong>
+        <div class="eqwrap">
+            \[ 5 = (2+i)(2-i) \]
+        </div>
+        5が異なる2つの素イデアルの積になりました。\( \mathbb{Z}[i] \) の中で5はもう素数ではない。<br />
+        <br />
+        <strong>惰性（\( p=3 \)）：</strong><br />
+        \( (3) \) は \( \mathbb{Z}[i] \) でもそのまま素イデアルです。3は \( \mathbb{Z}[i] \) に行っても分解しない。頑固にそのまま。<br />
+        <br />
+        <strong>分岐（\( p=2 \)）：</strong>
+        <div class="eqwrap">
+            \[ 2 = -i(1+i)^2 \]
+        </div>
+        2が一つの素イデアル \( (1+i) \) の二乗になりました。二つの因子が合流して重なっている。<br />
+        <br />
+
+        <h3>14.4 ファイバーの環構造</h3>
+        各素数 \( p \) で「ファイバー」\( \mathbb{Z}[i]/(p) \) を計算すると、その環の構造が分裂の型を教えてくれます。<br />
+        <br />
+        \[
+        \mathbb{Z}[i]/(p) \cong \mathbb{F}_p[x]/(x^2+1)
+        \]
+        <ul>
+            <li><strong>分裂（\( p=5 \)）：</strong>\( \mathbb{F}_5[x]/(x^2+1) \cong \mathbb{F}_5 \times \mathbb{F}_5
+                \)（直積！<strong>冪等元</strong>がある）</li>
+            <li><strong>惰性（\( p=3 \)）：</strong>\( \mathbb{F}_3[x]/(x^2+1) \cong \mathbb{F}_9 \)（体！零因子なし）</li>
+            <li><strong>分岐（\( p=2 \)）：</strong>\( \mathbb{F}_2[x]/(x+1)^2 \cong
+                \mathbb{F}_2[\varepsilon]/(\varepsilon^2) \)（二重数！<strong>冪零元</strong>がある）</li>
+        </ul>
+        <table>
+            <tr>
+                <th>型</th>
+                <th>ファイバーの環</th>
+                <th>零因子</th>
+            </tr>
+            <tr>
+                <td>分裂</td>
+                <td>\( \mathbb{F}_p \times \mathbb{F}_p \)</td>
+                <td>冪等型</td>
+            </tr>
+            <tr>
+                <td>惰性</td>
+                <td>\( \mathbb{F}_{p^2} \)</td>
+                <td>なし</td>
+            </tr>
+            <tr>
+                <td>分岐</td>
+                <td>\( \mathbb{F}_p[\varepsilon]/(\varepsilon^2) \)</td>
+                <td>冪零型</td>
+            </tr>
+        </table>
+        入門編で見た冪等元と冪零元の区別が、ここで分裂と分岐の区別に対応していたわけです！<br />
+        <br />
+
+        <h3>14.5 被覆空間の絵</h3>
+        <pre style="background:#1a2a3a;color:#afd3e6;padding:1em;border-radius:4px;line-height:1.8;">
+分裂 (p=5)        惰性 (p=3)        分岐 (p=2)
+
+  ●     ●              ◎                  ◉
+  |     |              |                  |
+──┼─────┼──         ───┼───            ───┼───
+  |     |              |                  |
+  (Z)               (Z)                (Z)
+
+ 2点が独立        1点（「太い」点）    2点が衝突して太い1点
+                  F_{p^2}の世界       二重数の世界
+        </pre>
+        分裂では2本の線が独立に通過。
+        惰性では1本の「太い」線が通過（\( \mathbb{F}_{p^2} \) は \( \mathbb{F}_p \) の2次拡大で「2倍太い」）。
+        分岐では2本の線が合流して、合流点が「太く」（\( \varepsilon \) 方向に太く）なる。<br />
+        <br />
+
+        <h3>14.6 なぜ3パターンしかないのか</h3>
+        2次拡大の場合、\( f(x) \) は2次多項式。mod \( p \) での因数分解の仕方は：
+        <ul>
+            <li>異なる2つの1次因子の積 → <strong>分裂</strong></li>
+            <li>既約のまま → <strong>惰性</strong></li>
+            <li>1次因子の二乗 → <strong>分岐</strong></li>
+        </ul>
+        多項式の因数分解の仕方がこの3通りしかないから、3パターンしかない。<br />
+        \( n \) 次拡大でも同じ原理で、因子の次数と重複度の組み合わせが増えるだけです。<br />
+        そして、<strong>例外的でない素数（分裂か惰性か）の振り分けを決めるのが、次のセクションで見るフロベニウス</strong>というわけです。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 15. 具体例 ===== -->
+        <h2>15. フロベニウスのおかげで分かること（具体例）</h2>
+        <p>「フロベニウス写像」という抽象的な道具が、具体的な整数論の問題をどう解決するかを見てみましょう。<br />
+            結局のところ、<strong>「方程式が \(\bmod p\) で解けるか？」という問いは、「\(p\) がその拡大体で分裂するか？」という問いと同じ</strong>であり、
+            それを支配するのがフロベニウスです。</p>
+
+        <h3>14.1 例1：\(x^2 + 1 \equiv 0 \pmod p\) とフェルマーの二平方定理</h3>
+        「\(-1\) は \(\bmod p\) で平方数か？」という問い。
+        これは \( \mathbb{Z}[i] \) において素数 \( p \) が分裂するか惰性か、という問いです。<br />
+        <br />
+        答えは驚くほどきれいです：
+        <div class="eqwrap">
+            \[ x^2 + 1 \equiv 0 \pmod p \iff p \equiv 1 \pmod 4 \]
+        </div>
+        （\( p=2 \) は分岐なので例外）<br />
+        <br />
+
+        <table>
+            <tr>
+                <th>\( p \)</th>
+                <th>\( p \bmod 4 \)</th>
+                <th>\( \mathbb{F}_p \) 上での \( x^2+1 \)</th>
+                <th>分裂/惰性</th>
+                <th>2つの平方数の和？</th>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>3</td>
+                <td>既約</td>
+                <td>惰性</td>
+                <td>×</td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>1</td>
+                <td>\((x-2)(x-3)\)</td>
+                <td>分裂</td>
+                <td>\( 1^2+2^2 \)</td>
+            </tr>
+            <tr>
+                <td>7</td>
+                <td>3</td>
+                <td>既約</td>
+                <td>惰性</td>
+                <td>×</td>
+            </tr>
+            <tr>
+                <td>11</td>
+                <td>3</td>
+                <td>既約</td>
+                <td>惰性</td>
+                <td>×</td>
+            </tr>
+            <tr>
+                <td>13</td>
+                <td>1</td>
+                <td>\((x-5)(x-8)\)</td>
+                <td>分裂</td>
+                <td>\( 2^2+3^2 \)</td>
+            </tr>
+            <tr>
+                <td>17</td>
+                <td>1</td>
+                <td>\((x-4)(x-13)\)</td>
+                <td>分裂</td>
+                <td>\( 1^2+4^2 \)</td>
+            </tr>
+            <tr>
+                <td>19</td>
+                <td>3</td>
+                <td>既約</td>
+                <td>惰性</td>
+                <td>×</td>
+            </tr>
+            <tr>
+                <td>29</td>
+                <td>1</td>
+                <td>\((x-12)(x-17)\)</td>
+                <td>分裂</td>
+                <td>\( 2^2+5^2 \)</td>
+            </tr>
+        </table>
+
+        <strong>なぜこうなるか（フロベニウスの視点）：</strong><br />
+        \( \mathrm{Gal}(\mathbb{Q}(i)/\mathbb{Q}) \cong \mathbb{Z}/2\mathbb{Z} \) で、非自明な元は複素共役 \( \sigma: i \mapsto -i
+        \) です。<br />
+        素数 \( p \) でのフロベニウス \( \mathrm{Frob}_p \) は \( i \mapsto i^p \) で決まります。
+        \( i^p = i^{p \bmod 4} \) なので：
+        <ul>
+            <li>\( p \equiv 1 \pmod 4 \implies i^p = i \implies \mathrm{Frob}_p = e \) （恒等写像） \(\implies\) 分裂</li>
+            <li>\( p \equiv 3 \pmod 4 \implies i^p = -i \implies \mathrm{Frob}_p = \sigma \) （入れ替え） \(\implies\) 惰性</li>
+        </ul>
+
+        <strong>応用：フェルマーの二平方定理</strong><br />
+        素数 \( p \) が \( \mathbb{Z}[i] \) で分裂する、つまり \( p = (a+bi)(a-bi) = a^2+b^2 \) と書ける条件が、
+        まさに \( p \equiv 1 \pmod 4 \) であること。
+        フロベニウスという抽象的な道具が、「どの素数が2つの平方数の和になるか」という具体的な問いに答えを出しました。<br />
+        <br />
+
+        <h3>14.2 例2：\( x^2 - 5 \equiv 0 \pmod p \) と平方剰余の相互法則</h3>
+        今度は \( \sqrt{5} \) が \(\bmod p\) で存在するか。
+        \( \mathrm{Gal}(\mathbb{Q}(\sqrt{5})/\mathbb{Q}) \cong \mathbb{Z}/2\mathbb{Z} \) です。<br />
+        <br />
+        答えは <strong>\( p \pmod 5 \) だけで決まります</strong>（二次の相互法則！）。
+        <table>
+            <tr>
+                <th>\( p \bmod 5 \)</th>
+                <th>\( \sqrt{5} \) は？</th>
+                <th>状態</th>
+                <th>例</th>
+            </tr>
+            <tr>
+                <td>1, 4</td>
+                <td>存在する</td>
+                <td>分裂</td>
+                <td>\( p=11, 19, 29, \dots \)</td>
+            </tr>
+            <tr>
+                <td>2, 3</td>
+                <td>存在しない</td>
+                <td>惰性</td>
+                <td>\( p=3, 7, 13, 17, \dots \)</td>
+            </tr>
+        </table>
+        「5が \(\bmod p\) で平方か」を問うているのに、答えは「\( p \) が \(\bmod 5\) で何か」で決まる。
+        \( p \) と 5 の役割が入れ替わっています。<br />
+        <div class="eqwrap">
+            \[ \left(\frac{5}{p}\right) = \left(\frac{p}{5}\right) \]
+        </div>
+        これは \( \mathrm{Spec}(\mathbb{Z}) \) 上の2重被覆のフロベニウスが、被覆の分岐点（この場合は5）の情報だけで決まる、
+        つまり局所的な情報（\( p \)）が大域的な情報（法5）で統制されていることを意味します。<br />
+        <br />
+
+        <h3>14.3 例3：円分体と素数の分裂パターン</h3>
+        \(\zeta_7 = e^{2\pi i/7}\) として \( \mathbb{Q}(\zeta_7)/\mathbb{Q} \) を考えます。
+        ガロア群は \( (\mathbb{Z}/7\mathbb{Z})^\times \cong \mathbb{Z}/6\mathbb{Z} \)。
+        フロベニウス \( \mathrm{Frob}_p \) は \( \zeta_7 \mapsto \zeta_7^p \) 、つまり \( p \pmod 7 \) に対応します。<br />
+        <br />
+        円分多項式 \( \Phi_7(x) \) の \(\bmod p\) での分解（＝\( p \) の分裂パターン）は、
+        \( p \bmod 7 \) の乗法群での位数 \( f \) で決まります。
+        （\( p^f \equiv 1 \pmod 7 \) となる最小の \( f \)）<br />
+        <br />
+        <table>
+            <tr>
+                <th>\( p \bmod 7 \)</th>
+                <th>位数 \( f \)</th>
+                <th>分解の様子（次数 \( f \) の因子が \( 6/f \) 個）</th>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>1</td>
+                <td>6つの1次因子（完全分裂）</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>3</td>
+                <td>2つの3次因子</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>6</td>
+                <td>1つの6次因子（惰性）</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>3</td>
+                <td>2つの3次因子</td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>6</td>
+                <td>1つの6次因子（惰性）</td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td>2</td>
+                <td>3つの2次因子</td>
+            </tr>
+        </table>
+        例えば \( p=29 \equiv 1 \pmod 7 \) なら、\( \mathbb{F}_{29} \) 上で \( \Phi_7(x) \) はバラバラに因数分解されます（1の7乗根が全て存在する）。
+        \( p=29 \) は完全分裂します。<br />
+        <br />
+
+        <h3>14.4 全体の景色</h3>
+        以上の例に共通するのは、
+        <strong>「素数 \( p \) でのフロベニウス（＝分解の様子）が、\( p \) をある数 \( N \) で割った余り（合同関係）だけで決まる」</strong>
+        という事実です。<br />
+        <br />
+        <ul>
+            <li>\( \mathbb{Q}(i) \to N=4 \)</li>
+            <li>\( \mathbb{Q}(\sqrt{5}) \to N=5 \)</li>
+            <li>\( \mathbb{Q}(\zeta_n) \to N=n \)</li>
+        </ul>
+        これを一般化したのが<strong>類体論（Class Field Theory）</strong>です。
+        「アーベル拡大（ガロア群が可換）ならば、そのフロベニウスは合同関係で完全に記述できる（アルティンの相互法則）」。<br />
+        <br />
+        そして、非アーベルな場合にはどうなるか——それが現代数学の最前線、<strong>ラングランズ・プログラム</strong>の問いです。
+        そこではフロベニウスの情報は、単なる合同関係ではなく、保形形式や表現論といったさらに巨大な構造と結びついていると考えられています。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 16. 二重数εとガロア理論 ===== -->
+        <h2>16. 二重数 \( \varepsilon \) とガロア理論——分岐の舞台裏</h2>
+        <p>二重数 \( \varepsilon \) の添加（\( \varepsilon^2=0 \)）はガロア理論と関係があるのでしょうか？<br />
+            結論：<strong>古典的なガロア理論の枠には入らないけれど、より広い枠組みでは深く関係する</strong>というのが答えです。</p>
+
+        <h3>16.1 なぜ古典的ガロア理論に入らないか</h3>
+        ガロア理論は<strong>体の拡大</strong>を扱います。体とは全ての非零元が逆元を持つ世界。
+        ところが二重数の環 \( \mathbb{R}[\varepsilon]/(\varepsilon^2) \) は体ではありません。
+        \( \varepsilon \neq 0 \) なのに \( \varepsilon \) に逆元がない（\( \varepsilon \) をかけると情報が消えてしまうから）。<br />
+        <br />
+        ガロア理論が体を要求するのは、自己同型が「根の置換」としてきれいに振る舞うための必要条件です。
+        体でない環では自己同型の構造がもっと複雑になります。<br />
+        <br />
+
+        <h3>16.2 \( \varepsilon \) の添加は「分岐」そのもの</h3>
+        Section 14 で見てきた3つのパターンを思い出してください：
+        <table>
+            <tr>
+                <th>\( f(x) \)</th>
+                <th>環</th>
+                <th>型</th>
+            </tr>
+            <tr>
+                <td>\( x^2-1 = (x-1)(x+1) \)</td>
+                <td>\( \mathbb{R} \times \mathbb{R} \)</td>
+                <td>分裂</td>
+            </tr>
+            <tr>
+                <td>\( x^2+1 \)（既約）</td>
+                <td>\( \mathbb{C} \)</td>
+                <td>惰性</td>
+            </tr>
+            <tr>
+                <td>\( x^2 \)</td>
+                <td>\( \mathbb{R}[\varepsilon]/(\varepsilon^2) \)</td>
+                <td>分岐</td>
+            </tr>
+        </table>
+        分裂と惰性はガロア理論の主役。
+        <strong>分岐は「2つの根が衝突して1つに潰れた」状態で、二重数はまさにその衝突の痕跡</strong>です。<br />
+        <br />
+        素数の分岐で見ると、\( \mathbb{Z}[i] \) で \( 2=(1+i)^2 \)。
+        \( (1+i) \) と \( (1-i) \) は実は同じイデアル（\( 1-i=-i(1+i) \)）で、二つの根が合流している。
+        この「合流点」の局所的な構造が二重数的なんです。<br />
+        <br />
+
+        <h3>16.3 接空間としての二重数</h3>
+        二重数には幾何学的な意味があります。
+        <div class="eqwrap">
+            \[ f(a + b\varepsilon) = f(a) + f'(a) \cdot b\varepsilon \]
+        </div>
+        二重数で計算すると微分が自動的に出てくる！<br />
+        <br />
+        スキームの言葉では、\( \mathrm{Spec}(\mathbb{R}[\varepsilon]/(\varepsilon^2)) \) は「太い点」です。
+        普通の点 \( \mathrm{Spec}(\mathbb{R}) \) が「位置」だけを見るのに対し、
+        <strong>太い点は「位置＋速度（接方向）」を見る</strong>。<br />
+        <br />
+        だから<strong>分岐点とは、被覆のファイバーの2点が合流して、合流した点が「太く」なった状態</strong>。
+        その太さが接空間の情報を持っていて、それが二重数で記述されます。<br />
+        <br />
+
+        <h3>16.4 分岐点でのフロベニウス：惰性群の登場</h3>
+        分裂する点ではフロベニウスがファイバーの点を置換します。
+        惰性の点ではフロベニウスが巡回的に作用します。<br />
+        <br />
+        では分岐する点では？ファイバーが潰れているのでフロベニウスの作用が「退化」します。
+        2つの点が1つに潰れた結果、フロベニウスが「普通に置換する」のではなく、
+        <strong>接方向に作用するようになる</strong>。この接方向への作用が<strong>惰性群（Inertia Group）</strong>として現れ、
+        その構造は冪零的です。\( \varepsilon^2 = 0 \) の冪零性がここに反映されています。<br />
+        <br />
+        具体的には、分岐する素数 \( p \) での局所的なガロア群は：
+        <div class="eqwrap">
+            \[ 1 \to I_p \to D_p \to \mathrm{Gal}(\mathbb{F}_{p^f}/\mathbb{F}_p) \to 1 \]
+        </div>
+        \( D_p \) が分解群（フロベニウスを含む）、\( I_p \) が惰性群（分岐の情報）です。
+        惰性群が自明なら分裂または惰性、非自明なら分岐。そして惰性群の構造は本質的に冪零的で、
+        二重数の \( \varepsilon \) 的な性質を持っています。<br />
+        <br />
+
+        <h3>16.5 まとめ：3つの型の完全対応表</h3>
+        <table>
+            <tr>
+                <th>型</th>
+                <th>ファイバー</th>
+                <th>零因子</th>
+                <th>局所構造</th>
+                <th>フロベニウス</th>
+                <th>惰性群</th>
+            </tr>
+            <tr>
+                <td>分裂</td>
+                <td>複数の点</td>
+                <td>冪等型</td>
+                <td>直積</td>
+                <td>点を置換</td>
+                <td>自明</td>
+            </tr>
+            <tr>
+                <td>惰性</td>
+                <td>1つの太くない点</td>
+                <td>なし</td>
+                <td>体（拡大）</td>
+                <td>巡回的に作用</td>
+                <td>自明</td>
+            </tr>
+            <tr>
+                <td>分岐</td>
+                <td>1つの太い点</td>
+                <td>冪零型</td>
+                <td>二重数的</td>
+                <td>退化（接空間に作用）</td>
+                <td>非自明（冪零的）</td>
+            </tr>
+        </table>
+        二重数は、ガロア理論の「表舞台」には出てこないけれど、分岐という現象を通じて「舞台裏」で本質的な役割を果たしている——そういうことだったんですね。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 17. 関数体のガロア理論とリーマン面 ===== -->
+        <h2>17. 関数体のガロア理論とリーマン面</h2>
+        <p>ガロア理論は有理数体 \( \mathbb{Q} \) だけの話ではありません。
+            <strong>体でありさえすれば、その上で代数方程式を考え、ガロア理論を展開できます</strong>。
+            関数体やローラン級数体の上でガロア理論を考えると、リーマン面の幾何学と直結する美しい景色が見えてきます。
+        </p>
+
+        <h3>17.1 位相の基本概念：ファイバー・被覆空間・基本群</h3>
+        <p>先に進む前に、これから頻繁に使う位相空間の概念を、具体例付きで整理しておきましょう。</p>
+
+        <strong>ファイバー（逆像）</strong><br />
+        写像 \( f: Y \to X \) があるとき、\( X \) の点 \( x \) の<strong>ファイバー</strong>とは、\( f \) で \( x \) に移るような \( Y \)
+        の点全体のことです。
+        <div class="eqwrap">
+            \[ f^{-1}(x) = \{ y \in Y \mid f(y) = x \} \]
+        </div>
+        <strong>例：</strong>らせん階段を真上から見下ろす写像を考えましょう。
+        らせん階段（実数直線 \( \mathbb{R} \)）から円（\( S^1 \)）への写像 \( t \mapsto e^{2\pi i t} \) では、
+        円上の一点（例えば \( 1 \)）のファイバーは \( \{..., -2, -1, 0, 1, 2, ...\} = \mathbb{Z} \) です。
+        円の各点の「真上」に、整数個の点が等間隔に並んでいる。<br />
+        <br />
+
+        <strong>被覆空間</strong><br />
+        写像 \( p: Y \to X \) が<strong>被覆写像</strong>であるとは、\( X \) の各点の近傍で \( Y \) が「何枚かのコピーに分かれる」こと。
+        各点のファイバーが離散的で、局所的には \( X \) のコピーが積み重なっている状態です。<br />
+        <br />
+        <strong>例：</strong>
+        <ul>
+            <li>\( \mathbb{R} \to S^1 \)（\( t \mapsto e^{2\pi it} \)）：らせん階段。無限枚の被覆。</li>
+            <li>\( S^1 \to S^1 \)（\( z \mapsto z^n \)）：円を \( n \) 回巻く写像。\( n \) 枚の被覆。円上の各点の上に \( n \) 個の点がある。</li>
+        </ul>
+        <pre style="background:#1a2a3a;color:#afd3e6;padding:1em;border-radius:4px;line-height:1.8;">
+2重被覆 z → z²（円を2回巻く）
+
+Y:   ─────●─────●─────    （上の円、2周で1周分）
+          │     │
+X:   ─────◆───────────    （下の円）
+
+下の円の各点◆の上に、上の円の点●が2つずつ乗っている
+        </pre>
+
+        <strong>基本群 \( \pi_1(X, x_0) \)</strong><br />
+        空間 \( X \) の点 \( x_0 \) を始点・終点とするループ（閉じた道）の集合を、
+        連続的に変形できるもの同士を「同じ」と見なして（ホモトピー同値）、
+        ループの連結を「かけ算」として群にしたもの。<br />
+        <br />
+        <strong>例：</strong>
+        <ul>
+            <li>\( \pi_1(S^1) \cong \mathbb{Z} \)：円のループは「何周するか」で決まる。1周が生成元。</li>
+            <li>\( \pi_1(\mathbb{R}^2 \setminus \{0\}) \cong \mathbb{Z} \)：穴の周りを何周するか。</li>
+            <li>\( \pi_1(S^2) = 0 \)：球面上ではどんなループも一点に縮められるので自明。</li>
+        </ul>
+        <strong>被覆空間の理論の核心は、被覆の分類が基本群で決まること</strong>です：
+        <div class="eqwrap">
+            \[ \{\text{$X$ の被覆空間}\} \longleftrightarrow \{\pi_1(X)\text{-集合}\} \]
+        </div>
+        被覆のファイバーに基本群が作用するから、被覆を調べることと基本群の作用を調べることは同じ。<br />
+        <br />
+
+        <h3>17.2 関数体とは何か</h3>
+        体 \( k \) の上の<strong>有理関数体</strong> \( k(t) \) とは、\( t \) を不定元とする分数式全体の体です。
+        例えば \( \frac{t^2+1}{t-3} \) のような式が元になります。<br />
+        <br />
+        \( k(t) \) は体なので、その上で代数方程式を考え、ガロア理論を展開できます。
+        例えば \( k(t) \) 上の方程式 \( x^n - t = 0 \) の分解体を取ると、
+        ガロア群は \( \mathbb{Z}/n\mathbb{Z} \) になります。これは「\( t \) の \( n \) 乗根を添加する」操作。<br />
+        <br />
+
+        <h3>17.3 リーマン面と関数体の対応</h3>
+        最も美しい対応の一つがここにあります。<br />
+        <br />
+        コンパクトなリーマン面 \( X \) があると、その上の有理型関数（meromorphic function）全体が体 \( \mathcal{M}(X) \) をなします。
+        逆に、\( \mathbb{C} \) 上の一変数関数体が与えられると、対応するリーマン面が復元できます。
+        <div class="eqwrap">
+            \[ \{\text{コンパクトリーマン面}\} \simeq \{\mathbb{C}\text{ 上の一変数関数体}\}^{\mathrm{op}} \]
+        </div>
+        これは反変的な圏同値です。空間と関数の体が双対的に対応する——Stone 双対性と同じ精神ですね。<br />
+        <br />
+
+        <h3>17.4 被覆 ＝ 体の拡大、デッキ変換 ＝ ガロア群</h3>
+        この対応のもとで、体の拡大 \( \mathcal{M}(X) \hookrightarrow \mathcal{M}(Y) \) は
+        リーマン面の間の正則写像（被覆写像）\( Y \to X \) に対応します。
+        <table>
+            <tr>
+                <th>関数体（代数）</th>
+                <th>リーマン面（幾何）</th>
+            </tr>
+            <tr>
+                <td>体の拡大の次数</td>
+                <td>被覆の次数（各点上のシート数）</td>
+            </tr>
+            <tr>
+                <td>\( \mathrm{Gal}(\mathcal{M}(Y)/\mathcal{M}(X)) \)</td>
+                <td>被覆変換群（デッキ変換群）</td>
+            </tr>
+            <tr>
+                <td>ガロア拡大</td>
+                <td>正規被覆</td>
+            </tr>
+        </table>
+        <strong>具体例：</strong>\( x^n - t = 0 \) は \( \mathbb{C}^* \) 上の被覆 \( z \mapsto z^n \) に対応します。
+        \( n \) 枚の被覆で、ガロア群は \( \mathbb{Z}/n\mathbb{Z} \)（シートの巡回的な入れ替え）。
+        \( 0 \) と \( \infty \) の上で分岐が起き、原点の周りを一周すると隣のシートに移ります。<br />
+        <br />
+
+        <h3>17.5 分岐点とローラン級数</h3>
+        分岐点の近傍では何が起きているのか？ここで<strong>ローラン級数体</strong>が登場します。<br />
+        <br />
+        分岐点 \( p \) の周りの局所的な振る舞いは、形式ローラン級数体 \( \mathbb{C}((t)) \) の上のガロア理論で記述されます。
+        \( t \) は \( p \) の周りの局所座標です。<br />
+        <br />
+        <strong>Puiseux 級数</strong> \( \mathbb{C}((t^{1/n})) \)——つまり \( t \) の分数べきを許したローラン級数——が
+        局所的な分解体を与え、分岐の仕方がガロア群の構造にエンコードされます。<br />
+        <br />
+        ローラン級数体も体なので、ちゃんとガロア理論が使える。
+        そしてこれは \( p \) 進体 \( \mathbb{Q}_p \) のガロア理論と構造的に並行する話です。<br />
+        <br />
+
+        <h3>17.6 なぜこれが面白いか：数論と幾何の統合</h3>
+        <table>
+            <tr>
+                <th>基礎体</th>
+                <th>ガロア理論の舞台</th>
+            </tr>
+            <tr>
+                <td>\( \mathbb{Q} \)</td>
+                <td>数論（代数的数体）</td>
+            </tr>
+            <tr>
+                <td>\( k(t) \)</td>
+                <td>代数曲線の被覆、リーマン面</td>
+            </tr>
+            <tr>
+                <td>\( k((t)) \)</td>
+                <td>局所的な分岐理論</td>
+            </tr>
+            <tr>
+                <td>\( \mathbb{F}_q \)</td>
+                <td>符号理論、有限幾何</td>
+            </tr>
+        </table>
+        体の上のガロア理論は全て同じ枠組みで語れます。
+        「体でありさえすればガロア理論ができる」という普遍性が、
+        グロタンディーク以降の代数幾何やエタール・コホモロジーの出発点でもあります。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 18. グロタンディークのガロア理論 ===== -->
+        <h2>18. グロタンディークのガロア理論</h2>
+        <p>ここまで見てきた「被覆空間 ↔ 基本群」の対応と「体の拡大 ↔ ガロア群」の対応は、
+            構造的にそっくりでした。グロタンディークはこれを統合する枠組みを与えました。</p>
+
+        <h3>18.1 被覆空間の分類定理</h3>
+        位相空間 \( X \) について：
+        <div class="eqwrap">
+            \[ \{\text{$X$ の被覆空間}\} \longleftrightarrow \{\pi_1(X, x_0)\text{-集合}\} \]
+        </div>
+        被覆空間 \( Y \to X \) に対して、ある点 \( x_0 \) のファイバー \( F_{x_0} \) を取ると、
+        基本群 \( \pi_1(X, x_0) \) が \( F_{x_0} \) に作用します。
+        ループを回ると、ファイバーの点が入れ替わる。この対応だけで被覆空間が完全に分類できる。<br />
+        <br />
+
+        <h3>18.2 体の場合も同じ構造</h3>
+        体 \( K \) の分離閉包 \( K^{\mathrm{sep}} \) について：
+        <div class="eqwrap">
+            \[ \{K\text{ の有限分離拡大}\} \longleftrightarrow \{\mathrm{Gal}(K^{\mathrm{sep}}/K)\text{-有限集合}\} \]
+        </div>
+        有限拡大 \( L/K \) に対して、\( L \) の \( K^{\mathrm{sep}} \) への埋め込みの集合を取ると、
+        絶対ガロア群が自然に作用します。この対応も圏同値。<br />
+        <br />
+
+        <h3>18.3 ファイバー関手：共通の本質</h3>
+        どちらの場合も、こういう構造があります：
+        <div class="eqwrap">
+            \[ \mathcal{C} \xrightarrow{F} \mathbf{FinSet} \]
+        </div>
+        \( \mathcal{C} \) が被覆空間の圏や有限分離拡大の圏で、\( F \) がファイバーを取る関手（<strong>ファイバー関手</strong>）。<br />
+        <br />
+        グロタンディークの定理：
+        <div class="eqwrap">
+            \[ \mathrm{Aut}(F) \cong \pi_1 \]
+        </div>
+        つまり<strong>ファイバー関手の自己同型群が基本群（やガロア群）を復元する</strong>。<br />
+        <br />
+        これは「群そのものを直接定義する」のではなく「群の作用の全体からその群を復元する」という発想で、
+        米田の補題の精神と通じます。対象そのものより、他の対象との関係の総体が本質だ、という。<br />
+        <br />
+
+        <h3>18.4 対応表：位相 vs 代数</h3>
+        <table>
+            <tr>
+                <th>位相</th>
+                <th>代数</th>
+            </tr>
+            <tr>
+                <td>空間 \( X \)</td>
+                <td>体 \( K \)</td>
+            </tr>
+            <tr>
+                <td>被覆空間</td>
+                <td>有限分離拡大</td>
+            </tr>
+            <tr>
+                <td>基本群 \( \pi_1 \)</td>
+                <td>絶対ガロア群</td>
+            </tr>
+            <tr>
+                <td>ファイバー（逆像）</td>
+                <td>埋め込みの集合</td>
+            </tr>
+            <tr>
+                <td>連結被覆</td>
+                <td>体（拡大）</td>
+            </tr>
+            <tr>
+                <td>正規被覆</td>
+                <td>ガロア拡大</td>
+            </tr>
+        </table>
+        この対応がスキームの理論で文字通り統合されて、<strong>エタール基本群</strong>という概念になります。
+        代数幾何と位相幾何が同じ言葉で語れるようになるわけです。<br />
+        <br />
+        ガロア対応が反変関手的であること（中間体の包含 \( M_1 \subseteq M_2 \) に対して
+        \( \mathrm{Gal}(L/M_2) \subseteq \mathrm{Gal}(L/M_1) \) と逆向きになる）は、
+        単なる反変関手ではなく<strong>圏の反同値（antiequivalence）</strong>になっている。
+        情報の損失がない。これがガロア理論の本質的な深さです。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 19. 音楽理論への接続 ===== -->
+        <h2>19. 音楽理論への接続</h2>
+        <p>関数体のガロア理論とリーマン面の被覆がどう繋がるか見てきました。
+            実は、この枠組みは音楽理論にも自然に接続します。</p>
+
+        <h3>19.1 音高空間の被覆構造</h3>
+        オクターブ同一視した音高クラス空間は \( \mathbb{R}/\mathbb{Z} \cong S^1 \)（円）です。
+        実数直線 \( \mathbb{R} \)（連続的な音高）から円 \( S^1 \) への写像
+        <div class="eqwrap">
+            \[ t \mapsto e^{2\pi i t} \]
+        </div>
+        は無限巡回被覆であり、Section 17 で見た \( z \mapsto z^n \) 型の被覆の無限版です。<br />
+        <br />
+
+        <h3>19.2 \( n \) 平均律と \( \mathbb{Z}/n\mathbb{Z} \) 作用</h3>
+        \( n \) 平均律の音階は、この円の上の \( \mathbb{Z}/n\mathbb{Z} \) 作用の軌道と見なせます。
+        12平均律なら \( \mathbb{Z}/12\mathbb{Z} \) で、巡回群としてガロア群のように音高空間の対称性を支配しています。<br />
+        <br />
+        異なる \( n \) の選択（\( n = 12, 19, 31, 53, \ldots \)）は、
+        それぞれ異なるガロア群構造を音階に導入することに対応します。<br />
+        <br />
+
+        <h3>19.3 倍音列と被覆写像</h3>
+        倍音列 \( f, 2f, 3f, \ldots \) を考えると、
+        \( n \) 倍音への写像 \( z \mapsto z^n \) はリーマン面の被覆写像そのものです。
+        基音の周りを一周する（オクターブを上がる）と、倍音の配置がガロア群的に入れ替わる。<br />
+        <br />
+        純正律と平均律の間のずれ（シントニック・コンマなど）は、
+        ある意味でこの被覆の「分岐」に対応しています。
+        局所的には Puiseux 級数で記述されるような「完全には合わないが近似的に閉じる」構造を持っています。<br />
+        <br />
+
+        <h3>19.4 微分音と体の拡大</h3>
+        微分音の作曲は、12平均律という「離散構造」から、より豊かな体の拡大へ進むことと見なせます。
+        \( n \) 平均律を考えるとは被覆の次数を変えるということ。<br />
+        <br />
+        「どの \( n \) 平均律を選ぶか」をガロア理論的に分析するのは興味深い方向で、
+        音律の選択を体の拡大の選択として定式化し、その間のガロア群の構造を調べる——
+        数学と音楽の関心が合流する場所です。<br />
+        <br />
+
+        <h3>19.5 まとめ：4つの世界の対応</h3>
+        <div class="eqwrap">
+            \[ \boxed{\text{体の拡大} \longleftrightarrow \text{リーマン面の被覆} \longleftrightarrow \text{基本群の作用}
+            \longleftrightarrow \text{音高空間の対称性}} \]
+        </div>
+        ガロア理論は、この全体を貫く共通言語になっています。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 20. おわりに ===== -->
+        <h2>20. おわりに</h2>
+        「零因子が見つかるか？」という計算問題から出発して、
+        因数分解のアルゴリズム、そして最後は空間の幾何学にまで話が繋がりました。<br />
+        <br />
+        プログラムを書いていると「バグ（例外的な挙動）」に見えるような分岐や零因子も、
+        数学的な空間の中で見れば「特異点」や「分岐点」という重要な構造の一部だったりするのかもしれません。
+        <br />
+
+        <hr />
+        <br />
+
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Homology Observation Machine</title>
+<meta name="description" content="ホモロジー観測機 — 離散空間のホモロジー群とBetti数を計算・可視化">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+MathJax = {
+  tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e1a;--bg2:#111827;--card:rgba(17,24,39,0.75);--glass:rgba(139,92,246,0.06);
+  --border:rgba(139,92,246,0.18);--text:#e2e8f0;--text2:#94a3b8;--muted:#64748b;
+  --accent:#8b5cf6;--accent2:#06b6d4;--grad:linear-gradient(135deg,#8b5cf6,#06b6d4);
+  --danger:#ef4444;--success:#10b981;--r:12px;--rs:8px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
+  background-image:radial-gradient(circle at 20% 50%,rgba(139,92,246,0.04) 0%,transparent 50%),
+  radial-gradient(circle at 80% 20%,rgba(6,182,212,0.04) 0%,transparent 50%)}
+.container{max-width:1080px;margin:0 auto;padding:20px;display:grid;grid-template-columns:1fr 350px;gap:20px}
+@media(max-width:900px){.container{grid-template-columns:1fr}}
+.main-col{display:flex;flex-direction:column;gap:16px}
+.side-col{display:flex;flex-direction:column;gap:16px}
+header{text-align:center;padding:20px 0;grid-column:1/-1}
+header h1{font-size:1.8rem;font-weight:700;background:var(--grad);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-0.02em}
+header p{color:var(--text2);font-size:0.85rem;margin-top:6px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  padding:20px;backdrop-filter:blur(12px)}
+.card h2{font-size:0.8rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);
+  margin-bottom:12px;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.input-row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:100px}
+.field.full{min-width:100%;flex-basis:100%}
+.field label{font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em}
+.field textarea, .field select{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+  border-radius:var(--rs);padding:10px 12px;color:var(--text);font-family:'JetBrains Mono',monospace;
+  font-size:0.85rem;outline:none;transition:border-color 0.2s}
+.field textarea:focus,.field select:focus{border-color:var(--accent)}
+.field textarea{resize:vertical;height:180px;line-height:1.4}
+.toggle-row{display:flex;gap:8px;align-items:center;margin-top:8px}
+.radios{display:flex;gap:12px;font-size:0.8rem;color:var(--text2)}
+.radios label{display:flex;align-items:center;gap:4px;cursor:pointer}
+.radios input{accent-color:var(--accent)}
+
+.presets-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.preset{font-size:0.7rem;padding:4px 10px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);
+  background:rgba(255,255,255,0.02);color:var(--text2);cursor:pointer; transition:all 0.2s}
+.preset:hover{border-color:var(--accent);color:var(--text)}
+
+.ops-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.op-btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;
+  border-radius:var(--r);border:1px solid var(--border);background:var(--glass);color:var(--text);
+  cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden}
+.op-btn::before{content:'';position:absolute;inset:0;background:var(--grad);opacity:0;transition:opacity 0.3s}
+.op-btn:hover::before{opacity:0.12}
+.op-btn:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 6px 20px rgba(139,92,246,0.15)}
+.op-btn:active{transform:translateY(0)}
+.op-btn .icon{font-size:1.1rem;position:relative;z-index:1}
+.op-btn .code{font-size:0.8rem;font-weight:600;font-family:'JetBrains Mono',monospace;position:relative;z-index:1}
+
+#result-area{min-height:100px;}
+.result-block{background:rgba(139,92,246,0.05);border:1px solid rgba(139,92,246,0.12);
+  border-radius:var(--rs);padding:14px 16px;margin-bottom:10px; animation:fadeUp 0.3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.result-block .def-label{font-size:0.7rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px}
+.math-display{font-size:1.0rem;overflow-x:auto;padding:4px 0}
+.math-display.sm{font-size:0.85rem;}
+
+.canvas-container{width:100%;aspect-ratio:1;background:rgba(0,0,0,0.2);border-radius:var(--rs);border:1px solid rgba(255,255,255,0.05);position:relative;overflow:hidden}
+canvas{width:100%;height:100%;display:block}
+
+.history-item{padding:8px 10px;border-radius:var(--rs);border:1px solid rgba(255,255,255,0.04);
+  margin-bottom:6px;font-size:0.75rem;background:rgba(255,255,255,0.01)}
+.history-item .hi-op{color:var(--accent);font-weight:600;margin-bottom:2px}
+
+.error-msg{color:var(--danger);background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);
+  border-radius:var(--rs);padding:12px;font-size:0.85rem;margin-bottom:10px}
+.success-msg{color:var(--success);background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);
+  border-radius:var(--rs);padding:12px;font-size:0.85rem;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>✦ Homology Observation Machine</h1>
+    <p>ホモロジー観測機 — 離散空間のホモロジー群とBetti数を計算・可視化</p>
+  </header>
+
+  <div class="main-col">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px;">
+        <h2 style="margin:0">入力 Complex Data</h2>
+        <div class="radios">
+          <label><input type="radio" name="field" value="GF2" checked> GF(2)</label>
+          <label><input type="radio" name="field" value="Q"> Q (有理数)</label>
+          <label><input type="radio" name="field" value="Z"> Z (整数)</label>
+        </div>
+      </div>
+      <div class="field full">
+        <textarea id="complex-input" spellcheck="false" placeholder="Vertices:&#10;0, 1, 2&#10;&#10;Edges:&#10;[0,1], [1,2], [2,0]&#10;&#10;Faces:&#10;[0,1,2]"></textarea>
+      </div>
+      <div class="presets-row">
+        <button class="preset" onclick="loadPreset('point')">点</button>
+        <button class="preset" onclick="loadPreset('line')">線分</button>
+        <button class="preset" onclick="loadPreset('triangle_hollow')">S¹ (穴空き三角)</button>
+        <button class="preset" onclick="loadPreset('triangle_filled')">円板 (塗り三角)</button>
+        <button class="preset" onclick="loadPreset('sphere')">S² (球面/四面体)</button>
+        <button class="preset" onclick="loadPreset('torus')">T² (トーラス)</button>
+        <button class="preset" onclick="loadPreset('rp2')">RP² (射影平面)</button>
+        <button class="preset" onclick="loadPreset('klein')">クラインの壺</button>
+        <button class="preset" onclick="loadPreset('figure8')">8の字グラフ</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>操作 Operations</h2>
+      <div class="ops-grid">
+        <button class="op-btn" onclick="exec('build')"><span class="icon">🏗️</span><span class="code">Build{}</span></button>
+        <button class="op-btn" onclick="exec('check')"><span class="icon">🔍</span><span class="code">Chk{}</span></button>
+        <button class="op-btn" onclick="exec('boundary_map')"><span class="icon">∂</span><span class="code">∂{}表示</span></button>
+        <button class="op-btn" onclick="exec('boundary_matrix')"><span class="icon">🔢</span><span class="code">行列BM{}</span></button>
+        <button class="op-btn" onclick="exec('homology')"><span class="icon">𝕳</span><span class="code">ホモロジー群</span></button>
+        <button class="op-btn" onclick="exec('betti')"><span class="icon">β</span><span class="code">Betti数計算</span></button>
+      </div>
+    </div>
+
+    <div class="card" id="result-card">
+      <h2 style="margin-bottom:0">結果 Result</h2>
+      <div id="result-area" style="margin-top:16px;">
+        <div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:20px">操作ボタンを押して計算を実行</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="side-col">
+    <div class="card" style="padding:16px">
+      <h2 style="margin-bottom:12px">可視化 Visualization <button onclick="drawComplex()" style="background:transparent;border:none;color:var(--text2);cursor:pointer">🔄</button></h2>
+      <div class="canvas-container">
+        <canvas id="viz-canvas" width="400" height="400"></canvas>
+      </div>
+      <p style="font-size:0.7rem;color:var(--muted);margin-top:8px;text-align:center">頂点の座標は自動配置（円環状など）で描画されます。</p>
+    </div>
+
+    <div class="card" style="padding:16px;flex:1">
+      <h2>履歴 History</h2>
+      <div id="history-area" style="max-height:400px;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- 1. Math Utils & Field Classes ---
+
+function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+class Frac {
+  constructor(n, d=1) {
+    if (d < 0) { n = -n; d = -d; }
+    let g = gcd(Math.abs(n), d);
+    this.n = n / g;
+    this.d = d / g;
+  }
+  add(o) { return new Frac(this.n * o.d + o.n * this.d, this.d * o.d); }
+  sub(o) { return new Frac(this.n * o.d - o.n * this.d, this.d * o.d); }
+  mul(o) { return new Frac(this.n * o.n, this.d * o.d); }
+  div(o) { return new Frac(this.n * o.d, this.d * o.n); }
+  isZero() { return this.n === 0; }
+  toString() { return this.d === 1 ? String(this.n) : `${this.n}/${this.d}`; }
+  toTex() { 
+    if(this.n === 0) return '0';
+    if(this.d === 1) return String(this.n);
+    return `${this.n < 0 ? '-' : ''}\\frac{${Math.abs(this.n)}}{${this.d}}`;
+  }
+}
+
+function computeRank(M, field) {
+  let R = M.length;
+  let C = R > 0 ? M[0].length : 0;
+  if(R === 0 || C === 0) return 0;
+
+  if (field === 'GF2') {
+    let A = M.map(row => row.map(v => Math.abs(v) % 2));
+    let rank = 0;
+    for (let c = 0; c < C && rank < R; c++) {
+      let pivot = rank;
+      while (pivot < R && A[pivot][c] === 0) pivot++;
+      if (pivot === R) continue;
+      
+      let temp = A[rank]; A[rank] = A[pivot]; A[pivot] = temp;
+      for (let r = rank + 1; r < R; r++) {
+        if (A[r][c] === 1) {
+          for (let k = c; k < C; k++) A[r][k] = (A[r][k] + A[rank][k]) % 2;
+        }
+      }
+      rank++;
+    }
+    return rank;
+  } else if (field === 'Q') {
+    let A = M.map(row => row.map(v => new Frac(v)));
+    let rank = 0;
+    for (let c = 0; c < C && rank < R; c++) {
+      let pivot = rank;
+      while (pivot < R && A[pivot][c].isZero()) pivot++;
+      if (pivot === R) continue;
+      
+      let temp = A[rank]; A[rank] = A[pivot]; A[pivot] = temp;
+      let pVal = A[rank][c];
+      
+      for (let r = rank + 1; r < R; r++) {
+        if (!A[r][c].isZero()) {
+          let f = A[r][c].div(pVal);
+          for (let k = c; k < C; k++) A[r][k] = A[r][k].sub(f.mul(A[rank][k]));
+        }
+      }
+      rank++;
+    }
+    return rank;
+  }
+}
+
+function computeSNF(M) {
+  let A = M.map(row => [...row]);
+  let R = A.length;
+  let C = R > 0 ? A[0].length : 0;
+  if (R === 0 || C === 0) return { rank: 0, diag: [] };
+
+  let rank = 0;
+  let minDim = Math.min(R, C);
+  let diag = [];
+
+  for (let k = 0; k < minDim; k++) {
+    let pivotFound = false;
+    
+    while (true) {
+      let pR = -1, pC = -1;
+      let minVal = Infinity;
+      for (let i = k; i < R; i++) {
+        for (let j = k; j < C; j++) {
+          if (A[i][j] !== 0 && Math.abs(A[i][j]) < minVal) {
+            minVal = Math.abs(A[i][j]);
+            pR = i; pC = j;
+          }
+        }
+      }
+      
+      if (pR === -1) break;
+      pivotFound = true;
+
+      if (pR !== k) {
+        let temp = A[k]; A[k] = A[pR]; A[pR] = temp;
+      }
+      if (pC !== k) {
+        for (let i = 0; i < R; i++) {
+          let temp = A[i][k]; A[i][k] = A[i][pC]; A[i][pC] = temp;
+        }
+      }
+
+      let pivot = A[k][k];
+      let changed = false;
+
+      for (let i = k + 1; i < R; i++) {
+        if (A[i][k] !== 0) {
+          let q = Math.trunc(A[i][k] / pivot);
+          for (let j = k; j < C; j++) A[i][j] -= q * A[k][j];
+          if (A[i][k] !== 0) changed = true;
+        }
+      }
+      
+      for (let j = k + 1; j < C; j++) {
+        if (A[k][j] !== 0) {
+          let q = Math.trunc(A[k][j] / pivot);
+          for (let i = k; i < R; i++) A[i][j] -= q * A[i][k];
+          if (A[k][j] !== 0) changed = true;
+        }
+      }
+
+      if (!changed) {
+        let dividesAll = true;
+        for (let i = k + 1; i < R; i++) {
+          for (let j = k + 1; j < C; j++) {
+            if (A[i][j] % A[k][k] !== 0) {
+              for (let c = k; c < C; c++) A[k][c] += A[i][c];
+              dividesAll = false;
+              break;
+            }
+          }
+          if (!dividesAll) break;
+        }
+        if (dividesAll) break;
+      }
+    }
+
+    if (pivotFound) {
+      if (A[k][k] < 0) {
+        for (let j = k; j < C; j++) A[k][j] = -A[k][j];
+      }
+      diag.push(A[k][k]);
+      rank++;
+    } else {
+      break;
+    }
+  }
+
+  diag.sort((a,b) => a - b);
+  let clean = false;
+  while (!clean) {
+    clean = true;
+    for (let i = 0; i < rank - 1; i++) {
+      if (diag[i+1] % diag[i] !== 0) {
+        let g = gcd(diag[i], diag[i+1]);
+        let l = (diag[i] * diag[i+1]) / g;
+        diag[i] = g;
+        diag[i+1] = l;
+        clean = false;
+      }
+    }
+    diag.sort((a,b) => a - b);
+  }
+
+  return { rank: rank, diag: diag };
+}
+
+
+// --- 2. Complex Parser & Engine ---
+
+let currentComplex = null;
+
+function parseComplex(text) {
+  let lines = text.split('\n').map(l => l.trim()).filter(l => l);
+  let sec = '';
+  let vSet = new Set(), edges = [], faces = [];
+  
+  const extractArr = (str) => {
+    let m = str.match(/[\[\(\{](.+)[\]\)\}]/);
+    let s = m ? m[1] : str;
+    return s.split(',').map(x=>x.trim()).filter(x=>x);
+  };
+
+  for (let line of lines) {
+    if (/^Vertices/i.test(line)) { sec = 'V'; continue; }
+    if (/^Edges/i.test(line)) { sec = 'E'; continue; }
+    if (/^Faces/i.test(line)) { sec = 'F'; continue; }
+
+    if (sec === 'V') {
+      line.split(',').map(x=>x.trim()).filter(x=>x).forEach(x => vSet.add(x));
+    } else if (sec === 'E') {
+      let parts = line.split(/(?<=\]),|(?<=\)),|(?<=\}),|\s+/).filter(x=>x);
+      for(let p of parts) {
+        let arr = extractArr(p);
+        if(arr.length === 2) edges.push(arr);
+        else if(arr.length > 2) { 
+          for(let i=0;i<arr.length-1;i+=2) if(arr[i] && arr[i+1]) edges.push([arr[i], arr[i+1]]);
+        }
+      }
+      let matches = line.match(/\[(.*?)\]|\((.*?)\)/g);
+      if(matches) {
+          matches.forEach(m => {
+              let a = extractArr(m);
+              if(a.length===2) edges.push(a);
+          });
+      }
+    } else if (sec === 'F') {
+      let matches = line.match(/\[(.*?)\]|\((.*?)\)/g);
+      if(matches) {
+          matches.forEach(m => {
+              let a = extractArr(m);
+              if(a.length===3) faces.push(a);
+          });
+      } else {
+        let arr = extractArr(line);
+        if(arr.length === 3) faces.push(arr);
+      }
+    }
+  }
+
+  edges.forEach(e => { vSet.add(e[0]); vSet.add(e[1]); });
+  faces.forEach(f => { vSet.add(f[0]); vSet.add(f[1]); vSet.add(f[2]); });
+
+  const cmp = (a, b) => {
+    let na = Number(a), nb = Number(b);
+    if(!isNaN(na) && !isNaN(nb)) return na - nb;
+    return a.localeCompare(b);
+  };
+
+  let V = Array.from(vSet).sort(cmp);
+  let E = edges.map(e => e.slice().sort(cmp));
+  let F = faces.map(f => f.slice().sort(cmp));
+
+  const uniq = (arr) => {
+    let seen = new Set();
+    let res = [];
+    arr.forEach(item => {
+      let key = item.join(',');
+      if(!seen.has(key)) { seen.add(key); res.push(item); }
+    });
+    return res;
+  };
+
+  return { 
+    V: uniq(V.map(x=>[x])).map(x=>x[0]), 
+    E: uniq(E), 
+    F: uniq(F) 
+  };
+}
+
+function getBoundaryMatrix(complex, n) {
+  if (n === 1) {
+    let M = Array(complex.V.length).fill(0).map(()=>Array(complex.E.length).fill(0));
+    complex.E.forEach((e, j) => {
+      let idx0 = complex.V.indexOf(e[0]);
+      let idx1 = complex.V.indexOf(e[1]);
+      if(idx1 !== -1) M[idx1][j] += 1;
+      if(idx0 !== -1) M[idx0][j] -= 1;
+    });
+    return M;
+  } else if (n === 2) {
+    let M = Array(complex.E.length).fill(0).map(()=>Array(complex.F.length).fill(0));
+    complex.F.forEach((f, j) => {
+      let bndPairs = [
+        [f[1], f[2]], // (-1)^0 => +1
+        [f[0], f[2]], // (-1)^1 => -1
+        [f[0], f[1]]  // (-1)^2 => +1
+      ];
+      let signs = [1, -1, 1];
+      bndPairs.forEach((pair, idx) => {
+        let eStr = pair.join(',');
+        let eIdx = complex.E.findIndex(e => e.join(',') === eStr);
+        if(eIdx !== -1) M[eIdx][j] += signs[idx];
+      });
+    });
+    return M;
+  }
+  return [];
+}
+
+// --- 3. UI Exec Dispatcher ---
+
+function renderHTML(html) {
+  const t = document.createElement('div');
+  t.innerHTML = html;
+  document.getElementById('result-area').innerHTML = '';
+  document.getElementById('result-area').appendChild(t);
+  if (window.MathJax) MathJax.typesetPromise([t]).catch(()=>{});
+}
+function addHist(opStr) {
+  const d = document.createElement('div');
+  d.className = 'history-item';
+  d.innerHTML = `<div class="hi-op">[ ${new Date().toLocaleTimeString()} ] ${opStr}</div>`;
+  const p = document.getElementById('history-area');
+  p.insertBefore(d, p.firstChild);
+}
+
+function getField() {
+  return document.querySelector('input[name="field"]:checked').value; // 'GF2' or 'Q'
+}
+
+function formatSimplex(sArray) { return `[${sArray.join(',')}]`; }
+function formatMatrixTex(M) {
+  if(!M || M.length===0 || M[0].length===0) return '\\begin{pmatrix} 0 \\end{pmatrix}';
+  let s = '\\begin{pmatrix}';
+  M.forEach(r => { s += r.join(' & ') + ' \\\\ '; });
+  s += '\\end{pmatrix}';
+  return s;
+}
+
+function exec(cmd) {
+  const text = document.getElementById('complex-input').value;
+  let cx = parseComplex(text);
+  currentComplex = cx;
+  drawComplex();
+
+  let html = '';
+  let field = getField();
+
+  if (cmd === 'build') {
+    html += `<div class="success-msg">複体を構成しました！<br>
+    V (0単体) : ${cx.V.length}個<br>
+    E (1単体) : ${cx.E.length}個<br>
+    F (2単体) : ${cx.F.length}個</div>`;
+    addHist(`Build: V=${cx.V.length}, E=${cx.E.length}, F=${cx.F.length}`);
+
+  } else if (cmd === 'check') {
+    let errs = [];
+    cx.E.forEach(e => {
+      if(!cx.V.includes(e[0])) errs.push(`Edge ${formatSimplex(e)} needs vertex ${e[0]}`);
+      if(!cx.V.includes(e[1])) errs.push(`Edge ${formatSimplex(e)} needs vertex ${e[1]}`);
+    });
+    cx.F.forEach(f => {
+      [[f[0],f[1]], [f[0],f[2]], [f[1],f[2]]].forEach(pair => {
+        let pStr = pair.join(',');
+        if(!cx.E.find(e => e.join(',')===pStr)) errs.push(`Face ${formatSimplex(f)} needs Edge ${formatSimplex(pair)}`);
+      });
+    });
+    if(errs.length > 0) {
+      html += `<div class="error-msg"><b>複体条件エラー (${errs.length}件):</b><br>${errs.slice(0,5).join('<br>')}${errs.length>5?'<br>...':''}</div>`;
+      addHist(`Check Failed (${errs.length} errors)`);
+    } else {
+      html += `<div class="success-msg">✅ 複体は適切に閉じています（不足している面・辺はありません）。</div>`;
+      addHist(`Check OK`);
+    }
+
+  } else if (cmd === 'boundary_map') {
+    let content = `<div class="result-block"><div class="def-label">境界写像 ∂ (式表現) / Field: ${field}</div>`;
+    
+    content += `<div style="margin-bottom:12px"><b>∂₁ : C₁ → C₀</b><br>`;
+    if(cx.E.length === 0) content += `(Eが空です)</div>`;
+    else {
+      content += `<ul style="list-style:none;font-family:'JetBrains Mono',monospace;font-size:0.85rem">`;
+      cx.E.forEach(e => {
+        if(field === 'GF2') content += `<li>∂₁${formatSimplex(e)} = [${e[1]}] + [${e[0]}]</li>`;
+        else content += `<li>∂₁${formatSimplex(e)} = [${e[1]}] - [${e[0]}]</li>`;
+      });
+      content += `</ul></div>`;
+    }
+
+    content += `<div><b>∂₂ : C₂ → C₁</b><br>`;
+    if(cx.F.length === 0) content += `(Fが空です)</div>`;
+    else {
+      content += `<ul style="list-style:none;font-family:'JetBrains Mono',monospace;font-size:0.85rem">`;
+      cx.F.forEach(f => {
+        if(field === 'GF2') content += `<li>∂₂${formatSimplex(f)} = [${f[1]},${f[2]}] + [${f[0]},${f[2]}] + [${f[0]},${f[1]}]</li>`;
+        else content += `<li>∂₂${formatSimplex(f)} = [${f[1]},${f[2]}] - [${f[0]},${f[2]}] + [${f[0]},${f[1]}]</li>`;
+      });
+      content += `</ul></div>`;
+    }
+    content += `</div>`;
+    html = content;
+    addHist(`∂₁ & ∂₂ Expressions`);
+
+  } else if (cmd === 'boundary_matrix') {
+    let M1 = getBoundaryMatrix(cx, 1);
+    let M2 = getBoundaryMatrix(cx, 2);
+    
+    if(field === 'GF2') {
+      M1 = M1.map(row => row.map(v => Math.abs(v)%2));
+      M2 = M2.map(row => row.map(v => Math.abs(v)%2));
+    }
+
+    let mt1 = formatMatrixTex(M1);
+    let mt2 = formatMatrixTex(M2);
+
+    let content = `<div class="result-block"><div class="def-label">境界行列 Boundary Matrices / Field: ${field}</div>`;
+    content += `<div class="math-display sm">\\partial_1 = ${mt1}</div>`;
+    if(M1.length>0 && M1[0].length>0) content += `<div style="font-size:0.75rem;color:var(--muted);text-align:center;margin-bottom:10px">(${cx.V.length} 行 × ${cx.E.length} 列)</div>`;
+    
+    content += `<div class="math-display sm">\\partial_2 = ${mt2}</div>`;
+    if(M2.length>0 && M2[0].length>0) content += `<div style="font-size:0.75rem;color:var(--muted);text-align:center">(${cx.E.length} 行 × ${cx.F.length} 列)</div>`;
+    
+    content += `</div>`;
+    html = content;
+    addHist(`Matrix Representation (${field})`);
+
+  } else if (cmd === 'homology' || cmd === 'betti') {
+    let M1 = getBoundaryMatrix(cx, 1);
+    let M2 = getBoundaryMatrix(cx, 2);
+
+    let r1, r2, t1 = [], t2 = [];
+    if (field === 'Z') {
+      let snf1 = computeSNF(M1);
+      let snf2 = computeSNF(M2);
+      r1 = snf1.rank;
+      r2 = snf2.rank;
+      t1 = snf1.diag.filter(d => d > 1);
+      t2 = snf2.diag.filter(d => d > 1);
+    } else {
+      r1 = computeRank(M1, field);
+      r2 = computeRank(M2, field);
+    }
+
+    let dimC0 = cx.V.length;
+    let dimC1 = cx.E.length;
+    let dimC2 = cx.F.length;
+
+    let z0 = dimC0; // ker d0 is all of C0
+    let b0 = r1;    // im d1
+    let betti0 = z0 - b0;
+
+    let z1 = dimC1 - r1; // ker d1
+    let b1 = r2;         // im d2
+    let betti1 = z1 - b1;
+
+    let z2 = dimC2 - r2; // ker d2
+    let b2 = 0;          // im d3 (no tetrahedra)
+    let betti2 = z2 - b2;
+
+    html += `<div class="result-block"><div class="def-label">ホモロジー群 H_n (Field: ${field})</div>`;
+    
+    if (cmd === 'homology') {
+      html += `
+        <div style="font-size:0.85rem;margin-bottom:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div><b>C₀ (Vertices):</b> Dim = ${dimC0}<br>
+               Ker(∂₀): ${z0}, Im(∂₁): ${b0}</div>
+          <div><b>C₁ (Edges):</b> Dim = ${dimC1}<br>
+               Ker(∂₁): ${z1}, Im(∂₂): ${b1}</div>
+          <div><b>C₂ (Faces):</b> Dim = ${dimC2}<br>
+               Ker(∂₂): ${z2}, Im(∂₃): ${b2}</div>
+        </div>
+        <hr style="border-color:var(--border);margin-bottom:12px">
+      `;
+    }
+
+    let fStr = field === 'Z' ? '\\mathbb{Z}' : (field === 'Q' ? '\\mathbb{Q}' : '\\mathbb{F}_2');
+    
+    const formatGroup = (betti, torsion) => {
+      let s = "";
+      if (betti === 0) s = "";
+      else if (betti === 1) s = fStr;
+      else s = `${fStr}^{${betti}}`;
+      
+      if (field === 'Z' && torsion && torsion.length > 0) {
+        torsion.forEach(d => {
+          s += (s ? " \\oplus " : "") + `\\mathbb{Z}_{${d}}`;
+        });
+      }
+      return s || "0";
+    };
+
+    let h0_str = formatGroup(betti0, t1);
+    let h1_str = formatGroup(betti1, t2);
+    let h2_str = formatGroup(betti2, []);
+
+    html += `<div class="math-display">
+      \\begin{align}
+      H_0(${fStr}) &\\cong ${h0_str} \\quad &(\\beta_0 = \\mathbf{${betti0}}) \\\\
+      H_1(${fStr}) &\\cong ${h1_str} \\quad &(\\beta_1 = \\mathbf{${betti1}}) \\\\
+      H_2(${fStr}) &\\cong ${h2_str} \\quad &(\\beta_2 = \\mathbf{${betti2}})
+      \\end{align}
+    </div>`;
+
+    if(betti1 < 0) html += `<div class="error-msg" style="margin-top:10px">⚠️ β₁ が負の値です。複体の条件 (Faces が対応する Edges をすべて持っているか) を Chk{} ボタンで確認してください。</div>`;
+
+    if(field === 'Z' && t2.length > 0) {
+      html += `<div style="font-size:0.85rem;color:var(--accent);margin-top:12px"><b>💡 Torsion（ねじれ）を検出しました！</b><br>
+      この空間には $\\mathbb{Z}_{${t2.join(', ')}}$ のねじれ部分群が存在します。係数を Q や GF(2) に切り替えて、Betti数がどう変わるか観察してみましょう！</div>`;
+    } else if(field === 'Q' && document.getElementById('complex-input').value === PRESETS['klein']) {
+      html += `<div style="font-size:0.8rem;color:var(--accent2);margin-top:8px">※ クラインの壺は有理数(Q)上では β₁=1, GF(2)上では β₁=2 となります。Z係数でねじれを確認してみてください！</div>`;
+    } else if(field === 'Q' && document.getElementById('complex-input').value === PRESETS['rp2']) {
+      html += `<div style="font-size:0.8rem;color:var(--accent2);margin-top:8px">※ 射影平面(RP²)は有理数(Q)上では β₁=0, GF(2)上では β₁=1 となります。Z係数でねじれを確認してみてください！</div>`;
+    }
+
+    let desc = "";
+    if(betti0 > 0) desc += `【解説】連結成分が ${betti0} 個あります。<br>`;
+    if(betti1 > 0) desc += `独立な1次元の穴（トンネル）が ${betti1} 個あります。<br>`;
+    if(betti2 > 0) desc += `独立な2次元の空洞が ${betti2} 個あります。`;
+    if(t2.length > 0) desc += `<br>※ ねじれ（Torsion）があるため、一部の「穴」は2周以上すると境界（ふち）になります。`;
+    if(desc) html += `<div style="font-size:0.8rem;color:var(--text);margin-top:12px;background:var(--border);padding:8px;border-radius:4px">${desc}</div>`;
+
+    html += `</div>`;
+    addHist(`Betti (β₀=${betti0}, β₁=${betti1}, β₂=${betti2})`);
+  }
+
+  renderHTML(html);
+}
+
+// --- 4. Presets ---
+const PRESETS = {
+  'point': "Vertices:\n0",
+  'line': "Vertices:\n0, 1\n\nEdges:\n[0,1]",
+  'triangle_hollow': "Vertices:\n0, 1, 2\n\nEdges:\n[0,1]\n[1,2]\n[2,0]",
+  'triangle_filled': "Vertices:\n0, 1, 2\n\nEdges:\n[0,1]\n[1,2]\n[2,0]\n\nFaces:\n[0,1,2]",
+  'sphere': "Vertices:\n0,1,2,3\n\nEdges:\n[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]\n\nFaces:\n[0,1,2],[0,1,3],[0,2,3],[1,2,3]",
+  'torus': "Vertices:\n0,1,2,3,4,5,6,7,8\n\nEdges:\n[0,1],[1,2],[2,0],[3,4],[4,5],[5,3],[6,7],[7,8],[8,6],[0,3],[3,6],[6,0],[1,4],[4,7],[7,1],[2,5],[5,8],[8,2],[0,4],[3,7],[6,1],[1,5],[4,8],[7,2],[2,3],[5,6],[8,0]\n\nFaces:\n[0,1,4],[0,3,4],[1,2,5],[1,4,5],[2,0,3],[2,3,5],[3,4,7],[3,6,7],[4,5,8],[4,7,8],[5,3,6],[5,6,8],[6,7,1],[6,0,1],[7,8,2],[7,1,2],[8,6,0],[8,0,2]",
+  'rp2': "Vertices:\n0,1,2,3,4,5\n\nEdges:\n[0,1],[0,2],[0,3],[0,4],[0,5],[1,2],[2,3],[3,4],[4,5],[5,1],[1,3],[2,4],[3,5],[4,1],[5,2]\n\nFaces:\n[0,1,2],[0,2,3],[0,3,4],[0,4,5],[0,5,1],[1,2,4],[2,3,5],[3,4,1],[4,5,2],[5,1,3]",
+  'klein': "Vertices:\n0,1,2,3,4,5,6,7,8\n\nEdges:\n[0,1],[1,2],[2,0],[3,4],[4,5],[5,3],[6,7],[7,8],[8,6],[0,3],[3,6],[6,0],[1,4],[4,7],[7,1],[2,5],[5,8],[8,2],[1,3],[4,6],[7,0],[2,4],[5,7],[8,1],[0,5],[3,8],[6,2]\n\nFaces:\n[0,1,3],[1,3,4],[1,2,4],[2,4,5],[2,0,5],[0,3,5],[3,4,6],[4,6,7],[4,5,7],[5,7,8],[5,3,8],[3,6,8],[6,7,2],[7,2,0],[7,8,0],[8,0,1],[8,6,1],[6,2,1]",
+  'figure8': "Vertices:\n0,1,2,3,4\n\nEdges:\n[0,1],[1,2],[2,0],[0,3],[3,4],[4,0]"
+};
+
+function loadPreset(key) {
+  document.getElementById('complex-input').value = PRESETS[key];
+  exec('build'); 
+}
+
+// --- 5. Visualization Canvas ---
+
+function drawComplex() {
+  const canvas = document.getElementById('viz-canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width;
+  const H = canvas.height;
+  
+  ctx.clearRect(0,0,W,H);
+  if(!currentComplex || currentComplex.V.length===0) return;
+  
+  let cx = currentComplex;
+  let cxV = cx.V;
+  let nv = cxV.length;
+  
+  let R = W * 0.38;
+  let CX = W / 2;
+  let CY = H / 2;
+  
+  let pos = {};
+  cxV.forEach((v, i) => {
+    let a = -Math.PI/2 + (2*Math.PI*i/nv);
+    pos[v] = { x: CX + R*Math.cos(a), y: CY + R*Math.sin(a) };
+  });
+
+  // Faces
+  ctx.fillStyle = 'rgba(139, 92, 246, 0.25)';
+  ctx.strokeStyle = 'transparent';
+  cx.F.forEach(f => {
+    ctx.beginPath();
+    let p0 = pos[f[0]], p1 = pos[f[1]], p2 = pos[f[2]];
+    if(p0 && p1 && p2) {
+      ctx.moveTo(p0.x, p0.y);
+      ctx.lineTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.fill();
+    }
+  });
+
+  // Edges
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+  ctx.lineWidth = 1.5;
+  cx.E.forEach(e => {
+    let p0 = pos[e[0]], p1 = pos[e[1]];
+    if(p0 && p1) {
+      ctx.beginPath();
+      ctx.moveTo(p0.x, p0.y);
+      ctx.lineTo(p1.x, p1.y);
+      ctx.stroke();
+    }
+  });
+
+  // Vertices
+  cxV.forEach(v => {
+    let p = pos[v];
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 10, 0, 2*Math.PI);
+    ctx.fillStyle = '#06b6d4';
+    ctx.fill();
+    ctx.strokeStyle = '--bg';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    ctx.fillStyle = '#ebf8ff';
+    ctx.font = 'bold 11px Inter';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(v, p.x, p.y + 1);
+  });
+}
+
+window.onload = () => {
+    loadPreset('triangle_hollow');
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,3413 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RegSum Lab v0.5 Phase 1 Prototype</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    function AutoBounds(values) {
+      const finite = values.filter(Number.isFinite);
+      if (!finite.length) return { min: -1, max: 1 };
+      let min = Math.min(...finite);
+      let max = Math.max(...finite);
+      if (Math.abs(max - min) < 1e-12) {
+        min -= 1;
+        max += 1;
+      }
+      const pad = (max - min) * 0.08;
+      return { min: min - pad, max: max + pad };
+    }
+
+    function SimpleLineChart({ data, lines, xKey, height = 360 }) {
+      const width = 900;
+      const m = { top: 20, right: 20, bottom: 32, left: 56 };
+      const innerW = width - m.left - m.right;
+      const innerH = height - m.top - m.bottom;
+      const xs = data.map(d => d[xKey]);
+      const ys = [];
+      lines.forEach(line => data.forEach(d => ys.push(d[line.key])));
+      const xMin = Math.min(...xs, 0), xMax = Math.max(...xs, 1);
+      const { min: yMin, max: yMax } = AutoBounds(ys);
+      const xScale = x => m.left + ((x - xMin) / Math.max(1e-12, xMax - xMin)) * innerW;
+      const yScale = y => m.top + innerH - ((y - yMin) / Math.max(1e-12, yMax - yMin)) * innerH;
+      const gridYs = 5;
+      const gridXs = 6;
+      return (
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full bg-slate-950 rounded-xl">
+          {Array.from({ length: gridYs + 1 }, (_, i) => {
+            const y = m.top + innerH * (i / gridYs);
+            const val = yMax - (yMax - yMin) * (i / gridYs);
+            return <g key={`gy-${i}`}>
+              <line x1={m.left} y1={y} x2={m.left + innerW} y2={y} stroke="#243041" strokeWidth="1" />
+              <text x={m.left - 8} y={y + 4} textAnchor="end" fontSize="11" fill="#cbd5e1">{formatNum(val, 4)}</text>
+            </g>;
+          })}
+          {Array.from({ length: gridXs + 1 }, (_, i) => {
+            const x = m.left + innerW * (i / gridXs);
+            const val = xMin + (xMax - xMin) * (i / gridXs);
+            return <g key={`gx-${i}`}>
+              <line x1={x} y1={m.top} x2={x} y2={m.top + innerH} stroke="#243041" strokeWidth="1" />
+              <text x={x} y={height - 8} textAnchor="middle" fontSize="11" fill="#cbd5e1">{formatNum(val, 4)}</text>
+            </g>;
+          })}
+          <rect x={m.left} y={m.top} width={innerW} height={innerH} fill="none" stroke="#334155" strokeWidth="1" />
+          {lines.map((line, idx) => {
+            const path = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${xScale(d[xKey])} ${yScale(d[line.key])}`).join(' ');
+            return <g key={line.key}>
+              <path d={path} fill="none" stroke={line.color} strokeWidth="2" />
+              <g transform={`translate(${m.left + 12 + idx * 170}, ${m.top + 12})`}>
+                <line x1="0" y1="0" x2="18" y2="0" stroke={line.color} strokeWidth="2" />
+                <text x="24" y="4" fontSize="12" fill="#e2e8f0">{line.label}</text>
+              </g>
+            </g>;
+          })}
+        </svg>
+      );
+    }
+
+    function SimpleScatterChart({ data, xKey, yKey, height = 360, color = '#22d3ee' }) {
+      const width = 900;
+      const m = { top: 20, right: 20, bottom: 32, left: 56 };
+      const innerW = width - m.left - m.right;
+      const innerH = height - m.top - m.bottom;
+      const xs = data.map(d => d[xKey]);
+      const ys = data.map(d => d[yKey]);
+      const xMin = Math.min(...xs, 0), xMax = Math.max(...xs, 1);
+      const { min: yMin, max: yMax } = AutoBounds(ys);
+      const xScale = x => m.left + ((x - xMin) / Math.max(1e-12, xMax - xMin)) * innerW;
+      const yScale = y => m.top + innerH - ((y - yMin) / Math.max(1e-12, yMax - yMin)) * innerH;
+      return (
+        <svg viewBox={`0 0 900 ${height}`} className="w-full h-full bg-slate-950 rounded-xl">
+          <rect x={m.left} y={m.top} width={innerW} height={innerH} fill="none" stroke="#334155" strokeWidth="1" />
+          {data.map((d, i) => <circle key={i} cx={xScale(d[xKey])} cy={yScale(d[yKey])} r="2.5" fill={color} />)}
+        </svg>
+      );
+    }
+
+    const TEST_CASES = [
+      { id: 'T001', expr: '1', expected: -0.5, method: 'hurwitz', tol: 1e-10, category: 'reference' },
+      { id: 'T002', expr: 'n', expected: -1/12, method: 'hurwitz', tol: 1e-10, category: 'reference' },
+      { id: 'T003', expr: 'n^2', expected: 0, method: 'hurwitz', tol: 1e-10, category: 'reference' },
+      { id: 'T004', expr: 'n^1.5', expected: -0.0254852018898, method: 'hurwitz', tol: 1e-6, category: 'reference' },
+      { id: 'T005', expr: 'n^29', expected: -20052695.79668808, method: 'hurwitz', tol: 1e-6, category: 'reference', settingsPatch: { modelDetection: { d_max: 29 } } },
+      { id: 'T006-M', expr: 'n^1.5 + n^1.4', expected: 'mixedPowerLaw', method: 'modelType', tol: 0, category: 'reference' },
+      { id: 'T006-H', expr: 'n^1.5 + n^1.4', expected: -0.048, method: 'hurwitz', tol: 2e-2, category: 'reference' },
+      { id: 'T201', expr: '1 + n', expected: -7/12, method: 'hurwitz', tol: 1e-9, category: 'linearity' },
+      { id: 'T202', expr: '3*n', expected: -1/4, method: 'hurwitz', tol: 1e-9, category: 'linearity' },
+      { id: 'T301', expr: '1 + 0.001*sin(n)', expected: -0.5, method: 'hurwitz', tol: 2e-3, category: 'perturbation' },
+      { id: 'T302', expr: 'n + 0.001*sin(n)', expected: -1/12, method: 'hurwitz', tol: 2e-3, category: 'perturbation' },
+      { id: 'T703-C', expr: '(-1)^n', expected: -0.5, method: 'cesaro', tol: 5e-3, category: 'oscillation' },
+      { id: 'T703-A', expr: '(-1)^n', expected: -0.5, method: 'abel', tol: 5e-3, category: 'oscillation' },
+      { id: 'T801-M', expr: 'sin(n)', expected: 'fourier', method: 'modelType', tol: 0, category: 'fourier' },
+      { id: 'T801-A', expr: 'sin(n)', expected: 0.5 * (Math.cos(0.5) / Math.sin(0.5)), method: 'abel', tol: 5e-3, category: 'fourier' },
+      { id: 'T802-C', expr: 'cos(n)', expected: -0.5, method: 'abel', tol: 5e-3, category: 'fourier' },
+      { id: 'T803-A', expr: 'sin(2*n)', expected: 0.5 * (Math.cos(1) / Math.sin(1)), method: 'abel', tol: 5e-3, category: 'fourier' },
+      { id: 'T804-M', expr: 'sin(cos(n))', expected: 'fourier', method: 'modelType', tol: 0, category: 'fourier-dc' },
+      { id: 'T804-C', expr: 'sin(cos(n))', expected: -0.4207355, method: 'abel', tol: 2e-2, category: 'fourier-dc' },
+      { id: 'T901-W', expr: 'floor(sqrt(n))', expected: 'exploratory', method: 'windowStatus', tol: 0, category: 'window' },
+      { id: 'T951-M', expr: 'log(n)', expected: 'extended', method: 'modelType', tol: 0, category: 'extended' },
+      { id: 'T951-E', expr: 'log(n)', expected: 1.0, method: 'expCutoff', tol: 2.5, category: 'extended' },
+      { id: 'T951-W', expr: 'log(n)', expected: 'diagnostic', method: 'windowStatus', tol: 0, category: 'extended' },
+      { id: 'T952-M', expr: 'n*log(n)', expected: 'extended', method: 'modelType', tol: 0, category: 'extended' },
+      { id: 'T952-E', expr: 'n*log(n)', expected: 0.165421, method: 'expCutoff', tol: 1e-2, category: 'extended' },
+      { id: 'T952-W', expr: 'n*log(n)', expected: 'diagnostic', method: 'windowStatus', tol: 0, category: 'extended' }
+    ];
+
+    const PRESETS = [
+      { name: "Constant 1", expr: "1", params: {} },
+      { name: "Natural numbers", expr: "n", params: {} },
+      { name: "Square numbers", expr: "n^2", params: {} },
+      { name: "Linear (1 + n)", expr: "1 + n", params: {} },
+      { name: "Alternating", expr: "(-1)^n", params: {} },
+      { name: "Residue mod 2", expr: "(n % 2 == 0) ? 1 : 0", params: {} },
+      { name: "Perturbed sum", expr: "n + 0.001*sin(n)", params: {} },
+      { name: "Non-polynomial", expr: "floor(sqrt(n))", params: {} },
+      { name: "Fractional power", expr: "n^1.5", params: {} },
+      { name: "Fractional power 2", expr: "n^(7/5)", params: {} },
+      { name: "Quasi-periodic", expr: "sin(n)", params: {} },
+      { name: "Double frequency", expr: "sin(2*n)", params: {} },
+      { name: "Composite (sin of cos)", expr: "sin(cos(n))", params: {} },
+      { name: "Composite (cos of sin)", expr: "cos(sin(n))", params: {} },
+      { name: "Absolute sine", expr: "abs(sin(n))", params: {} },
+      { name: "Logarithmic", expr: "log(n)", params: {} },
+      { name: "n log n", expr: "n*log(n)", params: {} },
+      { name: "Alternating linear", expr: "(-1)^n * n", params: {} },
+    ];
+
+    const BERNOULLI = [
+      1,
+      -1/2,
+      1/6,
+      0,
+      -1/30,
+      0,
+      1/42,
+      0,
+      -1/30,
+      0,
+      5/66,
+      0,
+      -691/2730,
+      0,
+      7/6,
+      0,
+      -3617/510,
+      0,
+      43867/798,
+      0,
+      -174611/330,
+      0,
+      854513/138,
+      0,
+      -236364091/2730,
+      0,
+      8553103/6,
+      0,
+      -23749461029/870,
+      0,
+      8615841276005/14322
+    ];
+
+    function clamp(x, a, b) {
+      return Math.max(a, Math.min(b, x));
+    }
+
+    function formatNum(x, digits = 10) {
+      if (x == null || !Number.isFinite(x)) return "—";
+      if (Math.abs(x) < 1e-12) return "0";
+      return Number(x).toPrecision(digits).replace(/\.0+$/, '').replace(/(\.[0-9]*?)0+$/, '$1');
+    }
+
+    function rationalApprox(x, maxDen = 1024, relTol = 1e-9) {
+      if (x == null || !Number.isFinite(x)) return null;
+      if (Math.abs(x) < 1e-12) return "0";
+      if (Math.abs(x - Math.round(x)) <= relTol * Math.max(1, Math.abs(x))) return `${Math.round(x)}`;
+
+      const sign = x < 0 ? -1 : 1;
+      let v = Math.abs(x);
+      let h1 = 1, h0 = 0, k1 = 0, k0 = 1;
+      let iter = 0;
+
+      while (iter++ < 32) {
+        const a = Math.floor(v);
+        const h2 = a * h1 + h0;
+        const k2 = a * k1 + k0;
+        if (k2 > maxDen) break;
+        h0 = h1; h1 = h2;
+        k0 = k1; k1 = k2;
+        const frac = v - a;
+        if (frac < 1e-14) break;
+        v = 1 / frac;
+      }
+
+      let num = sign * h1;
+      let den = k1;
+      if (!den) return null;
+
+      const approx = num / den;
+      const err = Math.abs(x - approx);
+      const scale = Math.max(1, Math.abs(x));
+      if (err > relTol * scale) return null;
+      if (den === 1) return `${num}`;
+      return `${num}/${den}`;
+    }
+
+    function approxRationalLabel(x) {
+      const rational = rationalApprox(x);
+      if (x == null || !Number.isFinite(x)) return null;
+      if (!rational || rational === "0" || rational === `${Math.round(x)}`) return null;
+      return rational;
+    }
+
+    function formatValueCell(x) {
+      const rational = rationalApprox(x);
+      if (!Number.isFinite(x)) return "—";
+      if (!rational || rational === "0" || rational === `${Math.round(x)}`) return formatNum(x);
+      return (
+        <div className="leading-snug">
+          <div>{formatNum(x)}</div>
+          <div className="text-xs text-slate-400">≈ {rational}</div>
+        </div>
+      );
+    }
+
+    function InfoTip({ label, tip, className = '' }) {
+      return (
+        <span className={`inline-flex items-center gap-1 ${className}`} title={tip}>
+          <span>{label}</span>
+          <span className="text-slate-500 cursor-help">ⓘ</span>
+        </span>
+      );
+    }
+
+    function mean(arr) {
+      if (!arr.length) return 0;
+      let s = 0;
+      for (const x of arr) s += x;
+      return s / arr.length;
+    }
+
+    function rms(arr) {
+      if (!arr.length) return 0;
+      let s = 0;
+      for (const x of arr) s += x * x;
+      return Math.sqrt(s / arr.length);
+    }
+
+    function variance(arr) {
+      if (arr.length < 2) return 0;
+      const m = mean(arr);
+      let s = 0;
+      for (const x of arr) s += (x - m) * (x - m);
+      return s / arr.length;
+    }
+
+    function parseParams(text) {
+      const out = {};
+      const trimmed = text.trim();
+      if (!trimmed) return out;
+      const parts = trimmed.split(/[,\n;]/).map(s => s.trim()).filter(Boolean);
+      for (const part of parts) {
+        const m = part.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)$/);
+        if (!m) throw new Error(`Invalid parameter entry: ${part}`);
+        const key = m[1];
+        const value = Number(m[2]);
+        if (!Number.isFinite(value)) throw new Error(`Invalid numeric value for ${key}`);
+        out[key] = value;
+      }
+      return out;
+    }
+
+    function extractIdentifiers(expr) {
+      const matches = expr.match(/[A-Za-z_][A-Za-z0-9_]*/g) || [];
+      return [...new Set(matches)];
+    }
+
+    function sanitizeExpression(expr) {
+      return expr.replace(/\*\*/g, "^").replace(/\^/g, "**");
+    }
+
+    function buildEvaluator(expr, params) {
+      const identifiers = extractIdentifiers(expr);
+      const allowed = new Set([
+        "n", "floor", "ceil", "round", "sqrt", "log", "sin", "cos", "tan", "abs", "pow",
+        "pi", "e", ...Object.keys(params)
+      ]);
+      for (const id of identifiers) {
+        if (!allowed.has(id)) throw new Error(`Unknown identifier: ${id}`);
+      }
+
+      const safeExpr = sanitizeExpression(expr);
+      const argNames = ["n", ...Object.keys(params)];
+      const body = `
+        const floor=Math.floor, ceil=Math.ceil, round=Math.round, sqrt=Math.sqrt,
+              log=Math.log, sin=Math.sin, cos=Math.cos, tan=Math.tan, abs=Math.abs,
+              pow=Math.pow, pi=Math.PI, e=Math.E;
+        return (${safeExpr});
+      `;
+      const fn = new Function(...argNames, body);
+      return (n) => {
+        const args = [n, ...Object.keys(params).map(k => params[k])];
+        const y = fn(...args);
+        if (typeof y !== "number" || !Number.isFinite(y)) {
+          throw new Error(`Expression produced non-finite value at n=${n}`);
+        }
+        return y;
+      };
+    }
+
+    function generateSequence(expr, params, Nmax) {
+      const evalFn = buildEvaluator(expr, params);
+      const seq = new Float64Array(Nmax);
+      for (let n = 1; n <= Nmax; n++) seq[n - 1] = evalFn(n);
+      return seq;
+    }
+
+    function solveLinearSystem(A, b) {
+      const n = A.length;
+      const M = A.map((row, i) => [...row, b[i]]);
+      for (let col = 0; col < n; col++) {
+        let pivot = col;
+        for (let r = col + 1; r < n; r++) {
+          if (Math.abs(M[r][col]) > Math.abs(M[pivot][col])) pivot = r;
+        }
+        if (Math.abs(M[pivot][col]) < 1e-14) throw new Error("Singular matrix");
+        [M[col], M[pivot]] = [M[pivot], M[col]];
+        const div = M[col][col];
+        for (let j = col; j <= n; j++) M[col][j] /= div;
+        for (let r = 0; r < n; r++) {
+          if (r === col) continue;
+          const factor = M[r][col];
+          for (let j = col; j <= n; j++) M[r][j] -= factor * M[col][j];
+        }
+      }
+      return M.map(row => row[n]);
+    }
+
+    function matMulAtA(X) {
+      const p = X[0].length;
+      const out = Array.from({ length: p }, () => Array(p).fill(0));
+      for (let i = 0; i < X.length; i++) {
+        for (let a = 0; a < p; a++) {
+          for (let b = 0; b < p; b++) out[a][b] += X[i][a] * X[i][b];
+        }
+      }
+      return out;
+    }
+
+    function matMulAtY(X, y) {
+      const p = X[0].length;
+      const out = Array(p).fill(0);
+      for (let i = 0; i < X.length; i++) {
+        for (let a = 0; a < p; a++) out[a] += X[i][a] * y[i];
+      }
+      return out;
+    }
+
+    function estimateConditionNumberGram(G) {
+      let maxRow = 0;
+      let minDiag = Infinity;
+      let maxDiag = 0;
+      for (let i = 0; i < G.length; i++) {
+        let rs = 0;
+        for (let j = 0; j < G.length; j++) rs += Math.abs(G[i][j]);
+        maxRow = Math.max(maxRow, rs);
+        minDiag = Math.min(minDiag, Math.abs(G[i][i]));
+        maxDiag = Math.max(maxDiag, Math.abs(G[i][i]));
+      }
+      if (minDiag < 1e-20) return Infinity;
+      return (maxRow || 1) * (maxDiag / minDiag);
+    }
+
+    function leastSquares(X, y) {
+      const G = matMulAtA(X);
+      const rhs = matMulAtY(X, y);
+      const coeffs = solveLinearSystem(G, rhs);
+      const fitted = X.map(row => row.reduce((s, v, i) => s + v * coeffs[i], 0));
+      const residuals = fitted.map((v, i) => y[i] - v);
+      const rss = residuals.reduce((s, v) => s + v * v, 0);
+      return {
+        coeffs,
+        fitted,
+        residuals,
+        rss,
+        rms: Math.sqrt(rss / Math.max(1, y.length)),
+        conditionNumber: estimateConditionNumberGram(G)
+      };
+    }
+
+    function leastSquaresScaled(X, y, weights = null) {
+      const rows = X.length;
+      const cols = X[0]?.length ?? 0;
+      if (!rows || !cols) throw new Error('Empty design matrix');
+      const w = weights && weights.length === rows ? weights.map(v => Math.max(1e-12, v)) : Array(rows).fill(1);
+      const colScales = Array(cols).fill(0);
+      const Xw = X.map((row, i) => {
+        const sw = Math.sqrt(w[i]);
+        return row.map((v, j) => {
+          const vv = v * sw;
+          colScales[j] = Math.max(colScales[j], Math.abs(vv));
+          return vv;
+        });
+      });
+      for (let j = 0; j < cols; j++) colScales[j] = Math.max(colScales[j], 1e-12);
+      const Xn = Xw.map(row => row.map((v, j) => v / colScales[j]));
+      const yw = y.map((v, i) => v * Math.sqrt(w[i]));
+      const fit = leastSquares(Xn, yw);
+      const coeffs = fit.coeffs.map((c, j) => c / colScales[j]);
+      const fitted = X.map(row => row.reduce((s, v, i) => s + v * coeffs[i], 0));
+      const residuals = fitted.map((v, i) => y[i] - v);
+      const rss = residuals.reduce((s, v, i) => s + w[i] * v * v, 0);
+      return {
+        coeffs,
+        fitted,
+        residuals,
+        rss,
+        rms: Math.sqrt(rss / Math.max(1, y.length)),
+        conditionNumber: fit.conditionNumber,
+        columnScales: colScales
+      };
+    }
+
+    function median(arr) {
+      if (!arr.length) return null;
+      const s = [...arr].sort((a, b) => a - b);
+      const m = Math.floor(s.length / 2);
+      return s.length % 2 ? s[m] : 0.5 * (s[m - 1] + s[m]);
+    }
+
+    function mad(arr, center = null) {
+      if (!arr.length) return 0;
+      const c = center == null ? median(arr) : center;
+      return median(arr.map(v => Math.abs(v - c))) ?? 0;
+    }
+
+    function fitPolynomial(ns, ys, degree) {
+      const X = ns.map(n => {
+        const row = [];
+        for (let k = 0; k <= degree; k++) row.push(n ** k);
+        return row;
+      });
+      return leastSquares(X, ys);
+    }
+
+    function detectQuasiPolynomial(sequence, options = {}) {
+      const N = sequence.length;
+      const Nfit = Math.min(options.N_fit ?? Math.min(N, 2048), N);
+      const mMax = options.m_max ?? 12;
+      const dMax = options.d_max ?? 4;
+      const threshold = options.residualThreshold ?? 1e-6;
+      const slice = Array.from(sequence.slice(0, Nfit));
+      let best = null;
+
+      for (let m = 1; m <= Math.min(mMax, Nfit); m++) {
+        for (let d = 0; d <= dMax; d++) {
+          let rss = 0;
+          let totalCount = 0;
+          const coefficients = Array.from({ length: m }, () => Array(d + 1).fill(0));
+          let failed = false;
+          for (let r = 0; r < m; r++) {
+            const ns = [];
+            const ys = [];
+            for (let idx = 0; idx < Nfit; idx++) {
+              const n = idx + 1;
+              if (n % m === r) {
+                ns.push(n);
+                ys.push(slice[idx]);
+              }
+            }
+            if (ns.length < d + 1) {
+              failed = true;
+              break;
+            }
+            try {
+              const fit = fitPolynomial(ns, ys, d);
+              rss += fit.rss;
+              totalCount += ys.length;
+              coefficients[r] = fit.coeffs;
+            } catch {
+              failed = true;
+              break;
+            }
+          }
+          if (failed) continue;
+          const aic = Nfit * Math.log(Math.max(rss / Math.max(1, totalCount), 1e-30)) + 2 * (m * (d + 1));
+          const residualRMS = Math.sqrt(rss / Math.max(1, totalCount));
+          const candidate = { period: m, degree: d, coefficients, residualRMS, aic };
+          if (!best || aic < best.aic - 1e-9 || (Math.abs(aic - best.aic) < 1e-9 && (m < best.period || (m === best.period && d < best.degree)))) {
+            best = candidate;
+          }
+        }
+      }
+
+      if (!best) return { type: "none", confidence: "poor", notes: ["no quasi-polynomial candidate"] };
+
+      const skeleton = new Float64Array(N);
+      for (let n = 1; n <= N; n++) {
+        const r = n % best.period;
+        let v = 0;
+        for (let k = 0; k <= best.degree; k++) v += best.coefficients[r][k] * (n ** k);
+        skeleton[n - 1] = v;
+      }
+      const residual = new Float64Array(N);
+      for (let i = 0; i < N; i++) residual[i] = sequence[i] - skeleton[i];
+      const rmsAll = Math.sqrt(Array.from(residual).reduce((s, x) => s + x * x, 0) / N);
+      const accepted = best.residualRMS <= threshold;
+      return {
+        type: accepted ? "quasiPolynomial" : "quasiPolynomialCandidate",
+        confidence: accepted ? (best.residualRMS < threshold * 0.1 ? "good" : "uncertain") : "poor",
+        period: best.period,
+        degree: best.degree,
+        coefficients: best.coefficients,
+        skeleton,
+        residual,
+        residualRMS: rmsAll,
+        fitResidualRMS: best.residualRMS,
+        notes: [accepted
+          ? `quasi-polynomial detected: period=${best.period}, degree=${best.degree}`
+          : `quasi-polynomial candidate: period=${best.period}, degree=${best.degree}, fitRMS=${best.residualRMS}`]
+      };
+    }
+
+    function detectPowerLaw(sequence, options = {}) {
+      const N = sequence.length;
+      const Nfit = Math.min(options.N_fit ?? Math.min(N, 2048), N);
+      
+      let residualSeq = Float64Array.from(sequence);
+      const components = [];
+      const skeleton = new Float64Array(N);
+      
+      const maxComponents = options.maxPowerComponents ?? 3;
+      let lastRms = Infinity;
+      const scale = Math.max(1e-12, rms(Array.from(sequence.slice(0, Nfit))));
+      const notes = [];
+
+      for (let comp = 0; comp < maxComponents; comp++) {
+        let posCount = 0, negCount = 0;
+        for (let n = Math.floor(Nfit / 2); n <= Nfit; n++) {
+          if (residualSeq[n - 1] > 0) posCount++;
+          else if (residualSeq[n - 1] < 0) negCount++;
+        }
+        const sign = posCount >= negCount ? 1 : -1;
+
+        const xs = [];
+        const ys = [];
+        for (let n = 1; n <= Nfit; n++) {
+          const a = sign * residualSeq[n - 1];
+          // We only take log of significantly positive values
+          if (a > scale * 1e-14) {
+            xs.push(Math.log(n));
+            ys.push(Math.log(a));
+          }
+        }
+
+        // If too many points are invalid (e.g. oscillating or zero), stop peeling
+        if (xs.length < Nfit * 0.5) {
+          if (comp === 0) return { type: "none", confidence: "poor", notes: ["power-law skipped: non-positive or oscillating values present"] };
+          notes.push(`peeling stopped: residual sign flips too much or is near zero`);
+          break;
+        }
+
+        const mx = mean(xs), my = mean(ys);
+        let num = 0, den = 0;
+        for (let i = 0; i < xs.length; i++) {
+          num += (xs[i] - mx) * (ys[i] - my);
+          den += (xs[i] - mx) * (xs[i] - mx);
+        }
+        let alpha = num / den;
+        let c = sign * Math.exp(my - alpha * mx);
+
+        for (let iter = 0; iter < 5; iter++) {
+          let j11 = 0, j12 = 0, j22 = 0, b1 = 0, b2 = 0;
+          for (let n = 1; n <= Nfit; n++) {
+            const na = n ** alpha;
+            const pred = c * na;
+            const r = residualSeq[n - 1] - pred;
+            const dc = na;
+            const da = c * na * Math.log(n);
+            j11 += dc * dc;
+            j12 += dc * da;
+            j22 += da * da;
+            b1 += dc * r;
+            b2 += da * r;
+          }
+          const det = j11 * j22 - j12 * j12;
+          if (Math.abs(det) < 1e-25) break;
+          const dcStep = (b1 * j22 - b2 * j12) / det;
+          const daStep = (j11 * b2 - j12 * b1) / det;
+          c += dcStep;
+          alpha += daStep;
+        }
+
+        const rounded = Math.round(alpha);
+        if (Math.abs(alpha - rounded) < 0.01) {
+          if (comp === 0) return { type: "none", confidence: "poor", notes: [`power-law near integer exponent ${alpha}, defer to quasi-polynomial`] };
+          notes.push(`peeling stopped: near-integer exponent ${alpha}`);
+          break;
+        }
+
+        // We expect subsequent components to have smaller exponents
+        if (comp > 0 && alpha >= components[comp - 1].exponent - 0.02) {
+          notes.push(`peeling stopped: exponent did not decrease meaningfully (${alpha.toFixed(3)} >= ${components[comp-1].exponent.toFixed(3)})`);
+          break; 
+        }
+
+        components.push({ exponent: alpha, coefficient: 0 }); // placeholder
+
+        // Global linear least squares for all detected components so far to avoid residual leakage
+        const X = [];
+        const y = Array.from(sequence.slice(0, Nfit));
+        for (let n = 1; n <= Nfit; n++) {
+          X.push(components.map(c => n ** c.exponent));
+        }
+        const fitParams = leastSquares(X, y);
+
+        let newResidualSq = 0;
+        for (let n = 1; n <= N; n++) {
+          let v = 0;
+          for (let i = 0; i < components.length; i++) {
+            components[i].coefficient = fitParams.coeffs[i];
+            v += fitParams.coeffs[i] * (n ** components[i].exponent);
+          }
+          residualSeq[n - 1] = sequence[n - 1] - v;
+          if (n <= Nfit) newResidualSq += residualSeq[n - 1] * residualSeq[n - 1];
+        }
+        const newResidualRMS = Math.sqrt(newResidualSq / Nfit);
+
+        if (comp > 0 && newResidualRMS > lastRms * 0.999) {
+          notes.push(`peeling stopped: no RMS improvement from term ${alpha.toFixed(3)}`);
+          components.pop();
+          // Restore previous residual (approximated by breaking)
+          break;
+        }
+
+        lastRms = newResidualRMS;
+
+        if (newResidualRMS / scale < 1e-6) {
+          notes.push(`peeling converged cleanly`);
+          break;
+        }
+      }
+
+      // If sequential peeling failed to find a good fit, attempt a joint 2-component damped Gauss-Newton fit
+      if (components.length === 1 && lastRms / scale > 5e-5) {
+        let a1 = components[0].exponent + 0.05;
+        let a2 = components[0].exponent - 0.05;
+        let c1 = components[0].coefficient / 2;
+        let c2 = components[0].coefficient / 2;
+        let converged = false;
+
+        for (let iter = 0; iter < 40; iter++) {
+          const J = [];
+          const r = [];
+          for (let n = 1; n <= Nfit; n++) {
+            const n_a1 = n ** a1;
+            const n_a2 = n ** a2;
+            const logn = Math.log(n);
+            const pred = c1 * n_a1 + c2 * n_a2;
+            r.push(sequence[n - 1] - pred);
+            J.push([n_a1, c1 * n_a1 * logn, n_a2, c2 * n_a2 * logn]);
+          }
+          try {
+            const step = leastSquares(J, r).coeffs;
+            if (!Number.isFinite(step[0])) break;
+            const lr = 0.35; // Damping factor for stability
+            c1 += step[0] * lr;
+            a1 += step[1] * lr;
+            c2 += step[2] * lr;
+            a2 += step[3] * lr;
+            if (Math.abs(step[1] * lr) < 1e-6 && Math.abs(step[3] * lr) < 1e-6) {
+              converged = true;
+              break;
+            }
+          } catch {
+            break; // singular
+          }
+        }
+
+        if (Math.abs(a1 - a2) > 0.01 && c1 > 0 && c2 > 0) {
+          let newResidualSq = 0;
+          for (let n = 1; n <= Nfit; n++) {
+            const err = sequence[n - 1] - (c1 * (n ** a1) + c2 * (n ** a2));
+            newResidualSq += err * err;
+          }
+          const gnRms = Math.sqrt(newResidualSq / Nfit);
+          if (gnRms < lastRms && (gnRms / scale) < 5e-3) {
+            components.length = 0;
+            // Sort by exponent descending
+            if (a1 < a2) { [a1, a2] = [a2, a1]; [c1, c2] = [c2, c1]; }
+            components.push({ exponent: a1, coefficient: c1 });
+            components.push({ exponent: a2, coefficient: c2 });
+            notes.push(`joint 2-component GN fit succeeded: α1=${a1.toFixed(4)}, α2=${a2.toFixed(4)}`);
+            lastRms = gnRms;
+          }
+        }
+      }
+
+      if (components.length === 0) {
+        return { type: "none", confidence: "poor", notes: ["power-law peeling failed"] };
+      }
+
+      const finalResidual = new Float64Array(N);
+      let headResSq = 0;
+      for (let n = 1; n <= N; n++) {
+        let v = 0;
+        for (const comp of components) v += comp.coefficient * (n ** comp.exponent);
+        skeleton[n - 1] = v;
+        finalResidual[n - 1] = sequence[n - 1] - v;
+        if (n <= Nfit) headResSq += finalResidual[n - 1] * finalResidual[n - 1];
+      }
+      const finalResidualRMS = Math.sqrt(headResSq / Nfit);
+
+      if (finalResidualRMS / scale > 1e-4) {
+        if (components.length === 1) {
+          return { type: "none", confidence: "poor", notes: [`power-law rejected (relative RMS=${finalResidualRMS / scale})`] };
+        } else {
+          notes.push(`warning: mixed power-law fit loose (relative RMS=${finalResidualRMS / scale})`);
+        }
+      }
+
+      notes.push(`exponents: ${components.map(c => c.exponent.toFixed(5)).join(', ')}`);
+
+      return {
+        type: components.length > 1 ? "mixedPowerLaw" : "powerLaw",
+        confidence: finalResidualRMS / scale < 1e-6 ? "good" : "uncertain",
+        exponent: components[0].exponent,
+        coefficient: components[0].coefficient,
+        components,
+        logCorrection: 0,
+        period: 1,
+        skeleton,
+        residual: finalResidual,
+        residualRMS: finalResidualRMS,
+        notes
+      };
+    }
+
+    function detectExtendedSkeleton(sequence, options = {}) {
+      const N = sequence.length;
+      const Nfit = Math.min(options.N_fit ?? Math.min(N, 2048), N);
+      const ns = Array.from({ length: Nfit }, (_, i) => i + 1);
+      const ys = Array.from(sequence.slice(0, Nfit));
+      const scale = Math.max(1e-12, rms(ys));
+
+      function fitBasis(terms, label, complexityPenalty = 0) {
+        const X = ns.map(n => terms.map(t => t.fn(n)));
+        const fit = leastSquaresScaled(X, ys);
+        const skeleton = new Float64Array(N);
+        const residual = new Float64Array(N);
+        for (let n = 1; n <= N; n++) {
+          let v = 0;
+          for (let i = 0; i < terms.length; i++) v += fit.coeffs[i] * terms[i].fn(n);
+          skeleton[n - 1] = v;
+          residual[n - 1] = sequence[n - 1] - v;
+        }
+        const headResidual = Array.from(residual.slice(0, Nfit));
+        const residualRMS = Math.sqrt(headResidual.reduce((s, x) => s + x * x, 0) / Nfit);
+        const rel = residualRMS / scale;
+
+        const cutPoints = [0.45, 0.65, 0.85, 1.0].map(frac => Math.max(terms.length + 8, Math.min(Nfit, Math.floor(Nfit * frac))));
+        const uniqueCuts = [...new Set(cutPoints)].sort((a, b) => a - b);
+        const coeffWindows = [];
+        const relWindows = [];
+        for (const cut of uniqueCuts) {
+          const subNs = ns.slice(0, cut);
+          const subYs = ys.slice(0, cut);
+          try {
+            const subFit = leastSquaresScaled(subNs.map(n => terms.map(t => t.fn(n))), subYs);
+            coeffWindows.push(subFit.coeffs);
+            const fitted = subNs.map(n => terms.reduce((s, t, i) => s + subFit.coeffs[i] * t.fn(n), 0));
+            const subResidual = fitted.map((v, i) => subYs[i] - v);
+            relWindows.push(Math.sqrt(subResidual.reduce((s, x) => s + x * x, 0) / cut) / scale);
+          } catch {
+          }
+        }
+        const leadIdx = 0;
+        const leadVals = coeffWindows.map(c => c[leadIdx]).filter(Number.isFinite);
+        const leadCenter = median(leadVals) ?? fit.coeffs[leadIdx];
+        const coeffSpread = leadVals.length >= 2 ? mad(leadVals, leadCenter) / Math.max(1e-12, Math.abs(leadCenter)) : Infinity;
+        const relSpread = relWindows.length >= 2 ? (Math.max(...relWindows) - Math.min(...relWindows)) : Infinity;
+        const stability = (Number.isFinite(coeffSpread) && Number.isFinite(relSpread))
+          ? clamp(1 - 2.5 * coeffSpread - 4 * relSpread, 0, 1)
+          : 0;
+        const score = rel + 0.3 * (1 - stability) + complexityPenalty;
+        return {
+          label,
+          fit,
+          skeleton,
+          residual,
+          residualRMS,
+          rel,
+          stability,
+          score,
+          terms,
+          coeffWindows,
+          relWindows,
+          leadCoeff: fit.coeffs[leadIdx],
+          leadCoeffSpread: Number.isFinite(coeffSpread) ? coeffSpread : null,
+          complexityPenalty
+        };
+      }
+
+      const candidates = [
+        fitBasis([
+          { label: 'log(n)', fn: n => Math.log(n) },
+          { label: '1', fn: () => 1 }
+        ], 'log', 0),
+        fitBasis([
+          { label: 'log(n)', fn: n => Math.log(n) },
+          { label: '1', fn: () => 1 },
+          { label: '1/n', fn: n => 1 / n }
+        ], 'log', 0.004),
+        fitBasis([
+          { label: 'n*log(n)', fn: n => n * Math.log(n) },
+          { label: 'n', fn: n => n },
+          { label: '1', fn: () => 1 }
+        ], 'nlogn', 0),
+        fitBasis([
+          { label: 'n*log(n)', fn: n => n * Math.log(n) },
+          { label: 'n', fn: n => n },
+          { label: 'log(n)', fn: n => Math.log(n) },
+          { label: '1', fn: () => 1 }
+        ], 'nlogn', 0.004)
+      ].sort((a, b) => a.score - b.score);
+
+      const best = candidates[0];
+      const second = candidates[1] || null;
+      const threshold = options.extendedThreshold ?? 5e-4;
+      const minStability = options.extendedDetectionStability ?? 0.72;
+      const ambiguityGap = second ? second.score - best.score : Infinity;
+      if (!best || best.rel > threshold || best.stability < minStability) {
+        return {
+          type: 'none',
+          confidence: 'poor',
+          notes: ['extended skeleton rejected'],
+          details: best ? {
+            bestType: best.label,
+            relResidual: best.rel,
+            stability: best.stability,
+            ambiguityGap
+          } : {}
+        };
+      }
+
+      const out = {
+        type: 'extended',
+        extendedType: best.label,
+        confidence: best.rel < 1e-5 && best.stability > 0.9 ? 'good' : 'uncertain',
+        coefficients: best.fit.coeffs,
+        basis: best.terms.map(t => t.label),
+        skeleton: best.skeleton,
+        residual: best.residual,
+        residualRMS: best.residualRMS,
+        stability: best.stability,
+        ambiguityGap,
+        notes: [
+          `extended skeleton detected: ${best.label}`,
+          best.stability > 0.9 ? 'coefficient windows look stable' : 'coefficient windows moderately stable',
+          ...(second && ambiguityGap < 0.015 ? [`close runner-up: ${second.label}`] : [])
+        ],
+        details: {
+          relResidual: best.rel,
+          stability: best.stability,
+          ambiguityGap,
+          candidateScores: candidates.map(c => ({
+            label: c.label,
+            relResidual: c.rel,
+            stability: c.stability,
+            score: c.score,
+            basis: c.terms.map(t => t.label),
+            leadCoeff: c.leadCoeff,
+            leadCoeffSpread: c.leadCoeffSpread
+          }))
+        }
+      };
+      return out;
+    }
+
+    function detectFourierSimple(sequence, options = {}) {
+      const N = sequence.length;
+      const Nfit = Math.min(options.N_fit ?? Math.min(N, 1024), N);
+      const data = Array.from(sequence.slice(0, Nfit));
+      const maxK = Math.min(Math.floor(Nfit / 2) - 1, options.fourierBins ?? 512);
+      const maxPeaks = options.fourierMaxPeaks ?? 3;
+
+      function solveTrigSystem(omegas) {
+        const p = 1 + 2 * omegas.length;
+        const G = Array.from({ length: p }, () => Array(p).fill(0));
+        const rhs = Array(p).fill(0);
+        for (let n = 1; n <= Nfit; n++) {
+          const row = [1];
+          for (const omega of omegas) {
+            row.push(Math.cos(omega * n));
+            row.push(Math.sin(omega * n));
+          }
+          const y = data[n - 1];
+          for (let i = 0; i < p; i++) {
+            rhs[i] += row[i] * y;
+            for (let j = 0; j < p; j++) G[i][j] += row[i] * row[j];
+          }
+        }
+        const coeffs = solveLinearSystem(G, rhs);
+        const dc = coeffs[0];
+        const peaks = [];
+        for (let i = 0; i < omegas.length; i++) {
+          const a = coeffs[1 + 2 * i];
+          const b = coeffs[1 + 2 * i + 1];
+          peaks.push({
+            frequency: omegas[i],
+            cosCoeff: a,
+            sinCoeff: b,
+            amplitude: Math.hypot(a, b),
+            phase: Math.atan2(-b, a)
+          });
+        }
+        let rss = 0;
+        for (let n = 1; n <= Nfit; n++) {
+          let pred = dc;
+          for (const peak of peaks) pred += peak.cosCoeff * Math.cos(peak.frequency * n) + peak.sinCoeff * Math.sin(peak.frequency * n);
+          const r = data[n - 1] - pred;
+          rss += r * r;
+        }
+        return { dc, peaks, rss };
+      }
+
+      function singlePeakAtOmega(omega) {
+        const fit = solveTrigSystem([omega]);
+        const peak = fit.peaks[0];
+        return { dc: fit.dc, a: peak.cosCoeff, b: peak.sinCoeff, rss: fit.rss, amplitude: peak.amplitude, phase: peak.phase };
+      }
+
+      const amps = new Float64Array(maxK + 2);
+      const rawPeaks = [];
+      for (let k = 1; k <= maxK; k++) {
+        const omega = 2 * Math.PI * k / Nfit;
+        const fit = singlePeakAtOmega(omega);
+        amps[k] = fit.amplitude;
+      }
+      for (let k = 2; k < maxK; k++) {
+        if (amps[k] >= amps[k - 1] && amps[k] >= amps[k + 1]) rawPeaks.push({ k, amplitude: amps[k] });
+      }
+      rawPeaks.sort((a, b) => b.amplitude - a.amplitude);
+      const selectedKs = rawPeaks.slice(0, maxPeaks).map(p => p.k);
+      if (!selectedKs.length) {
+        const bestK = amps.reduce((best, val, idx) => idx > 0 && val > amps[best] ? idx : best, 1);
+        selectedKs.push(bestK);
+      }
+
+      const refinedOmegas = [];
+      for (const k of selectedKs) {
+        const y1 = amps[Math.max(1, k - 1)];
+        const y2 = amps[k];
+        const y3 = amps[Math.min(maxK, k + 1)];
+        let delta = 0;
+        const denom = y1 - 2 * y2 + y3;
+        if (Math.abs(denom) > 1e-18) {
+          delta = 0.5 * (y1 - y3) / denom;
+          delta = clamp(delta, -0.5, 0.5);
+        }
+        let omega = 2 * Math.PI * (k + delta) / Nfit;
+        let step = 2 * Math.PI / Nfit;
+        for (let iter = 0; iter < (options.fourierRefineSteps ?? 5); iter++) {
+          const cand = [omega - step, omega, omega + step].map(w => ({ omega: w, ...singlePeakAtOmega(w) }));
+          cand.sort((p, q) => q.amplitude - p.amplitude);
+          omega = cand[0].omega;
+          step *= 0.35;
+        }
+        refinedOmegas.push(omega);
+      }
+
+      refinedOmegas.sort((a, b) => a - b);
+      const deduped = [];
+      const minSep = 0.02;
+      for (const omega of refinedOmegas) {
+        if (!deduped.length || Math.abs(omega - deduped[deduped.length - 1]) > minSep) deduped.push(omega);
+      }
+
+      const bestFit = solveTrigSystem(deduped);
+      const skeleton = new Float64Array(N);
+      const residual = new Float64Array(N);
+      for (let n = 1; n <= N; n++) {
+        let v = bestFit.dc;
+        for (const peak of bestFit.peaks) v += peak.cosCoeff * Math.cos(peak.frequency * n) + peak.sinCoeff * Math.sin(peak.frequency * n);
+        skeleton[n - 1] = v;
+        residual[n - 1] = sequence[n - 1] - v;
+      }
+      const residualRMS = Math.sqrt(Array.from(residual.slice(0, Nfit)).reduce((s, x) => s + x * x, 0) / Nfit);
+      const seqScale = Math.max(1e-12, rms(Array.from(sequence.slice(0, Nfit))));
+      const rel = residualRMS / seqScale;
+      if (rel > (options.fourierThreshold ?? 0.2)) {
+        return { type: "none", confidence: "poor", notes: [`fourier rejected (relative RMS=${rel})`] };
+      }
+
+      const dcWindows = [
+        sequence.slice(0, Math.min(sequence.length, 2048)),
+        sequence.slice(Math.max(0, Math.floor(sequence.length / 2) - 1024), Math.max(0, Math.floor(sequence.length / 2) - 1024) + Math.min(sequence.length, 2048)),
+        sequence.slice(Math.max(0, sequence.length - Math.min(sequence.length, 2048)))
+      ].filter(arr => arr.length > 0).map(arr => mean(Array.from(arr)));
+      const dcSpread = dcWindows.length ? Math.max(...dcWindows) - Math.min(...dcWindows) : 0;
+      const dcScale = Math.max(1e-9, Math.abs(bestFit.dc), ...dcWindows.map(v => Math.abs(v)));
+      const dcStability = clamp(1 - dcSpread / dcScale - rel, 0, 1);
+      const dcDetails = {
+        windows: dcWindows,
+        spread: dcSpread,
+        stability: dcStability,
+        note: dcStability > 0.9
+          ? 'Fourier skeleton DC component (stable time-average candidate for bounded oscillatory data)'
+          : 'Fourier skeleton DC component (time-average candidate; check diagnostics)'
+      };
+
+      return {
+        type: "fourier",
+        confidence: rel < 0.05 ? "good" : "uncertain",
+        dcComponent: bestFit.dc,
+        dcDetails,
+        peaks: bestFit.peaks.map(p => ({ ...p, rss: bestFit.rss })),
+        numPeaks: bestFit.peaks.length,
+        skeleton,
+        residual,
+        residualRMS,
+        notes: [`fourier skeleton detected: peaks=${bestFit.peaks.length}, dc≈${bestFit.dc.toFixed(6)}`]
+      };
+    }
+
+    function detectModel(sequence, options) {
+      const Ncheck = Math.min(1024, sequence.length);
+      const head = Array.from(sequence.slice(0, Ncheck));
+      const firstDiff = [];
+      for (let i = 1; i < head.length; i++) firstDiff.push(head[i] - head[i - 1]);
+      const seqScale = Math.max(1e-12, rms(head));
+      const diffScale = firstDiff.length ? rms(firstDiff) : 0;
+      const quasiSoftRel = options.quasiSoftRelativeThreshold ?? 0.0025;
+
+      const qp = detectQuasiPolynomial(sequence, options);
+      if (qp.type === "quasiPolynomial") {
+        const relResidual = (qp.residualRMS ?? Infinity) / seqScale;
+        if ((qp.period ?? 1) <= 12 && relResidual < Math.max(1e-8, 1e-6)) {
+          return qp;
+        }
+        if ((qp.period ?? 1) <= 4 && (qp.degree ?? 0) <= 2 && relResidual < quasiSoftRel) {
+          return {
+            ...qp,
+            confidence: 'uncertain',
+            notes: [...(qp.notes || []), `soft quasi acceptance (relative residual=${relResidual})`]
+          };
+        }
+      }
+
+      if (qp.type === "quasiPolynomialCandidate") {
+        const relResidual = (qp.residualRMS ?? Infinity) / seqScale;
+        if ((qp.period ?? 1) <= 4 && (qp.degree ?? 0) <= 2 && relResidual < quasiSoftRel) {
+          return {
+            ...qp,
+            type: 'quasiPolynomial',
+            confidence: 'uncertain',
+            notes: [...(qp.notes || []), `soft quasi acceptance (relative residual=${relResidual})`]
+          };
+        }
+      }
+
+      const pw = detectPowerLaw(sequence, options);
+      if (pw.type === "powerLaw" || pw.type === "mixedPowerLaw") return pw;
+
+      const ext = detectExtendedSkeleton(sequence, options);
+      if (ext.type === 'extended') return ext;
+
+      const fourier = detectFourierSimple(sequence, options);
+      if (fourier.type === "fourier") {
+        const peak = fourier.peaks?.[0];
+        const omega = peak?.frequency ?? Infinity;
+        const amp = peak?.amplitude ?? 0;
+        const dc = Math.abs(fourier.dcComponent ?? 0);
+        const looksLikeTrend = diffScale < 0.02 * seqScale;
+        const lowFreq = omega < (options.fourierMinOmega ?? 0.01);
+        const dcDominant = dc > 0.25 * Math.max(1e-12, amp);
+        const tinyOscillationOnQuasi =
+          (qp.type === 'quasiPolynomial' || qp.type === 'quasiPolynomialCandidate') &&
+          (qp.residualRMS ?? Infinity) / seqScale < quasiSoftRel &&
+          amp < 0.05 * seqScale;
+        if (!(lowFreq && looksLikeTrend) && !(lowFreq && dcDominant) && !tinyOscillationOnQuasi) {
+          return fourier;
+        }
+      }
+
+      if (qp.type === "quasiPolynomial" || qp.type === "quasiPolynomialCandidate") {
+        return {
+          ...qp,
+          confidence: qp.confidence || 'uncertain',
+          notes: [...(qp.notes || []), 'quasi fallback selected']
+        };
+      }
+
+      return {
+        type: "none",
+        confidence: "poor",
+        skeleton: qp.skeleton || fourier.skeleton || new Float64Array(sequence.length),
+        residual: qp.residual || fourier.residual || new Float64Array(sequence.length),
+        residualRMS: qp.residualRMS ?? fourier.residualRMS ?? null,
+        notes: [
+          ...(qp.notes || []),
+          ...(pw.notes || []),
+          ...(ext.notes || []),
+          ...(fourier.notes || []),
+          "no supported skeleton detected in current build"
+        ]
+      };
+    }
+
+    function bernoulliPolynomial(k, x) {
+      let sum = 0;
+      for (let j = 0; j <= k; j++) {
+        const Bj = BERNOULLI[j] ?? 0;
+        sum += comb(k, j) * Bj * (x ** (k - j));
+      }
+      return sum;
+    }
+
+    function comb(n, k) {
+      if (k < 0 || k > n) return 0;
+      if (k === 0 || k === n) return 1;
+      let res = 1;
+      for (let i = 1; i <= k; i++) res = res * (n - k + i) / i;
+      return res;
+    }
+
+    function gamma(z) {
+      const p = [
+        0.99999999999980993, 676.5203681218851, -1259.1392167224028,
+        771.32342877765313, -176.61502916214059, 12.507343278686905,
+        -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7
+      ];
+      if (z < 0.5) return Math.PI / (Math.sin(Math.PI * z) * gamma(1 - z));
+      z -= 1;
+      let x = p[0];
+      for (let i = 1; i < p.length; i++) x += p[i] / (z + i);
+      const t = z + 7.5;
+      return Math.sqrt(2 * Math.PI) * Math.pow(t, z + 0.5) * Math.exp(-t) * x;
+    }
+
+    function zetaSeries(s, N = 20000) {
+      let sum = 0;
+      for (let n = 1; n <= N; n++) sum += 1 / (n ** s);
+      return sum;
+    }
+
+    function zetaViaFunctionalEquation(s) {
+      if (s > 1) return zetaSeries(s);
+      const oneMinusS = 1 - s;
+      const z = zetaSeries(oneMinusS, 50000);
+      return (2 ** s) * (Math.PI ** (s - 1)) * Math.sin(Math.PI * s / 2) * gamma(1 - s) * z;
+    }
+
+    function hurwitzRegularize(model, sequence) {
+      if (model.type === "quasiPolynomial") {
+        const m = model.period;
+        const d = model.degree;
+        let total = 0;
+        const residueBreakdown = [];
+        for (let r = 0; r < m; r++) {
+          let contrib = 0;
+          for (let k = 0; k <= d; k++) {
+            const c = model.coefficients[r][k];
+            if (Math.abs(c) < 1e-15) continue;
+            const a = r === 0 ? 1 : r / m;
+            const B = bernoulliPolynomial(k + 1, a);
+            const zetaVal = -B / (k + 1);
+            contrib += c * (m ** k) * zetaVal;
+          }
+          residueBreakdown.push({ residue: r, contribution: contrib });
+          total += contrib;
+        }
+        return {
+          method: "hurwitz",
+          status: "success",
+          value: total,
+          stability: "exact-ish",
+          notes: [...model.notes],
+          details: {
+            exactForm: model.period === 1 ? "Bernoulli-polynomial exact-ish path" : "Residue-class Hurwitz/Bernoulli path",
+            residueBreakdown
+          }
+        };
+      }
+      if ((model.type === "powerLaw" || model.type === "mixedPowerLaw") && model.period === 1) {
+        const components = model.components || [{ exponent: model.exponent, coefficient: model.coefficient }];
+        let value = 0;
+        const termsText = [];
+        for (const comp of components) {
+          value += comp.coefficient * zetaViaFunctionalEquation(-comp.exponent);
+          termsText.push(`${formatNum(comp.coefficient, 4)} * zeta(${-comp.exponent.toFixed(4)})`);
+        }
+        return {
+          method: "hurwitz",
+          status: "success",
+          value,
+          stability: "exact-ish",
+          notes: [...(model.notes || [])],
+          details: {
+            exactForm: termsText.join('  +  ') + ' via functional equation',
+            components
+          }
+        };
+      }
+      if (model.type === 'extended') {
+        return {
+          method: 'hurwitz',
+          status: 'not_applicable',
+          value: null,
+          stability: null,
+          notes: [`extended skeleton ${model.extendedType} detected — use ExpCutoff / Window in current build`],
+          details: { basis: model.basis, coefficients: model.coefficients }
+        };
+      }
+      if (model.type === "fourier") {
+        return {
+          method: "hurwitz",
+          status: "not_applicable",
+          value: null,
+          stability: null,
+          notes: ["fourier skeleton — use Abel/ExpCutoff"],
+          details: {}
+        };
+      }
+      return {
+        method: "hurwitz",
+        status: "not_applicable",
+        value: null,
+        stability: null,
+        notes: ["supported only for quasi-polynomial and single power-law skeletons in Phase 1"],
+        details: {}
+      };
+    }
+
+    function buildExpBasis(model) {
+      const basis = [];
+      if (model.type === "quasiPolynomial") {
+        for (let p = model.degree + 1; p >= 1; p--) basis.push({ label: `eps^-${p}`, fn: eps => eps ** (-p) });
+        basis.push({ label: "1", fn: () => 1 });
+        basis.push({ label: "eps", fn: eps => eps });
+        return basis;
+      }
+      if (model.type === "powerLaw" || model.type === "mixedPowerLaw") {
+        const a = model.exponent;
+        const exponents = [a + 1, a, Math.max(a - 1, 0.5)].filter((v, i, arr) => arr.findIndex(u => Math.abs(u - v) < 1e-9) === i);
+        for (const p of exponents) basis.push({ label: `eps^-${p.toFixed(3)}`, fn: eps => eps ** (-p) });
+        basis.push({ label: "1", fn: () => 1 });
+        basis.push({ label: "eps", fn: eps => eps });
+        return basis;
+      }
+      if (model.type === 'extended') {
+        if (model.extendedType === 'log') {
+          return [
+            { label: 'log(eps)/eps', fn: eps => Math.log(eps) / eps },
+            { label: 'eps^-1', fn: eps => eps ** -1 },
+            { label: '1', fn: () => 1 },
+            { label: 'eps*log(eps)', fn: eps => eps * Math.log(eps) },
+            { label: 'eps', fn: eps => eps },
+            { label: 'eps^2', fn: eps => eps * eps }
+          ];
+        }
+        if (model.extendedType === 'nlogn') {
+          return [
+            { label: 'log(eps)/eps^2', fn: eps => Math.log(eps) / (eps * eps) },
+            { label: 'eps^-2', fn: eps => eps ** -2 },
+            { label: 'eps^-1', fn: eps => eps ** -1 },
+            { label: '1', fn: () => 1 },
+            { label: 'eps*log(eps)', fn: eps => eps * Math.log(eps) },
+            { label: 'eps', fn: eps => eps }
+          ];
+        }
+      }
+      return [
+        { label: "eps^-3", fn: eps => eps ** -3 },
+        { label: "eps^-2", fn: eps => eps ** -2 },
+        { label: "eps^-1", fn: eps => eps ** -1 },
+        { label: "log(eps)", fn: eps => Math.log(eps) },
+        { label: "1", fn: () => 1 },
+        { label: "eps", fn: eps => eps }
+      ];
+    }
+
+    function logspace(a, b, n) {
+      const out = [];
+      const la = Math.log(a), lb = Math.log(b);
+      for (let i = 0; i < n; i++) {
+        const t = i / (n - 1);
+        out.push(Math.exp(la + (lb - la) * t));
+      }
+      return out;
+    }
+
+    function expCutoffRegularize(sequence, model, options = {}) {
+      const epsMin = options.epsMin ?? 0.001;
+      const epsMax = options.epsMax ?? 0.5;
+      const samples = options.samples ?? 60;
+      const epsGrid = logspace(epsMin, epsMax, samples);
+      const basis = buildExpBasis(model);
+      const skeleton = model?.skeleton instanceof Float64Array ? model.skeleton : null;
+      const residual = model?.residual instanceof Float64Array ? model.residual : null;
+      const useResidualMode = !!(skeleton && residual && (model.type === 'quasiPolynomial' || model.type === 'powerLaw'));
+      const baseHurwitz = useResidualMode ? hurwitzRegularize(model, sequence) : null;
+
+      const curve = epsGrid.map(eps => {
+        let sFull = 0;
+        let sResidual = 0;
+        for (let i = 0; i < sequence.length; i++) {
+          const w = Math.exp(-eps * (i + 1));
+          sFull += sequence[i] * w;
+          if (useResidualMode) sResidual += residual[i] * w;
+        }
+        return { eps, sEps: useResidualMode ? sResidual : sFull, fullSEps: sFull };
+      });
+
+      function fitOn(subCurve, profile = 'default') {
+        const X = subCurve.map(({ eps }) => basis.map(b => b.fn(eps)));
+        const y = subCurve.map(p => p.sEps);
+        const weights = subCurve.map((p, i) => {
+          const t = subCurve.length <= 1 ? 0 : i / (subCurve.length - 1);
+          if (model.type === 'extended') {
+            if (profile === 'small-eps') return 1.6 - 0.7 * t;
+            if (profile === 'mid-eps') return 0.9 + 0.3 * Math.sin(Math.PI * t);
+          }
+          return 1;
+        });
+        const fit = leastSquaresScaled(X, y, weights);
+        const oneIdx = basis.findIndex(b => b.label === "1");
+        const finitePartResidual = oneIdx >= 0 ? fit.coeffs[oneIdx] : null;
+        const value = useResidualMode
+          ? ((baseHurwitz?.status === 'success' ? baseHurwitz.value : 0) + (finitePartResidual ?? 0))
+          : finitePartResidual;
+        return { fit, finitePartResidual, value, profile };
+      }
+
+      try {
+        const main = fitOn(curve, model.type === 'extended' ? 'small-eps' : 'default');
+        const fit = main.fit;
+        const fitVals = curve.map(({ eps }) => basis.reduce((s, b, i) => s + fit.coeffs[i] * b.fn(eps), 0));
+
+        const rawWindows = [
+          { a: epsMin, b: epsMax, profile: 'default', label: 'full' },
+          { a: epsMin * 1.25, b: epsMax / 1.15, profile: 'small-eps', label: 'tight-inner' },
+          { a: epsMin * 1.5, b: epsMax / 1.5, profile: 'small-eps', label: 'core' },
+          { a: epsMin * 2, b: epsMax / 2, profile: 'small-eps', label: 'inner-core' },
+          { a: epsMin, b: Math.sqrt(epsMin * epsMax), profile: 'small-eps', label: 'small-eps half' },
+          { a: epsMin * 1.1, b: Math.sqrt(epsMin * epsMax) * 1.15, profile: 'mid-eps', label: 'small-mid blend' }
+        ].filter(w => w.a < w.b && w.b <= epsMax * 1.01);
+
+        function evaluateWindow(w) {
+          const subCurve = curve.filter(p => p.eps >= w.a && p.eps <= w.b);
+          if (subCurve.length < basis.length + 3) return null;
+          try {
+            const sub = fitOn(subCurve, w.profile);
+            return { ...w, value: sub.value, fit: sub.fit, finitePartResidual: sub.finitePartResidual, size: subCurve.length };
+          } catch {
+            return null;
+          }
+        }
+
+        const windowFits = [];
+        for (const w of rawWindows) {
+          const evaluated = evaluateWindow(w);
+          if (evaluated) windowFits.push(evaluated);
+        }
+
+        for (const w of windowFits) {
+          const variantDefs = [
+            { a: Math.max(epsMin, w.a * 1.08), b: Math.min(epsMax, w.b / 1.08), profile: `${w.profile || ''}:inner` },
+            { a: Math.max(epsMin, w.a / 1.08), b: Math.min(epsMax, w.b * 1.08), profile: `${w.profile || ''}:outer` }
+          ].filter(v => v.a < v.b);
+          const variantVals = [];
+          for (const v of variantDefs) {
+            const evaluated = evaluateWindow(v);
+            if (evaluated && Number.isFinite(evaluated.value)) variantVals.push(evaluated.value);
+          }
+          const localCenter = variantVals.length ? median([w.value, ...variantVals]) : w.value;
+          const localSpread = variantVals.length ? Math.max(...variantVals, w.value) - Math.min(...variantVals, w.value) : 0;
+          const localScale = Math.max(1e-9, Math.abs(localCenter || 0), ...variantVals.map(v => Math.abs(v)), Math.abs(w.value || 0));
+          const localRel = localSpread / (localScale + 1e-12);
+          const profilePenalty = model.type === 'extended'
+            ? ((w.label || '').includes('small-eps') ? 0.58
+              : ((w.label || '').includes('small-mid') ? 0.72
+              : ((model.extendedType === 'nlogn' && (w.label || '').includes('full')) ? 0.88 : 1.0)))
+            : 1.0;
+          w.localWindowValues = variantVals;
+          w.localSpread = localSpread;
+          w.localStability = clamp(1 - 3.2 * localRel, 0, 1);
+          w.profilePenalty = profilePenalty;
+        }
+
+        const vals = windowFits.map(w => w.value).filter(Number.isFinite);
+        const preCenter = vals.length ? (model.type === 'extended' ? (median(vals) ?? main.value) : main.value) : main.value;
+        const spread = vals.length >= 2 ? Math.max(...vals) - Math.min(...vals) : Infinity;
+        const preRobustSpread = vals.length >= 2 ? 1.4826 * mad(vals, preCenter) : Infinity;
+        const preScale = Math.max(1e-12, Math.abs(preCenter || 0), ...vals.map(v => Math.abs(v)));
+        const preRelMad = Number.isFinite(preRobustSpread) ? preRobustSpread / (preScale + 1e-12) : Infinity;
+
+        const extendedConditionThreshold = options.extendedConditionThreshold ?? 1e9;
+        const windowCondThreshold = Math.max(1e6, Math.sqrt(extendedConditionThreshold));
+        const windowFitErrorScale = Math.max(1e-9, Math.abs(preCenter || 0), rms(curve.map(p => p.sEps)));
+        const windowFitMedian = windowFits.length ? median(windowFits.map(w => w.fit.rms).filter(Number.isFinite)) : null;
+        const outlierK = model.type === 'extended' ? 3.0 : 4.0;
+        const fallbackBand = Math.max(1e-8, 0.02 * preScale);
+        const acceptedWindowFits = windowFits.filter(w => {
+          if (!Number.isFinite(w.value)) return false;
+          if (model.type !== 'extended') return true;
+          const deviation = Math.abs(w.value - preCenter);
+          const baseBand = Number.isFinite(preRobustSpread) && preRobustSpread > 0 ? outlierK * preRobustSpread : fallbackBand;
+          const localFactor = Number.isFinite(w.localStability) ? (0.75 + 0.5 * w.localStability) : 1.0;
+          const profileFactor = Number.isFinite(w.profilePenalty) ? Math.max(0.5, Math.min(1.0, w.profilePenalty)) : 1.0;
+          const band = Math.max(fallbackBand, baseBand * localFactor * profileFactor);
+          if (deviation > band) return false;
+          if (!Number.isFinite(w.fit.conditionNumber) || w.fit.conditionNumber > windowCondThreshold) return false;
+          if (windowFitMedian != null && Number.isFinite(windowFitMedian) && w.fit.rms > Math.max(windowFitMedian * 4, windowFitErrorScale * 0.35)) return false;
+          if (Number.isFinite(w.localStability) && w.localStability < 0.35) return false;
+          return true;
+        });
+        const rejectedWindowFits = windowFits.filter(w => !acceptedWindowFits.includes(w));
+
+        const rawWindowQuality = windowFits.map(w => {
+          const condWeight = 1 / (1 + Math.log10(Math.max(1, w.fit.conditionNumber)));
+          const errWeight = 1 / (1 + (w.fit.rms / Math.max(1e-9, windowFitErrorScale)));
+          const localWeight = 0.35 + 0.65 * (Number.isFinite(w.localStability) ? w.localStability : 0.5);
+          const profileWeight = Number.isFinite(w.profilePenalty) ? w.profilePenalty : 1.0;
+          const quality = condWeight * errWeight * localWeight * profileWeight;
+          w.qualityScore = quality;
+          w.aggregateWeight = quality;
+          return quality;
+        });
+
+        let refinedAcceptedWindowFits = acceptedWindowFits.slice();
+        if (model.type === 'extended' && refinedAcceptedWindowFits.length) {
+          const draftCenter = median(refinedAcceptedWindowFits.map(w => w.value).filter(Number.isFinite)) ?? preCenter;
+          const draftVals = refinedAcceptedWindowFits.map(w => w.value).filter(Number.isFinite);
+          const draftMad = draftVals.length >= 2 ? 1.4826 * mad(draftVals, draftCenter) : 0;
+          const draftScale = Math.max(1e-9, Math.abs(draftCenter || 0), ...draftVals.map(v => Math.abs(v)));
+          const draftBand = Math.max(0.015 * draftScale, 1.75 * (draftMad || 0));
+
+          refinedAcceptedWindowFits.forEach(w => {
+            const baseQuality = Number.isFinite(w.qualityScore) ? Math.max(1e-6, w.qualityScore) : 1e-6;
+            const local = clamp(Number.isFinite(w.localStability) ? w.localStability : 0.5, 0, 1);
+            const deviation = Math.abs(w.value - draftCenter);
+            const deviationRatio = deviation / Math.max(1e-9, draftBand);
+            const consensusWeight = clamp(1.05 - 0.48 * deviationRatio, 0.08, 1.0);
+            const localAccent = 0.20 + 0.80 * Math.pow(local, 1.35);
+            const qualityAccent = Math.pow(baseQuality, 1.35);
+            const profileAccent = Math.pow(Number.isFinite(w.profilePenalty) ? w.profilePenalty : 1.0, 1.1);
+            let aggregateWeight = qualityAccent * localAccent * consensusWeight * profileAccent;
+            if (model.extendedType === 'nlogn' && w.label === 'full') aggregateWeight *= 0.76;
+            if (model.extendedType === 'nlogn' && w.label === 'core' && local < 0.45) aggregateWeight *= 0.82;
+            if (model.extendedType === 'log' && w.label === 'full' && deviationRatio > 0.8) aggregateWeight *= 0.92;
+            w.deviationFromCenter = deviation;
+            w.consensusWeight = consensusWeight;
+            w.aggregateWeight = aggregateWeight;
+          });
+
+          if (refinedAcceptedWindowFits.length >= 4) {
+            const ranked = refinedAcceptedWindowFits.map(w => ({
+              w,
+              deviation: Number.isFinite(w.deviationFromCenter) ? w.deviationFromCenter : Math.abs(w.value - draftCenter),
+              aggregate: Number.isFinite(w.aggregateWeight) ? w.aggregateWeight : 0,
+              quality: Number.isFinite(w.qualityScore) ? w.qualityScore : 0
+            })).sort((a, b) => (a.aggregate - b.aggregate) || (a.quality - b.quality) || (b.deviation - a.deviation));
+            const weakest = ranked[0];
+            const minKeep = Math.max(3, options.extendedMinWindows ?? 4);
+            if (weakest && weakest.aggregate < 0.018 && weakest.deviation > Math.max(draftBand, 0.07 * draftScale) && refinedAcceptedWindowFits.length - 1 >= minKeep) {
+              refinedAcceptedWindowFits = refinedAcceptedWindowFits.filter(w => w !== weakest.w);
+            }
+          }
+        }
+
+        const finalRejectedWindowFits = windowFits.filter(w => !refinedAcceptedWindowFits.includes(w));
+        const acceptedVals = refinedAcceptedWindowFits.map(w => w.value).filter(Number.isFinite);
+        let center = preCenter;
+        let acceptedTotalWeight = 0;
+        if (model.type === 'extended' && refinedAcceptedWindowFits.length) {
+          const weighted = refinedAcceptedWindowFits.map(w => {
+            const weight = Number.isFinite(w.aggregateWeight) ? w.aggregateWeight : (Number.isFinite(w.qualityScore) ? w.qualityScore : 0);
+            return { ref: w, value: w.value, weight };
+          }).filter(x => Number.isFinite(x.value) && Number.isFinite(x.weight) && x.weight > 0);
+          acceptedTotalWeight = weighted.reduce((s, x) => s + x.weight, 0);
+          refinedAcceptedWindowFits.forEach(w => {
+            const rawWeight = Number.isFinite(w.aggregateWeight) ? w.aggregateWeight : (Number.isFinite(w.qualityScore) ? w.qualityScore : 0);
+            w.normalizedAggregateWeight = acceptedTotalWeight > 0 ? rawWeight / acceptedTotalWeight : 0;
+          });
+          finalRejectedWindowFits.forEach(w => {
+            w.normalizedAggregateWeight = 0;
+          });
+          if (acceptedTotalWeight > 0) center = weighted.reduce((s, x) => s + x.value * x.weight, 0) / acceptedTotalWeight;
+          else center = median(acceptedVals) ?? preCenter;
+        } else if (acceptedVals.length) {
+          center = acceptedVals[0];
+        }
+
+        const robustSpread = acceptedVals.length >= 2 ? 1.4826 * mad(acceptedVals, center) : preRobustSpread;
+        const usedSpread = acceptedVals.length >= 2 ? Math.max(...acceptedVals) - Math.min(...acceptedVals) : spread;
+        const scale = Math.max(1e-12, Math.abs(center || 0), ...acceptedVals.map(v => Math.abs(v)), ...vals.map(v => Math.abs(v)));
+        const relMad = Number.isFinite(robustSpread) ? robustSpread / (scale + 1e-12) : Infinity;
+        const usedRelSpread = Number.isFinite(usedSpread) ? usedSpread / (scale + 1e-12) : Infinity;
+        const rawRelSpread = Number.isFinite(spread) ? spread / (preScale + 1e-12) : Infinity;
+        const shrinkGain = (Number.isFinite(rawRelSpread) && Number.isFinite(usedRelSpread) && rawRelSpread > 0)
+          ? clamp((rawRelSpread - usedRelSpread) / rawRelSpread, 0, 1)
+          : 0;
+        const avgQuality = refinedAcceptedWindowFits.length
+          ? mean(refinedAcceptedWindowFits.map(w => Number.isFinite(w.aggregateWeight) ? w.aggregateWeight : (Number.isFinite(w.qualityScore) ? w.qualityScore : 0)))
+          : 0;
+        const avgNormalizedWeight = refinedAcceptedWindowFits.length
+          ? mean(refinedAcceptedWindowFits.map(w => Number.isFinite(w.normalizedAggregateWeight) ? w.normalizedAggregateWeight : 0))
+          : 0;
+        const mainPenalty = fit.rms / Math.max(1e-9, Math.abs(center || 0), rms(curve.map(p => p.sEps)));
+        const condPenalty = Math.log10(Math.max(1, fit.conditionNumber)) / 16;
+        let stabilityScore;
+        if (model.type === 'extended') {
+          const enoughWindows = Math.min(1, refinedAcceptedWindowFits.length / Math.max(3, options.extendedMinWindows ?? 4));
+          const rejectionPenalty = finalRejectedWindowFits.length / Math.max(1, windowFits.length) * 0.06;
+          const avgLocalStability = refinedAcceptedWindowFits.length
+            ? mean(refinedAcceptedWindowFits.map(w => Number.isFinite(w.localStability) ? w.localStability : 0.5))
+            : 0;
+          const qualityBoost = clamp(Math.sqrt(Math.max(0, avgQuality) / 0.24), 0, 1);
+          const shrinkBoost = Math.pow(shrinkGain, 0.72);
+          const tightnessBoost = clamp(1 - 0.85 * relMad - 0.28 * usedRelSpread, 0, 1);
+          const penaltyBlend = 0.62 * mainPenalty + 0.30 * condPenalty + rejectionPenalty;
+          stabilityScore = clamp(
+            0.18
+            + 0.30 * shrinkBoost
+            + 0.20 * tightnessBoost
+            + 0.14 * qualityBoost
+            + 0.10 * avgLocalStability
+            + 0.05 * Math.sqrt(Math.max(0, avgNormalizedWeight) / 0.34)
+            - 0.34 * penaltyBlend,
+            0,
+            1
+          ) * enoughWindows;
+        } else {
+          stabilityScore = Number.isFinite(usedSpread) ? clamp(1 - usedSpread / (scale + 1e-12), 0, 1) : 0;
+        }
+
+        const value = model.type === 'extended' && Number.isFinite(center) ? center : main.value;
+        const extendedPromoteThreshold = options.extendedPromoteThreshold ?? 0.9;
+        const extendedMinWindows = options.extendedMinWindows ?? 4;
+        const extendedProvisional = model.type === 'extended' && (
+          stabilityScore < extendedPromoteThreshold ||
+          fit.conditionNumber > extendedConditionThreshold ||
+          refinedAcceptedWindowFits.length < extendedMinWindows ||
+          !Number.isFinite(relMad) || relMad > 0.08
+        );
+        const status = model.type === 'extended'
+          ? (extendedProvisional ? 'exploratory' : 'success')
+          : 'success';
+
+        return {
+          method: "expCutoff",
+          status,
+          value,
+          stability: stabilityScore,
+          notes: [
+            fit.conditionNumber > 1e8 ? `condition number high: ${formatNum(fit.conditionNumber, 6)}` : "stable fit",
+            ...(useResidualMode ? ['skeleton-subtracted residual fit'] : []),
+            ...(model.type === 'extended' ? [`extended-aware basis: ${model.extendedType}`] : []),
+            ...(model.type === 'extended' ? [`accepted windows: ${refinedAcceptedWindowFits.length}/${windowFits.length}`] : []),
+            ...(model.type === 'extended' && extendedProvisional ? ['provisional: not used in ensemble'] : []),
+            ...(model.type === 'extended' && !extendedProvisional ? ['extended fit passed robust multi-window check'] : [])
+          ],
+          details: {
+            divergentTerms: basis.map((b, i) => ({ basis: b.label, coeff: fit.coeffs[i] })).filter(x => x.basis !== "1" && x.basis !== "eps"),
+            fitError: fit.rms,
+            conditionNumber: fit.conditionNumber,
+            stabilityScore,
+            windowValues: vals,
+            acceptedWindowValues: acceptedVals,
+            rejectedWindowValues: finalRejectedWindowFits.map(w => w.value).filter(Number.isFinite),
+            windowSpread: Number.isFinite(usedSpread) ? usedSpread : null,
+            rawWindowSpread: Number.isFinite(spread) ? spread : null,
+            robustSpread: Number.isFinite(robustSpread) ? robustSpread : null,
+            preRobustSpread: Number.isFinite(preRobustSpread) ? preRobustSpread : null,
+            robustCenter: Number.isFinite(center) ? center : null,
+            spreadShrinkGain: Number.isFinite(shrinkGain) ? shrinkGain : null,
+            avgWindowQuality: Number.isFinite(avgQuality) ? avgQuality : null,
+            curve: curve.map((p, i) => ({ ...p, fitted: fitVals[i] })),
+            basis: basis.map(b => b.label),
+            residualFinitePart: main.finitePartResidual,
+            skeletonMode: useResidualMode,
+            skeletonContribution: baseHurwitz?.status === 'success' ? baseHurwitz.value : null,
+            windowFits: windowFits.map(w => ({
+              label: w.label,
+              a: w.a,
+              b: w.b,
+              profile: w.profile,
+              size: w.size,
+              value: w.value,
+              fitError: w.fit.rms,
+              conditionNumber: w.fit.conditionNumber,
+              localStability: w.localStability,
+              localSpread: w.localSpread,
+              profilePenalty: w.profilePenalty,
+              qualityScore: w.qualityScore,
+              aggregateWeight: w.aggregateWeight,
+              normalizedAggregateWeight: w.normalizedAggregateWeight,
+              consensusWeight: w.consensusWeight,
+              accepted: refinedAcceptedWindowFits.includes(w),
+              status: refinedAcceptedWindowFits.includes(w) ? 'accepted' : 'rejected'
+            }))
+          }
+        };
+      } catch (err) {
+        return {
+          method: "expCutoff",
+          status: "failed",
+          value: null,
+          stability: null,
+          notes: [String(err.message || err)],
+          details: {}
+        };
+      }
+    }
+
+    function cesaroRegularize(sequence, options = {}) {
+      const N = sequence.length;
+      const partials = new Float64Array(N);
+      const cesaro = new Float64Array(N);
+      let s = 0;
+      let csum = 0;
+      for (let i = 0; i < N; i++) {
+        s += sequence[i];
+        partials[i] = s;
+        csum += s;
+        cesaro[i] = csum / (i + 1);
+      }
+      const tailStart = Math.max(0, Math.floor(N * 0.9));
+      const tail = Array.from(cesaro.slice(tailStart));
+      const tailMean = mean(tail);
+      const tailStd = Math.sqrt(variance(tail));
+      const scale = Math.max(1e-9, Math.abs(tailMean), ...tail.map(v => Math.abs(v)));
+      const relStd = tailStd / scale;
+      const trend = tail.length > 1 ? Math.abs(tail[tail.length - 1] - tail[0]) / Math.max(1, tail.length - 1) : 0;
+      const trendRel = trend / scale;
+      const sampled = [];
+      const step = Math.max(1, Math.floor(N / 256));
+      for (let i = 0; i < N; i += step) sampled.push({ n: i + 1, partial: partials[i], cesaro: cesaro[i] });
+      if (relStd < (options.stdThreshold ?? 1e-2) && trendRel < (options.trendThreshold ?? 2e-3)) {
+        return {
+          method: "cesaro",
+          status: "success",
+          value: tailMean,
+          stability: clamp(1 - 20 * relStd - 50 * trendRel, 0, 1),
+          notes: ["tail average appears convergent"],
+          details: { partials: sampled, tailStd, trendRel }
+        };
+      }
+      return {
+        method: "cesaro",
+        status: "not_applicable",
+        value: null,
+        stability: null,
+        notes: ["Cesàro tail does not stabilize"],
+        details: { partials: sampled, tailStd, trendRel }
+      };
+    }
+
+    function isBoundedSequence(sequence, options = {}) {
+      const N = Math.min(sequence.length, options.N_check ?? 8192);
+      const head = Array.from(sequence.slice(0, N));
+      const tail = Array.from(sequence.slice(Math.max(0, sequence.length - N)));
+      const ampHead = Math.max(...head) - Math.min(...head);
+      const ampTail = Math.max(...tail) - Math.min(...tail);
+      const scale = Math.max(1e-9, rms(head), rms(tail), Math.abs(mean(head)), Math.abs(mean(tail)));
+      const ratio = ampTail / Math.max(1e-9, ampHead, scale);
+      const meanShift = Math.abs(mean(tail) - mean(head)) / Math.max(1e-9, scale);
+      return {
+        bounded: ratio < (options.rangeRatioThreshold ?? 1.5) && meanShift < (options.meanShiftThreshold ?? 0.2),
+        ampHead,
+        ampTail,
+        ratio,
+        meanShift
+      };
+    }
+
+    function abelRegularize(sequence, model, options = {}) {
+      const xMin = options.xMin ?? 0.5;
+      const xMax = options.xMax ?? 0.999;
+      const samples = options.samples ?? 50;
+
+      const disallowAbel = (
+        ((model.type === 'quasiPolynomial' || model.type === 'quasiPolynomialCandidate') && (model.degree ?? 0) >= 0 && (model.period ?? 1) === 1) ||
+        (model.type === 'powerLaw') ||
+        (model.type === 'extended') ||
+        (model.type === 'none')
+      );
+      if (disallowAbel) {
+        return {
+          method: 'abel',
+          status: 'not_applicable',
+          value: null,
+          stability: null,
+          notes: [model.type === 'extended'
+            ? 'Abel disabled for extended-growth skeleton in current build'
+            : 'Abel disabled for non-oscillatory growth / unresolved skeleton'],
+          details: {}
+        };
+      }
+
+      const boundedInfo = isBoundedSequence(sequence, options);
+      const xs = logspace(1 - xMax, 1 - xMin, samples).map(t => 1 - t).sort((a, b) => a - b);
+      const curve = xs.map(x => {
+        let s = 0;
+        let xn = x;
+        for (let i = 0; i < sequence.length; i++) {
+          s += sequence[i] * xn;
+          xn *= x;
+        }
+        return { x, A: s, t: 1 - x };
+      });
+
+      if (model.type === 'quasiPolynomial' && model.period === 2 && model.degree === 0) {
+        const c0 = model.coefficients[0][0];
+        const c1 = model.coefficients[1][0];
+        if (Math.abs(c0 + c1) < 1e-10) {
+          const value = c1 / 2;
+          return {
+            method: 'abel',
+            status: 'success',
+            value,
+            stability: 'exact-ish',
+            notes: ['period-2 alternating exact path'],
+            details: { curve }
+          };
+        }
+      }
+
+      const peakAmps = (model.peaks || []).map(p => p.amplitude || 0);
+      const strongestAmp = peakAmps.length ? Math.max(...peakAmps) : 0;
+      const totalPeakAmp = peakAmps.reduce((s, x) => s + x, 0);
+      const dcAbs = Math.abs(model.dcComponent ?? 0);
+      const dcDominant = model.type === 'fourier' && dcAbs > (options.dcDominanceFactor ?? 3) * Math.max(1e-9, strongestAmp);
+      const hardDcDominant = model.type === 'fourier' && dcAbs > (options.hardDcDominanceFactor ?? 8) * Math.max(1e-9, strongestAmp);
+      const boundedMultiPeakDc = model.type === 'fourier' && boundedInfo.bounded && (model.peaks?.length ?? 0) >= 2 && dcAbs > Math.max(1e-9, strongestAmp) && dcAbs > 0.5 * totalPeakAmp;
+
+      if (model.type === 'fourier' && (((dcDominant || boundedMultiPeakDc) && boundedInfo.bounded) || hardDcDominant)) {
+        return {
+          method: 'abel',
+          status: 'not_applicable',
+          value: null,
+          stability: null,
+          notes: ['Abel disabled for DC-dominant bounded Fourier skeleton; use Cesàro / inspect dcComponent'],
+          details: { boundedInfo, dcComponent: model.dcComponent, peaks: model.peaks, dcDominant, hardDcDominant, boundedMultiPeakDc }
+        };
+      }
+
+      const tailCount = model.type === 'fourier' ? Math.min(28, curve.length) : Math.min(20, curve.length);
+      const tail = curve.slice(Math.max(0, curve.length - tailCount));
+      const X = tail.map(p => [1, p.t, p.t * p.t]);
+      const y = tail.map(p => p.A);
+
+      try {
+        const fit = leastSquares(X, y);
+        const value = fit.coeffs[0];
+        const fitVals = curve.map(p => fit.coeffs[0] + fit.coeffs[1] * p.t + fit.coeffs[2] * p.t * p.t);
+        const tailResidual = y.map((v, i) => v - (fit.coeffs[0] + fit.coeffs[1] * tail[i].t + fit.coeffs[2] * tail[i].t * tail[i].t));
+        const tailRms = rms(tailResidual);
+        const scale = Math.max(1e-9, Math.abs(value), ...tail.map(p => Math.abs(p.A)));
+        const stability = clamp(1 - tailRms / scale, 0, 1);
+
+        if (model.type === 'fourier' && model.peaks && model.peaks.length >= 1) {
+          const strongest = [...model.peaks].sort((a, b) => b.amplitude - a.amplitude)[0];
+          const omega = strongest.frequency;
+          const a = Number.isFinite(strongest.cosCoeff) ? strongest.cosCoeff : 0;
+          const b = Number.isFinite(strongest.sinCoeff) ? strongest.sinCoeff : 0;
+          const sinHalf = Math.sin(omega / 2);
+          let candidate = null;
+          if (Math.abs(sinHalf) > 1e-12) {
+            const cotHalf = Math.cos(omega / 2) / sinHalf;
+            candidate = -0.5 * a + 0.5 * b * cotHalf;
+          }
+          const candidateDiff = Number.isFinite(candidate) ? Math.abs(candidate - value) : Infinity;
+          const useCandidate = model.peaks.length === 1 && Number.isFinite(candidate) && candidateDiff < Math.max(5e-4, 8 * tailRms);
+          return {
+            method: 'abel',
+            status: 'success',
+            value: useCandidate ? candidate : value,
+            stability: useCandidate ? 'exact-ish' : stability,
+            notes: [
+              useCandidate
+                ? 'single-frequency fourier exact-ish path v5'
+                : (model.peaks.length > 1 || Math.abs(model.dcComponent ?? 0) > 0.05
+                    ? 'fourier-tail extrapolation preferred (multi-peak / DC)'
+                    : 'fourier-tail extrapolation preferred')
+            ],
+            details: {
+              curve: curve.map((p, i) => ({ ...p, fitted: fitVals[i] })),
+              fitError: fit.rms,
+              tailRms,
+              fourierCandidate: candidate,
+              chosen: useCandidate ? 'fourierCandidate' : 'tailExtrapolation',
+              boundedInfo,
+              dcDominant,
+              hardDcDominant,
+              boundedMultiPeakDc
+            }
+          };
+        }
+
+        return {
+          method: 'abel',
+          status: 'success',
+          value,
+          stability,
+          notes: [tailRms / scale < 1e-2 ? 'stable extrapolation' : 'extrapolation may be loose'],
+          details: {
+            curve: curve.map((p, i) => ({ ...p, fitted: fitVals[i] })),
+            fitError: fit.rms,
+            tailRms,
+            boundedInfo,
+            dcDominant,
+            hardDcDominant,
+            boundedMultiPeakDc
+          }
+        };
+      } catch (err) {
+        return {
+          method: 'abel',
+          status: 'failed',
+          value: null,
+          stability: null,
+          notes: [String(err.message || err)],
+          details: { curve, boundedInfo, dcDominant, hardDcDominant, boundedMultiPeakDc }
+        };
+      }
+    }
+
+    function windowRegularize(sequence, model, options = {}) {
+      const N = sequence.length;
+      const nMin = options.Nmin ?? Math.max(128, Math.floor(N / 8));
+      const nMax = Math.min(options.Nmax ?? N, N);
+      const samples = options.samples ?? 16;
+      const windowType = options.windowType ?? 'hann';
+      const Ns = [];
+      const logA = Math.log(nMin), logB = Math.log(nMax);
+      for (let i = 0; i < samples; i++) {
+        const t = samples === 1 ? 0 : i / (samples - 1);
+        const v = Math.round(Math.exp(logA + (logB - logA) * t));
+        if (!Ns.length || v > Ns[Ns.length - 1]) Ns.push(v);
+      }
+
+      function w(u) {
+        if (windowType === 'blackman') return 0.42 - 0.5 * Math.cos(2 * Math.PI * u) + 0.08 * Math.cos(4 * Math.PI * u);
+        return 0.5 - 0.5 * Math.cos(2 * Math.PI * u);
+      }
+
+      const curve = Ns.map(M => {
+        let s = 0;
+        for (let n = 1; n <= M; n++) s += sequence[n - 1] * w(n / M);
+        return {
+          N: M,
+          S: s,
+          invN: 1 / M,
+          invN2: 1 / (M * M),
+          logN: Math.log(M),
+          sqrtN: Math.sqrt(M),
+          NlogN: M * Math.log(M),
+          N2: M * M,
+          N2logN: M * M * Math.log(M)
+        };
+      });
+
+      function makeBasis(mode) {
+        if (mode === 'linearGrowth') {
+          return {
+            label: 'model-aware polynomial basis',
+            terms: [
+              { label: 'N^2', fn: p => p.N2 },
+              { label: 'N', fn: p => p.N },
+              { label: '1', fn: () => 1 }
+            ]
+          };
+        }
+        if (mode === 'constantGrowth') {
+          return {
+            label: 'constant-growth basis',
+            terms: [
+              { label: 'N', fn: p => p.N },
+              { label: '1', fn: () => 1 },
+              { label: '1/N', fn: p => p.invN }
+            ]
+          };
+        }
+        if (mode === 'powerLaw') {
+          const a = model.exponent ?? 0.5;
+          return {
+            label: 'power-law basis',
+            terms: [
+              { label: `N^${formatNum(a + 1, 4)}`, fn: p => p.N ** (a + 1) },
+              { label: `N^${formatNum(Math.max(a, 0), 4)}`, fn: p => p.N ** Math.max(a, 0) },
+              { label: '1', fn: () => 1 }
+            ]
+          };
+        }
+        if (mode === 'extendedLog') {
+          return {
+            label: 'extended log-growth basis (residual c0+c1/N fit)',
+            terms: [
+              { label: 'N log N', fn: p => p.NlogN },
+              { label: 'N', fn: p => p.N },
+              { label: 'log N', fn: p => p.logN }
+            ]
+          };
+        }
+        if (mode === 'extendedNlogn') {
+          return {
+            label: 'extended nlogn-growth basis (residual c0+c1/N fit)',
+            terms: [
+              { label: 'N^2 log N', fn: p => p.N2logN },
+              { label: 'N^2', fn: p => p.N2 },
+              { label: 'N log N', fn: p => p.NlogN },
+              { label: 'N', fn: p => p.N }
+            ]
+          };
+        }
+        return {
+          label: 'exploratory growth basis',
+          terms: [
+            { label: 'sqrt(N)', fn: p => p.sqrtN },
+            { label: 'log(N)', fn: p => p.logN },
+            { label: '1', fn: () => 1 }
+          ]
+        };
+      }
+
+      function chooseMode() {
+        if (model.type === 'extended') {
+          if (model.extendedType === 'log') return 'extendedLog';
+          if (model.extendedType === 'nlogn') return 'extendedNlogn';
+        }
+        if (model.type === 'quasiPolynomial') {
+          if ((model.degree ?? 0) >= 1) return 'linearGrowth';
+          return 'constantGrowth';
+        }
+        if (model.type === 'powerLaw') return 'powerLaw';
+        return 'exploratory';
+      }
+
+      function buildTailWindows(points, mode) {
+        const len = points.length;
+        const windows = [];
+        const pushWindow = (label, startFrac, endFrac, profileWeight = 1) => {
+          const start = Math.max(0, Math.min(len - 2, Math.floor(len * startFrac)));
+          const end = Math.max(start + 2, Math.min(len, Math.ceil(len * endFrac)));
+          const pts = points.slice(start, end);
+          if (pts.length >= 4) windows.push({ label, points: pts, profileWeight });
+        };
+        if (mode === 'extendedLog' || mode === 'extendedNlogn') {
+          pushWindow('full-tail', 0.00, 1.00, mode === 'extendedNlogn' ? 0.9 : 1.0);
+          pushWindow('tight-inner', 0.12, 0.88, 1.05);
+          pushWindow('core', 0.22, 0.82, 1.03);
+          pushWindow('inner-core', 0.32, 0.74, 1.0);
+          pushWindow('late-tail', 0.42, 0.94, 0.94);
+        } else {
+          pushWindow('full-tail', 0.00, 1.00, 1.0);
+          pushWindow('core', 0.18, 0.86, 1.0);
+          pushWindow('inner-core', 0.30, 0.78, 0.97);
+        }
+        return windows;
+      }
+
+      function fitWindow(windowSpec, basisSpec) {
+        const pts = windowSpec.points;
+        const X = pts.map(p => basisSpec.terms.map(t => t.fn(p)));
+        const y = pts.map(p => p.S);
+        const weights = pts.map((p, i) => {
+          const frac = pts.length <= 1 ? 1 : i / (pts.length - 1);
+          const edgeBoost = 0.85 + 0.35 * frac;
+          if (basisSpec.label.includes('extended')) return edgeBoost;
+          return 1;
+        });
+        const fit = leastSquaresScaled(X, y, weights);
+        const oneIdx = basisSpec.terms.findIndex(t => t.label === '1');
+        const fittedTailBase = pts.map((p, i) => X[i].reduce((s, v, j) => s + fit.coeffs[j] * v, 0));
+        const residualBase = pts.map((p, i) => p.S - fittedTailBase[i]);
+
+        let value = 0;
+        let fpFitRms = null;
+        let fpFitCondition = null;
+        let fpFitCoeffs = null;
+        if (oneIdx >= 0) {
+          value = fit.coeffs[oneIdx];
+        } else {
+          const XR = pts.map(p => [1, 1 / Math.max(1, p.N)]);
+          const yR = residualBase.slice();
+          const weightsR = pts.map((p, i) => {
+            const frac = pts.length <= 1 ? 1 : i / (pts.length - 1);
+            return 0.95 + 0.25 * frac;
+          });
+          const fitR = leastSquaresScaled(XR, yR, weightsR);
+          fpFitCoeffs = fitR.coeffs.slice();
+          fpFitCondition = fitR.conditionNumber;
+          value = Number.isFinite(fitR.coeffs[0]) ? fitR.coeffs[0] : (median(residualBase) ?? mean(residualBase) ?? 0);
+          const residualFine = pts.map((p, i) => yR[i] - (fitR.coeffs[0] + fitR.coeffs[1] / Math.max(1, p.N)));
+          fpFitRms = rms(residualFine);
+        }
+
+        const fittedAllBase = curve.map(p => basisSpec.terms.reduce((s, t, i) => s + fit.coeffs[i] * t.fn(p), 0));
+        const fittedAll = curve.map((p, i) => {
+          const corr = oneIdx >= 0 ? value : (value + ((fpFitCoeffs && Number.isFinite(fpFitCoeffs[1])) ? fpFitCoeffs[1] / Math.max(1, p.N) : 0));
+          return fittedAllBase[i] + corr;
+        });
+        const tailResidual = pts.map((p, i) => {
+          const corr = oneIdx >= 0 ? value : (value + ((fpFitCoeffs && Number.isFinite(fpFitCoeffs[1])) ? fpFitCoeffs[1] / Math.max(1, p.N) : 0));
+          return p.S - (fittedTailBase[i] + corr);
+        });
+        const tailRms = rms(tailResidual);
+        const scale = Math.max(1e-9, Math.abs(value), ...pts.map(p => Math.abs(p.S)));
+        const stability = clamp(1 - tailRms / scale, 0, 1);
+        return {
+          label: windowSpec.label,
+          profileWeight: windowSpec.profileWeight,
+          points: pts,
+          startN: pts[0]?.N ?? null,
+          endN: pts[pts.length - 1]?.N ?? null,
+          effectiveN: Math.sqrt(Math.max(1, (pts[0]?.N ?? 1) * (pts[pts.length - 1]?.N ?? 1))),
+          fit,
+          value,
+          fitVals: fittedAll,
+          tailRms,
+          stability,
+          conditionNumber: fit.conditionNumber,
+          fpFitRms,
+          fpFitCondition,
+          fpFitCoeffs
+        };
+      }
+
+      function computePairwiseFinitePart(pool) {
+        if (!Array.isArray(pool) || pool.length < 2) return null;
+        const pairs = [];
+        for (let i = 0; i < pool.length; i++) {
+          for (let j = i + 1; j < pool.length; j++) {
+            const a = pool[i], b = pool[j];
+            const Na = Math.max(1, a.effectiveN ?? a.startN ?? 1);
+            const Nb = Math.max(1, b.effectiveN ?? b.startN ?? 1);
+            if (!Number.isFinite(a.value) || !Number.isFinite(b.value) || Math.abs(Nb - Na) < 1e-9) continue;
+            const c0 = (b.value * Nb - a.value * Na) / (Nb - Na);
+            const sep = Math.abs(Nb - Na) / Math.max(Na, Nb);
+            const baseWt = Math.max(1e-9, (a.aggRaw ?? 1) * (b.aggRaw ?? 1));
+            const sepWt = clamp(sep / 0.22, 0.15, 1.0);
+            const raw = baseWt * sepWt;
+            pairs.push({ labels: [a.label, b.label], value: c0, raw });
+          }
+        }
+        if (!pairs.length) return null;
+        const vals = pairs.map(p => p.value).filter(Number.isFinite);
+        if (!vals.length) return null;
+        const center = median(vals) ?? mean(vals) ?? 0;
+        const m = Math.max(1e-12, mad(vals, center));
+        const rescored = pairs.map(pair => {
+          const consensus = 1 / (1 + Math.pow(Math.abs(pair.value - center) / (2.5 * m), 2));
+          return { ...pair, consensus, use: pair.raw * consensus };
+        });
+        const sumUse = rescored.reduce((s, pair) => s + pair.use, 0) || 1;
+        const norm = rescored.map(pair => ({ ...pair, use: pair.use / sumUse }));
+        const value = norm.reduce((s, pair) => s + pair.value * pair.use, 0);
+        const robustSpread = mad(norm.map(pair => pair.value), value);
+        return { value, robustSpread, table: norm };
+      }
+
+      function aggregateExtendedWindow(windowFits, basisSpec) {
+        const vals = windowFits.map(wf => wf.value).filter(Number.isFinite);
+        const center0 = median(vals) ?? windowFits[0]?.value ?? 0;
+        const mad0 = Math.max(1e-9, mad(vals, center0));
+        const accepted = windowFits.filter(wf => {
+          const z = Math.abs(wf.value - center0) / mad0;
+          const condOk = (wf.conditionNumber ?? Infinity) < 5e7;
+          return z < 6 && condOk;
+        });
+        const pool = accepted.length >= 3 ? accepted : windowFits;
+        const poolVals = pool.map(wf => wf.value);
+        const center = median(poolVals) ?? center0;
+        const localMad = Math.max(1e-9, mad(poolVals, center));
+        const weighted = pool.map(wf => {
+          const relErr = wf.tailRms / Math.max(1e-9, Math.abs(wf.value), ...wf.points.map(p => Math.abs(p.S)));
+          const consensus = 1 / (1 + Math.pow(Math.abs(wf.value - center) / (2.5 * localMad), 2));
+          const condPenalty = 1 / (1 + Math.log10(1 + Math.max(1, wf.conditionNumber ?? 1)));
+          const stabilityBoost = Math.pow(Math.max(1e-6, wf.stability), 1.15);
+          const profile = wf.profileWeight ?? 1;
+          const raw = Math.max(1e-9, consensus * condPenalty * stabilityBoost * profile / Math.max(1e-9, 0.35 + 9 * relErr));
+          return { ...wf, relErr, consensus, aggRaw: raw };
+        });
+        const sumRaw = weighted.reduce((s, wf) => s + wf.aggRaw, 0) || 1;
+        const normalized = weighted.map(wf => ({ ...wf, aggUse: wf.aggRaw / sumRaw }));
+        const directValue = normalized.reduce((s, wf) => s + wf.value * wf.aggUse, 0);
+        const pairwise = computePairwiseFinitePart(normalized);
+        const directRobustSpread = mad(normalized.map(wf => wf.value), directValue);
+        let value = directValue;
+        let robustSpread = directRobustSpread;
+        let pairwiseValue = null;
+        let pairwiseRobustSpread = null;
+        let usedPairwise = false;
+        let blendMode = 'direct-only';
+        if (pairwise && Number.isFinite(pairwise.value)) {
+          pairwiseValue = pairwise.value;
+          pairwiseRobustSpread = pairwise.robustSpread;
+          const directScale = Math.max(1e-9, Math.abs(directValue), directRobustSpread, 1);
+          const pairScale = Math.max(1e-9, Math.abs(pairwise.value), pairwise.robustSpread ?? 0, 1);
+          const pairBetter = (pairwise.robustSpread ?? Infinity) < directRobustSpread * 1.15;
+          const pairNotWild = Math.abs(pairwise.value) < 40 * directScale + 5;
+          if (pairBetter && pairNotWild) {
+            value = 0.35 * directValue + 0.65 * pairwise.value;
+            robustSpread = Math.min(directRobustSpread, pairwise.robustSpread ?? directRobustSpread);
+            usedPairwise = true;
+            blendMode = 'blend(0.35 direct + 0.65 pairwise)';
+          } else {
+            blendMode = `direct-only (pairwise suppressed: better=${pairBetter ? 'yes' : 'no'}, notWild=${pairNotWild ? 'yes' : 'no'})`;
+          }
+        } else {
+          blendMode = 'direct-only (no valid pairwise estimate)';
+        }
+        const usedSpread = Math.max(...normalized.map(wf => Math.abs(wf.value - value)), 0);
+        const avgStability = mean(normalized.map(wf => wf.stability)) ?? 0;
+        const avgQuality = mean(normalized.map(wf => wf.aggUse * wf.consensus)) ?? 0;
+        const fitError = mean(normalized.map(wf => wf.tailRms)) ?? 0;
+        const conditionNumber = mean(normalized.map(wf => wf.conditionNumber)) ?? 0;
+        const shrinkGain = vals.length >= 2 ? clamp(1 - usedSpread / Math.max(1e-9, Math.max(...vals) - Math.min(...vals)), 0, 1) : 1;
+        const stability = clamp(
+          0.24 + 0.34 * avgStability + 0.22 * shrinkGain + 0.16 * Math.sqrt(Math.max(0, avgQuality))
+          - 0.10 * Math.min(1, robustSpread / Math.max(1, Math.abs(value)))
+          - 0.08 * Math.min(1, Math.log10(1 + Math.max(1, conditionNumber)) / 6),
+          0,
+          1
+        );
+        const table = windowFits.map(wf => {
+          const used = normalized.find(x => x.label === wf.label);
+          return {
+            label: wf.label,
+            status: pool.some(x => x.label === wf.label) ? 'accepted' : 'rejected',
+            value: wf.value,
+            fitError: wf.tailRms,
+            conditionNumber: wf.conditionNumber,
+            stability: wf.stability,
+            profileWeight: wf.profileWeight,
+            consensus: used?.consensus ?? null,
+            aggRaw: used?.aggRaw ?? null,
+            aggUse: used?.aggUse ?? null
+          };
+        });
+        return {
+          value,
+          stability,
+          fitError,
+          conditionNumber,
+          robustSpread,
+          usedSpread,
+          rawSpread: vals.length ? Math.max(...vals) - Math.min(...vals) : 0,
+          shrinkGain,
+          avgQuality,
+          acceptedWindowValues: normalized.map(wf => wf.value),
+          rejectedWindowValues: table.filter(r => r.status === 'rejected').map(r => r.value),
+          fitVals: normalized[0]?.fitVals ?? curve.map(p => p.S),
+          basis: basisSpec.terms.map(t => t.label),
+          pairwiseFinitePart: pairwiseValue,
+          pairwiseRobustSpread,
+          directFinitePart: directValue,
+          finalFinitePart: value,
+          usedPairwise,
+          blendMode,
+          pairwiseCount: pairwise?.table?.length ?? 0,
+          table,
+          pairwiseTable: pairwise?.table ?? []
+        };
+      }
+
+      try {
+        const primaryMode = chooseMode();
+        if (primaryMode === 'extendedLog' || primaryMode === 'extendedNlogn') {
+          const basisSpec = makeBasis(primaryMode);
+          const windows = buildTailWindows(curve, primaryMode);
+          const windowFits = windows.map(w => fitWindow(w, basisSpec));
+          const agg = aggregateExtendedWindow(windowFits, basisSpec);
+          return {
+            method: 'window',
+            status: 'diagnostic',
+            value: null,
+            stability: agg.stability,
+            notes: [
+              windowType === 'hann' ? 'Hann window diagnostics' : 'Blackman window diagnostics',
+              basisSpec.label,
+              'diagnostic-only for extended skeletons',
+              'finite-part estimates collapse near zero; inspect details',
+              'not used in ensemble'
+            ],
+            details: {
+              diagnosticFinitePart: agg.finalFinitePart,
+              curve: curve.map((p, i) => ({ ...p, fitted: agg.fitVals[i] })),
+              fitError: agg.fitError,
+              tailRms: agg.fitError,
+              conditionNumber: agg.conditionNumber,
+              windowSpread: agg.usedSpread,
+              rawWindowSpread: agg.rawSpread,
+              robustSpread: agg.robustSpread,
+              spreadShrinkGain: agg.shrinkGain,
+              avgWindowQuality: agg.avgQuality,
+              acceptedWindowValues: agg.acceptedWindowValues,
+              rejectedWindowValues: agg.rejectedWindowValues,
+              pairwiseFinitePart: agg.pairwiseFinitePart,
+              pairwiseRobustSpread: agg.pairwiseRobustSpread,
+              directFinitePart: agg.directFinitePart,
+              finalFinitePart: agg.finalFinitePart,
+              usedPairwise: agg.usedPairwise,
+              blendMode: agg.blendMode,
+              pairwiseCount: agg.pairwiseCount,
+              windowType,
+              basis: agg.basis,
+              windowTable: agg.table,
+              pairwiseTable: agg.pairwiseTable
+            }
+          };
+        }
+
+        const tail = curve.slice(Math.max(0, curve.length - Math.min(10, curve.length)));
+        function tryFit(basisSpec) {
+          const X = tail.map(p => basisSpec.terms.map(t => t.fn(p)));
+          const y = tail.map(p => p.S);
+          const fit = leastSquaresScaled(X, y);
+          const oneIdx = basisSpec.terms.findIndex(t => t.label === '1');
+          const value = oneIdx >= 0 ? fit.coeffs[oneIdx] : fit.coeffs[fit.coeffs.length - 1];
+          const fitVals = curve.map(p => basisSpec.terms.reduce((s, t, i) => s + fit.coeffs[i] * t.fn(p), 0));
+          const tailResidual = tail.map((p, i) => p.S - basisSpec.terms.reduce((s, t, j) => s + fit.coeffs[j] * t.fn(p), 0));
+          const tailRms = rms(tailResidual);
+          const scale = Math.max(1e-9, Math.abs(value), ...tail.map(p => Math.abs(p.S)));
+          const stability = clamp(1 - tailRms / scale, 0, 1);
+          return { basisSpec, fit, value, fitVals, tailRms, stability };
+        }
+
+        const trialModes = primaryMode === 'exploratory'
+          ? ['exploratory', 'constantGrowth']
+          : [primaryMode, 'exploratory'];
+        let result = null;
+        let lastError = null;
+        for (const mode of trialModes) {
+          try {
+            result = tryFit(makeBasis(mode));
+            break;
+          } catch (err) {
+            lastError = err;
+          }
+        }
+        if (!result) throw lastError || new Error('window fit failed');
+        return {
+          method: 'window',
+          status: result.basisSpec.label.includes('exploratory') ? 'exploratory' : 'success',
+          value: result.value,
+          stability: result.stability,
+          notes: [
+            windowType === 'hann' ? 'Hann window finite-part estimate' : 'Blackman window finite-part estimate',
+            result.basisSpec.label,
+            ...(result.basisSpec.label.includes('exploratory') ? ['not used in ensemble'] : [])
+          ],
+          details: {
+            curve: curve.map((p, i) => ({ ...p, fitted: result.fitVals[i] })),
+            fitError: result.fit.rms,
+            tailRms: result.tailRms,
+            windowType,
+            basis: result.basisSpec.terms.map(t => t.label)
+          }
+        };
+      } catch (err) {
+        return {
+          method: 'window',
+          status: 'failed',
+          value: null,
+          stability: null,
+          notes: [String(err.message || err)],
+          details: { curve, windowType }
+        };
+      }
+    }
+
+    function buildEnsemble(results) {
+      const successResults = results.filter(r => {
+        if (!(Number.isFinite(r.value) && (r.status === "success" || r.status === "exploratory"))) return false;
+        if (r.method === 'window') {
+          const notes = r.notes || [];
+          const exploratory = notes.some(n => String(n).includes('exploratory growth basis'));
+          const excluded = notes.some(n => String(n).includes('not used in ensemble'));
+          if (exploratory || excluded) return false;
+        }
+        if (r.method === 'expCutoff') {
+          const notes = r.notes || [];
+          const provisional = notes.some(n => String(n).includes('provisional: not used in ensemble'));
+          if (provisional) return false;
+        }
+        return true;
+      });
+      const vals = successResults.map(r => r.value);
+      if (!vals.length) {
+        return { mean: null, median: null, maxDeviation: null, agreement: null };
+      }
+      if (vals.length === 1) {
+        const only = successResults[0];
+        const unstable = typeof only.stability === 'number' ? only.stability < 0.9 : false;
+        const suspicious = (only.details?.conditionNumber ?? 0) > 1e12;
+        return {
+          mean: vals[0],
+          median: vals[0],
+          maxDeviation: null,
+          agreement: suspicious || unstable ? 'low' : 'insufficient'
+        };
+      }
+      const sorted = [...vals].sort((a, b) => a - b);
+      const meanVal = mean(vals);
+      const medianVal = sorted.length % 2 ? sorted[(sorted.length - 1) / 2] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2;
+      const ref = medianVal;
+      const maxDeviation = Math.max(...vals.map(v => Math.abs(v - ref)));
+      let agreement = "split";
+      if (maxDeviation < 1e-4) agreement = "high";
+      else if (maxDeviation < 1e-3) agreement = "moderate";
+      else if (maxDeviation < 1e-2) agreement = "low";
+      return { mean: meanVal, median: medianVal, maxDeviation, agreement };
+    }
+
+    function runBuiltInTests(settings) {
+      const results = [];
+      for (const tc of TEST_CASES) {
+        try {
+          const testNmax = (
+            tc.id === 'T004' ? 8192 :
+            tc.category === 'fourier' ? 65536 :
+            tc.category === 'fourier-dc' ? 65536 :
+            tc.category === 'extended' ? 65536 :
+            tc.category === 'oscillation' ? 16384 :
+            4096
+          );
+          const testSettings = tc.settingsPatch
+            ? {
+                ...settings,
+                ...tc.settingsPatch,
+                modelDetection: {
+                  ...settings.modelDetection,
+                  ...(tc.settingsPatch.modelDetection || {})
+                },
+                expCutoff: {
+                  ...settings.expCutoff,
+                  ...(tc.settingsPatch.expCutoff || {})
+                },
+                window: {
+                  ...settings.window,
+                  ...(tc.settingsPatch.window || {})
+                }
+              }
+            : settings;
+          const bundle = runFullAnalysis({
+            expression: tc.expr,
+            params: {},
+            Nmax: testNmax,
+            settings: testSettings
+          });
+          let actual = null;
+          let status = 'missing';
+          let pass = false;
+          let error = Infinity;
+
+          if (tc.method === 'modelType') {
+            actual = bundle.modelDetection?.type ?? null;
+            status = actual ? 'success' : 'missing';
+            pass = actual === tc.expected;
+            error = pass ? 0 : Infinity;
+          } else if (tc.method === 'windowStatus') {
+            const target = bundle.results.find(r => r.method === 'window');
+            actual = target?.status ?? null;
+            status = actual || 'missing';
+            pass = actual === tc.expected;
+            error = pass ? 0 : Infinity;
+          } else if (tc.method === 'abelStatus') {
+            const target = bundle.results.find(r => r.method === 'abel');
+            actual = target?.status ?? null;
+            status = actual || 'missing';
+            pass = actual === tc.expected;
+            error = pass ? 0 : Infinity;
+          } else if (tc.method === 'expStatus') {
+            const target = bundle.results.find(r => r.method === 'expCutoff');
+            actual = target?.status ?? null;
+            status = actual || 'missing';
+            pass = actual === tc.expected;
+            error = pass ? 0 : Infinity;
+          } else if (tc.method === 'ensembleEmpty') {
+            actual = bundle.ensemble?.median == null;
+            status = 'success';
+            pass = actual === tc.expected;
+            error = pass ? 0 : Infinity;
+          } else if (tc.method === 'expStabilityMax') {
+            const target = bundle.results.find(r => r.method === 'expCutoff');
+            actual = target?.stability ?? null;
+            status = Number.isFinite(actual) ? 'success' : 'missing';
+            pass = Number.isFinite(actual) && actual < tc.expected;
+            error = pass ? 0 : Infinity;
+          } else {
+            const target = bundle.results.find(r => r.method === tc.method);
+            actual = target?.value;
+            status = target?.status || 'missing';
+            error = Math.abs((actual ?? NaN) - tc.expected);
+            pass = Number.isFinite(actual) && error <= tc.tol;
+          }
+
+          results.push({
+            ...tc,
+            actual,
+            error,
+            pass,
+            status
+          });
+        } catch (e) {
+          results.push({ ...tc, actual: null, error: Infinity, pass: false, status: String(e.message || e) });
+        }
+      }
+      return results;
+    }
+
+    function summarizeTests(testResults) {
+      const total = testResults.length;
+      const passed = testResults.filter(t => t.pass).length;
+      const byCategory = {};
+      for (const t of testResults) {
+        const key = t.category || 'other';
+        if (!byCategory[key]) byCategory[key] = { total: 0, passed: 0 };
+        byCategory[key].total += 1;
+        if (t.pass) byCategory[key].passed += 1;
+      }
+      return { total, passed, byCategory };
+    }
+
+    function buildDiagnostics(bundle) {
+      const out = [];
+      const exp = bundle.results.find(r => r.method === "expCutoff");
+      if (bundle.input.Nmax <= 128) out.push(`⚠ Nmax=${bundle.input.Nmax} may be too small for reliable estimation.`);
+      if (bundle.modelDetection.confidence === "uncertain") out.push("⚠ Skeleton estimate is uncertain. Consider manual specification.");
+      if (exp?.details?.conditionNumber > 1e8) out.push(`⚠ Fit condition number is high (${formatNum(exp.details.conditionNumber, 6)}). Result may be unstable.`);
+      if (bundle.ensemble.maxDeviation != null && bundle.ensemble.maxDeviation > 1e-2) out.push("⚠ Methods disagree significantly. Check individual results.");
+      if (bundle.modelDetection.type === "none" && bundle.results.find(r => r.method === "hurwitz")?.status === "not_applicable") {
+        out.push("⚠ Sequence is not quasi-polynomial/power-law in the supported Phase 1 sense. Hurwitz path is skipped.");
+      }
+      if (bundle.modelDetection.type === 'fourier') {
+        const peakAmps = (bundle.modelDetection.peaks || []).map(p => p.amplitude || 0);
+        const strongestAmp = peakAmps.length ? Math.max(...peakAmps) : 0;
+        const dcAbs = Math.abs(bundle.modelDetection.dcComponent ?? 0);
+        if (dcAbs > 3 * Math.max(1e-9, strongestAmp)) {
+          out.push(`ℹ DC component is dominant (${formatNum(bundle.modelDetection.dcComponent, 6)}). For bounded oscillatory data, dcEstimate may be more informative than Abel.`);
+        }
+      }
+      return out;
+    }
+
+    function exportBundle(bundle) {
+      const replacer = (key, value) => {
+        if (value instanceof Float64Array) return Array.from(value);
+        return value;
+      };
+      return JSON.stringify(bundle, replacer, 2);
+    }
+
+    function runFullAnalysis({ expression, params, Nmax, settings }) {
+      const sequence = generateSequence(expression, params, Nmax);
+      const modelDetection = detectModel(sequence, settings.modelDetection);
+      const results = [
+        hurwitzRegularize(modelDetection, sequence),
+        expCutoffRegularize(sequence, modelDetection, settings.expCutoff),
+        windowRegularize(sequence, modelDetection, settings.window || {}),
+        cesaroRegularize(sequence, settings.cesaro || {}),
+        abelRegularize(sequence, modelDetection, settings.abel || {}),
+      ];
+
+      const hurwitzRes = results.find(r => r.method === 'hurwitz' && r.status === 'success' && Number.isFinite(r.value));
+      const expRes = results.find(r => r.method === 'expCutoff' && r.status === 'success' && Number.isFinite(r.value));
+      const winIdx = results.findIndex(r => r.method === 'window' && (r.status === 'success' || r.status === 'exploratory') && Number.isFinite(r.value));
+      if (winIdx >= 0) {
+        const refs = [hurwitzRes?.value, expRes?.value].filter(Number.isFinite);
+        if (refs.length) {
+          const ref = refs[0];
+          const w = results[winIdx];
+          const diff = Math.abs(w.value - ref);
+          const scale = Math.max(1e-9, Math.abs(ref), ...refs.map(v => Math.abs(v)));
+          if (diff > Math.max(1e-3, 1e-2 * scale)) {
+            results[winIdx] = {
+              ...w,
+              status: 'exploratory',
+              notes: [...(w.notes || []), `large disagreement with reference methods (Δ=${formatNum(diff, 6)})`, 'not used in ensemble']
+            };
+          }
+        }
+      }
+
+      const ensemble = buildEnsemble(results);
+      const bundle = {
+        input: { expression, params, Nmax },
+        sequence,
+        modelDetection,
+        results,
+        ensemble,
+        diagnostics: [],
+        meta: { version: "0.5-phase1-prototype", generatedAt: new Date().toISOString() }
+      };
+      bundle.diagnostics = buildDiagnostics(bundle);
+      return bundle;
+    }
+
+    function summaryRows(bundle) {
+      const rows = bundle.results.map(r => ({
+        method: r.method,
+        status: r.status,
+        value: r.value,
+        stability: r.stability,
+        notes: r.notes.join('; ')
+      }));
+      if (bundle.modelDetection?.type === 'fourier' && Math.abs(bundle.modelDetection.dcComponent ?? 0) > 1e-9) {
+        const dcDetails = bundle.modelDetection?.dcDetails || {};
+        const dcStability = Number.isFinite(dcDetails.stability) ? dcDetails.stability : (bundle.modelDetection.confidence === 'good' ? 0.9 : 0.75);
+        rows.push({
+          method: 'dcEstimate',
+          status: 'derived',
+          value: bundle.modelDetection.dcComponent,
+          stability: dcStability,
+          notes: dcDetails.note || 'Fourier skeleton DC component (time-average candidate for bounded oscillatory data)'
+        });
+      }
+      rows.push({
+        method: "ensemble",
+        status: "summary",
+        value: bundle.ensemble.median,
+        stability: bundle.ensemble.agreement,
+        notes: (bundle.ensemble.agreement === 'insufficient' || bundle.ensemble.maxDeviation == null)
+          ? 'only one successful method'
+          : `max deviation=${formatNum(bundle.ensemble.maxDeviation, 6)}`
+      });
+      return rows;
+    }
+
+    function toScatterData(sequence, limit = 256) {
+      const step = Math.max(1, Math.floor(sequence.length / limit));
+      const out = [];
+      for (let i = 0; i < sequence.length; i += step) out.push({ n: i + 1, a: sequence[i] });
+      return out;
+    }
+
+    function toLineData(bundle, limit = 256) {
+      const seq = bundle.sequence;
+      const sk = bundle.modelDetection.skeleton || new Float64Array(seq.length);
+      const re = bundle.modelDetection.residual || new Float64Array(seq.length);
+      const step = Math.max(1, Math.floor(seq.length / limit));
+      const out = [];
+      for (let i = 0; i < seq.length; i += step) {
+        out.push({ n: i + 1, seq: seq[i], skeleton: sk[i], residual: re[i] });
+      }
+      return out;
+    }
+
+    function download(filename, text) {
+      const blob = new Blob([text], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function App() {
+      const [preset, setPreset] = React.useState(PRESETS[1].name);
+      const [expression, setExpression] = React.useState(PRESETS[1].expr);
+      const [paramText, setParamText] = React.useState("");
+      const [Nmax, setNmax] = React.useState(4096);
+      const [tab, setTab] = React.useState("Sequence");
+      const [bundle, setBundle] = React.useState(null);
+      const [importText, setImportText] = React.useState("");
+      const [error, setError] = React.useState("");
+      const [testResults, setTestResults] = React.useState([]);
+      const [testFilter, setTestFilter] = React.useState('all');
+      const [settings, setSettings] = React.useState({
+        modelDetection: { m_max: 12, d_max: 4, N_fit: 2048, residualThreshold: 1e-6, fourierBins: 1024, fourierThreshold: 0.2, fourierRefineSteps: 4, fourierMinOmega: 0.01, fourierMaxPeaks: 3, quasiSoftRelativeThreshold: 0.0025, extendedThreshold: 5e-4, extendedDetectionStability: 0.72 },
+        expCutoff: { epsMin: 0.001, epsMax: 0.5, samples: 60, extendedPromoteThreshold: 0.9, extendedConditionThreshold: 1e9, extendedMinWindows: 4 },
+        window: { Nmin: 256, Nmax: 65536, samples: 16, windowType: 'hann' },
+        cesaro: { stdThreshold: 1e-2, trendThreshold: 2e-3 },
+        abel: { xMin: 0.5, xMax: 0.999, samples: 50, dcDominanceFactor: 3, hardDcDominanceFactor: 8, N_check: 8192, rangeRatioThreshold: 1.5, meanShiftThreshold: 0.2 }
+      });
+
+      const applyPreset = (name) => {
+        const p = PRESETS.find(x => x.name === name);
+        if (!p) return;
+        setPreset(name);
+        setExpression(p.expr);
+        const text = Object.entries(p.params).map(([k, v]) => `${k}=${v}`).join(", ");
+        setParamText(text);
+      };
+
+      React.useEffect(() => {
+        try {
+          const params = parseParams(paramText);
+          const result = runFullAnalysis({ expression, params, Nmax, settings });
+          setBundle(result);
+          setError("");
+        } catch (err) {
+          setError(String(err.message || err));
+        }
+      }, []);
+
+      const onRun = () => {
+        try {
+          const params = parseParams(paramText);
+          const result = runFullAnalysis({ expression, params, Nmax, settings });
+          setBundle(result);
+          setError("");
+        } catch (err) {
+          setError(String(err.message || err));
+          setBundle(null);
+        }
+      };
+
+      const rows = bundle ? summaryRows(bundle) : [];
+      const hurwitzResult = bundle?.results?.find(r => r.method === 'hurwitz');
+      const expResult = bundle?.results?.find(r => r.method === 'expCutoff');
+      const windowResult = bundle?.results?.find(r => r.method === 'window');
+      const scatterData = bundle ? toScatterData(bundle.sequence) : [];
+      const skeletonData = bundle ? toLineData(bundle) : [];
+      const expData = bundle?.results.find(r => r.method === "expCutoff")?.details?.curve || [];
+      const testSummary = summarizeTests(testResults);
+      const filteredTests = testFilter === 'all' ? testResults : testResults.filter(t => (t.category || 'other') === testFilter);
+
+      return (
+        <div className="max-w-7xl mx-auto p-6 space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">RegSum Lab</h1>
+            <p className="text-slate-400 mt-2">発散級数・有限部抽出・複数正則化法の比較ダッシュボード。現在は <span className="text-cyan-300 font-medium">Phase 2 alpha の保存版</span> で、<span className="text-slate-200">Hurwitz / Exp Cutoff / Cesàro / Abel / Fourier / dcEstimate / exploratory Window / extended skeleton</span> までを、無理な成功判定を避けつつ比較できる状態です。</p>
+          </div>
+
+          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 text-sm text-slate-300">
+            <div className="font-semibold text-slate-100 mb-2">まず触ってみるなら</div>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><span className="text-slate-100">1</span>, <span className="text-slate-100">n</span>, <span className="text-slate-100">n^2</span>, <span className="text-slate-100">(-1)^n</span>, <span className="text-slate-100">sin(n)</span> で exact-ish / Abel / Cesàro の感触を見る</li>
+              <li><span className="text-slate-100">sin(cos(n))</span>, <span className="text-slate-100">cos(sin(n))</span>, <span className="text-slate-100">abs(sin(n))</span> で <span className="text-slate-100">dcEstimate</span> を試す</li>
+              <li><span className="text-slate-100">log(n)</span>, <span className="text-slate-100">n*log(n)</span>, <span className="text-slate-100">floor(sqrt(n))</span> は exploratory の例として読む</li>
+            </ul>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-4 bg-slate-900 border border-slate-800 rounded-2xl p-4">
+            <div>
+              <label className="block text-sm text-slate-300 mb-2">Preset</label>
+              <select className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2" value={preset}
+                onChange={(e) => applyPreset(e.target.value)}>
+                {PRESETS.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
+              </select>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm text-slate-300 mb-2">式</label>
+              <input className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2" value={expression} onChange={e => setExpression(e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-300 mb-2">Nmax</label>
+              <input type="number" min="64" max="65536" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2" value={Nmax} onChange={e => setNmax(clamp(Number(e.target.value) || 64, 64, 65536))} />
+            </div>
+            <div className="md:col-span-3">
+              <label className="block text-sm text-slate-300 mb-2">パラメータ</label>
+              <input className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2" value={paramText} onChange={e => setParamText(e.target.value)} placeholder="eps=0.001" />
+            </div>
+            <div className="flex items-end">
+              <button className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold rounded-xl px-4 py-2" onClick={onRun}>▶ Run Full Analysis</button>
+            </div>
+          </div>
+
+          <details className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+            <summary className="cursor-pointer font-semibold">Advanced Settings</summary>
+            <div className="grid md:grid-cols-3 gap-4 mt-4">
+              <div>
+                <div className="text-sm text-slate-400 mb-2">Model Detection</div>
+                <label className="block text-xs mb-1">m_max</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.m_max}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, m_max: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">d_max <span className="text-slate-500">(Hurwitz exact-ish は 29 まで対応)</span></label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.d_max}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, d_max: Math.max(0, Math.min(29, Number(e.target.value))) } }))} />
+                <label className="block text-xs mb-1">N_fit</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.N_fit}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, N_fit: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">fourierBins</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.fourierBins}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, fourierBins: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">fourierThreshold</label>
+                <input type="number" step="0.01" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.fourierThreshold}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, fourierThreshold: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">fourierRefineSteps</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.fourierRefineSteps}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, fourierRefineSteps: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">fourierMinOmega</label>
+                <input type="number" step="0.001" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.fourierMinOmega}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, fourierMinOmega: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">fourierMaxPeaks</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.fourierMaxPeaks}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, fourierMaxPeaks: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">quasiSoftRelativeThreshold</label>
+                <input type="number" step="0.0001" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.quasiSoftRelativeThreshold}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, quasiSoftRelativeThreshold: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">extendedThreshold</label>
+                <input type="number" step="0.0001" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2" value={settings.modelDetection.extendedThreshold}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, extendedThreshold: Number(e.target.value) } }))} />
+              </div>
+              <div>
+                <div className="text-sm text-slate-400 mb-2">Exp Cutoff</div>
+                <label className="block text-xs mb-1">epsMin</label>
+                <input type="number" step="0.0001" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.expCutoff.epsMin}
+                  onChange={e => setSettings(s => ({ ...s, expCutoff: { ...s.expCutoff, epsMin: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">epsMax</label>
+                <input type="number" step="0.001" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.expCutoff.epsMax}
+                  onChange={e => setSettings(s => ({ ...s, expCutoff: { ...s.expCutoff, epsMax: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">samples</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.expCutoff.samples}
+                  onChange={e => setSettings(s => ({ ...s, expCutoff: { ...s.expCutoff, samples: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">extendedPromoteThreshold</label>
+                <input type="number" step="0.01" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.expCutoff.extendedPromoteThreshold}
+                  onChange={e => setSettings(s => ({ ...s, expCutoff: { ...s.expCutoff, extendedPromoteThreshold: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">extendedConditionThreshold</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-4" value={settings.expCutoff.extendedConditionThreshold}
+                  onChange={e => setSettings(s => ({ ...s, expCutoff: { ...s.expCutoff, extendedConditionThreshold: Number(e.target.value) } }))} />
+                <div className="text-sm text-slate-400 mb-2">Window</div>
+                <label className="block text-xs mb-1">Nmin</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.window.Nmin}
+                  onChange={e => setSettings(s => ({ ...s, window: { ...s.window, Nmin: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">Nmax</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.window.Nmax}
+                  onChange={e => setSettings(s => ({ ...s, window: { ...s.window, Nmax: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">samples</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.window.samples}
+                  onChange={e => setSettings(s => ({ ...s, window: { ...s.window, samples: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">windowType</label>
+                <select className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.window.windowType}
+                  onChange={e => setSettings(s => ({ ...s, window: { ...s.window, windowType: e.target.value } }))}>
+                  <option value="hann">hann</option>
+                  <option value="blackman">blackman</option>
+                </select>
+              </div>
+              <div>
+                <div className="text-sm text-slate-400 mb-2">Cesàro / Abel</div>
+                <label className="block text-xs mb-1">Cesàro std threshold</label>
+                <input type="number" step="0.001" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.cesaro.stdThreshold}
+                  onChange={e => setSettings(s => ({ ...s, cesaro: { ...s.cesaro, stdThreshold: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">Abel xMax</label>
+                <input type="number" step="0.001" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.abel.xMax}
+                  onChange={e => setSettings(s => ({ ...s, abel: { ...s.abel, xMax: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">Abel samples</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.abel.samples}
+                  onChange={e => setSettings(s => ({ ...s, abel: { ...s.abel, samples: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">dcDominanceFactor</label>
+                <input type="number" step="0.5" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.abel.dcDominanceFactor}
+                  onChange={e => setSettings(s => ({ ...s, abel: { ...s.abel, dcDominanceFactor: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">hardDcDominanceFactor</label>
+                <input type="number" step="0.5" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.abel.hardDcDominanceFactor}
+                  onChange={e => setSettings(s => ({ ...s, abel: { ...s.abel, hardDcDominanceFactor: Number(e.target.value) } }))} />
+                <div className="text-sm text-slate-400 mb-2 mt-3">JSON Import</div>
+                <textarea className="w-full h-40 bg-slate-950 border border-slate-700 rounded-xl p-2" value={importText} onChange={e => setImportText(e.target.value)} placeholder="Paste exported AnalysisBundle JSON here" />
+                <button className="mt-2 bg-slate-200 text-slate-950 rounded-xl px-3 py-2 font-medium" onClick={() => {
+                  try {
+                    const parsed = JSON.parse(importText);
+                    if (Array.isArray(parsed.sequence)) parsed.sequence = Float64Array.from(parsed.sequence);
+                    if (parsed?.modelDetection?.skeleton && Array.isArray(parsed.modelDetection.skeleton)) parsed.modelDetection.skeleton = Float64Array.from(parsed.modelDetection.skeleton);
+                    if (parsed?.modelDetection?.residual && Array.isArray(parsed.modelDetection.residual)) parsed.modelDetection.residual = Float64Array.from(parsed.modelDetection.residual);
+                    setBundle(parsed);
+                    setError("");
+                  } catch (err) {
+                    setError(`Import failed: ${String(err.message || err)}`);
+                  }
+                }}>Import JSON</button>
+              </div>
+            </div>
+          </details>
+
+          {error && <div className="bg-rose-950 border border-rose-800 text-rose-200 rounded-2xl p-4">{error}</div>}
+
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 overflow-x-auto">
+            <h2 className="text-xl font-semibold mb-3">Summary Table</h2>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left border-b border-slate-800 text-slate-300">
+                  <th className="py-2 pr-4">Method</th>
+                  <th className="py-2 pr-4">Status</th>
+                  <th className="py-2 pr-4"><InfoTip label="Value" tip="その手法が返した代表値です。exact-ish は比較的強く、exploratory は参考表示です。" /></th>
+                  <th className="py-2 pr-4"><InfoTip label="Stability" tip="設定や再フィットに対する安定度の目安です。大きいほど頑健、小さいほど条件に敏感です。ただし他手法との一致も併せて見てください。" /></th>
+                  <th className="py-2"><InfoTip label="Notes" tip="その値の読み方や注意点です。not_applicable や provisional は、むしろ誠実な案内です。" /></th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => {
+                  const statusClass =
+                    r.status === 'success' ? 'text-emerald-300' :
+                    r.status === 'exploratory' ? 'text-amber-300' :
+                    r.status === 'not_applicable' ? 'text-slate-400' :
+                    r.status === 'summary' ? 'text-cyan-300' :
+                    r.status === 'derived' ? 'text-violet-300' :
+                    'text-slate-200';
+                  return (
+                  <tr key={i} className="border-b border-slate-900 align-top">
+                    <td className="py-2 pr-4 font-medium">{r.method}</td>
+                    <td className={`py-2 pr-4 font-medium ${statusClass}`}>{r.status}</td>
+                    <td className="py-2 pr-4">{formatValueCell(r.value)}</td>
+                    <td className="py-2 pr-4">{typeof r.stability === 'number' ? formatNum(r.stability, 4) : (r.stability ?? '—')}</td>
+                    <td className="py-2">{r.notes || '—'}</td>
+                  </tr>
+                                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {["Sequence", "Skeleton", "ExpCutoff", "Window", "Compare", "Cesaro", "Abel"].map(name => (
+              <button key={name} className={`px-4 py-2 rounded-xl border ${tab === name ? 'bg-cyan-500 text-slate-950 border-cyan-400' : 'bg-slate-900 border-slate-700 text-slate-200'}`} onClick={() => setTab(name)}>{name}</button>
+            ))}
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 h-[420px]">
+            {tab === "Sequence" && (
+              <SimpleScatterChart data={scatterData} xKey="n" yKey="a" />
+            )}
+            {tab === "Skeleton" && (
+              <SimpleLineChart
+                data={skeletonData}
+                xKey="n"
+                lines={[
+                  { key: 'seq', label: 'a_n', color: '#22d3ee' },
+                  { key: 'skeleton', label: 'b_n', color: '#a78bfa' },
+                  { key: 'residual', label: 'e_n', color: '#f59e0b' },
+                ]}
+              />
+            )}
+            {tab === "ExpCutoff" && (
+              <SimpleLineChart
+                data={expData}
+                xKey="eps"
+                lines={[
+                  { key: 'sEps', label: 'S(eps)', color: '#22d3ee' },
+                  { key: 'fitted', label: 'fitted', color: '#f472b6' },
+                ]}
+              />
+            )}
+            {tab === "Window" && bundle && (
+              <SimpleLineChart
+                data={bundle.results.find(r => r.method === 'window')?.details?.curve || []}
+                xKey="N"
+                lines={[
+                  { key: 'S', label: 'windowed sum', color: '#22d3ee' },
+                  { key: 'fitted', label: 'fitted', color: '#a78bfa' },
+                ]}
+              />
+            )}
+            {tab === "Compare" && bundle && (() => {
+              const primaryResults = bundle.results.filter(r => r.status === "success" || r.status === "exact-ish");
+              const exploratoryResults = bundle.results.filter(r => r.status === "exploratory");
+              const diagnosticResults = bundle.results.filter(r => r.status === "diagnostic");
+              const mutedResults = bundle.results.filter(r => r.status === "not_applicable");
+              const statusClass = (status) => ({
+                'exact-ish': 'bg-emerald-400/15 text-emerald-300 border border-emerald-400/20',
+                success: 'bg-sky-400/15 text-sky-300 border border-sky-400/20',
+                exploratory: 'bg-amber-400/15 text-amber-300 border border-amber-400/20',
+                diagnostic: 'bg-violet-400/15 text-violet-300 border border-violet-400/20',
+                not_applicable: 'bg-slate-700/40 text-slate-300 border border-slate-700/60',
+              }[status] || 'bg-slate-700/40 text-slate-300 border border-slate-700/60');
+              const valueBlock = (r) => {
+                if (r.status === 'diagnostic' || r.value == null || Number.isNaN(r.value)) return '—';
+                return formatNum(r.value);
+              };
+              const rationalBlock = (r) => {
+                if (r.status === 'diagnostic' || r.value == null || Number.isNaN(r.value)) return null;
+                return approxRationalLabel(r.value);
+              };
+              return (
+              <div className="h-full overflow-auto space-y-5">
+                <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 text-sm text-slate-300">
+                  <div className="font-semibold text-slate-100">Compare の読み方</div>
+                  <div className="mt-2">このタブでは、<span className="text-slate-100">推定値として使う候補</span> と、<span className="text-slate-100">診断だけに使う候補</span> を分けて並べます。extended では Exp Cutoff が主役で、Window は診断器として表示されます。</div>
+                </div>
+
+                <div>
+                  <div className="text-sm font-semibold text-slate-200 mb-3">Primary estimates</div>
+                  <div className="grid lg:grid-cols-3 gap-4">
+                    {primaryResults.map((r, i) => (
+                      <div key={i} className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="font-semibold text-slate-100">{r.method}</div>
+                          <span className={`text-xs px-2 py-1 rounded-full ${statusClass(r.status)}`}>{r.status}</span>
+                        </div>
+                        <div className="text-2xl mt-3 text-slate-50">{valueBlock(r)}</div>
+                        {rationalBlock(r) && <div className="text-sm text-slate-400 mt-1">≈ {rationalBlock(r)}</div>}
+                        <div className="text-slate-400 mt-3" title="設定や再フィットに対する安定度の目安です。大きいほど頑健で、小さいほど条件依存が強いと読めます。">stability: {typeof r.stability === 'number' ? formatNum(r.stability, 4) : r.stability}</div>
+                        <div className="text-xs text-slate-500 mt-2">{r.notes.join('; ') || '—'}</div>
+                      </div>
+                    ))}
+                    <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="font-semibold text-slate-100">ensemble</div>
+                        <span className={`text-xs px-2 py-1 rounded-full ${statusClass('success')}`}>summary</span>
+                      </div>
+                      <div className="text-2xl mt-3 text-slate-50">{formatNum(bundle.ensemble.median)}</div>
+                      {bundle.ensemble.median != null && !Number.isNaN(bundle.ensemble.median) && approxRationalLabel(bundle.ensemble.median) && (
+                        <div className="text-sm text-slate-400 mt-1">≈ {approxRationalLabel(bundle.ensemble.median)}</div>
+                      )}
+                      <div className="text-slate-400 mt-3">agreement: {bundle.ensemble.agreement || '—'}</div>
+                      <div className="text-xs text-slate-500 mt-2">{(bundle.ensemble.agreement === 'insufficient' || bundle.ensemble.maxDeviation == null)
+                          ? 'only one successful method'
+                          : `max deviation: ${formatNum(bundle.ensemble.maxDeviation, 6)}`}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {(exploratoryResults.length > 0 || diagnosticResults.length > 0) && (
+                  <div className="grid xl:grid-cols-2 gap-4">
+                    <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+                      <div className="text-sm font-semibold text-slate-200 mb-3">Exploratory estimates</div>
+                      <div className="space-y-3">
+                        {exploratoryResults.length === 0 && <div className="text-sm text-slate-500">—</div>}
+                        {exploratoryResults.map((r, i) => (
+                          <div key={i} className="border border-slate-800 rounded-xl p-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="font-medium text-slate-100">{r.method}</div>
+                              <span className={`text-xs px-2 py-1 rounded-full ${statusClass(r.status)}`}>{r.status}</span>
+                            </div>
+                            <div className="mt-2 text-slate-200">{formatNum(r.value)}</div>
+                            {approxRationalLabel(r.value) && <div className="text-xs text-slate-400 mt-1">≈ {approxRationalLabel(r.value)}</div>}
+                            <div className="text-xs text-slate-400 mt-2">stability: {typeof r.stability === 'number' ? formatNum(r.stability, 4) : r.stability}</div>
+                            <div className="text-xs text-slate-500 mt-1">参考表示です。主結論には使わず、details と併読してください。</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+                      <div className="text-sm font-semibold text-slate-200 mb-3">Diagnostics only</div>
+                      <div className="space-y-3">
+                        {diagnosticResults.length === 0 && <div className="text-sm text-slate-500">—</div>}
+                        {diagnosticResults.map((r, i) => (
+                          <div key={i} className="border border-slate-800 rounded-xl p-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="font-medium text-slate-100">{r.method}</div>
+                              <span className={`text-xs px-2 py-1 rounded-full ${statusClass(r.status)}`}>{r.status}</span>
+                            </div>
+                            <div className="mt-2 text-slate-400">value: —</div>
+                            <div className="text-xs text-slate-400 mt-2">stability: {typeof r.stability === 'number' ? formatNum(r.stability, 4) : r.stability}</div>
+                            <div className="text-xs text-slate-500 mt-1">この欄は値の主張ではなく、骨格適合や窓の合意の診断に使います。詳しくは details を見てください。</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {mutedResults.length > 0 && (
+                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+                    <div className="text-sm font-semibold text-slate-200 mb-3">Inactive / not applicable</div>
+                    <div className="flex flex-wrap gap-2">
+                      {mutedResults.map((r, i) => (
+                        <span key={i} className={`text-xs px-2 py-1 rounded-full ${statusClass(r.status)}`}>{r.method}: {r.status}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              );
+            })()}
+            {tab === "Cesaro" && bundle && (
+              <SimpleLineChart
+                data={bundle.results.find(r => r.method === 'cesaro')?.details?.partials || []}
+                xKey="n"
+                lines={[
+                  { key: 'partial', label: 'partial sum', color: '#22d3ee' },
+                  { key: 'cesaro', label: 'cesaro mean', color: '#34d399' },
+                ]}
+              />
+            )}
+            {tab === "Abel" && bundle && (
+              <SimpleLineChart
+                data={bundle.results.find(r => r.method === 'abel')?.details?.curve || []}
+                xKey="x"
+                lines={[
+                  { key: 'A', label: 'A(x)', color: '#60a5fa' },
+                  { key: 'fitted', label: 'fitted', color: '#f472b6' },
+                ]}
+              />
+            )}
+          </div>
+
+          <details className="bg-slate-900 border border-slate-800 rounded-2xl p-4" open>
+            <summary className="cursor-pointer font-semibold">Diagnostics & Warnings</summary>
+            <ul className="mt-3 space-y-2 text-sm text-slate-300 list-disc pl-5">
+              {(bundle?.diagnostics || ["No diagnostics yet"]).map((d, i) => <li key={i}>{d}</li>)}
+            </ul>
+            {bundle && (
+              <div className="mt-4 text-sm text-slate-400">
+                skeleton type: <span className="text-slate-200">{bundle.modelDetection.type}</span>
+                {bundle.modelDetection.type === 'quasiPolynomial' && ` / period=${bundle.modelDetection.period} / degree=${bundle.modelDetection.degree}`}
+                {bundle.modelDetection.type === 'powerLaw' && ` / exponent=${formatNum(bundle.modelDetection.exponent, 8)}`}
+                {bundle.modelDetection.type === 'fourier' && ` / peaks=${bundle.modelDetection.numPeaks} / ω1=${formatNum(bundle.modelDetection.peaks?.[0]?.frequency, 6)} / amp1=${formatNum(bundle.modelDetection.peaks?.[0]?.amplitude, 6)} / dc=${formatNum(bundle.modelDetection.dcComponent, 6)}`}
+              </div>
+            )}
+          </details>
+
+          <div className="flex flex-wrap gap-3">
+            <div className="text-sm text-slate-400">現在の保存版が意図どおり振る舞っているかを確認します。</div>
+            <button className="bg-violet-400 text-slate-950 rounded-xl px-4 py-2 font-semibold" onClick={() => {
+              try {
+                const results = runBuiltInTests(settings);
+                setTestResults(results);
+                setError('');
+              } catch (err) {
+                setError(String(err.message || err));
+              }
+            }}>Run Built-in Tests</button>
+            <button className="bg-emerald-400 text-slate-950 rounded-xl px-4 py-2 font-semibold" onClick={() => bundle && download("regsum-analysis.json", exportBundle(bundle))}>Export JSON</button>
+          </div>
+
+          {bundle && (
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                <h3 className="font-semibold text-slate-100 mb-3">Hurwitz details</h3>
+                <div className="text-sm text-slate-300">status: {hurwitzResult?.status || '—'}</div>
+                <div className="text-sm text-slate-300 mt-2">value: {formatNum(hurwitzResult?.value)}</div>
+                <div className="text-sm text-slate-300 mt-2"><InfoTip label={`path: ${hurwitzResult?.details?.exactForm || '—'}`} tip="Hurwitz / Bernoulli / functional equation のどの exact-ish ルートを使ったかを示します。閉形式や解析接続に近いほど、数値フィットより強く読めます。" /></div>
+                {hurwitzResult?.details?.residueBreakdown?.length ? (
+                  <div className="mt-3 overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead><tr className="text-left text-slate-400"><th className="py-1">residue</th><th className="py-1">contribution</th></tr></thead>
+                      <tbody>
+                        {hurwitzResult.details.residueBreakdown.map((x, i) => (
+                          <tr key={i} className="border-t border-slate-800"><td className="py-1">{x.residue}</td><td className="py-1">{formatNum(x.contribution, 8)}</td></tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : null}
+              </div>
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                <h3 className="font-semibold text-slate-100 mb-3">Exp Cutoff details</h3>
+                <div className="text-sm text-slate-300">status: {expResult?.status || '—'}</div>
+                <div className="text-sm text-slate-300 mt-2">value: {formatNum(expResult?.value)}</div>
+                {bundle?.modelDetection?.type === 'fourier' && (
+                  <div className="text-xs text-amber-300 mt-2">fourier骨格ではこのExp Cutoffはまだ一般基底フィットなので、Abel優先で読むのがおすすめです。</div>
+                )}
+                <div className="text-sm text-slate-300 mt-2"><InfoTip label={`fit error: ${formatNum(expResult?.details?.fitError, 6)}`} tip="フィット曲線と実データのずれの大きさです。小さいほど基底がデータをうまく説明しています。ただし fit error が小さくても、基底そのものが不適切なら値の解釈には注意が必要です。" /></div>
+                <div className="text-sm text-slate-300 mt-2"><InfoTip label={`condition #: ${formatNum(expResult?.details?.conditionNumber, 6)}`} tip="基底どうしの相関の強さに由来する数値的不安定さの目安です。大きいほど係数がぶれやすく、少しのデータ変更で結果が動きやすくなります。" /></div>
+                {expResult?.details?.windowSpread != null && (
+                  <div className="text-sm text-slate-300 mt-2"><InfoTip label={`window spread: ${formatNum(expResult.details.windowSpread, 6)}`} tip="採用された窓だけで見たときの値のばらつきです。小さいほど頑健で、大きいほど設定依存が強いと読めます。" /></div>
+                )}
+                {expResult?.details?.rawWindowSpread != null && (
+                  <div className="text-sm text-slate-300 mt-2"><InfoTip label={`raw window spread: ${formatNum(expResult.details.rawWindowSpread, 6)}`} tip="外れ窓を落とす前のばらつきです。window spread と大きく差があるときは、一部の窓が暴れていたと読めます。" /></div>
+                )}
+                {expResult?.details?.robustSpread != null && (
+                  <div className="text-sm text-slate-300 mt-2"><InfoTip label={`robust spread: ${formatNum(expResult.details.robustSpread, 6)}`} tip="MAD ベースのロバストな散らばりです。極端な外れ値の影響を受けにくい指標です。" /></div>
+                )}
+                {expResult?.details?.spreadShrinkGain != null && (
+                  <div className="text-sm text-slate-300 mt-2"><InfoTip label={`spread shrink gain: ${formatNum(expResult.details.spreadShrinkGain, 4)}`} tip="外れ窓除去と重み付けによって、除外前のばらつきがどれだけ締まったかの目安です。1 に近いほど大きく改善しています。" /></div>
+                )}
+                {expResult?.details?.avgWindowQuality != null && (
+                  <div className="text-sm text-slate-300 mt-2"><InfoTip label={`avg window quality: ${formatNum(expResult.details.avgWindowQuality, 4)}`} tip="採用窓の aggregate weight を平均したものです。数値そのものは小さくなりやすいので、単独よりも stability や spread shrink gain と併せて読む補助指標です。" /></div>
+                )}
+                {expResult?.details?.acceptedWindowValues?.length ? (
+                  <div className="text-xs text-emerald-300 mt-2">accepted window values: {expResult.details.acceptedWindowValues.map(v => formatNum(v, 6)).join(', ')}</div>
+                ) : null}
+                {expResult?.details?.rejectedWindowValues?.length ? (
+                  <div className="text-xs text-rose-300 mt-1">rejected window values: {expResult.details.rejectedWindowValues.map(v => formatNum(v, 6)).join(', ')}</div>
+                ) : null}
+                {expResult?.details?.windowFits?.length ? (
+                  <div className="mt-3 overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead><tr className="text-left text-slate-400"><th className="py-1">window</th><th className="py-1">status</th><th className="py-1">value</th><th className="py-1">fit error</th><th className="py-1">cond#</th><th className="py-1">local stab</th><th className="py-1">profile wt</th><th className="py-1">quality</th><th className="py-1">agg raw</th><th className="py-1">agg use</th></tr></thead>
+                      <tbody>
+                        {expResult.details.windowFits.map((w, i) => (
+                          <tr key={i} className="border-t border-slate-800">
+                            <td className="py-1">{w.label}</td>
+                            <td className={`py-1 ${w.accepted ? 'text-emerald-300' : 'text-rose-300'}`}>{w.accepted ? 'accepted' : 'rejected'}</td>
+                            <td className="py-1">{formatNum(w.value, 8)}</td>
+                            <td className="py-1">{formatNum(w.fitError, 6)}</td>
+                            <td className="py-1">{formatNum(w.conditionNumber, 6)}</td>
+                            <td className="py-1">{formatNum(w.localStability, 4)}</td>
+                            <td className="py-1">{formatNum(w.profilePenalty, 4)}</td>
+                            <td className="py-1">{formatNum(w.qualityScore, 4)}</td>
+                            <td className="py-1">{formatNum(w.aggregateWeight, 4)}</td>
+                            <td className="py-1">{w.accepted ? formatNum(w.normalizedAggregateWeight, 4) : '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : null}
+                {bundle?.results?.find(r => r.method === 'abel')?.details?.chosen && (
+                  <div className="text-xs text-slate-400 mt-2">Abel choice: {bundle.results.find(r => r.method === 'abel').details.chosen}</div>
+                )}
+                <div className="mt-3 overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead><tr className="text-left text-slate-400"><th className="py-1">basis</th><th className="py-1">coeff</th></tr></thead>
+                    <tbody>
+                      {(expResult?.details?.divergentTerms || []).map((x, i) => (
+                        <tr key={i} className="border-t border-slate-800"><td className="py-1">{x.basis}</td><td className="py-1">{formatNum(x.coeff, 8)}</td></tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                <h3 className="font-semibold text-slate-100 mb-3">Window details</h3>
+                <div className="text-sm text-slate-300">status: {windowResult?.status || '—'}</div>
+                <div className="text-sm text-slate-300 mt-2">value: {formatNum(windowResult?.value)}</div>
+                <div className="text-sm text-slate-300 mt-2"><InfoTip label={`fit error: ${formatNum(windowResult?.details?.fitError, 6)}`} tip="window 側の tail fit とデータのずれの大きさです。小さいほど各 tail 窓で骨格をよく説明できています。" /></div>
+                <div className="text-sm text-slate-300 mt-2"><InfoTip label={`condition #: ${formatNum(windowResult?.details?.conditionNumber, 6)}`} tip="window 側で使った基底の数値的な不安定さの目安です。大きいほど tail fit の係数がぶれやすくなります。" /></div>
+                {windowResult?.details?.windowSpread != null && (
+                  <div className="text-sm text-slate-300 mt-2"><InfoTip label={`window spread: ${formatNum(windowResult.details.windowSpread, 6)}`} tip="採用された tail 窓どうしの finite-part 候補のばらつきです。" /></div>
+                )}
+                {windowResult?.details?.rawWindowSpread != null && (
+                  <div className="text-sm text-slate-300 mt-2"><InfoTip label={`raw window spread: ${formatNum(windowResult.details.rawWindowSpread, 6)}`} tip="外れ窓を落とす前のばらつきです。" /></div>
+                )}
+                {windowResult?.details?.robustSpread != null && (
+                  <div className="text-sm text-slate-300 mt-2"><InfoTip label={`robust spread: ${formatNum(windowResult.details.robustSpread, 6)}`} tip="MAD ベースのロバストな散らばりです。" /></div>
+                )}
+                {windowResult?.details?.spreadShrinkGain != null && (
+                  <div className="text-sm text-slate-300 mt-2"><InfoTip label={`spread shrink gain: ${formatNum(windowResult.details.spreadShrinkGain, 4)}`} tip="tail 窓のロバスト集約で、ばらつきがどれだけ締まったかの目安です。" /></div>
+                )}
+                {windowResult?.details?.avgWindowQuality != null && (
+                  <div className="text-sm text-slate-300 mt-2"><InfoTip label={`avg window quality: ${formatNum(windowResult.details.avgWindowQuality, 4)}`} tip="採用された tail 窓の quality の平均です。" /></div>
+                )}
+                {windowResult?.details?.directFinitePart != null && (
+                  <div className="text-xs text-cyan-300 mt-2">direct finite part: {formatNum(windowResult.details.directFinitePart, 10)}</div>
+                )}
+                {windowResult?.details?.pairwiseFinitePart != null && (
+                  <div className="text-xs text-violet-300 mt-1">pairwise finite part: {formatNum(windowResult.details.pairwiseFinitePart, 10)}</div>
+                )}
+                {windowResult?.details?.finalFinitePart != null && (
+                  <div className="text-xs text-emerald-300 mt-1">final finite part: {formatNum(windowResult.details.finalFinitePart, 10)}</div>
+                )}
+                <div className="text-xs text-slate-400 mt-1">blend mode: {windowResult?.details?.blendMode || '—'}</div>
+                <div className="text-xs text-slate-400 mt-1">used pairwise: {windowResult?.details?.usedPairwise ? 'yes' : 'no'} / pair count: {windowResult?.details?.pairwiseCount ?? 0}</div>
+                {windowResult?.details?.acceptedWindowValues?.length ? (
+                  <div className="text-xs text-emerald-300 mt-2">accepted window values: {windowResult.details.acceptedWindowValues.map(v => formatNum(v, 8)).join(', ')}</div>
+                ) : null}
+                {windowResult?.details?.rejectedWindowValues?.length ? (
+                  <div className="text-xs text-rose-300 mt-1">rejected window values: {windowResult.details.rejectedWindowValues.map(v => formatNum(v, 8)).join(', ')}</div>
+                ) : null}
+                {windowResult?.details?.windowTable?.length ? (
+                  <div className="mt-3 overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead><tr className="text-left text-slate-400"><th className="py-1">window</th><th className="py-1">status</th><th className="py-1">value</th><th className="py-1">fit error</th><th className="py-1">cond#</th><th className="py-1">local stab</th><th className="py-1">profile wt</th><th className="py-1">consensus</th><th className="py-1">agg raw</th><th className="py-1">agg use</th></tr></thead>
+                      <tbody>
+                        {windowResult.details.windowTable.map((w, i) => (
+                          <tr key={i} className="border-t border-slate-800">
+                            <td className="py-1">{w.label}</td>
+                            <td className={`py-1 ${w.status === 'accepted' ? 'text-emerald-300' : 'text-rose-300'}`}>{w.status}</td>
+                            <td className="py-1">{formatNum(w.value, 10)}</td>
+                            <td className="py-1">{formatNum(w.fitError, 6)}</td>
+                            <td className="py-1">{formatNum(w.conditionNumber, 6)}</td>
+                            <td className="py-1">{formatNum(w.stability, 4)}</td>
+                            <td className="py-1">{formatNum(w.profileWeight, 4)}</td>
+                            <td className="py-1">{formatNum(w.consensus, 4)}</td>
+                            <td className="py-1">{formatNum(w.aggRaw, 4)}</td>
+                            <td className="py-1">{w.status === 'accepted' ? formatNum(w.aggUse, 4) : '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : null}
+                {windowResult?.details?.pairwiseTable?.length ? (
+                  <div className="mt-3 overflow-x-auto">
+                    <div className="text-xs text-slate-400 mb-1">pairwise finite-part candidates</div>
+                    <table className="w-full text-xs">
+                      <thead><tr className="text-left text-slate-400"><th className="py-1">pair</th><th className="py-1">value</th><th className="py-1">raw</th><th className="py-1">consensus</th><th className="py-1">use</th></tr></thead>
+                      <tbody>
+                        {windowResult.details.pairwiseTable.map((p, i) => (
+                          <tr key={i} className="border-t border-slate-800">
+                            <td className="py-1">{p.labelA} ↔ {p.labelB}</td>
+                            <td className="py-1">{formatNum(p.value, 10)}</td>
+                            <td className="py-1">{formatNum(p.raw, 4)}</td>
+                            <td className="py-1">{formatNum(p.consensus, 4)}</td>
+                            <td className="py-1">{formatNum(p.use, 4)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          )}
+
+          {testResults.length > 0 && (
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 overflow-x-auto">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <h2 className="text-xl font-semibold">Built-in Tests</h2>
+                <div className="text-sm text-slate-300">PASS {testSummary.passed} / {testSummary.total}</div>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <button className={`px-3 py-1 rounded-lg border ${testFilter === 'all' ? 'bg-cyan-500 text-slate-950 border-cyan-400' : 'bg-slate-950 border-slate-700 text-slate-200'}`} onClick={() => setTestFilter('all')}>all</button>
+                {Object.keys(testSummary.byCategory).map(cat => (
+                  <button key={cat} className={`px-3 py-1 rounded-lg border ${testFilter === cat ? 'bg-cyan-500 text-slate-950 border-cyan-400' : 'bg-slate-950 border-slate-700 text-slate-200'}`} onClick={() => setTestFilter(cat)}>
+                    {cat} ({testSummary.byCategory[cat].passed}/{testSummary.byCategory[cat].total})
+                  </button>
+                ))}
+              </div>
+              <table className="w-full text-sm mb-4">
+                <thead>
+                  <tr className="text-left border-b border-slate-800 text-slate-300">
+                    <th className="py-2 pr-4">ID</th>
+                    <th className="py-2 pr-4">Category</th>
+                    <th className="py-2 pr-4">Expr</th>
+                    <th className="py-2 pr-4">Method</th>
+                    <th className="py-2 pr-4">Expected</th>
+                    <th className="py-2 pr-4">Actual</th>
+                    <th className="py-2 pr-4">Error</th>
+                    <th className="py-2 pr-4">Tol</th>
+                    <th className="py-2">Pass</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTests.map((t, i) => (
+                    <tr key={i} className="border-b border-slate-900">
+                      <td className="py-2 pr-4 font-medium">{t.id}</td>
+                      <td className="py-2 pr-4 text-slate-400">{t.category || 'other'}</td>
+                      <td className="py-2 pr-4">{t.expr}</td>
+                      <td className="py-2 pr-4">{t.method}</td>
+                      <td className="py-2 pr-4">{typeof t.expected === 'string' ? t.expected : formatNum(t.expected, 8)}</td>
+                      <td className="py-2 pr-4">{typeof t.actual === 'string' ? t.actual : formatNum(t.actual, 8)}</td>
+                      <td className="py-2 pr-4">{Number.isFinite(t.error) ? formatNum(t.error, 6) : '—'}</td>
+                      <td className="py-2 pr-4">{t.method === 'modelType' ? '—' : formatNum(t.tol, 3)}</td>
+                      <td className={`py-2 font-semibold ${t.pass ? 'text-emerald-400' : 'text-rose-400'}`}>{t.pass ? 'PASS' : 'FAIL'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="grid md:grid-cols-3 gap-3">
+                {Object.entries(testSummary.byCategory).map(([cat, stat]) => (
+                  <div key={cat} className="bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm">
+                    <div className="font-medium text-slate-100">{cat}</div>
+                    <div className="text-slate-400 mt-1">{stat.passed} / {stat.total} passed</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-slate-300">
+            <h2 className="text-2xl font-bold text-slate-100 mb-6">RegSum Lab 仕様＆設計方針</h2>
+            
+            <div className="space-y-8">
+              <section>
+                <h3 className="text-xl font-semibold text-slate-200 mb-3 border-b border-slate-700 pb-2">1. 目的</h3>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-slate-100 mb-1">1.1 このツールの役割</h4>
+                    <p className="text-sm leading-relaxed">数列 <code className="bg-slate-800 px-1 rounded">a_1, a_2, a_3, ...</code> に対して、その通常和が発散していても、骨格を見抜き、適切な正則化手法を選び、「有限部」「時間平均」「解析接続的な値候補」などを返すことを目的とします。<br/>ただし、無理な場合は <code className="bg-slate-800 px-1 text-slate-400 rounded">not_applicable</code> や <code className="bg-slate-800 px-1 text-amber-300 rounded">exploratory</code> で潔く止まります。</p>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-slate-950 rounded-xl p-4 border border-slate-800">
+                      <h4 className="font-medium text-emerald-300 mb-2">1.2 現状の強み</h4>
+                      <ul className="list-disc pl-5 text-sm space-y-1">
+                        <li>多項式列、準多項式列</li>
+                        <li>単項の冪則列 <code className="bg-slate-800 px-1 rounded">n^α</code></li>
+                        <li>単純な振動列 <code className="bg-slate-800 px-1 rounded">(-1)^n, sin(n)</code> など</li>
+                        <li>有界な Fourier 的列の DC 成分推定</li>
+                        <li><code className="bg-slate-800 px-1 rounded">log(n)</code> などを「extended」として扱う方針</li>
+                      </ul>
+                    </div>
+                    <div className="bg-slate-950 rounded-xl p-4 border border-slate-800">
+                      <h4 className="font-medium text-rose-300 mb-2">1.3 現状の難所</h4>
+                      <ul className="list-disc pl-5 text-sm space-y-1">
+                        <li>mixed power の検出が弱い</li>
+                        <li>extended 系の有限部抽出が繊細</li>
+                        <li>基底選択が「賢すぎると危険、単純すぎると弱い」</li>
+                        <li>Hurwitz が複合骨格にはまだ弱い</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-xl font-semibold text-slate-200 mb-4 border-b border-slate-700 pb-2">2. 各計算法の意味と、おすすめの式</h3>
+                
+                <div className="grid md:grid-cols-3 gap-4">
+                  {/* Hurwitz */}
+                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                    <h4 className="font-semibold text-slate-100 flex items-center justify-between">Hurwitz <span className="text-xs bg-slate-800 px-2 py-1 rounded text-slate-300">理論・主砲</span></h4>
+                    <p className="mt-2 text-xs text-slate-400">Bernoulli 多項式や Hurwitz zeta 解析接続を使い、かなり「理論に寄った値」を返す主砲。exact-ish に最も近い位置づけ。</p>
+                    <div className="mt-3 text-sm">
+                      <span className="text-emerald-300 font-medium text-xs block mb-1">向いている式:</span>
+                      <ul className="list-disc pl-5 space-y-1 text-slate-300">
+                        <li>定数・多項式 (<code className="text-xs">1, n, n^2, 1+n</code>)</li>
+                        <li>分数冪 (<code className="text-xs">n^1.5, n^(7/5)</code>)</li>
+                        <li>周期付多項式 (<code className="text-xs">(-1)^n * n</code>)</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Exp Cutoff */}
+                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                    <h4 className="font-semibold text-slate-100 flex items-center justify-between">Exp Cutoff <span className="text-xs bg-slate-800 px-2 py-1 rounded text-slate-300">数値主力</span></h4>
+                    <p className="mt-2 text-xs text-slate-400"><code className="bg-slate-800 px-1 rounded">e^(-εn)</code> をかけて発散成分を分離する手法。extended系を扱う中心的な武器。</p>
+                    <div className="mt-3 text-sm">
+                      <span className="text-emerald-300 font-medium text-xs block mb-1">向いている式:</span>
+                      <ul className="list-disc pl-5 space-y-1 text-slate-300">
+                        <li>extended系 (<code className="text-xs">log(n), n*log(n)</code>)</li>
+                        <li>微小摂動付 (<code className="text-xs">n + 0.001*sin(n)</code>)</li>
+                        <li>数値検証用 (<code className="text-xs">n, n^1.5</code>)</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Window */}
+                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                    <h4 className="font-semibold text-slate-100 flex items-center justify-between">Window <span className="text-xs bg-slate-800 px-2 py-1 rounded text-slate-300">補助診断器</span></h4>
+                    <p className="mt-2 text-xs text-slate-400">平滑化窓をかけた有限和を外挿する。値を当てるより、変な挙動を炙り出す「診断」としての役割が強い。</p>
+                    <div className="mt-3 text-sm">
+                      <span className="text-emerald-300 font-medium text-xs block mb-1">向いている式:</span>
+                      <ul className="list-disc pl-5 space-y-1 text-slate-300">
+                        <li>大域成長の診断 (<code className="text-xs">floor(sqrt(n))</code>)</li>
+                        <li>extended補助 (<code className="text-xs">log(n)</code>)</li>
+                        <li>他手法の比較用 (<code className="text-xs">n, n^2</code>)</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Cesàro */}
+                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                    <h4 className="font-semibold text-slate-100">Cesàro</h4>
+                    <p className="mt-2 text-xs text-slate-400">部分和の平均を見る。「普通の和は揺れるが、平均すると落ち着く」交代列や有界振動に向く。</p>
+                    <div className="mt-3 text-sm">
+                      <span className="text-emerald-300 font-medium text-xs block mb-1">向いている式:</span>
+                      <code className="text-xs bg-slate-800 px-1 rounded block mb-1">(-1)^n</code>
+                      <code className="text-xs bg-slate-800 px-1 rounded block">(n % 2 == 0) ? 1 : 0</code>
+                    </div>
+                  </div>
+
+                  {/* Abel */}
+                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                    <h4 className="font-semibold text-slate-100">Abel</h4>
+                    <p className="mt-2 text-xs text-slate-400">生成関数的な極限 <code className="text-xs bg-slate-800 px-1 rounded">x→1-</code> を見る。単一周波数の振動列・Fourier的な列の収束を捉えるのに強い。</p>
+                    <div className="mt-3 text-sm">
+                      <span className="text-emerald-300 font-medium text-xs block mb-1">向いている式:</span>
+                      <span className="text-xs bg-slate-800 px-1 rounded mr-1 leading-loose">(-1)^n</span>
+                      <span className="text-xs bg-slate-800 px-1 rounded mr-1 leading-loose">sin(n)</span>
+                      <span className="text-xs bg-slate-800 px-1 rounded mr-1 leading-loose">cos(n)</span>
+                      <span className="text-xs bg-slate-800 px-1 rounded mr-1 leading-loose">sin(2*n)</span>
+                    </div>
+                  </div>
+
+                  {/* Fourier / dcEstimate */}
+                  <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                    <h4 className="font-semibold text-slate-100">Fourier / dcEstimate</h4>
+                    <p className="mt-2 text-xs text-slate-400">有界で複雑に揺れる列について、DC（直流）成分を分離し、時間平均候補として提示する。</p>
+                    <div className="mt-3 text-sm">
+                      <span className="text-emerald-300 font-medium text-xs block mb-1">向いている式:</span>
+                      <span className="text-xs bg-slate-800 px-1 rounded mr-1 leading-loose">sin(cos(n))</span>
+                      <span className="text-xs bg-slate-800 px-1 rounded mr-1 leading-loose">cos(sin(n))</span>
+                      <span className="text-xs bg-slate-800 px-1 rounded mr-1 leading-loose">abs(sin(n))</span>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-xl font-semibold text-slate-200 mb-3 border-b border-slate-700 pb-2">3. 各計算法の精度向上と拡張方針</h3>
+                <div className="space-y-4">
+                  <div className="bg-slate-900 rounded-xl p-4 border border-violet-900">
+                    <h4 className="font-medium text-violet-300 mb-2">今後の主眼：Hurwitz の mixed power 拡張</h4>
+                    <p className="text-sm mb-3">
+                      目標：<code className="bg-slate-950 text-slate-300 px-1 py-0.5 rounded">n^(3/2) + n^(7/5)</code> のように複数の成分が混ざる列を扱えるようにする。
+                    </p>
+                    <ol className="list-decimal pl-5 text-sm space-y-1 text-slate-300">
+                      <li><strong>peeling 型検出:</strong> 支配的な冪を推定し、引いた残差から次の冪を探す。</li>
+                      <li><strong>混合 Hurwitz 和:</strong> 検出した各成分 <code className="text-xs border border-slate-700 px-1">c_j n^α_j</code> を <code className="text-xs border border-slate-700 px-1">c_j ζ(-α_j)</code> にマップする。</li>
+                      <li><strong>periodic + mixed:</strong> さらに residue class（剰余類）×混合冪へと繋げる。</li>
+                    </ol>
+                  </div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="font-medium text-slate-200 mb-1">Exp Cutoff の改善</h4>
+                      <ul className="list-disc pl-5 text-sm space-y-1 text-slate-400">
+                        <li>基底・窓・条件数管理の厳格化。</li>
+                        <li>ε範囲の自動最適化。</li>
+                        <li>骨格 contribution を理論式で別管理し、残差 fit と合成する二層構造化。</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-slate-200 mb-1">Window & Abel の改善</h4>
+                      <ul className="list-disc pl-5 text-sm space-y-1 text-slate-400">
+                        <li>Window: Tukey / Kaiser など窓 family の拡張と、品質ベースの診断UI強化。</li>
+                        <li>Abel: tail 外挿次元の自動化(線形/2次/Pade)と、Fourier 情報による補助の統合。</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

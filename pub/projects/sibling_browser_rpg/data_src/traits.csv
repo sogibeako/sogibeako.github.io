@@ -1,0 +1,3 @@
+traitId,name,effectType,value,note
+race_slime,スライム系,special_target,anti_slime,スライム特攻対象
+fire_body,炎の身体,element_resist,"fire:0.5;water:1.5;ice:0.5",炎耐性と水弱点

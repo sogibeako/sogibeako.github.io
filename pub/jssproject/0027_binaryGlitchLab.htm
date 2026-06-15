@@ -1,0 +1,1689 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Binary Glitch Laboratory</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root {
+      --bg: #111315;
+      --panel: #191d20;
+      --panel-2: #20262a;
+      --line: #394147;
+      --line-soft: #2a3035;
+      --text: #e7eceb;
+      --muted: #9aa6a5;
+      --teal: #4fd1c5;
+      --amber: #f2b84b;
+      --red: #ff6b6b;
+      --green: #7bd88f;
+      --blue: #77a8ff;
+      --mark: rgba(79, 209, 197, .18);
+      --changed: rgba(242, 184, 75, .24);
+      --header: rgba(255, 107, 107, .18);
+      --data: rgba(123, 216, 143, .18);
+      --mono: Consolas, "SFMono-Regular", "M PLUS 1 Code", monospace;
+      --ui: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--ui);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    button, input, select, textarea {
+      font: inherit;
+      color: var(--text);
+    }
+
+    button, select, input[type="number"], input[type="text"], textarea {
+      background: #111619;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+    }
+
+    button {
+      min-height: 32px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+
+    button:hover { border-color: var(--teal); }
+    button.primary { background: #14302f; border-color: #2b7d76; }
+    button.warn { background: #302719; border-color: #8d6824; }
+    button.danger { background: #331d20; border-color: #914045; }
+    button:disabled { opacity: .45; cursor: default; }
+
+    input, select { min-height: 30px; padding: 4px 7px; }
+    input[type="checkbox"] { min-height: 0; }
+
+    textarea {
+      width: 100%;
+      min-height: 118px;
+      padding: 8px;
+      resize: vertical;
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #15191c;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0;
+      font-weight: 750;
+    }
+
+    .header-sub {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .main {
+      display: grid;
+      grid-template-columns: minmax(280px, 340px) minmax(520px, 1.5fr) minmax(360px, 520px);
+      gap: 10px;
+      padding: 10px;
+      min-height: 0;
+    }
+
+    section, .panel {
+      background: var(--panel);
+      border: 1px solid var(--line-soft);
+      border-radius: 8px;
+      min-width: 0;
+    }
+
+    .side, .preview {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .panel {
+      padding: 10px;
+    }
+
+    h2 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      color: var(--teal);
+      font-weight: 750;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    label.field {
+      display: grid;
+      gap: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    label.field input, label.field select {
+      width: 100%;
+      color: var(--text);
+    }
+
+    .fileline {
+      display: grid;
+      gap: 8px;
+    }
+
+    #fileInput { width: 100%; }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .structure-list {
+      display: grid;
+      gap: 4px;
+      max-height: 240px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .segment {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px;
+      padding: 6px 8px;
+      border: 1px solid var(--line-soft);
+      border-radius: 6px;
+      background: #151a1d;
+      cursor: pointer;
+    }
+
+    .segment:hover { border-color: var(--teal); }
+    .segment.header { background: linear-gradient(90deg, var(--header), transparent); }
+    .segment.data { background: linear-gradient(90deg, var(--data), transparent); }
+    .segment.meta { background: linear-gradient(90deg, rgba(119,168,255,.15), transparent); }
+    .segment .name { font-weight: 700; }
+    .segment .range { color: var(--muted); font-family: var(--mono); font-size: 11px; }
+    .segment .desc { grid-column: 1 / -1; color: var(--muted); font-size: 12px; }
+
+    .hex-panel {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .hex-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line-soft);
+      background: var(--panel);
+    }
+
+    .hex-status {
+      padding: 7px 10px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--line-soft);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    .hex-wrap {
+      position: relative;
+      min-height: 0;
+      overflow: auto;
+      background: #0d1012;
+      font-family: var(--mono);
+      font-size: 14px;
+      line-height: 24px;
+    }
+
+    .hex-spacer { position: relative; }
+
+    .hex-rows {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+    }
+
+    .hex-row {
+      display: grid;
+      grid-template-columns: 92px minmax(360px, 1fr) minmax(130px, .55fr);
+      min-height: 24px;
+      border-bottom: 1px solid rgba(255,255,255,.03);
+      white-space: nowrap;
+    }
+
+    .hex-addr {
+      color: var(--blue);
+      padding-left: 10px;
+      user-select: none;
+    }
+
+    .hex-bytes {
+      display: flex;
+      gap: 3px;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .byte {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 20px;
+      border-radius: 4px;
+      color: #dce5e4;
+      cursor: pointer;
+      user-select: none;
+      border: 1px solid transparent;
+    }
+
+    .byte:hover { border-color: var(--teal); }
+    .byte.selected { background: var(--mark); border-color: var(--teal); }
+    .byte.changed { background: var(--changed); color: #ffe6a9; }
+    .byte.protected { box-shadow: inset 0 -2px 0 rgba(255,107,107,.6); }
+    .byte.data { box-shadow: inset 0 -2px 0 rgba(123,216,143,.55); }
+
+    .hex-ascii {
+      color: var(--muted);
+      overflow: hidden;
+      padding-right: 8px;
+    }
+
+    .bit-row {
+      grid-column: 2 / 4;
+      color: #73817f;
+      font-size: 11px;
+      line-height: 16px;
+      padding-bottom: 3px;
+      white-space: normal;
+      word-break: break-all;
+    }
+
+    .bottom-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      border-top: 1px solid var(--line-soft);
+      background: var(--panel);
+    }
+
+    .preview-panel {
+      min-height: 0;
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 8px 8px 0;
+      flex-wrap: wrap;
+    }
+
+    .tab {
+      min-height: 29px;
+      padding: 4px 9px;
+      font-size: 12px;
+    }
+
+    .tab.active {
+      border-color: var(--teal);
+      background: #12302e;
+    }
+
+    .view {
+      display: none;
+      min-height: 0;
+      overflow: auto;
+      padding: 10px;
+    }
+
+    .view.active { display: block; }
+
+    #imageView img {
+      display: block;
+      max-width: 100%;
+      max-height: 45vh;
+      background: repeating-conic-gradient(#252a2e 0 25%, #15191c 0 50%) 0 / 18px 18px;
+      border: 1px solid var(--line-soft);
+      image-rendering: auto;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      min-height: 140px;
+      background: #0d1012;
+      border: 1px solid var(--line-soft);
+      border-radius: 6px;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    audio {
+      width: 100%;
+      margin: 8px 0;
+    }
+
+    .console {
+      border-top: 1px solid var(--line);
+      background: #0b0e10;
+      min-height: 130px;
+      max-height: 210px;
+      overflow: auto;
+      padding: 8px 12px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: #d6dddc;
+    }
+
+    .log-warn { color: var(--amber); }
+    .log-error { color: var(--red); }
+    .log-ok { color: var(--green); }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 24px;
+      padding: 2px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      background: #111619;
+    }
+
+    .mono { font-family: var(--mono); }
+
+    @media (max-width: 1220px) {
+      .main { grid-template-columns: 320px 1fr; }
+      .preview { grid-column: 1 / -1; min-height: 460px; }
+    }
+
+    @media (max-width: 820px) {
+      .main { grid-template-columns: 1fr; }
+      .hex-row { grid-template-columns: 84px minmax(320px, 1fr) 120px; }
+      header { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>Binary Glitch Laboratory</h1>
+        <div class="header-sub">Hexを読み、構造を見て、実データだけを壊して遊ぶ学習用ラボ</div>
+      </div>
+      <div class="row">
+        <span class="pill" id="fileInfo">demo text / 103 bytes</span>
+        <button id="downloadBtn">保存</button>
+        <button id="recipeBtn">レシピ</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <aside class="side">
+        <section class="panel">
+          <h2>Input</h2>
+          <div class="fileline">
+            <input id="fileInput" type="file" accept=".txt,.csv,.json,.html,.css,.js,.png,.gif,.bmp,.jpg,.jpeg,.wav,.mp3,.mid,.midi,application/octet-stream,audio/*,image/*,text/*">
+            <div class="grid">
+              <label class="field">force format
+                <select id="formatOverride">
+                  <option value="auto">auto detect</option>
+                  <option value="raw">raw binary</option>
+                  <option value="text">UTF-8 text</option>
+                  <option value="png">PNG payload</option>
+                  <option value="gif">GIF payload</option>
+                  <option value="bmp">BMP pixels</option>
+                  <option value="jpg">JPEG payload</option>
+                  <option value="wav">WAV PCM8</option>
+                  <option value="mp3">MP3 frames</option>
+                  <option value="midi">MIDI track</option>
+                </select>
+              </label>
+              <label class="field">work limit
+                <select id="workLimit">
+                  <option value="full">full file</option>
+                  <option value="auto" selected>auto cut</option>
+                  <option value="65536">64 KiB</option>
+                  <option value="131072">128 KiB</option>
+                  <option value="262144">256 KiB</option>
+                  <option value="524288">512 KiB</option>
+                </select>
+              </label>
+              <label class="field">image width<input id="imageWidth" type="number" min="1" max="4096" value="128"></label>
+            </div>
+            <div class="row">
+              <button id="loadTextBtn">テキストをbyte化</button>
+              <button id="demoBtn">デモ</button>
+            </div>
+            <textarea id="textInput">Binary Glitch Laboratory
+UTF-8 text, image bytes, sound data.
+00 FF 21 F9 49 44 41 54 data sections.</textarea>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Structure</h2>
+          <div class="hint" id="structureHint">セグメントを押すとHex選択に反映します。</div>
+          <div class="structure-list" id="structureList"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Mutation</h2>
+          <div class="grid">
+            <label class="field">start offset<input id="rangeStart" type="number" min="0" value="0"></label>
+            <label class="field">end offset<input id="rangeEnd" type="number" min="0" value="0"></label>
+            <label class="field">probability %<input id="prob" type="number" min="0" max="100" value="12"></label>
+            <label class="field">seed<input id="seed" type="number" value="2701"></label>
+            <label class="field">match bytes<input id="banBytes" type="text" value="*"></label>
+            <label class="field">paint with<input id="replaceByte" type="text" value="00"></label>
+            <label class="field">bit offset<input id="bitOffset" type="number" min="0" max="7" value="0"></label>
+            <label class="field">bit shift<input id="bitShift" type="number" min="-7" max="7" value="0"></label>
+            <label class="field">repeat min<input id="repMin" type="number" min="1" value="8"></label>
+            <label class="field">repeat max<input id="repMax" type="number" min="1" value="64"></label>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <label class="pill"><input id="protectHeaders" type="checkbox" checked> ヘッダ保護</label>
+            <label class="pill"><input id="audioTanh" type="checkbox" checked> 音声tanh</label>
+            <label class="pill"><input id="showBits" type="checkbox"> bit表示</label>
+            <label class="pill"><input id="matchOnly" type="checkbox"> matchのみ</label>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <button class="primary" id="applyByteBan">byte ban</button>
+            <button class="primary" id="applyBitOps">bit操作</button>
+            <button class="primary" id="applyRepeat">反復</button>
+            <button class="warn" id="applyRandom">randomize</button>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <button id="undoBtn">Undo</button>
+            <button id="redoBtn">Redo</button>
+            <button class="danger" id="resetBtn">元に戻す</button>
+          </div>
+        </section>
+      </aside>
+
+      <section class="hex-panel">
+        <div class="hex-toolbar">
+          <div class="row">
+            <strong>Hex Editor</strong>
+            <select id="bytesPerRow">
+              <option value="16">16 bytes</option>
+              <option value="24">24 bytes</option>
+              <option value="32">32 bytes</option>
+            </select>
+            <span class="pill" id="selectionInfo">selection: 000000..000000</span>
+          </div>
+          <div class="row">
+            <button id="jumpSelectionBtn">選択へ</button>
+            <button id="copyHexBtn">Hexコピー</button>
+          </div>
+        </div>
+        <div class="hex-status" id="hexStatus">offset / hex / text</div>
+        <div class="hex-wrap" id="hexWrap">
+          <div class="hex-spacer" id="hexSpacer">
+            <div class="hex-rows" id="hexRows"></div>
+          </div>
+        </div>
+        <div class="bottom-actions">
+          <span class="hint">byteをクリックすると範囲選択。ダブルクリックで値を編集できます。</span>
+          <span class="pill" id="changeInfo">changed: 0 bytes</span>
+        </div>
+      </section>
+
+      <aside class="preview">
+        <section class="preview-panel">
+          <div class="tabs">
+            <button class="tab active" data-view="textView">Text</button>
+            <button class="tab" data-view="imageView">Image</button>
+            <button class="tab" data-view="audioView">Audio</button>
+            <button class="tab" data-view="waveView">Wave</button>
+            <button class="tab" data-view="metaView">Meta</button>
+          </div>
+          <div class="view active" id="textView"><pre id="textPreview"></pre></div>
+          <div class="view" id="imageView">
+            <img id="imagePreview" alt="image preview">
+            <div class="hint" id="imageStatus"></div>
+          </div>
+          <div class="view" id="audioView">
+            <audio id="audioPreview" controls></audio>
+            <div class="row">
+              <button id="playMidiBtn">MIDI再生</button>
+              <button id="stopMidiBtn">停止</button>
+            </div>
+            <div class="hint" id="audioStatus"></div>
+          </div>
+          <div class="view" id="waveView">
+            <canvas id="waveCanvas" width="900" height="240"></canvas>
+          </div>
+          <div class="view" id="metaView"><pre id="metaPreview"></pre></div>
+        </section>
+      </aside>
+    </main>
+
+    <div class="console" id="console"></div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const enc = new TextEncoder();
+    const dec = new TextDecoder("utf-8", { fatal: false });
+    const state = {
+      original: new Uint8Array(),
+      data: new Uint8Array(),
+      name: "demo.txt",
+      mime: "text/plain",
+      kind: "text",
+      segments: [],
+      safeRanges: [],
+      selection: { start: 0, end: 0 },
+      changed: new Set(),
+      history: [],
+      future: [],
+      objectUrls: [],
+      midiTimer: null,
+      audioCtx: null
+    };
+
+    const log = {
+      line(cls, msg) {
+        const el = document.createElement("div");
+        el.className = cls || "";
+        el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        $("console").appendChild(el);
+        $("console").scrollTop = $("console").scrollHeight;
+      },
+      info(msg) { this.line("", msg); },
+      ok(msg) { this.line("log-ok", msg); },
+      warn(msg) { this.line("log-warn", msg); },
+      error(msg) { this.line("log-error", msg); }
+    };
+
+    function hex(n, width = 2) {
+      return Math.max(0, n).toString(16).toUpperCase().padStart(width, "0");
+    }
+
+    function asciiByte(b) {
+      return b >= 0x20 && b <= 0x7E ? String.fromCharCode(b) : ".";
+    }
+
+    function clamp(v, min, max) {
+      return Math.min(max, Math.max(min, v));
+    }
+
+    function bytesToString(d, start, len) {
+      let s = "";
+      for (let i = start; i < Math.min(d.length, start + len); i++) s += String.fromCharCode(d[i]);
+      return s;
+    }
+
+    function u16le(d, o) { return o + 1 < d.length ? d[o] | (d[o + 1] << 8) : 0; }
+    function u32le(d, o) { return o + 3 < d.length ? (d[o] | (d[o + 1] << 8) | (d[o + 2] << 16) | (d[o + 3] << 24)) >>> 0 : 0; }
+    function u16be(d, o) { return o + 1 < d.length ? (d[o] << 8) | d[o + 1] : 0; }
+    function u32be(d, o) { return o + 3 < d.length ? (((d[o] << 24) >>> 0) | (d[o + 1] << 16) | (d[o + 2] << 8) | d[o + 3]) >>> 0 : 0; }
+    function w16le(d, o, v) { d[o] = v & 255; d[o + 1] = (v >> 8) & 255; }
+    function w32le(d, o, v) { d[o] = v & 255; d[o + 1] = (v >> 8) & 255; d[o + 2] = (v >> 16) & 255; d[o + 3] = (v >> 24) & 255; }
+    function w32be(d, o, v) { d[o] = (v >> 24) & 255; d[o + 1] = (v >> 16) & 255; d[o + 2] = (v >> 8) & 255; d[o + 3] = v & 255; }
+
+    function addSegment(list, name, start, end, role, desc) {
+      if (end <= start) return;
+      list.push({ name, start: clamp(start, 0, state.data.length), end: clamp(end, 0, state.data.length), role, desc: desc || "" });
+    }
+
+    function detectKind(name, mime, d) {
+      const lower = name.toLowerCase();
+      if (d.length >= 8 && d[0] === 0x89 && bytesToString(d, 1, 3) === "PNG") return "png";
+      if (bytesToString(d, 0, 3) === "GIF") return "gif";
+      if (bytesToString(d, 0, 2) === "BM") return "bmp";
+      if (d[0] === 0xFF && d[1] === 0xD8) return "jpg";
+      if (bytesToString(d, 0, 4) === "RIFF" && bytesToString(d, 8, 4) === "WAVE") return "wav";
+      if (bytesToString(d, 0, 4) === "MThd" || lower.endsWith(".mid") || lower.endsWith(".midi")) return "midi";
+      if (bytesToString(d, 0, 3) === "ID3" || lower.endsWith(".mp3") || mime.includes("mpeg")) return "mp3";
+      if (mime.startsWith("image/")) return "image";
+      if (mime.startsWith("audio/")) return "audio";
+      if (mime.startsWith("text/") || /\.(txt|csv|json|html|css|js|md|xml)$/i.test(lower)) return "text";
+      return "binary";
+    }
+
+    function analyze() {
+      const d = state.data;
+      const seg = [];
+      state.safeRanges = [];
+      const kind = detectKind(state.name, state.mime, d);
+      state.kind = kind;
+      if (kind === "png") parsePng(d, seg);
+      else if (kind === "gif") parseGif(d, seg);
+      else if (kind === "bmp") parseBmp(d, seg);
+      else if (kind === "jpg") parseJpeg(d, seg);
+      else if (kind === "wav") parseWav(d, seg);
+      else if (kind === "midi") parseMidi(d, seg);
+      else if (kind === "mp3") parseMp3(d, seg);
+      else if (kind === "text") addSegment(seg, "UTF-8 text bytes", 0, d.length, "data", "TextDecoderで本来の文字も表示します。");
+      else addSegment(seg, "raw binary", 0, d.length, "data", "未知のファイルとして全体をbyte列で扱います。");
+      state.segments = seg.length ? seg : [{ name: "all bytes", start: 0, end: d.length, role: "data", desc: "" }];
+      if (!state.safeRanges.length) {
+        const dataSegs = state.segments.filter(s => s.role === "data");
+        state.safeRanges = dataSegs.length ? dataSegs.map(s => [s.start, s.end]) : [[0, d.length]];
+      }
+      renderStructure();
+      log.ok(`解析: ${kind} / ${state.segments.length} segments / safe ranges ${state.safeRanges.length}`);
+    }
+
+    function parsePng(d, seg) {
+      addSegment(seg, "PNG signature", 0, 8, "header", "89 50 4E 47 0D 0A 1A 0A");
+      let o = 8;
+      while (o + 12 <= d.length) {
+        const len = u32be(d, o);
+        const type = bytesToString(d, o + 4, 4);
+        const start = o;
+        const dataStart = o + 8;
+        const dataEnd = Math.min(dataStart + len, d.length);
+        const end = Math.min(dataEnd + 4, d.length);
+        const role = type === "IDAT" ? "data" : (type === "IHDR" || type === "IEND" || type === "PLTE" ? "header" : "meta");
+        let desc = `${len} bytes`;
+        if (type === "IHDR" && len >= 13) desc = `${u32be(d, dataStart)} x ${u32be(d, dataStart + 4)}, bit depth ${d[dataStart + 8]}, color type ${d[dataStart + 9]}`;
+        addSegment(seg, `PNG ${type}`, start, end, role, desc);
+        if (type === "IDAT") state.safeRanges.push([dataStart, dataEnd]);
+        o = end;
+        if (type === "IEND") break;
+      }
+    }
+
+    function parseGif(d, seg) {
+      addSegment(seg, "GIF header", 0, 6, "header", bytesToString(d, 0, 6));
+      addSegment(seg, "Logical Screen Descriptor", 6, 13, "header", `${u16le(d, 6)} x ${u16le(d, 8)}`);
+      let o = 13;
+      const gct = (d[10] & 0x80) ? 3 * (1 << ((d[10] & 7) + 1)) : 0;
+      if (gct) { addSegment(seg, "Global Color Table", o, o + gct, "header", `${gct / 3} colors`); o += gct; }
+      let frame = 0;
+      while (o < d.length) {
+        const b = d[o];
+        if (b === 0x3B) { addSegment(seg, "GIF trailer", o, o + 1, "header", "3B"); break; }
+        if (b === 0x21) {
+          const label = d[o + 1];
+          let p = o + 2;
+          while (p < d.length) {
+            const size = d[p++];
+            if (size === 0) break;
+            p += size;
+          }
+          const name = label === 0xF9 ? "Graphic Control Extension 21 F9" : `Extension 21 ${hex(label)}`;
+          addSegment(seg, name, o, Math.min(p, d.length), "meta", label === 0xF9 ? "delay, transparency, disposal method" : "extension blocks");
+          o = p;
+        } else if (b === 0x2C) {
+          const start = o;
+          const lctFlag = d[o + 9] & 0x80;
+          const lct = lctFlag ? 3 * (1 << ((d[o + 9] & 7) + 1)) : 0;
+          const imgDescEnd = o + 10;
+          addSegment(seg, `Image Descriptor frame ${++frame}`, o, imgDescEnd, "header", `${u16le(d, o + 5)} x ${u16le(d, o + 7)}`);
+          o = imgDescEnd;
+          if (lct) { addSegment(seg, `Local Color Table frame ${frame}`, o, o + lct, "header", `${lct / 3} colors`); o += lct; }
+          const dataStart = o;
+          o++;
+          while (o < d.length) {
+            const size = d[o++];
+            if (size === 0) break;
+            o += size;
+          }
+          addSegment(seg, `Image Data frame ${frame}`, dataStart, Math.min(o, d.length), "data", "LZW minimum code size and image data sub-blocks");
+          state.safeRanges.push([dataStart, Math.min(o, d.length)]);
+        } else {
+          addSegment(seg, `Unknown GIF byte ${hex(b)}`, o, o + 1, "meta", "");
+          o++;
+        }
+      }
+    }
+
+    function parseBmp(d, seg) {
+      const pixelOffset = u32le(d, 10);
+      const dibSize = u32le(d, 14);
+      const width = u32le(d, 18);
+      const height = u32le(d, 22);
+      addSegment(seg, "BMP file header", 0, 14, "header", `pixel array at ${hex(pixelOffset, 8)}`);
+      addSegment(seg, "DIB header", 14, 14 + dibSize, "header", `${width} x ${height}`);
+      if (pixelOffset > 14 + dibSize) addSegment(seg, "Palette / gap", 14 + dibSize, pixelOffset, "header", "color table or reserved bytes");
+      addSegment(seg, "Pixel Array", pixelOffset, d.length, "data", "bitmap pixels");
+      state.safeRanges.push([pixelOffset, d.length]);
+    }
+
+    function parseJpeg(d, seg) {
+      addSegment(seg, "JPEG SOI", 0, 2, "header", "FF D8");
+      let o = 2;
+      let scanStarted = false;
+      while (o + 3 < d.length) {
+        if (d[o] !== 0xFF) {
+          if (scanStarted) break;
+          o++;
+          continue;
+        }
+        while (d[o] === 0xFF) o++;
+        const marker = d[o++];
+        if (marker === 0xD9) { addSegment(seg, "JPEG EOI", o - 2, o, "header", "FF D9"); break; }
+        if (marker >= 0xD0 && marker <= 0xD7) { addSegment(seg, `Restart marker FF ${hex(marker)}`, o - 2, o, "meta", ""); continue; }
+        const len = u16be(d, o);
+        const start = o - 2;
+        const end = Math.min(o + len, d.length);
+        const names = { C0: "SOF0", C2: "SOF2", C4: "DHT", DB: "DQT", DA: "SOS", DD: "DRI", E0: "APP0", E1: "APP1", FE: "COM" };
+        const key = hex(marker);
+        const name = names[key] || `Marker FF ${key}`;
+        addSegment(seg, `JPEG ${name}`, start, end, marker === 0xDA ? "header" : "meta", `${Math.max(0, len - 2)} bytes`);
+        o = end;
+        if (marker === 0xDA) {
+          const scanStart = o;
+          let eoi = d.length;
+          for (let p = o; p + 1 < d.length; p++) if (d[p] === 0xFF && d[p + 1] === 0xD9) { eoi = p; break; }
+          addSegment(seg, "JPEG compressed scan data", scanStart, eoi, "data", "entropy-coded image data");
+          state.safeRanges.push([scanStart, eoi]);
+          if (eoi + 2 <= d.length) addSegment(seg, "JPEG EOI", eoi, eoi + 2, "header", "FF D9");
+          scanStarted = true;
+          break;
+        }
+      }
+    }
+
+    function parseWav(d, seg) {
+      addSegment(seg, "RIFF/WAVE header", 0, 12, "header", `RIFF size ${u32le(d, 4)}`);
+      let o = 12;
+      while (o + 8 <= d.length) {
+        const id = bytesToString(d, o, 4);
+        const len = u32le(d, o + 4);
+        const start = o;
+        const dataStart = o + 8;
+        const dataEnd = Math.min(dataStart + len, d.length);
+        const end = Math.min(dataEnd + (len % 2), d.length);
+        let desc = `${len} bytes`;
+        if (id === "fmt " && len >= 16) desc = `format ${u16le(d, dataStart)}, ${u16le(d, dataStart + 2)} ch, ${u32le(d, dataStart + 4)} Hz, ${u16le(d, dataStart + 14)} bit`;
+        addSegment(seg, `WAV ${id || "chunk"}`, start, end, id === "data" ? "data" : "header", desc);
+        if (id === "data") state.safeRanges.push([dataStart, dataEnd]);
+        o = end;
+      }
+    }
+
+    function parseMidi(d, seg) {
+      let o = 0;
+      if (bytesToString(d, 0, 4) === "MThd") {
+        const len = u32be(d, 4);
+        addSegment(seg, "MIDI Header MThd", 0, 8 + len, "header", `format ${u16be(d, 8)}, tracks ${u16be(d, 10)}, division ${u16be(d, 12)}`);
+        o = 8 + len;
+      }
+      let t = 0;
+      while (o + 8 <= d.length) {
+        const id = bytesToString(d, o, 4);
+        const len = u32be(d, o + 4);
+        const end = Math.min(o + 8 + len, d.length);
+        addSegment(seg, id === "MTrk" ? `MIDI Track ${++t}` : `MIDI ${id}`, o, end, id === "MTrk" ? "data" : "meta", `${len} bytes`);
+        if (id === "MTrk") state.safeRanges.push([o + 8, end]);
+        o = end;
+      }
+    }
+
+    function parseMp3(d, seg) {
+      let o = 0;
+      if (bytesToString(d, 0, 3) === "ID3" && d.length >= 10) {
+        const size = ((d[6] & 0x7F) << 21) | ((d[7] & 0x7F) << 14) | ((d[8] & 0x7F) << 7) | (d[9] & 0x7F);
+        addSegment(seg, "ID3v2 tag", 0, Math.min(10 + size, d.length), "header", `${size} bytes`);
+        o = Math.min(10 + size, d.length);
+      }
+      addSegment(seg, "MP3 audio frames", o, d.length, "data", "frame sync FF Ex 以降の圧縮音声");
+      state.safeRanges.push([o, d.length]);
+    }
+
+    function renderStructure() {
+      const list = $("structureList");
+      list.innerHTML = "";
+      for (const s of state.segments) {
+        const div = document.createElement("div");
+        div.className = `segment ${s.role}`;
+        div.innerHTML = `<span class="name">${s.name}</span><span class="range">${hex(s.start, 6)}..${hex(s.end, 6)}</span><span class="desc">${s.desc}</span>`;
+        div.addEventListener("click", () => setSelection(s.start, Math.max(s.start, s.end - 1), true));
+        list.appendChild(div);
+      }
+    }
+
+    function snapshot() {
+      state.history.push(new Uint8Array(state.data));
+      if (state.history.length > 30) state.history.shift();
+      state.future = [];
+    }
+
+    function loadData(bytes, name, mime) {
+      const prepared = prepareInputBytes(new Uint8Array(bytes), name, mime);
+      bytes = prepared.bytes;
+      name = prepared.name;
+      mime = prepared.mime;
+      state.original = new Uint8Array(bytes);
+      state.data = new Uint8Array(bytes);
+      state.name = name || "untitled.bin";
+      state.mime = mime || "application/octet-stream";
+      state.changed.clear();
+      state.history = [];
+      state.future = [];
+      setSelection(0, Math.max(0, state.data.length - 1), false);
+      analyze();
+      renderAll();
+      log.ok(`読み込み: ${state.name} / ${state.data.length} bytes`);
+    }
+
+    function prepareInputBytes(bytes, name, mime) {
+      let out = new Uint8Array(bytes);
+      let outName = name || "untitled.bin";
+      let outMime = mime || "application/octet-stream";
+      const force = $("formatOverride") ? $("formatOverride").value : "auto";
+      if (force && force !== "auto") {
+        const wrapped = force === "raw" ? { bytes: out, ext: "bin", mime: "application/octet-stream" } : wrapAsFormat(out, force);
+        out = wrapped.bytes;
+        outMime = wrapped.mime;
+        outName = replaceExt(outName, wrapped.ext);
+        log.info(`形式指定: ${force} として解釈するための外枠を付与しました。`);
+      }
+      const limit = readWorkLimit(out.length);
+      if (limit && out.length > limit) {
+        const before = out.length;
+        const kind = force && force !== "auto" && force !== "raw" ? force : detectKind(outName, outMime, out);
+        out = truncateForWork(out, kind, limit);
+        log.warn(`作業用カット: ${before} bytes -> ${out.length} bytes (${kind})`);
+      }
+      return { bytes: out, name: outName, mime: outMime };
+    }
+
+    function readWorkLimit(size) {
+      const el = $("workLimit");
+      if (!el || el.value === "full") return 0;
+      if (el.value === "auto") {
+        if (size > 524288) return 262144;
+        if (size > 131072) return 131072;
+        return 0;
+      }
+      return +el.value || 0;
+    }
+
+    function replaceExt(name, ext) {
+      const clean = ext.replace(/^\./, "");
+      const i = name.lastIndexOf(".");
+      return (i > 0 ? name.slice(0, i) : name) + "." + clean;
+    }
+
+    function readImageWidth(fallback = 128) {
+      const el = $("imageWidth");
+      return clamp(Math.floor(el ? +el.value || fallback : fallback), 1, 4096);
+    }
+
+    function bytesFromAscii(str) {
+      const out = new Uint8Array(str.length);
+      for (let i = 0; i < str.length; i++) out[i] = str.charCodeAt(i) & 255;
+      return out;
+    }
+
+    function concatBytes(...parts) {
+      const len = parts.reduce((n, p) => n + p.length, 0);
+      const out = new Uint8Array(len);
+      let o = 0;
+      for (const p of parts) { out.set(p, o); o += p.length; }
+      return out;
+    }
+
+    function wrapAsFormat(payload, kind) {
+      const data = new Uint8Array(payload);
+      if (kind === "text") return { bytes: data, ext: "txt", mime: "text/plain" };
+      if (kind === "mp3") return { bytes: data, ext: "mp3", mime: "audio/mpeg" };
+      if (kind === "jpg") return { bytes: concatBytes(new Uint8Array([0xFF, 0xD8, 0xFF, 0xDA, 0, 8, 1, 1, 0, 0]), data, new Uint8Array([0xFF, 0xD9])), ext: "jpg", mime: "image/jpeg" };
+      if (kind === "gif") return { bytes: makeGif(data), ext: "gif", mime: "image/gif" };
+      if (kind === "bmp") return { bytes: makeBmp(data), ext: "bmp", mime: "image/bmp" };
+      if (kind === "wav") return { bytes: makeWav(data), ext: "wav", mime: "audio/wav" };
+      if (kind === "midi") return { bytes: makeMidi(data), ext: "mid", mime: "audio/midi" };
+      if (kind === "png") {
+        return { bytes: makePng(data), ext: "png", mime: "image/png" };
+      }
+      return { bytes: data, ext: "bin", mime: "application/octet-stream" };
+    }
+
+    function makePng(payload) {
+      const w = readImageWidth(128);
+      const h = Math.max(1, Math.ceil(payload.length / w));
+      const raw = new Uint8Array((w * 3 + 1) * h);
+      for (let y = 0; y < h; y++) {
+        const row = y * (w * 3 + 1);
+        raw[row] = 0;
+        for (let x = 0; x < w; x++) {
+          const src = y * w + x;
+          const v = payload[src % Math.max(1, payload.length)] || 0;
+          raw[row + 1 + x * 3] = v;
+          raw[row + 2 + x * 3] = payload[(src + 1) % Math.max(1, payload.length)] || v;
+          raw[row + 3 + x * 3] = payload[(src + 2) % Math.max(1, payload.length)] || v;
+        }
+      }
+      const ihdr = new Uint8Array(13);
+      w32be(ihdr, 0, w);
+      w32be(ihdr, 4, h);
+      ihdr[8] = 8;
+      ihdr[9] = 2;
+      const signature = new Uint8Array([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+      return concatBytes(signature, pngChunk("IHDR", ihdr), pngChunk("IDAT", zlibStore(raw)), pngChunk("IEND", new Uint8Array()));
+    }
+
+    function pngChunk(type, data) {
+      const out = new Uint8Array(12 + data.length);
+      w32be(out, 0, data.length);
+      out.set(bytesFromAscii(type), 4);
+      out.set(data, 8);
+      w32be(out, 8 + data.length, crc32(out.slice(4, 8 + data.length)));
+      return out;
+    }
+
+    function zlibStore(raw) {
+      const blocks = [];
+      for (let o = 0; o < raw.length; o += 65535) {
+        const part = raw.slice(o, o + 65535);
+        const head = new Uint8Array(5);
+        head[0] = o + part.length >= raw.length ? 1 : 0;
+        w16le(head, 1, part.length);
+        w16le(head, 3, (~part.length) & 0xFFFF);
+        blocks.push(head, part);
+      }
+      const body = concatBytes(...blocks);
+      const out = new Uint8Array(2 + body.length + 4);
+      out[0] = 0x78; out[1] = 0x01;
+      out.set(body, 2);
+      w32be(out, out.length - 4, adler32(raw));
+      return out;
+    }
+
+    function adler32(d) {
+      let a = 1, b = 0;
+      for (let i = 0; i < d.length; i++) { a = (a + d[i]) % 65521; b = (b + a) % 65521; }
+      return ((b << 16) | a) >>> 0;
+    }
+
+    function crc32(d) {
+      let c = 0xFFFFFFFF;
+      for (let i = 0; i < d.length; i++) {
+        c ^= d[i];
+        for (let k = 0; k < 8; k++) c = (c >>> 1) ^ (0xEDB88320 & -(c & 1));
+      }
+      return (c ^ 0xFFFFFFFF) >>> 0;
+    }
+
+    function makeBmp(payload) {
+      const w = readImageWidth(128);
+      const h = Math.max(1, Math.ceil(payload.length / w));
+      const row = Math.ceil((w * 3) / 4) * 4;
+      const pixelSize = row * h;
+      const out = new Uint8Array(54 + pixelSize);
+      out.set(bytesFromAscii("BM"), 0);
+      w32le(out, 2, out.length);
+      w32le(out, 10, 54);
+      w32le(out, 14, 40);
+      w32le(out, 18, w);
+      w32le(out, 22, h);
+      w16le(out, 26, 1);
+      w16le(out, 28, 24);
+      w32le(out, 34, pixelSize);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const src = (h - 1 - y) * w + x;
+          const v = payload[src % Math.max(1, payload.length)] || 0;
+          const o = 54 + y * row + x * 3;
+          out[o] = v;
+          out[o + 1] = payload[(src + 1) % Math.max(1, payload.length)] || v;
+          out[o + 2] = payload[(src + 2) % Math.max(1, payload.length)] || v;
+        }
+      }
+      return out;
+    }
+
+    function makeGif(payload) {
+      const w = clamp(readImageWidth(64), 1, 255);
+      const h = Math.max(1, Math.min(255, Math.ceil(payload.length / w)));
+      const header = bytesFromAscii("GIF89a");
+      const lsd = new Uint8Array([w, 0, h, 0, 0xF7, 0, 0]);
+      const pal = new Uint8Array(256 * 3);
+      for (let i = 0; i < 256; i++) { pal[i * 3] = i; pal[i * 3 + 1] = payload[i % Math.max(1, payload.length)] || i; pal[i * 3 + 2] = 255 - i; }
+      const gce = new Uint8Array([0x21, 0xF9, 4, 0, 8, 0, 0, 0]);
+      const desc = new Uint8Array([0x2C, 0, 0, 0, 0, w, 0, h, 0, 0]);
+      const img = new Uint8Array([2, 1, 0, 0]);
+      return concatBytes(header, lsd, pal, gce, desc, img, new Uint8Array([0x3B]));
+    }
+
+    function makeWav(payload) {
+      const len = payload.length;
+      const out = new Uint8Array(44 + len);
+      out.set(bytesFromAscii("RIFF"), 0);
+      w32le(out, 4, 36 + len);
+      out.set(bytesFromAscii("WAVEfmt "), 8);
+      w32le(out, 16, 16);
+      w16le(out, 20, 1);
+      w16le(out, 22, 1);
+      w32le(out, 24, 22050);
+      w32le(out, 28, 22050);
+      w16le(out, 32, 1);
+      w16le(out, 34, 8);
+      out.set(bytesFromAscii("data"), 36);
+      w32le(out, 40, len);
+      out.set(payload, 44);
+      return out;
+    }
+
+    function makeMidi(payload) {
+      const events = [];
+      const maxNotes = Math.min(96, payload.length);
+      for (let i = 0; i < maxNotes; i++) {
+        const note = 36 + (payload[i] % 48);
+        events.push(0, 0x90, note, 64, 60, 0x80, note, 0);
+      }
+      events.push(0, 0xFF, 0x2F, 0);
+      const trk = new Uint8Array(events);
+      const head = new Uint8Array(14);
+      head.set(bytesFromAscii("MThd"), 0);
+      w32be(head, 4, 6);
+      head[9] = 0; head[11] = 1; head[12] = 1; head[13] = 0xE0;
+      const chunk = new Uint8Array(8);
+      chunk.set(bytesFromAscii("MTrk"), 0);
+      w32be(chunk, 4, trk.length);
+      return concatBytes(head, chunk, trk);
+    }
+
+    function truncateForWork(bytes, kind, limit) {
+      const d = bytes.slice(0, Math.max(16, limit));
+      if (kind === "jpg" || kind === "jpeg") return concatBytes(d.slice(0, Math.max(2, d.length - 2)), new Uint8Array([0xFF, 0xD9]));
+      if (kind === "gif") return concatBytes(d[d.length - 1] === 0x3B ? d : d.slice(0, Math.max(1, d.length - 1)), new Uint8Array([0x3B]));
+      if (kind === "mp3" || kind === "text" || kind === "binary" || kind === "raw") return d;
+      if (kind === "bmp" && d.length > 54) { w32le(d, 2, d.length); return d; }
+      if (kind === "wav" && d.length > 44) {
+        const dataSegStart = 36;
+        if (bytesToString(d, dataSegStart, 4) === "data") w32le(d, 40, Math.max(0, d.length - 44));
+        w32le(d, 4, Math.max(0, d.length - 8));
+        return d;
+      }
+      if (kind === "midi") {
+        const tracks = [];
+        let o = bytesToString(d, 0, 4) === "MThd" ? 14 : 0;
+        while (o + 8 <= d.length) {
+          const len = u32be(d, o + 4);
+          if (o + 8 + len > d.length) {
+            const newLen = Math.max(0, d.length - o - 8);
+            w32be(d, o + 4, newLen);
+            break;
+          }
+          tracks.push(o);
+          o += 8 + len;
+        }
+        return d;
+      }
+      if (kind === "png") log.warn("PNGは途中カットするとCRCや圧縮ストリームが壊れやすいです。構造学習用の作業スライスとして扱います。");
+      return d;
+    }
+
+    function setSelection(start, end, scroll) {
+      start = clamp(Math.floor(start || 0), 0, Math.max(0, state.data.length - 1));
+      end = clamp(Math.floor(end || 0), 0, Math.max(0, state.data.length - 1));
+      if (end < start) [start, end] = [end, start];
+      state.selection = { start, end };
+      $("rangeStart").value = start;
+      $("rangeEnd").value = end;
+      updateSelectionInfo();
+      if (scroll) {
+        const bpr = +$("bytesPerRow").value;
+        $("hexWrap").scrollTop = Math.floor(start / bpr) * rowHeight();
+      }
+      renderHex();
+    }
+
+    function updateSelectionFromInputs() {
+      setSelection(+$("rangeStart").value, +$("rangeEnd").value, true);
+    }
+
+    function updateSelectionInfo() {
+      const s = state.selection;
+      $("selectionInfo").textContent = `selection: ${hex(s.start, 6)}..${hex(s.end, 6)} (${Math.max(0, s.end - s.start + 1)} bytes)`;
+    }
+
+    function isProtected(idx) {
+      return state.segments.some(s => s.role === "header" && idx >= s.start && idx < s.end);
+    }
+
+    function isSafe(idx) {
+      return state.safeRanges.some(r => idx >= r[0] && idx < r[1]);
+    }
+
+    function allowedIndices(start, end) {
+      const protect = $("protectHeaders").checked;
+      const out = [];
+      for (let i = start; i <= end && i < state.data.length; i++) {
+        if (!protect || isSafe(i)) out.push(i);
+      }
+      return out;
+    }
+
+    function rowHeight() {
+      return $("showBits").checked ? 43 : 24;
+    }
+
+    function renderHex() {
+      const wrap = $("hexWrap");
+      const rowsEl = $("hexRows");
+      const spacer = $("hexSpacer");
+      const d = state.data;
+      const bpr = +$("bytesPerRow").value;
+      const rh = rowHeight();
+      const totalRows = Math.ceil(d.length / bpr);
+      spacer.style.height = `${Math.max(rh, totalRows * rh)}px`;
+      const first = clamp(Math.floor(wrap.scrollTop / rh) - 4, 0, totalRows);
+      const visible = Math.ceil(wrap.clientHeight / rh) + 10;
+      rowsEl.style.transform = `translateY(${first * rh}px)`;
+      rowsEl.innerHTML = "";
+      for (let r = first; r < Math.min(totalRows, first + visible); r++) {
+        const start = r * bpr;
+        const row = document.createElement("div");
+        row.className = "hex-row";
+        const addr = document.createElement("div");
+        addr.className = "hex-addr";
+        addr.textContent = hex(start, 8);
+        const bytes = document.createElement("div");
+        bytes.className = "hex-bytes";
+        const asc = document.createElement("div");
+        asc.className = "hex-ascii";
+        let ascText = "";
+        let bitText = "";
+        for (let j = 0; j < bpr && start + j < d.length; j++) {
+          const idx = start + j;
+          const b = d[idx];
+          const el = document.createElement("span");
+          el.className = "byte";
+          if (idx >= state.selection.start && idx <= state.selection.end) el.classList.add("selected");
+          if (state.changed.has(idx)) el.classList.add("changed");
+          if (isProtected(idx)) el.classList.add("protected");
+          else if (isSafe(idx)) el.classList.add("data");
+          el.textContent = hex(b);
+          el.title = `${hex(idx, 8)} / ${b} / ${b.toString(2).padStart(8, "0")}`;
+          el.dataset.idx = idx;
+          el.addEventListener("click", (ev) => {
+            const i = +ev.currentTarget.dataset.idx;
+            if (ev.shiftKey) setSelection(state.selection.start, i, false);
+            else setSelection(i, i, false);
+          });
+          el.addEventListener("dblclick", editByte);
+          bytes.appendChild(el);
+          ascText += asciiByte(b);
+          bitText += b.toString(2).padStart(8, "0") + " ";
+        }
+        asc.textContent = ascText;
+        row.append(addr, bytes, asc);
+        if ($("showBits").checked) {
+          const bits = document.createElement("div");
+          bits.className = "bit-row";
+          bits.textContent = bitText;
+          row.appendChild(bits);
+        }
+        rowsEl.appendChild(row);
+      }
+      $("hexStatus").textContent = `${state.name} / ${state.kind} / ${d.length} bytes / row ${bpr} bytes`;
+      $("changeInfo").textContent = `changed: ${state.changed.size} bytes`;
+    }
+
+    function editByte(ev) {
+      const idx = +ev.currentTarget.dataset.idx;
+      const next = prompt(`offset ${hex(idx, 8)} の値`, hex(state.data[idx]));
+      if (next == null) return;
+      const v = parseInt(next.trim(), 16);
+      if (!Number.isFinite(v) || v < 0 || v > 255) { log.warn("Hex byteは00..FFで入力してください。"); return; }
+      snapshot();
+      state.data[idx] = v;
+      updateChanged(idx);
+      analyze();
+      renderAll();
+    }
+
+    function updateChanged(idx) {
+      if (state.data[idx] !== state.original[idx]) state.changed.add(idx);
+      else state.changed.delete(idx);
+    }
+
+    function rebuildChanged() {
+      state.changed.clear();
+      const n = Math.max(state.data.length, state.original.length);
+      for (let i = 0; i < n; i++) if (state.data[i] !== state.original[i]) state.changed.add(i);
+    }
+
+    function parseHexList(str) {
+      return (str || "").split(/[\s,]+/).filter(Boolean).map(x => parseInt(x, 16)).filter(x => Number.isFinite(x) && x >= 0 && x <= 255);
+    }
+
+    function rng(seed) {
+      let x = (seed >>> 0) || 1;
+      return () => {
+        x ^= x << 13; x ^= x >>> 17; x ^= x << 5;
+        return ((x >>> 0) / 4294967296);
+      };
+    }
+
+    function applyToSelection(name, fn) {
+      updateSelectionFromInputs();
+      const { start, end } = state.selection;
+      const idxs = allowedIndices(start, end);
+      if (!idxs.length) { log.warn("操作可能なbyteがありません。ヘッダ保護を外すか、実データ領域を選んでください。"); return; }
+      snapshot();
+      fn(idxs, rng(+$("seed").value || 1));
+      if (state.kind === "wav" && $("audioTanh").checked) clampWavAudio();
+      rebuildChanged();
+      analyze();
+      renderAll();
+      log.ok(`${name}: ${idxs.length} candidate bytes / changed ${state.changed.size}`);
+    }
+
+    function applyByteBan() {
+      const matchText = ($("banBytes").value || "").trim();
+      const matchAll = !($("matchOnly").checked) || matchText === "" || matchText === "*";
+      const banned = new Set(parseHexList(matchText));
+      const repl = parseHexList($("replaceByte").value);
+      const prob = (+$("prob").value || 0) / 100;
+      applyToSelection("byte ban", (idxs, random) => {
+        for (const i of idxs) {
+          if ((matchAll || banned.has(state.data[i])) && random() <= prob) {
+            state.data[i] = repl.length ? repl[Math.floor(random() * repl.length)] : Math.floor(random() * 256);
+          }
+        }
+      });
+      if (!matchAll && !banned.size) log.warn("match onlyがONですが、match bytesが空です。例: 00 FF または *");
+    }
+
+    function applyRandom() {
+      const prob = (+$("prob").value || 0) / 100;
+      applyToSelection("randomize", (idxs, random) => {
+        for (const i of idxs) if (random() <= prob) state.data[i] = Math.floor(random() * 256);
+      });
+    }
+
+    function applyBitOps() {
+      const bitOffset = (+$("bitOffset").value || 0) & 7;
+      const shift = clamp(+$("bitShift").value || 0, -7, 7);
+      const prob = (+$("prob").value || 0) / 100;
+      applyToSelection("bit ops", (idxs, random) => {
+        const set = new Set(idxs);
+        const copy = new Uint8Array(state.data);
+        for (const i of idxs) {
+          if (random() > prob) continue;
+          let v = copy[i];
+          if (bitOffset) {
+            const n = set.has(i + 1) ? copy[i + 1] : 0;
+            v = ((v << bitOffset) | (n >> (8 - bitOffset))) & 0xFF;
+          }
+          if (shift > 0) v = ((v << shift) | (v >> (8 - shift))) & 0xFF;
+          if (shift < 0) {
+            const s = -shift;
+            v = ((v >> s) | (v << (8 - s))) & 0xFF;
+          }
+          state.data[i] = v;
+        }
+      });
+    }
+
+    function applyRepeat() {
+      updateSelectionFromInputs();
+      const { start, end } = state.selection;
+      const allowed = allowedIndices(start, end);
+      if (!allowed.length) { log.warn("反復可能なbyteがありません。"); return; }
+      snapshot();
+      const random = rng(+$("seed").value || 1);
+      const min = Math.max(1, +$("repMin").value || 1);
+      const max = Math.max(min, +$("repMax").value || min);
+      const attempts = Math.max(1, Math.floor(((+$("prob").value || 0) / 100) * 12));
+      const safeStart = allowed[0];
+      const safeEnd = allowed[allowed.length - 1] + 1;
+      for (let k = 0; k < attempts; k++) {
+        const len = Math.min(safeEnd - safeStart, min + Math.floor(random() * (max - min + 1)));
+        if (len <= 0) continue;
+        const src = safeStart + Math.floor(random() * Math.max(1, safeEnd - safeStart - len));
+        const dst = safeStart + Math.floor(random() * Math.max(1, safeEnd - safeStart - len));
+        state.data.copyWithin(dst, src, src + len);
+      }
+      if (state.kind === "wav" && $("audioTanh").checked) clampWavAudio();
+      rebuildChanged();
+      analyze();
+      renderAll();
+      log.ok(`repeat: ${attempts} fragments within ${hex(safeStart, 6)}..${hex(safeEnd, 6)}`);
+    }
+
+    function clampWavAudio() {
+      const fmt = findWavFmt();
+      if (!fmt) return;
+      const dataSeg = state.segments.find(s => s.name.startsWith("WAV data"));
+      if (!dataSeg) return;
+      const bytes = fmt.bits / 8;
+      if (![1, 2, 3, 4].includes(bytes)) return;
+      const dataStart = dataSeg.start + 8;
+      const dataEnd = dataSeg.end;
+      const view = new DataView(state.data.buffer);
+      for (let o = dataStart; o + bytes <= dataEnd; o += bytes) {
+        if (fmt.bits === 8) {
+          const x = ((state.data[o] - 128) / 128);
+          state.data[o] = clamp(Math.round(Math.tanh(x) * 127 + 128), 0, 255);
+        } else if (fmt.bits === 16) {
+          const x = view.getInt16(o, true) / 32768;
+          view.setInt16(o, clamp(Math.round(Math.tanh(x) * 32767), -32768, 32767), true);
+        } else if (fmt.bits === 24) {
+          let v = state.data[o] | (state.data[o + 1] << 8) | (state.data[o + 2] << 16);
+          if (v & 0x800000) v |= 0xFF000000;
+          const y = clamp(Math.round(Math.tanh(v / 8388608) * 8388607), -8388608, 8388607);
+          state.data[o] = y & 255; state.data[o + 1] = (y >> 8) & 255; state.data[o + 2] = (y >> 16) & 255;
+        } else if (fmt.bits === 32 && fmt.format === 3) {
+          const x = view.getFloat32(o, true);
+          view.setFloat32(o, Math.tanh(Number.isFinite(x) ? x : 0), true);
+        }
+      }
+    }
+
+    function findWavFmt() {
+      for (const s of state.segments) {
+        if (s.name.startsWith("WAV fmt") && s.start + 24 <= state.data.length) {
+          const o = s.start + 8;
+          return { format: u16le(state.data, o), channels: u16le(state.data, o + 2), rate: u32le(state.data, o + 4), bits: u16le(state.data, o + 14) };
+        }
+      }
+      return null;
+    }
+
+    function renderAll() {
+      $("fileInfo").textContent = `${state.name} / ${state.kind} / ${state.data.length} bytes`;
+      renderHex();
+      renderText();
+      renderPreview();
+      renderMeta();
+      updateSelectionInfo();
+      $("changeInfo").textContent = `changed: ${state.changed.size} bytes`;
+    }
+
+    function renderText() {
+      const d = state.data;
+      let text = dec.decode(d.slice(0, Math.min(d.length, 200000)));
+      if (d.length > 200000) text += `\n\n... ${d.length - 200000} bytes omitted`;
+      text = text.replace(/\u0000/g, "\\0");
+      $("textPreview").textContent = text;
+    }
+
+    function revokeUrls() {
+      for (const url of state.objectUrls) URL.revokeObjectURL(url);
+      state.objectUrls = [];
+    }
+
+    function objectUrl(type) {
+      const blob = new Blob([state.data], { type });
+      const url = URL.createObjectURL(blob);
+      state.objectUrls.push(url);
+      return url;
+    }
+
+    function renderPreview() {
+      revokeUrls();
+      const img = $("imagePreview");
+      const audio = $("audioPreview");
+      img.removeAttribute("src");
+      audio.removeAttribute("src");
+      $("imageStatus").textContent = "";
+      $("audioStatus").textContent = "";
+      if (["png", "gif", "bmp", "jpg", "image"].includes(state.kind)) {
+        img.src = objectUrl(mimeForKind());
+        img.onload = () => $("imageStatus").textContent = `${img.naturalWidth} x ${img.naturalHeight}`;
+        img.onerror = () => $("imageStatus").textContent = "画像としては表示できません。構造や圧縮データが壊れている可能性があります。";
+      }
+      if (["wav", "mp3", "audio"].includes(state.kind)) {
+        audio.src = objectUrl(mimeForKind());
+        $("audioStatus").textContent = state.kind === "wav" ? "WAV data chunkはtanh/clamp対象です。" : "圧縮音声は改変Blobをブラウザ再生します。";
+      } else if (state.kind === "midi") {
+        $("audioStatus").textContent = "MIDI Trackを簡易WebAudioシンセで再生できます。";
+      }
+      renderWave();
+    }
+
+    function mimeForKind() {
+      if (state.kind === "png") return "image/png";
+      if (state.kind === "gif") return "image/gif";
+      if (state.kind === "bmp") return "image/bmp";
+      if (state.kind === "jpg") return "image/jpeg";
+      if (state.kind === "wav") return "audio/wav";
+      if (state.kind === "mp3") return "audio/mpeg";
+      if (state.kind === "midi") return "audio/midi";
+      return state.mime || "application/octet-stream";
+    }
+
+    function renderWave() {
+      const cv = $("waveCanvas");
+      const ctx = cv.getContext("2d");
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      ctx.fillStyle = "#0d1012";
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.strokeStyle = "#394147";
+      ctx.beginPath();
+      ctx.moveTo(0, cv.height / 2);
+      ctx.lineTo(cv.width, cv.height / 2);
+      ctx.stroke();
+      const d = state.data;
+      let samples = [];
+      const fmt = state.kind === "wav" ? findWavFmt() : null;
+      const dataSeg = state.kind === "wav" ? state.segments.find(s => s.name.startsWith("WAV data")) : null;
+      if (fmt && dataSeg && fmt.bits === 16) {
+        const view = new DataView(d.buffer);
+        const start = dataSeg.start + 8;
+        for (let o = start; o + 1 < dataSeg.end; o += 2) samples.push(view.getInt16(o, true) / 32768);
+      } else {
+        const step = Math.max(1, Math.floor(d.length / 4096));
+        for (let i = 0; i < d.length; i += step) samples.push((d[i] - 128) / 128);
+      }
+      ctx.strokeStyle = "#4fd1c5";
+      ctx.beginPath();
+      const stepX = cv.width / Math.max(1, samples.length - 1);
+      for (let i = 0; i < samples.length; i++) {
+        const x = i * stepX;
+        const y = cv.height / 2 - clamp(samples[i], -1, 1) * (cv.height * .42);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    function renderMeta() {
+      const meta = {
+        file: state.name,
+        kind: state.kind,
+        bytes: state.data.length,
+        changed: state.changed.size,
+        selection: state.selection,
+        safeRanges: state.safeRanges.map(r => `${hex(r[0], 6)}..${hex(r[1], 6)}`),
+        segments: state.segments.map(s => ({ name: s.name, range: `${hex(s.start, 6)}..${hex(s.end, 6)}`, role: s.role, desc: s.desc }))
+      };
+      $("metaPreview").textContent = JSON.stringify(meta, null, 2);
+    }
+
+    function undo() {
+      if (!state.history.length) { log.warn("Undo履歴がありません。"); return; }
+      state.future.push(new Uint8Array(state.data));
+      state.data = state.history.pop();
+      rebuildChanged();
+      analyze();
+      renderAll();
+      log.info("Undo");
+    }
+
+    function redo() {
+      if (!state.future.length) { log.warn("Redo履歴がありません。"); return; }
+      state.history.push(new Uint8Array(state.data));
+      state.data = state.future.pop();
+      rebuildChanged();
+      analyze();
+      renderAll();
+      log.info("Redo");
+    }
+
+    function reset() {
+      snapshot();
+      state.data = new Uint8Array(state.original);
+      rebuildChanged();
+      analyze();
+      renderAll();
+      log.info("元データへ戻しました。");
+    }
+
+    async function copyHex() {
+      const { start, end } = state.selection;
+      const text = Array.from(state.data.slice(start, end + 1)).map(b => hex(b)).join(" ");
+      await navigator.clipboard.writeText(text);
+      log.ok(`Hexコピー: ${end - start + 1} bytes`);
+    }
+
+    function download() {
+      const a = document.createElement("a");
+      const dot = state.name.lastIndexOf(".");
+      const outName = dot > 0 ? `${state.name.slice(0, dot)}_glitched${state.name.slice(dot)}` : `${state.name}_glitched.bin`;
+      a.download = outName;
+      a.href = objectUrl(mimeForKind());
+      a.click();
+      log.ok(`保存: ${outName}`);
+    }
+
+    async function playMidi() {
+      stopMidi();
+      const notes = extractMidiNotes();
+      if (!notes.length) { log.warn("再生できるMIDI Note Onが見つかりません。"); return; }
+      if (!state.audioCtx) state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      await state.audioCtx.resume();
+      const ctx = state.audioCtx;
+      const gain = ctx.createGain();
+      gain.gain.value = 0.12;
+      gain.connect(ctx.destination);
+      let delay = 0;
+      for (const n of notes.slice(0, 512)) {
+        const osc = ctx.createOscillator();
+        osc.type = "triangle";
+        osc.frequency.value = 440 * Math.pow(2, (n.note - 69) / 12);
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0, ctx.currentTime + delay);
+        g.gain.linearRampToValueAtTime(n.vel / 127, ctx.currentTime + delay + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + n.dur);
+        osc.connect(g).connect(gain);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + n.dur + 0.02);
+        delay += n.gap;
+      }
+      state.midiTimer = setTimeout(stopMidi, (delay + 1) * 1000);
+      log.ok(`MIDI再生: ${Math.min(notes.length, 512)} notes`);
+    }
+
+    function stopMidi() {
+      if (state.midiTimer) clearTimeout(state.midiTimer);
+      state.midiTimer = null;
+    }
+
+    function readVlq(d, o, end) {
+      let v = 0;
+      for (let i = 0; i < 4 && o < end; i++) {
+        const b = d[o++];
+        v = (v << 7) | (b & 0x7F);
+        if (!(b & 0x80)) break;
+      }
+      return [v, o];
+    }
+
+    function extractMidiNotes() {
+      const notes = [];
+      const tracks = state.segments.filter(s => s.name.startsWith("MIDI Track"));
+      const division = bytesToString(state.data, 0, 4) === "MThd" ? u16be(state.data, 12) : 480;
+      for (const tr of tracks) {
+        let o = tr.start + 8;
+        let running = 0;
+        let gapTicks = 0;
+        while (o < tr.end && notes.length < 1024) {
+          let delta; [delta, o] = readVlq(state.data, o, tr.end);
+          gapTicks += delta;
+          let status = state.data[o++];
+          if (status < 0x80) { o--; status = running; } else running = status;
+          if (status === 0xFF) {
+            const type = state.data[o++];
+            let len; [len, o] = readVlq(state.data, o, tr.end);
+            o += len;
+            if (type === 0x2F) break;
+          } else if ((status & 0xF0) === 0x90) {
+            const note = state.data[o++], vel = state.data[o++];
+            if (vel > 0) {
+              notes.push({ note, vel, gap: clamp(gapTicks / division * 0.5, 0.03, 0.8), dur: 0.18 + (vel / 127) * 0.28 });
+              gapTicks = 0;
+            }
+          } else {
+            const hi = status & 0xF0;
+            o += (hi === 0xC0 || hi === 0xD0) ? 1 : 2;
+          }
+        }
+      }
+      return notes;
+    }
+
+    function showRecipe() {
+      const recipe = {
+        app: "Binary Glitch Laboratory",
+        file: state.name,
+        formatOverride: $("formatOverride").value,
+        workLimit: $("workLimit").value,
+        selection: state.selection,
+        probability: +$("prob").value,
+        seed: +$("seed").value,
+        byteBan: $("banBytes").value,
+        replaceWith: $("replaceByte").value,
+        matchOnly: $("matchOnly").checked,
+        bitOffset: +$("bitOffset").value,
+        bitShift: +$("bitShift").value,
+        repeatMin: +$("repMin").value,
+        repeatMax: +$("repMax").value,
+        protectHeaders: $("protectHeaders").checked,
+        audioTanh: $("audioTanh").checked
+      };
+      $("metaPreview").textContent = JSON.stringify(recipe, null, 2);
+      activateTab("metaView");
+      log.info("現在の操作レシピをMetaに表示しました。");
+    }
+
+    function activateTab(id) {
+      document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.view === id));
+      document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === id));
+    }
+
+    $("fileInput").addEventListener("change", () => {
+      const f = $("fileInput").files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = () => loadData(new Uint8Array(reader.result), f.name, f.type);
+      reader.onerror = () => log.error("ファイルを読めませんでした。");
+      reader.readAsArrayBuffer(f);
+    });
+    $("loadTextBtn").addEventListener("click", () => loadData(enc.encode($("textInput").value), "text-input.txt", "text/plain"));
+    $("demoBtn").addEventListener("click", () => loadData(enc.encode($("textInput").value), "demo.txt", "text/plain"));
+    $("bytesPerRow").addEventListener("change", renderHex);
+    $("showBits").addEventListener("change", renderHex);
+    $("hexWrap").addEventListener("scroll", () => requestAnimationFrame(renderHex));
+    $("rangeStart").addEventListener("change", updateSelectionFromInputs);
+    $("rangeEnd").addEventListener("change", updateSelectionFromInputs);
+    $("jumpSelectionBtn").addEventListener("click", () => setSelection(state.selection.start, state.selection.end, true));
+    $("copyHexBtn").addEventListener("click", copyHex);
+    $("applyByteBan").addEventListener("click", applyByteBan);
+    $("applyBitOps").addEventListener("click", applyBitOps);
+    $("applyRandom").addEventListener("click", applyRandom);
+    $("applyRepeat").addEventListener("click", applyRepeat);
+    $("undoBtn").addEventListener("click", undo);
+    $("redoBtn").addEventListener("click", redo);
+    $("resetBtn").addEventListener("click", reset);
+    $("downloadBtn").addEventListener("click", download);
+    $("recipeBtn").addEventListener("click", showRecipe);
+    $("playMidiBtn").addEventListener("click", playMidi);
+    $("stopMidiBtn").addEventListener("click", stopMidi);
+    document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => activateTab(t.dataset.view)));
+
+    loadData(enc.encode($("textInput").value), "demo.txt", "text/plain");
+  </script>
+</body>
+</html>

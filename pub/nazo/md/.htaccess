@@ -1,0 +1,8 @@
+# .md をテキストとして扱う
+AddType text/plain .md
+
+# .md の文字コードを UTF-8 に固定
+AddCharset UTF-8 .md
+
+# サーバ全体のデフォルトもUTF-8に（必要なら）
+AddDefaultCharset UTF-8

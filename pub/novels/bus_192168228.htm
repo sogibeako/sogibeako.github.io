@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行き先：192.168.2.28</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap');
+
+  :root {
+    --bg: #0f0f13;
+    --text: #e8e4da;
+    --accent: #7ec8c0;
+    --dim: #9995a0;
+    --highlight: #c0a060;
+    --code: #1e2538;
+    --code-text: #88bbff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Serif JP', serif;
+    line-height: 2.1;
+    font-size: 17px;
+    padding: 0 1rem;
+  }
+
+  .wrapper {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 4rem 2rem 6rem;
+  }
+
+  h1 {
+    font-size: 1.7rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.3rem;
+    font-weight: 700;
+  }
+
+  .subtitle {
+    color: var(--dim);
+    font-size: 0.9rem;
+    margin-bottom: 3rem;
+    letter-spacing: 0.05em;
+  }
+
+  h2 {
+    font-size: 1.1rem;
+    color: var(--highlight);
+    margin: 3rem 0 1.2rem;
+    padding-left: 1rem;
+    border-left: 3px solid var(--highlight);
+    letter-spacing: 0.08em;
+  }
+
+  p {
+    margin-bottom: 1.2em;
+    text-indent: 1em;
+  }
+
+  p.no-indent { text-indent: 0; }
+
+  .dialog {
+    margin: 0.5em 0 0.5em 1.5em;
+    text-indent: 0;
+  }
+
+  .dialog .name {
+    color: var(--accent);
+    font-size: 0.85em;
+    margin-right: 0.3em;
+  }
+
+  .ip-display {
+    display: block;
+    text-align: center;
+    font-family: 'Noto Sans JP', 'Courier New', monospace;
+    font-size: 2rem;
+    color: var(--code-text);
+    letter-spacing: 0.1em;
+    margin: 2.5rem 0;
+    padding: 1rem;
+    background: var(--code);
+    border-radius: 6px;
+    text-shadow: 0 0 18px #4488ff88;
+  }
+
+  .trivia {
+    background: #16182a;
+    border-left: 3px solid var(--accent);
+    padding: 0.8rem 1.2rem;
+    margin: 1.5rem 0;
+    font-size: 0.92em;
+    color: #aac8e0;
+    font-style: italic;
+    text-indent: 0;
+  }
+
+  .bus-sign {
+    font-family: 'Noto Sans JP', monospace;
+    color: var(--code-text);
+    background: var(--code);
+    border-radius: 4px;
+    padding: 0.1em 0.4em;
+    font-size: 0.95em;
+  }
+
+  .diary {
+    background: #fffdf4;
+    color: #333;
+    font-family: 'Noto Sans JP', sans-serif;
+    border-radius: 8px;
+    padding: 2rem 2.5rem;
+    margin: 2rem 0;
+    line-height: 2.2;
+    font-size: 1rem;
+    position: relative;
+  }
+
+  .diary::before {
+    content: "夏休みの絵日記";
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    background: #f5c842;
+    color: #333;
+    font-size: 0.78rem;
+    padding: 2px 10px;
+    border-radius: 3px;
+  }
+
+  .diary p { color: #333; }
+  .diary .diary-date { font-weight: 700; color: #c04020; text-indent: 0; }
+  .diary .diary-picture {
+    border: 1px dashed #aaa;
+    border-radius: 4px;
+    padding: 0.6rem 1rem;
+    font-size: 0.88rem;
+    color: #666;
+    margin: 0.8rem 0;
+    text-indent: 0;
+  }
+
+  .teacher-comment {
+    background: #fff8f8;
+    border: 1px solid #e8a0a0;
+    border-radius: 4px;
+    padding: 0.8rem 1.2rem;
+    font-size: 0.9rem;
+    color: #cc3333;
+    font-family: 'Noto Sans JP', sans-serif;
+    margin-top: 0.5rem;
+    text-indent: 0;
+  }
+
+  .sign-post {
+    font-family: 'Noto Sans JP', monospace;
+    background: #1a1a2e;
+    color: #80d4b0;
+    border: 1px solid #2a3a50;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    margin: 0.5rem 0 0.5rem 2rem;
+    display: inline-block;
+    font-size: 0.9rem;
+  }
+
+  .section-break {
+    text-align: center;
+    color: var(--dim);
+    margin: 2.5rem 0 1.5rem;
+    letter-spacing: 0.4em;
+    font-size: 0.9em;
+  }
+
+  .souvenir-list {
+    background: var(--code);
+    border-radius: 6px;
+    padding: 1.2rem 1.5rem;
+    margin: 1.2rem 0;
+    list-style: none;
+  }
+
+  .souvenir-list li {
+    padding: 0.3rem 0;
+    border-bottom: 1px solid #2a2a3a;
+    color: #c8d8f0;
+    font-size: 0.95em;
+  }
+  .souvenir-list li:last-child { border-bottom: none; }
+
+  em { color: var(--highlight); font-style: normal; }
+
+  hr {
+    border: none;
+    border-top: 1px solid #2a2a3a;
+    margin: 2rem 0;
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+<h1>行き先：192.168.2.28</h1>
+<div class="subtitle">兄妹シリーズ / 再帰構造観光記</div>
+
+<!-- =============== 序章：バス停 =============== -->
+
+<p>夏の終わりの、午後三時ごろのことだった。</p>
+
+<p>バス停というのは、だいたいどこも似ている。錆びかけた金属のポール。色あせた時刻表。電光式の到着案内板。一埜がそのベンチに腰かけていたのも、別にたいした理由はない。ただ、お兄ちゃんが「ちょっとそこまで行く」と言いながらもう四十分も戻ってこないから、しょうがなく待っていたというだけの話だ。</p>
+
+<p>夏の空気は重かった。アスファルトが蓄えた熱がじわじわと足元から這い上がってきて、セミがどこか遠くでやかましく鳴いていた。一埜はカバンから取り出したペットボトルを一口飲んで、ぼんやりと停留所の電光板を眺めた。</p>
+
+<p>そこへ、ようやく一彌が戻ってきた。手に缶コーヒーを二本持って、なぜか少し誇らしげな顔をしていた。</p>
+
+<p class="dialog"><span class="name">一彌</span>「待たせたな、一埜」</p>
+<p class="dialog"><span class="name">一埜</span>「四十分も何してたの！？」</p>
+<p class="dialog"><span class="name">一彌</span>「自販機の前でコーヒーの種類を検討していた」</p>
+<p class="dialog"><span class="name">一埜</span>「長い！」</p>
+
+<p>バスが来た。正確には、バスが来た気配がした。遠くから重い車体の振動が伝わってきて、幅の広いバスが夏の逃げ水の向こうから現れた。一埜は荷物をまとめて立ち上がりかけ、ふと電光板を見た。</p>
+
+<p class="dialog"><span class="name">一埜</span>「えっ！？　お兄ちゃん、あのバス……！」</p>
+
+<span class="ip-display">192.168.2.28</span>
+
+<p>行き先がおかしかった。</p>
+
+<p class="dialog"><span class="name">一彌</span>「……あの行き先」</p>
+
+<p>バスの電光表示には、確かにそう出ていた。</p>
+
+<p><span class="bus-sign">192.168.2.28</span>。</p>
+
+<p>普通の系統番号ではない。地名でもない。<em>それはIPアドレスだった</em>。それも、インターネット上には存在しない種類の。RFC1918によって「プライベートアドレス」として定義された番号帯、つまり家庭内LAN専用のアドレスである。一彌が心の中でそんなことを秒速で確認したのと同時に、一埜が不安そうに声を上げた。</p>
+
+<p class="dialog"><span class="name">一埜</span>「どこなのそれ！？💦」</p>
+<p class="dialog"><span class="name">一彌</span>「家庭内LANの奥地だな……」</p>
+<p class="dialog"><span class="name">一埜</span>「奥地って言い方やめてよ！　秘境みたいじゃん！💦」</p>
+
+<div class="trivia">
+【トリビア：プライベートIPアドレスについて】<br>
+192.168.x.x という形のアドレスは、家庭や会社の内部ネットワーク専用に割り当てられた「プライベートアドレス」である。IETFのRFC1918（1996年策定）によって定められており、インターネットには直接露出しない。——一彌の思考に引っかかったのはそこだった。「このバスは、どこへ向かっているのか。ネットの外に出られない宛先へ？」
+</div>
+
+<p class="dialog"><span class="name">一彌</span>「しかしなぜこんな表示が……。今時のバスは運行管理システムをスマートフォンかタブレットで制御しているものも多い。おそらく、車内スタッフが持つ端末のWi-FiのIPアドレスが、行き先表示システムのバグで表示されてしまっているんじゃないか？」</p>
+<p class="dialog"><span class="name">一埜</span>「そんなことある？」</p>
+<p class="dialog"><span class="name">一彌</span>「あるかどうかは知らんが、そういう仮説だ」</p>
+<p class="dialog"><span class="name">一埜</span>「じゃあじゃあ、そのバスは……自分の中に着くってこと？」</p>
+<p class="dialog"><span class="name">一彌</span>「bus → [bus] みたいな路線なんじゃないかな」</p>
+<p class="dialog"><span class="name">一埜</span>「[[[…[bus]…]]] みたいになっちゃうじゃん！」</p>
+
+<p>ぷしゅー、と扉が開いた。</p>
+
+<p>気のせいかもしれないが、なんというか、<em>乗るしかない感じの開き方</em>だった。バスというのはいつも人を待たないし、機械的に扉を開けて機械的に閉める。だが今回はなぜか、扉が開いたことで、宇宙のある種の力学がこの兄妹に向けて作用している気がした。</p>
+
+<p>一埜はお兄ちゃんを見た。一彌は一埜を見た。二人は顔を見合わせ、そして——乗ってしまった。</p>
+
+<!-- =============== ① 再帰が深くなる =============== -->
+
+<h2>① 再帰が深くなり、景色がおかしくなる</h2>
+
+<p>最初のうちは普通だった。</p>
+
+<p>車内広告がつり革の隙間から覗いていた。栄養ドリンクか、不動産か、何かの英会話教室か。座席はそこそこ固くて、バスに乗る時特有の、少し熱を帯びたプラスチックと布の匂いがした。運転手さんも、疲れているのか涼しげなのかよくわからない顔で前を向いており、特別に怪しいところはない。</p>
+
+<p>だが、窓の外の景色が、三つ目の停留所を過ぎたあたりからおかしくなり始めた。</p>
+
+<p class="dialog"><span class="name">一埜</span>「……お兄ちゃん」</p>
+<p class="dialog"><span class="name">一彌</span>「うむ」</p>
+<p class="dialog"><span class="name">一埜</span>「さっきから、外に同じバス停が何回も出てくる」</p>
+<p class="dialog"><span class="name">一彌</span>「しかも微妙に近いな」</p>
+
+<p>最初は「○○通り西」だった。</p>
+<p>次は「○○通り西・西」。</p>
+<p>その次は「○○通り西・西・西」。</p>
+
+<p>文字列が増殖していた。一埜は窓に顔を寄せながら、これはいったい何番目の「西」なのかを指で数えようとして、途中で諦めた。フォントが小さくなっていくのだ。バス停の看板の文字が、進むにつれてどんどん小さくなり、ある時点から肉眼では追えなくなった。</p>
+
+<div class="trivia">
+【トリビア：再帰とスタックオーバーフロー】<br>
+コンピュータが「関数の中から同じ関数を呼ぶ」ことを再帰という。深く呼び続けるとメモリが溢れ、「スタックオーバーフロー」というエラーが起きる。——一彌は今、バス停の看板が無限に小さくなっていくのを眺めながら、「ああ、これがスタックをタプルで積み続けた時の感じかもしれない」と思った。もちろん一埜には言わなかった。言ったらおそらくすねを蹴られる。
+</div>
+
+<p>景色そのものが変わり始めた。</p>
+
+<p>バスが交差点を曲がると、風景がおかしくなり始めた。ビルの看板の文字が左右反転している——いや、反転ではなく、鏡の中の鏡に映した文字のように、反転の反転の反転が不完全に重なっている。空の色が、青とも翠ともつかない、テレビの走査線を思わせる横縞になった。</p>
+
+<p>道路の白線がフラクタルじみた蛇行を始めた。歩道を歩く人々が、よく見ると同じ三人組の繰り返しだった——老人、子供、犬。老人、子供、犬。老人、子供、犬。ただし繰り返すたびに微妙にスケールが縮んでいる。</p>
+
+<p>バスの車窓の向こうに、もう一台のバスの車窓があった。その車窓の向こうにもう一台。その向こうにもう一台。合わせ鏡のように無限に続いているが、奥に行くほど色がずれて、赤紫のグラデーションの廊下のようになっていた。</p>
+
+<p class="dialog"><span class="name">一彌</span>「ドロステ効果だな。バスの中にバスがあるんだから当然こうなる」
+<p class="dialog"><span class="name">一埜</span>「当然じゃないよ！？ 全然当然じゃないよ！？💦」
+
+<p>街の中に街がはまり、その中にさらに街がはまる。箱庭の中の箱庭。ビルの窓ガラスに街が映っているのではない——映ったふりをして、本当にそこに別の街が生えている。遠近感が狂って、一埜はしばらく目が痛くなった。</p>
+
+<p>信号機の赤ランプの内側に、小さな交差点があった。その交差点に、指の先ほどの小さなバスがいた。そしてそのバスの正面に——電光表示で——</p>
+
+<span class="bus-sign" style="display:block;text-align:center;padding:0.4rem;margin:0.8rem 0 0.8rem 0;font-size:1.1rem;">192.168.2.28</span>
+
+<p>と出ていた。</p>
+
+<p class="dialog"><span class="name">一埜</span>「やだやだやだやだ！💦　あの小さいバスにも同じのが出てる！」</p>
+<p class="dialog"><span class="name">一彌</span>「フラクタル公共交通網だな……」</p>
+<p class="dialog"><span class="name">一埜</span>「言い換えても怖いものは怖い！💦」</p>
+
+<div class="trivia">
+【トリビア：フラクタル】<br>
+フラクタルとは、どこを拡大しても同じ構造が現れる幾何学図形のことだ。マンデルブロ集合が有名で、自然界では海岸線や雪の結晶がこの性質を持つ。——一彌は脳の片隅で「マンデルブロ先生もまさかバスの路線でこれが実装されるとは思わなかっただろうな」と考えた。ちなみに一埜は、フラクタルという言葉を聞いてグラフィックデザインの授業を思い出し、なぜ今そのことを思い出したのかよくわからなかった。
+</div>
+
+<p>道路標識が変質し始めた。「左折可」「徐行」の代わりに：</p>
+
+<div style="margin:1rem 0 1rem 2rem;">
+  <div class="sign-post">/home</div><br>
+  <div class="sign-post">localhost</div><br>
+  <div class="sign-post">root権限注意</div><br>
+  <div class="sign-post">← 再帰ループ</div>
+</div>
+
+<p>空には電線の代わりに、細い白い線が何重にも張り巡らされていた。それが遠くでビルと接続しているのか雲と接続しているのか、あるいは概念そのものと接続しているのか、一埜にはまったく判断がつかなかった。</p>
+
+<p class="dialog"><span class="name">一埜</span>「景色が……サイバーっていうか、だまし絵っていうか……」</p>
+<p class="dialog"><span class="name">一彌</span>「エッシャーがルータ設定を覚えたら、こうなるのかもしれん」</p>
+<p class="dialog"><span class="name">一埜</span>「嫌すぎる進化だよ！」</p>
+
+<div class="trivia">
+【トリビア：M・C・エッシャーと不可能図形】<br>
+マウリッツ・コルネリス・エッシャー（1898-1972）はオランダの版画家で、「上り続けて元に戻る階段」や「手が手を描く」といった、幾何学的に不可能な世界を描き続けた。彼の作品は数学者のロジャー・ペンローズとも交流があり、現在はコンピュータグラフィクスの理論にも影響を与えている。——「エッシャーとルータ」の組み合わせは一彌の造語だが、一彌の中ではかなり筋が通っていた。どちらも「パケットの経路」を循環させるという意味では同じだと思った。
+</div>
+
+<p>風景が完全にワイヤーフレームに変わった。緑の線で描かれた直方体がビルの代わりに並び、道路はグリッド線そのものだった。信号機は赤黄緑の点が宙に浮いているだけ。歩行者はスティックフィギュアだった。</p>
+
+<p>座席の模様まで変わり始めた。布地の幾何学模様の中に、さらに小さな座席があり、その小さな座席に、さらに小さな兄妹が座っていた。</p>
+
+<p class="dialog"><span class="name">一埜</span>「わっ！！　ちっちゃい私！？」</p>
+<p class="dialog"><span class="name">一彌</span>「本当だ。しかもあっちもこっちを見てるな」</p>
+<p class="dialog"><span class="name">一埜</span>「えっ、じゃあ向こうから見たら私たちも座席の柄なの！？💦」</p>
+
+<p>バスは曲がるたびに、外ではなく内側へ進んでいる気がした。ワイヤーフレームさえ消え、車窓の外は一面のテキストだった。JSONのような、XMLのような、しかしどちらでもない構造化テキストが、上から下へ滝のように流れていた。バスはその文字列の川を掻き分けるように進んでいる。町の中心ではない。構造の中心へ。入れ子の、奥の、奥の、そのさらに奥へ。</p>
+
+<p>一彌は窓の外の文字列をじっと見た。</p>
+
+<p class="dialog"><span class="name">一彌</span>「……bus: { destination: { bus: { destination: { bus: { destination: ...」
+<p class="dialog"><span class="name">一埜</span>「それがこのバス？」
+<p class="dialog"><span class="name">一彌</span>「そう。いま俺たちが乗っているものの、定義そのもの。もうすぐ底に着く」
+<p class="dialog"><span class="name">一埜</span>「底なんてあるの？」
+<p class="dialog"><span class="name">一彌</span>「無限に深い再帰には底がない。ないからこそ——到着できる」
+<p class="dialog"><span class="name">一埜</span>「意味がわからないんだけど！」
+
+  電光掲示板がちかちかと点滅して、表示がぐしゃぐしゃに乱れて——
+そして、安らかに、一行だけ表示した。
+
+<!-- =============== ② 再帰構造に到着 =============== -->
+
+<h2>② 終点：再帰構造そのもの</h2>
+
+<p>やがて、窓の外から「町」というものが消えた。</p>
+
+<p>代わりに見えたのは、空でも地面でもなく、「同じものが同じものを含み続ける」という<em>事実そのもの</em>だった。</p>
+
+<p>バス停の柱があった。その柱の表面にバス停の柱があり、その表面にまた柱があった。どこまで寄っても終わらない。広告ポスターには飲み物の写真が印刷されていたが、その缶のラベルにも同じポスターがあり、その缶にもポスターがあり、もう飲料なのか画像なのかわからなかった。</p>
+
+<p>バスが停まった。</p>
+
+<p>アナウンスが流れた。</p>
+
+<p class="no-indent" style="text-align:center;color:var(--dim);font-size:1.05rem;margin:1.5rem 0;">「次は、再帰構造そのもの。終点、再帰構造そのもの、です」</p>
+
+<p class="dialog"><span class="name">一埜</span>「いや駅名みたいに言うな！！💢」</p>
+<p class="dialog"><span class="name">一彌</span>「終点らしいな」</p>
+<p class="dialog"><span class="name">一埜</span>「終点が終わってないじゃん！！　無限に続いてるじゃん！！」</p>
+
+<p>扉が開くと、そこは奇妙に静かな場所だった。</p>
+
+<p>床は鏡のようでいて鏡ではない。見下ろすと自分たちが映るが、映っている自分たちの足元にもまた同じ床があり、その中にもまた自分たちがいた。一埜は一歩踏み出してから「踏んでいいのかな」と思ったが、すでに踏んでいたのでもう遅かった。</p>
+
+<p class="dialog"><span class="name">一埜</span>「うわぁぁぁ、どこ見ても終わらない！」</p>
+<p class="dialog"><span class="name">一彌</span>「概念の観光地だな」</p>
+<p class="dialog"><span class="name">一埜</span>「結局ここどこ？」
+<p class="dialog"><span class="name">一彌</span>「再帰構造そのもの。無限に深い入れ子の底——というか、底のない底。バスの行き先が自分自身を参照し続けた結果、参照の連鎖だけが残った場所だ」
+<p class="dialog"><span class="name">一埜</span>「つまり……？」
+<p class="dialog"><span class="name">一彌</span>「つまり、ここはどこでもなくて、『どこかへ行く途中』が永遠に固定された場所だ」
+<p class="dialog"><span class="name">一埜</span>「お兄ちゃんのせいで来たんだけど！？💢」</p>
+
+<p>バシッ。</p>
+
+<p>一埜のローキックが一彌のすねに入った。精度が高かった。一彌は「ぐふっ」という情けない声を上げた。</p>
+
+<p class="dialog"><span class="name">一埜</span>「『ぐふっ』じゃないよ！　なんでそんな平然と観光地とか言ってるの！？💢 帰れるの！？ ねえ、帰れるの！？💦」</p>
+<p class="dialog"><span class="name">一彌</span>「だ、大丈夫だ一埜よ……こういう時のために……」</p>
+<p class="dialog"><span class="name">一埜</span>「こういう時って何！？　想定してたの！？💦」</p>
+
+<p>一彌はポケットから、折りたたまれた小さな紙切れを取り出した。それにはマジックで雑にこう書いてあった。</p>
+
+<div style="background:var(--code);border-radius:6px;padding:1rem 1.5rem;text-align:center;font-family:'Courier New',monospace;color:var(--code-text);font-size:1.1rem;margin:1.5rem 0;letter-spacing:0.05em;">
+  return 192.168.2.1;
+</div>
+
+<p class="dialog"><span class="name">一埜</span>「なにそれ」</p>
+<p class="dialog"><span class="name">一彌</span>「帰りのショートカットだ！ 192.168.2.1というのはLANの上流アドレス、つまりルータだ。ここから戻れる」</p>
+<p class="dialog"><span class="name">一埜</span>「そんな雑な呪符みたいなルータアドレスある！？」</p>
+<p class="dialog"><span class="name">一彌</span>「まあ、最悪これを唱えれば家庭内の上流へ戻れる……！」</p>
+<p class="dialog"><span class="name">一埜</span>「上流って言い方もなんか川みたいでイヤ！」</p>
+<p class="dialog"><span class="name">一彌</span>「安心しろ。帰れる！ ……たぶん」</p>
+<p class="dialog"><span class="name">一埜</span>「たぶんなんだ……」</p>
+<p class="dialog"><span class="name">一彌</span>「八割五分くらい……」</p>
+<p class="dialog"><span class="name">一埜</span>「急に具体的！！　逆に不安！！」</p>
+
+<div class="trivia">
+【トリビア：デフォルトゲートウェイ】<br>
+家庭内のルータには通常、192.168.1.1または192.168.0.1などの「デフォルトゲートウェイ」アドレスが割り当てられている。このアドレスに「戻れ」というパケットを送ることで、内部ネットワークから外部へ抜け出すルートが開ける。——「return文みたいに使えば帰れる」と一彌は考えていた。プログラミング言語のreturn文は関数の実行を終了し、呼び出し元へ値を返すものだ。「帰還はreturnではなく、帰還がreturnだ」——この区別は一埜にはまったくどうでもよかった。
+</div>
+
+<p>でも、一埜は少しだけ落ち着いた。</p>
+
+<p>お兄ちゃんは変なことを言う。変なことを言ったせいで変なところへ来る。けれど、たいてい最後には、もっと変な方法でなんとかする。そこは、まあ、少し信じていた。</p>
+
+<!-- =============== ③ 観光 =============== -->
+
+<h2>③ せっかくなので観光する</h2>
+
+<p class="dialog"><span class="name">一彌</span>「まあ、せっかく来たんだ！ 少し観光してから帰ろう」
+<p class="dialog"><span class="name">一埜</span>「観光できそうなところに見える！？ ……ま、まあ、帰れるなら、ちょっとだけ見ていこうかな」</p>
+<p class="dialog"><span class="name">一彌</span>「そうこなくてはな！」</p>
+
+透明なバス停には、手書きの看板が立っていた。
+「ようこそ、Fixpoint Cityへ」
+
+<p class="dialog"><span class="name">一埜</span>「都市だったの！？」
+<p class="dialog"><span class="name">一彌</span>「不動点都市。再帰構造の収束先だから、名前としては正確だな」
+
+<p>この場所は、思いのほか観光地として成立していた。</p>
+
+<div class="section-break">— 名所 其の壱 —</div>
+
+<p><strong>自己言及記念塔</strong></p>
+
+<p>まず目についたのは、街の中心にそびえる塔だった。塔の形は——塔だった。いや、正確に言えば、塔の形をした塔の形をした塔の形をした……を無限に繰り返したもので、どの縮尺で見ても同じ塔が見えるので、近づいても遠ざかっても大きさの印象が変わらない。</p>
+
+<p class="dialog"><span class="name">一埜</span>「あの塔、歩いても近づけないんだけど……」
+<p class="dialog"><span class="name">一彌</span>「自己相似だからな。スケールの概念が壊れてる。近づいたぶんだけ塔も縮む——というか、近づくという行為が再帰的に展開されて永遠に完了しない」
+
+  <p>観光案内のスティックフィギュア（ここではちゃんと服を着ていた。ネクタイまでしている）が説明してくれた。</p>
+
+<p class="dialog"><span class="name">案内人</span>「この塔はFixpoint Cityの市章にもなっておりまして、建設されたのは……えーと、建設中です」
+<p class="dialog"><span class="name">一埜</span>「まだ！？」
+<p class="dialog"><span class="name">案内人</span>「建設する行為が建設する行為を呼び出しますので、完了条件がありません。しかし各段の建設は進んでおりますので、収束はしています」
+<p class="dialog"><span class="name">一彌</span>「ゼノンのパラドックスの建築版だな」
+<p class="dialog"><span class="name">一埜</span>「でもちゃんと立ってるよね、あの塔」
+<p class="dialog"><span class="name">案内人</span>「はい。無限に建設中ですが、極限としては存在しています」
+<p class="dialog"><span class="name">一埜</span>「……頭が痛くなってきた……💦」
+
+<div class="section-break">— 名所 其の弐 —</div>
+
+<p><strong>無限入れ子展望台</strong></p>
+
+<p>大きな円形の展望台があった。コンクリートと——コンクリートではないかもしれない何か——でできており、手すりの向こうに、深く、暗く、終わりのない穴が空いている。覗き込むと、自分が覗いている姿が無数に落ちていく。眼球の中に眼球があり、その中に眼球があり、それを見ようとするとまた眼球が増える。</p>
+
+<p class="dialog"><span class="name">一埜</span>「吸い込まれそう……」</p>
+<p class="dialog"><span class="name">一彌</span>「落ちてもたぶん次の自分の肩に乗るだけだ」</p>
+<p class="dialog"><span class="name">一埜</span>「たぶんで人を縦にするな！」</p>
+
+<p>一埜はスマホで写真を撮ってみた。撮った画像を見ると、画面の中で兄妹がスマホを構えていた。その中の画面の中でも兄妹がスマホを構えていた。ギャラリーを開いて写真の容量を確認すると、<span class="bus-sign">∞ MB</span> と表示されていた。</p>
+
+<p class="dialog"><span class="name">一埜</span>「うわっ、写真が終わらない」</p>
+<p class="dialog"><span class="name">一彌</span>「容量が再帰的に圧迫されるな」</p>
+<p class="dialog"><span class="name">一埜</span>「楽しそうに言わないで！」</p>
+
+<div class="section-break">— 名所 其の参 —</div>
+
+<p><strong>LANケーブル並木道</strong></p>
+
+<p>その場所を抜けると、並木道に出た。木の幹が透明な材質でできており、内部を光がチカチカと脈打つように流れていた。枝先には、よく見ると、RJ45コネクタにそっくりな形の実がぶら下がっていた。</p>
+
+<div class="trivia">
+【トリビア：RJ45コネクタ】<br>
+RJ45はEthernetケーブル（いわゆるLANケーブル）の端子規格で、8本の銅線を内蔵したプラスチック製のコネクタを指す。家庭のルータとパソコンを有線接続する際によく見かける、あの四角くて透明なプラグのことだ。「実として実る」のはさすがに違うが、一彌には何一つ違和感がなかった。
+</div>
+
+<p class="dialog"><span class="name">一埜</span>「これ、もいだらネット遅くなったりしない？」</p>
+<p class="dialog"><span class="name">一彌</span>「マナー違反だろうな」</p>
+<p class="dialog"><span class="name">一埜</span>「観光地としての倫理観が急に現実的……」</p>
+
+<div class="section-break">■ 食事：Y Combinator Café</div>
+<p>昼食をとることにした。駅前の通り（透明だが踏むと足音がする）を歩くと、カフェがあった。</p>
+
+<p><strong>看板：Y Combinator Café　——「自分で自分を注文する店」</strong></p>
+<p class="dialog"><span class="name">一埜</span>「自分で自分を注文する……？」</p>
+<p>メニューを開くと、品目はひとつしかなかった。</p>
+<p>本日のランチ：本日のランチ</p>
+<p class="dialog"><span class="name">一彌</span>「再帰的メニューだ」</p>
+<p class="dialog"><span class="name">一埜</span>「何が出てくるの！？」</p>
+<p>注文すると、ウェイターが料理を持ってきた。皿の上に、小さな皿が乗っていて、その上にさらに小さな皿が乗っていて——最終的に、最も小さな皿の上に、ちゃんとしたサンドイッチがあった。</p>
+<p class="dialog"><span class="name">一彌</span>「不動点がサンドイッチだったらしいな」</p>
+<p class="dialog"><span class="name">一埜</span>「……おいしい」</p>
+<p>サンドイッチは、たまごサンドだった。具体的には帯広の六花亭のカフェで出てきそうな、丁寧な、正しいたまごサンド。</p>
+<p class="dialog"><span class="name">一埜</span>「ここの料理、ちゃんとおいしいんだ……」</p>
+<p class="dialog"><span class="name">一彌</span>「再帰の不動点が到達するところは、意外とまともなんだよ。無限にこねくり回した結果、一番安定する形に落ち着く。たまごサンドは安定している」</p>
+<p class="dialog"><span class="name">一埜</span>「たまごサンドは安定している……（深く頷く）」</p>
+
+<div class="section-break">— 名物料理 —</div>
+
+<p><strong>パケットまんじゅう</strong></p>
+
+<p>並木道を抜けたところに、売店のおばちゃんがいた。白い布巾で手を拭きながら、蒸し台の前にのんびりと立っていた。この場所の何もかもが異常であるのに、おばちゃんの様子だけは完全に普通だった。</p>
+
+<p class="dialog"><span class="name">売店のおばちゃん</span>「はいよ、蒸したてだよ」</p>
+<p class="dialog"><span class="name">一埜</span>「えっ、普通に売店あるんだ……」</p>
+<p class="dialog"><span class="name">一彌</span>「観光地だからな」</p>
+
+<p>白いまんじゅうの表面には、謎の数字列が焼印で押されていた。</p>
+
+<p class="dialog"><span class="name">一埜</span>「これ、何味？」</p>
+<p class="dialog"><span class="name">おばちゃん</span>「中身は圧縮されてるから、食べる時に展開されるよ」</p>
+<p class="dialog"><span class="name">一埜</span>「説明が怖い」</p>
+<p class="dialog"><span class="name">一彌</span>「いただこう」</p>
+
+<p>ぱくり。</p>
+
+<p class="dialog"><span class="name">一埜</span>「……！」</p>
+<p class="dialog"><span class="name">一彌</span>「どうだ？」</p>
+<p class="dialog"><span class="name">一埜</span>「肉まんだった気がするし、あんまんだった気もするし、ピザまんでもある！！」</p>
+<p class="dialog"><span class="name">一彌</span>「多重化されている」</p>
+<p class="dialog"><span class="name">一埜</span>「おいしいけど、舌が一瞬バグった！」</p>
+
+<div class="trivia">
+【トリビア：データ圧縮と展開】<br>
+ZIPやgzipなどの圧縮形式は、データを小さくまとめた状態で保存し、使う際に「展開（解凍）」して元の大きさに戻す。「食べると展開される」というのは荒唐無稽だが、食事中に味覚が「フォーマットを解析している」と考えると、一彌的には完全に整合している。なお、「多重化」は通信用語で、一本の回線に複数の信号を同時に流す技術を指す。まんじゅうとの親和性は高い。
+</div>
+
+<p>別の場所では、屋台の兄ちゃんが焼きそばを焼いていた。ただし鉄板の上の焼きそばをよく見ると、麺の一本一本が極小の道路だった。つまり焼きそばを炒めるということは、ミニチュアの都市を再編成するということだった。</p>
+
+<p class="dialog"><span class="name">屋台の兄ちゃん</span>「ソース多めにします？」</p>
+<p class="dialog"><span class="name">一埜</span>「こういう場所でも接客は普通なんだ……」</p>
+<p class="dialog"><span class="name">一彌</span>「観光地として完成度が高い」</p>
+
+<div class="section-break">— ベンチの住人 —</div>
+
+<p>帰り道（帰り道という概念があること自体が不思議だったが、Fixpoint Cityでは「帰る」という関数もまた不動点を持つらしい）、ベンチに座っている人物がいた。</p>
+<p>人物の見た目は——一言で言えば、ぼやけていた。性別も年齢も服装も判然としないが、雰囲気だけは穏やかに確かだった。服の模様をよく見ると、その人自身がその服を着て座っているイラストになっていた。</p>
+
+<p class="dialog"><span class="name">一埜</span>「……あの人、何してるんだろ」</p>
+<p class="dialog"><span class="name">住人</span>「観測してるんですよ」</p>
+<p class="dialog"><span class="name">一彌</span>「何を？」</p>
+<p class="dialog"><span class="name">住人</span>「どこまで行くと"自分"が背景になるかを」</p>
+<p class="dialog"><span class="name">一埜</span>「ひぇっ……」</p>
+<p class="dialog"><span class="name">住人</span>「でも安心してください。慣れます」</p>
+<p class="dialog"><span class="name">一彌</span>「ここに住んでるんですか？」</p>
+<p class="dialog"><span class="name">住人</span>「ええ。ずっとここにいます。ずっと」</p>
+<p class="dialog"><span class="name">一彌</span>「……ずっとというのは」</p>
+<p class="dialog"><span class="name">住人</span>「文字通りです。私はこの街の最初の住人です。再帰が始まる前からここにいました。再帰が始まったあとも。再帰が無限に深くなったあとも。私がここにいるという事実が、この街の不動点なんです」</p>
+<p class="dialog"><span class="name">一埜</span>「えっと……つまり、あなたがいるからこの街がある？」</p>
+<p class="dialog"><span class="name">住人</span>「この街があるから私がいるんです。そして私がいるからこの街がある。どちらが先かは、もう決められません」</p>
+<p class="dialog"><span class="name">一彌</span>「鶏と卵じゃなくて、鶏＝卵なわけだ」</p>
+<p>住人はにっこり笑った。笑顔だけはぼやけていなかった。</p>
+<p class="dialog"><span class="name">住人</span>「お二人は、帰れるんですね。いいですね。帰る場所があるのは」</p>
+<p class="dialog"><span class="name">一埜</span>「……あの、寂しくないですか？」
+<p class="dialog"><span class="name">住人</span>「寂しい？　いいえ。だって、この街自体が私の反復ですから。道も建物も塔も、全部わたしの、考えていることの……影みたいなものです。一人暮らしというより、自分の中に住んでいる感じでしょうか」
+<p>一埜は少し黙って、それからぺこりとお辞儀をした。</p>
+<p class="dialog"><span class="name">一埜</span>「来てよかったです。ありがとうございました」
+<p class="dialog"><span class="name">住人</span>「こちらこそ。外から来てくれた人がいるというのは……再帰にとっては、とても新鮮なことです」
+
+
+<div class="section-break">— おみやげ —</div>
+
+<p>売店にはこんな品が並んでいた。</p>
+
+<ul class="souvenir-list">
+  <li>🪞 無限ミラーキーホルダー</li>
+  <li>👕 "I went to Recursive Structure Itself" Tシャツ</li>
+  <li>🚌 入れ子マトリョーシカバス（バスの中にバス、その中にまたバス）</li>
+  <li>🖼 家に帰ると一個だけ増えている写真立て</li>
+</ul>
+
+<p class="dialog"><span class="name">一埜</span>「最後のやつ嫌だな！？」</p>
+<p class="dialog"><span class="name">一彌</span>「記念にはなる」</p>
+<p class="dialog"><span class="name">一埜</span>「ならないよ！！　増殖してるよ！！」</p>
+
+<p>結局、一埜は小さなバスの中に小さなバスが入っているキーホルダーを買った。可愛い。ちょっと怖い。でも可愛い。</p>
+
+<!-- =============== ④ 帰宅 =============== -->
+
+<h2>④ 帰宅と夏休みの絵日記</h2>
+
+<p>帰りは、本当にショートカットだった。</p>
+
+<p>一彌が紙切れをひらりと掲げて、</p>
+
+<p style="text-align:center;color:var(--code-text);font-family:'Courier New',monospace;font-size:1.1rem;margin:1.2rem 0;">「return 192.168.2.1;」</p>
+
+<p>と読み上げると、景色がさっと巻き戻った。LANケーブル並木が線になり、展望台が点になり、バス停が看板の隅に押し込まれ、兄妹は最初に乗ったあのバスの車内へ戻っていた。</p>
+
+<p>ちょうどアナウンスが流れていた。</p>
+
+<p class="no-indent" style="text-align:center;color:#aaa;font-style:italic;margin:1rem 0;">「次は、○○三丁目……」</p>
+
+<p>この世の言葉とは思えないほど安心するアナウンスだった。</p>
+
+<p class="dialog"><span class="name">一埜</span>「……帰ってきた？」</p>
+<p class="dialog"><span class="name">一彌</span>「帰ってきたようだな」</p>
+<p class="dialog"><span class="name">一埜</span>「ほんとに？」</p>
+<p class="dialog"><span class="name">一彌</span>「少なくとも、外の自販機に"ping 可能"とは書いてない」</p>
+<p class="dialog"><span class="name">一埜</span>「基準が変になってるよ……」</p>
+
+<div class="trivia">
+【トリビア：pingコマンド】<br>
+pingとは、ネットワーク上の相手端末が応答するかを確認するコマンドだ。「そこにちゃんといるか」を確かめるために小さなパケットを送り、返事が来れば「疎通確認OK」となる。——「自販機にpingが通る」とはつまり、「この世界がネットワークとして正常に機能している」ことを意味するはずで、正常な世界への帰還確認として一彌は理にかなっていると思っていた。一埜は何も言わなかったが、「そういう確認のしかたで生きてるのか、このお兄ちゃんは」とぼんやり思った。
+</div>
+
+<p>家に帰ると、一埜はその日のうちに夏休みの絵日記を書いた。</p>
+
+<div class="diary">
+  <p class="diary-date">8月○日　てんき：はれ</p>
+  <p>きょう、おにいちゃんとバスにのりました。</p>
+  <p>バスの行きさきが「192.168.2.28」でした。</p>
+  <p>へんなところにつきました。そこは、なんでも小さいのが入っていて、その中にもまた同じものが入っているところでした。</p>
+  <p>わたしはちょっとおこって、おにいちゃんをけりました。</p>
+  <p>でも、おみやげをかったので、まあまあたのしかったです。パケットまんじゅうがおいしかったです。また行くかどうかは、ちょっと考えます。</p>
+  <div class="diary-picture">
+    絵：バスの中にバスがあって、その中にまたバスがある絵 / 右下にローキックされている一彌 / 左上に「おみやげ」と書かれた小さいキーホルダー
+  </div>
+  <div class="teacher-comment">
+    先生より：バスのたびが、いきいきとえがかれていました。「おにいちゃんをけった」のところが、とくにりあるでした。おみやげが「ふえていないといいですね」。おうちのひとと、またおはなししてみましょう。
+  </div>
+</div>
+
+<p class="dialog"><span class="name">母</span>「……一埜、これ本当のこと？」</p>
+<p class="dialog"><span class="name">一埜</span>「うん！」</p>
+<p class="dialog"><span class="name">母</span>「一彌？」</p>
+<p class="dialog"><span class="name">一彌</span>「概ね事実です」</p>
+<p class="dialog"><span class="name">母</span>「概ねで済ませる話じゃないのよ」</p>
+
+<p class="dialog"><span class="name">一埜</span>「でもね、おみやげ可愛いよ」</p>
+<p class="dialog"><span class="name">母</span>「あら、本当。可愛い……」</p>
+<p class="dialog"><span class="name">一彌</span>「であろう」</p>
+<p class="dialog"><span class="name">母</span>「でも増えたりしないでしょうね？」</p>
+<p class="dialog"><span class="name">一埜</span>「えっ」</p>
+
+<p>居間のテーブルを見ると、さっき一つだったはずのキーホルダーが、二つになっていた。</p>
+
+<p class="no-indent" style="margin:2rem 0 0.5rem 0; text-align:center;">※</p>
+
+<p class="dialog"><span class="name">一埜</span>「お兄ちゃん」</p>
+<p class="dialog"><span class="name">一彌</span>「うむ」</p>
+<p class="dialog"><span class="name">一埜</span>「これ、帰ってきてない可能性ある？」</p>
+<p class="dialog"><span class="name">一彌</span>「完全には否定できんな」</p>
+<p class="dialog"><span class="name">一埜</span>「もー！！💢」</p>
+
+<p>一埜は今度こそ本気でローキックを放った。一彌は「ぐふっ」と言った。夏の夕方の光が居間の床に長く伸びて、キーホルダーが三つ目を目指して静かに輝いていた。</p>
+
+<hr>
+
+<p style="text-align:center;color:var(--dim);font-size:0.85em;margin-top:2rem;">（了）</p>
+
+</div>
+</body>
+</html>

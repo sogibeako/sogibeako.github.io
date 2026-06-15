@@ -1,0 +1,2037 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RegSum Lab v0.5 Phase 1 Prototype</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    function AutoBounds(values) {
+      const finite = values.filter(Number.isFinite);
+      if (!finite.length) return { min: -1, max: 1 };
+      let min = Math.min(...finite);
+      let max = Math.max(...finite);
+      if (Math.abs(max - min) < 1e-12) {
+        min -= 1;
+        max += 1;
+      }
+      const pad = (max - min) * 0.08;
+      return { min: min - pad, max: max + pad };
+    }
+
+    function SimpleLineChart({ data, lines, xKey, height = 360 }) {
+      const width = 900;
+      const m = { top: 20, right: 20, bottom: 32, left: 56 };
+      const innerW = width - m.left - m.right;
+      const innerH = height - m.top - m.bottom;
+      const xs = data.map(d => d[xKey]);
+      const ys = [];
+      lines.forEach(line => data.forEach(d => ys.push(d[line.key])));
+      const xMin = Math.min(...xs, 0), xMax = Math.max(...xs, 1);
+      const { min: yMin, max: yMax } = AutoBounds(ys);
+      const xScale = x => m.left + ((x - xMin) / Math.max(1e-12, xMax - xMin)) * innerW;
+      const yScale = y => m.top + innerH - ((y - yMin) / Math.max(1e-12, yMax - yMin)) * innerH;
+      const gridYs = 5;
+      const gridXs = 6;
+      return (
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full bg-slate-950 rounded-xl">
+          {Array.from({ length: gridYs + 1 }, (_, i) => {
+            const y = m.top + innerH * (i / gridYs);
+            const val = yMax - (yMax - yMin) * (i / gridYs);
+            return <g key={`gy-${i}`}>
+              <line x1={m.left} y1={y} x2={m.left + innerW} y2={y} stroke="#243041" strokeWidth="1" />
+              <text x={m.left - 8} y={y + 4} textAnchor="end" fontSize="11" fill="#cbd5e1">{formatNum(val, 4)}</text>
+            </g>;
+          })}
+          {Array.from({ length: gridXs + 1 }, (_, i) => {
+            const x = m.left + innerW * (i / gridXs);
+            const val = xMin + (xMax - xMin) * (i / gridXs);
+            return <g key={`gx-${i}`}>
+              <line x1={x} y1={m.top} x2={x} y2={m.top + innerH} stroke="#243041" strokeWidth="1" />
+              <text x={x} y={height - 8} textAnchor="middle" fontSize="11" fill="#cbd5e1">{formatNum(val, 4)}</text>
+            </g>;
+          })}
+          <rect x={m.left} y={m.top} width={innerW} height={innerH} fill="none" stroke="#334155" strokeWidth="1" />
+          {lines.map((line, idx) => {
+            const path = data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${xScale(d[xKey])} ${yScale(d[line.key])}`).join(' ');
+            return <g key={line.key}>
+              <path d={path} fill="none" stroke={line.color} strokeWidth="2" />
+              <g transform={`translate(${m.left + 12 + idx * 170}, ${m.top + 12})`}>
+                <line x1="0" y1="0" x2="18" y2="0" stroke={line.color} strokeWidth="2" />
+                <text x="24" y="4" fontSize="12" fill="#e2e8f0">{line.label}</text>
+              </g>
+            </g>;
+          })}
+        </svg>
+      );
+    }
+
+    function SimpleScatterChart({ data, xKey, yKey, height = 360, color = '#22d3ee' }) {
+      const width = 900;
+      const m = { top: 20, right: 20, bottom: 32, left: 56 };
+      const innerW = width - m.left - m.right;
+      const innerH = height - m.top - m.bottom;
+      const xs = data.map(d => d[xKey]);
+      const ys = data.map(d => d[yKey]);
+      const xMin = Math.min(...xs, 0), xMax = Math.max(...xs, 1);
+      const { min: yMin, max: yMax } = AutoBounds(ys);
+      const xScale = x => m.left + ((x - xMin) / Math.max(1e-12, xMax - xMin)) * innerW;
+      const yScale = y => m.top + innerH - ((y - yMin) / Math.max(1e-12, yMax - yMin)) * innerH;
+      return (
+        <svg viewBox={`0 0 900 ${height}`} className="w-full h-full bg-slate-950 rounded-xl">
+          <rect x={m.left} y={m.top} width={innerW} height={innerH} fill="none" stroke="#334155" strokeWidth="1" />
+          {data.map((d, i) => <circle key={i} cx={xScale(d[xKey])} cy={yScale(d[yKey])} r="2.5" fill={color} />)}
+        </svg>
+      );
+    }
+
+    const TEST_CASES = [
+      { id: 'T001', expr: '1', expected: -0.5, method: 'hurwitz', tol: 1e-10, category: 'reference' },
+      { id: 'T002', expr: 'n', expected: -1/12, method: 'hurwitz', tol: 1e-10, category: 'reference' },
+      { id: 'T003', expr: 'n^2', expected: 0, method: 'hurwitz', tol: 1e-10, category: 'reference' },
+      { id: 'T004', expr: 'n^1.5', expected: -0.0254852018898, method: 'hurwitz', tol: 1e-6, category: 'reference' },
+      { id: 'T201', expr: '1 + n', expected: -7/12, method: 'hurwitz', tol: 1e-9, category: 'linearity' },
+      { id: 'T202', expr: '3*n', expected: -1/4, method: 'hurwitz', tol: 1e-9, category: 'linearity' },
+      { id: 'T301', expr: '1 + 0.001*sin(n)', expected: -0.5, method: 'hurwitz', tol: 2e-3, category: 'perturbation' },
+      { id: 'T302', expr: 'n + 0.001*sin(n)', expected: -1/12, method: 'hurwitz', tol: 2e-3, category: 'perturbation' },
+      { id: 'T703-C', expr: '(-1)^n', expected: -0.5, method: 'cesaro', tol: 5e-3, category: 'oscillation' },
+      { id: 'T703-A', expr: '(-1)^n', expected: -0.5, method: 'abel', tol: 5e-3, category: 'oscillation' },
+      { id: 'T801-M', expr: 'sin(n)', expected: 'fourier', method: 'modelType', tol: 0, category: 'fourier' },
+      { id: 'T801-A', expr: 'sin(n)', expected: 0.5 * (Math.cos(0.5) / Math.sin(0.5)), method: 'abel', tol: 5e-3, category: 'fourier' },
+      { id: 'T802-C', expr: 'cos(n)', expected: -0.5, method: 'abel', tol: 5e-3, category: 'fourier' },
+      { id: 'T803-A', expr: 'sin(2*n)', expected: 0.5 * (Math.cos(1) / Math.sin(1)), method: 'abel', tol: 5e-3, category: 'fourier' },
+      { id: 'T804-M', expr: 'sin(cos(n))', expected: 'fourier', method: 'modelType', tol: 0, category: 'fourier-dc' },
+      { id: 'T804-C', expr: 'sin(cos(n))', expected: -0.4207355, method: 'abel', tol: 2e-2, category: 'fourier-dc' },
+      { id: 'T901-W', expr: 'floor(sqrt(n))', expected: 'success', method: 'windowStatus', tol: 0, category: 'window' }
+    ];
+
+    const PRESETS = [
+      { name: "Constant 1", expr: "1", params: {} },
+      { name: "Natural numbers", expr: "n", params: {} },
+      { name: "Square numbers", expr: "n^2", params: {} },
+      { name: "Alternating", expr: "(-1)^n", params: {} },
+      { name: "Residue mod 2", expr: "(n % 2 == 0) ? 1 : 0", params: {} },
+      { name: "Perturbed sum", expr: "n + 0.001*sin(n)", params: {} },
+      { name: "Non-polynomial", expr: "floor(sqrt(n))", params: {} },
+      { name: "Fractional power", expr: "n^1.5", params: {} },
+      { name: "Quasi-periodic", expr: "sin(n)", params: {} },
+      { name: "Composite", expr: "sin(cos(n))", params: {} },
+    ];
+
+    const BERNOULLI = [1, -1/2, 1/6, 0, -1/30, 0, 1/42, 0, -1/30, 0, 5/66];
+
+    function clamp(x, a, b) {
+      return Math.max(a, Math.min(b, x));
+    }
+
+    function formatNum(x, digits = 10) {
+      if (x == null || !Number.isFinite(x)) return "—";
+      if (Math.abs(x) < 1e-12) return "0";
+      return Number(x).toPrecision(digits).replace(/\.0+$/,'').replace(/(\.[0-9]*?)0+$/,'$1');
+    }
+
+    function mean(arr) {
+      if (!arr.length) return 0;
+      let s = 0;
+      for (const x of arr) s += x;
+      return s / arr.length;
+    }
+
+    function rms(arr) {
+      if (!arr.length) return 0;
+      let s = 0;
+      for (const x of arr) s += x * x;
+      return Math.sqrt(s / arr.length);
+    }
+
+    function variance(arr) {
+      if (arr.length < 2) return 0;
+      const m = mean(arr);
+      let s = 0;
+      for (const x of arr) s += (x - m) * (x - m);
+      return s / arr.length;
+    }
+
+    function parseParams(text) {
+      const out = {};
+      const trimmed = text.trim();
+      if (!trimmed) return out;
+      const parts = trimmed.split(/[,\n;]/).map(s => s.trim()).filter(Boolean);
+      for (const part of parts) {
+        const m = part.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)$/);
+        if (!m) throw new Error(`Invalid parameter entry: ${part}`);
+        const key = m[1];
+        const value = Number(m[2]);
+        if (!Number.isFinite(value)) throw new Error(`Invalid numeric value for ${key}`);
+        out[key] = value;
+      }
+      return out;
+    }
+
+    function extractIdentifiers(expr) {
+      const matches = expr.match(/[A-Za-z_][A-Za-z0-9_]*/g) || [];
+      return [...new Set(matches)];
+    }
+
+    function sanitizeExpression(expr) {
+      return expr.replace(/\*\*/g, "^").replace(/\^/g, "**");
+    }
+
+    function buildEvaluator(expr, params) {
+      const identifiers = extractIdentifiers(expr);
+      const allowed = new Set([
+        "n", "floor", "ceil", "round", "sqrt", "log", "sin", "cos", "tan", "abs", "pow",
+        "pi", "e", ...Object.keys(params)
+      ]);
+      for (const id of identifiers) {
+        if (!allowed.has(id)) throw new Error(`Unknown identifier: ${id}`);
+      }
+
+      const safeExpr = sanitizeExpression(expr);
+      const argNames = ["n", ...Object.keys(params)];
+      const body = `
+        const floor=Math.floor, ceil=Math.ceil, round=Math.round, sqrt=Math.sqrt,
+              log=Math.log, sin=Math.sin, cos=Math.cos, tan=Math.tan, abs=Math.abs,
+              pow=Math.pow, pi=Math.PI, e=Math.E;
+        return (${safeExpr});
+      `;
+      const fn = new Function(...argNames, body);
+      return (n) => {
+        const args = [n, ...Object.keys(params).map(k => params[k])];
+        const y = fn(...args);
+        if (typeof y !== "number" || !Number.isFinite(y)) {
+          throw new Error(`Expression produced non-finite value at n=${n}`);
+        }
+        return y;
+      };
+    }
+
+    function generateSequence(expr, params, Nmax) {
+      const evalFn = buildEvaluator(expr, params);
+      const seq = new Float64Array(Nmax);
+      for (let n = 1; n <= Nmax; n++) seq[n - 1] = evalFn(n);
+      return seq;
+    }
+
+    function solveLinearSystem(A, b) {
+      const n = A.length;
+      const M = A.map((row, i) => [...row, b[i]]);
+      for (let col = 0; col < n; col++) {
+        let pivot = col;
+        for (let r = col + 1; r < n; r++) {
+          if (Math.abs(M[r][col]) > Math.abs(M[pivot][col])) pivot = r;
+        }
+        if (Math.abs(M[pivot][col]) < 1e-14) throw new Error("Singular matrix");
+        [M[col], M[pivot]] = [M[pivot], M[col]];
+        const div = M[col][col];
+        for (let j = col; j <= n; j++) M[col][j] /= div;
+        for (let r = 0; r < n; r++) {
+          if (r === col) continue;
+          const factor = M[r][col];
+          for (let j = col; j <= n; j++) M[r][j] -= factor * M[col][j];
+        }
+      }
+      return M.map(row => row[n]);
+    }
+
+    function matMulAtA(X) {
+      const p = X[0].length;
+      const out = Array.from({ length: p }, () => Array(p).fill(0));
+      for (let i = 0; i < X.length; i++) {
+        for (let a = 0; a < p; a++) {
+          for (let b = 0; b < p; b++) out[a][b] += X[i][a] * X[i][b];
+        }
+      }
+      return out;
+    }
+
+    function matMulAtY(X, y) {
+      const p = X[0].length;
+      const out = Array(p).fill(0);
+      for (let i = 0; i < X.length; i++) {
+        for (let a = 0; a < p; a++) out[a] += X[i][a] * y[i];
+      }
+      return out;
+    }
+
+    function estimateConditionNumberGram(G) {
+      let maxRow = 0;
+      let minDiag = Infinity;
+      let maxDiag = 0;
+      for (let i = 0; i < G.length; i++) {
+        let rs = 0;
+        for (let j = 0; j < G.length; j++) rs += Math.abs(G[i][j]);
+        maxRow = Math.max(maxRow, rs);
+        minDiag = Math.min(minDiag, Math.abs(G[i][i]));
+        maxDiag = Math.max(maxDiag, Math.abs(G[i][i]));
+      }
+      if (minDiag < 1e-20) return Infinity;
+      return (maxRow || 1) * (maxDiag / minDiag);
+    }
+
+    function leastSquares(X, y) {
+      const G = matMulAtA(X);
+      const rhs = matMulAtY(X, y);
+      const coeffs = solveLinearSystem(G, rhs);
+      const fitted = X.map(row => row.reduce((s, v, i) => s + v * coeffs[i], 0));
+      const residuals = fitted.map((v, i) => y[i] - v);
+      const rss = residuals.reduce((s, v) => s + v * v, 0);
+      return {
+        coeffs,
+        fitted,
+        residuals,
+        rss,
+        rms: Math.sqrt(rss / Math.max(1, y.length)),
+        conditionNumber: estimateConditionNumberGram(G)
+      };
+    }
+
+    function fitPolynomial(ns, ys, degree) {
+      const X = ns.map(n => {
+        const row = [];
+        for (let k = 0; k <= degree; k++) row.push(n ** k);
+        return row;
+      });
+      return leastSquares(X, ys);
+    }
+
+    function detectQuasiPolynomial(sequence, options = {}) {
+      const N = sequence.length;
+      const Nfit = Math.min(options.N_fit ?? Math.min(N, 2048), N);
+      const mMax = options.m_max ?? 12;
+      const dMax = options.d_max ?? 4;
+      const threshold = options.residualThreshold ?? 1e-6;
+      const slice = Array.from(sequence.slice(0, Nfit));
+      let best = null;
+
+      for (let m = 1; m <= Math.min(mMax, Nfit); m++) {
+        for (let d = 0; d <= dMax; d++) {
+          let rss = 0;
+          let totalCount = 0;
+          const coefficients = Array.from({ length: m }, () => Array(d + 1).fill(0));
+          let failed = false;
+          for (let r = 0; r < m; r++) {
+            const ns = [];
+            const ys = [];
+            for (let idx = 0; idx < Nfit; idx++) {
+              const n = idx + 1;
+              if (n % m === r) {
+                ns.push(n);
+                ys.push(slice[idx]);
+              }
+            }
+            if (ns.length < d + 1) {
+              failed = true;
+              break;
+            }
+            try {
+              const fit = fitPolynomial(ns, ys, d);
+              rss += fit.rss;
+              totalCount += ys.length;
+              coefficients[r] = fit.coeffs;
+            } catch {
+              failed = true;
+              break;
+            }
+          }
+          if (failed) continue;
+          const aic = Nfit * Math.log(Math.max(rss / Math.max(1, totalCount), 1e-30)) + 2 * (m * (d + 1));
+          const residualRMS = Math.sqrt(rss / Math.max(1, totalCount));
+          const candidate = { period: m, degree: d, coefficients, residualRMS, aic };
+          if (!best || aic < best.aic - 1e-9 || (Math.abs(aic - best.aic) < 1e-9 && (m < best.period || (m === best.period && d < best.degree)))) {
+            best = candidate;
+          }
+        }
+      }
+
+      if (!best) return { type: "none", confidence: "poor", notes: ["no quasi-polynomial candidate"] };
+
+      const skeleton = new Float64Array(N);
+      for (let n = 1; n <= N; n++) {
+        const r = n % best.period;
+        let v = 0;
+        for (let k = 0; k <= best.degree; k++) v += best.coefficients[r][k] * (n ** k);
+        skeleton[n - 1] = v;
+      }
+      const residual = new Float64Array(N);
+      for (let i = 0; i < N; i++) residual[i] = sequence[i] - skeleton[i];
+      const rmsAll = Math.sqrt(Array.from(residual).reduce((s, x) => s + x * x, 0) / N);
+      const accepted = best.residualRMS <= threshold;
+      return {
+        type: accepted ? "quasiPolynomial" : "quasiPolynomialCandidate",
+        confidence: accepted ? (best.residualRMS < threshold * 0.1 ? "good" : "uncertain") : "poor",
+        period: best.period,
+        degree: best.degree,
+        coefficients: best.coefficients,
+        skeleton,
+        residual,
+        residualRMS: rmsAll,
+        fitResidualRMS: best.residualRMS,
+        notes: [accepted
+          ? `quasi-polynomial detected: period=${best.period}, degree=${best.degree}`
+          : `quasi-polynomial candidate: period=${best.period}, degree=${best.degree}, fitRMS=${best.residualRMS}`]
+      };
+    }
+
+    function detectPowerLaw(sequence, options = {}) {
+      const N = sequence.length;
+      const Nfit = Math.min(options.N_fit ?? Math.min(N, 2048), N);
+      const xs = [];
+      const ys = [];
+      for (let n = 1; n <= Nfit; n++) {
+        const a = sequence[n - 1];
+        if (!(a > 0)) return { type: "none", confidence: "poor", notes: ["power-law skipped: non-positive values present"] };
+        xs.push(Math.log(n));
+        ys.push(Math.log(a));
+      }
+      const mx = mean(xs), my = mean(ys);
+      let num = 0, den = 0;
+      for (let i = 0; i < xs.length; i++) {
+        num += (xs[i] - mx) * (ys[i] - my);
+        den += (xs[i] - mx) * (xs[i] - mx);
+      }
+      let alpha = num / den;
+      let c = Math.exp(my - alpha * mx);
+
+      for (let iter = 0; iter < 3; iter++) {
+        let j11 = 0, j12 = 0, j22 = 0, b1 = 0, b2 = 0;
+        for (let n = 1; n <= Nfit; n++) {
+          const na = n ** alpha;
+          const pred = c * na;
+          const r = sequence[n - 1] - pred;
+          const dc = na;
+          const da = c * na * Math.log(n);
+          j11 += dc * dc;
+          j12 += dc * da;
+          j22 += da * da;
+          b1 += dc * r;
+          b2 += da * r;
+        }
+        const det = j11 * j22 - j12 * j12;
+        if (Math.abs(det) < 1e-20) break;
+        const dcStep = (b1 * j22 - b2 * j12) / det;
+        const daStep = (j11 * b2 - j12 * b1) / det;
+        c += dcStep;
+        alpha += daStep;
+      }
+
+      const rounded = Math.round(alpha);
+      if (Math.abs(alpha - rounded) < 0.01) {
+        return { type: "none", confidence: "poor", notes: [`power-law near integer exponent ${alpha}, defer to quasi-polynomial`] };
+      }
+
+      const skeleton = new Float64Array(N);
+      const residual = new Float64Array(N);
+      for (let n = 1; n <= N; n++) {
+        skeleton[n - 1] = c * (n ** alpha);
+        residual[n - 1] = sequence[n - 1] - skeleton[n - 1];
+      }
+      const residualRMS = Math.sqrt(Array.from(residual.slice(0, Nfit)).reduce((s, x) => s + x * x, 0) / Nfit);
+      const scale = Math.max(1e-12, rms(Array.from(sequence.slice(0, Nfit))));
+      if (residualRMS / scale > 1e-4) {
+        return { type: "none", confidence: "poor", notes: [`power-law rejected (relative RMS=${residualRMS / scale})`] };
+      }
+      return {
+        type: "powerLaw",
+        confidence: residualRMS / scale < 1e-6 ? "good" : "uncertain",
+        exponent: alpha,
+        coefficient: c,
+        logCorrection: 0,
+        period: 1,
+        skeleton,
+        residual,
+        residualRMS,
+        notes: [`non-integer exponent α=${alpha.toFixed(6)} detected`]
+      };
+    }
+
+    function detectExtendedSkeleton(sequence, options = {}) {
+      const N = sequence.length;
+      const Nfit = Math.min(options.N_fit ?? Math.min(N, 2048), N);
+      const ns = Array.from({ length: Nfit }, (_, i) => i + 1);
+      const ys = Array.from(sequence.slice(0, Nfit));
+      const scale = Math.max(1e-12, rms(ys));
+
+      function fitBasis(terms, label) {
+        const X = ns.map(n => terms.map(t => t.fn(n)));
+        const fit = leastSquares(X, ys);
+        const skeleton = new Float64Array(N);
+        const residual = new Float64Array(N);
+        for (let n = 1; n <= N; n++) {
+          let v = 0;
+          for (let i = 0; i < terms.length; i++) v += fit.coeffs[i] * terms[i].fn(n);
+          skeleton[n - 1] = v;
+          residual[n - 1] = sequence[n - 1] - v;
+        }
+        const residualRMS = Math.sqrt(Array.from(residual.slice(0, Nfit)).reduce((s, x) => s + x * x, 0) / Nfit);
+        return { label, fit, skeleton, residual, residualRMS, rel: residualRMS / scale, terms };
+      }
+
+      const candidates = [
+        fitBasis([
+          { label: 'log(n)', fn: n => Math.log(n) },
+          { label: '1', fn: () => 1 }
+        ], 'log'),
+        fitBasis([
+          { label: 'n*log(n)', fn: n => n * Math.log(n) },
+          { label: 'n', fn: n => n },
+          { label: '1', fn: () => 1 }
+        ], 'nlogn')
+      ].sort((a, b) => a.rel - b.rel);
+
+      const best = candidates[0];
+      if (!best || best.rel > (options.extendedThreshold ?? 5e-4)) {
+        return { type: 'none', confidence: 'poor', notes: ['extended skeleton rejected'] };
+      }
+
+      const out = {
+        type: 'extended',
+        extendedType: best.label,
+        confidence: best.rel < 1e-5 ? 'good' : 'uncertain',
+        coefficients: best.fit.coeffs,
+        basis: best.terms.map(t => t.label),
+        skeleton: best.skeleton,
+        residual: best.residual,
+        residualRMS: best.residualRMS,
+        notes: [`extended skeleton detected: ${best.label}`]
+      };
+      return out;
+    }
+
+    function detectFourierSimple(sequence, options = {}) {
+      const N = sequence.length;
+      const Nfit = Math.min(options.N_fit ?? Math.min(N, 1024), N);
+      const data = Array.from(sequence.slice(0, Nfit));
+      const maxK = Math.min(Math.floor(Nfit / 2) - 1, options.fourierBins ?? 512);
+      const maxPeaks = options.fourierMaxPeaks ?? 3;
+
+      function solveTrigSystem(omegas) {
+        const p = 1 + 2 * omegas.length;
+        const G = Array.from({ length: p }, () => Array(p).fill(0));
+        const rhs = Array(p).fill(0);
+        for (let n = 1; n <= Nfit; n++) {
+          const row = [1];
+          for (const omega of omegas) {
+            row.push(Math.cos(omega * n));
+            row.push(Math.sin(omega * n));
+          }
+          const y = data[n - 1];
+          for (let i = 0; i < p; i++) {
+            rhs[i] += row[i] * y;
+            for (let j = 0; j < p; j++) G[i][j] += row[i] * row[j];
+          }
+        }
+        const coeffs = solveLinearSystem(G, rhs);
+        const dc = coeffs[0];
+        const peaks = [];
+        for (let i = 0; i < omegas.length; i++) {
+          const a = coeffs[1 + 2 * i];
+          const b = coeffs[1 + 2 * i + 1];
+          peaks.push({
+            frequency: omegas[i],
+            cosCoeff: a,
+            sinCoeff: b,
+            amplitude: Math.hypot(a, b),
+            phase: Math.atan2(-b, a)
+          });
+        }
+        let rss = 0;
+        for (let n = 1; n <= Nfit; n++) {
+          let pred = dc;
+          for (const peak of peaks) pred += peak.cosCoeff * Math.cos(peak.frequency * n) + peak.sinCoeff * Math.sin(peak.frequency * n);
+          const r = data[n - 1] - pred;
+          rss += r * r;
+        }
+        return { dc, peaks, rss };
+      }
+
+      function singlePeakAtOmega(omega) {
+        const fit = solveTrigSystem([omega]);
+        const peak = fit.peaks[0];
+        return { dc: fit.dc, a: peak.cosCoeff, b: peak.sinCoeff, rss: fit.rss, amplitude: peak.amplitude, phase: peak.phase };
+      }
+
+      const amps = new Float64Array(maxK + 2);
+      const rawPeaks = [];
+      for (let k = 1; k <= maxK; k++) {
+        const omega = 2 * Math.PI * k / Nfit;
+        const fit = singlePeakAtOmega(omega);
+        amps[k] = fit.amplitude;
+      }
+      for (let k = 2; k < maxK; k++) {
+        if (amps[k] >= amps[k - 1] && amps[k] >= amps[k + 1]) rawPeaks.push({ k, amplitude: amps[k] });
+      }
+      rawPeaks.sort((a, b) => b.amplitude - a.amplitude);
+      const selectedKs = rawPeaks.slice(0, maxPeaks).map(p => p.k);
+      if (!selectedKs.length) {
+        const bestK = amps.reduce((best, val, idx) => idx > 0 && val > amps[best] ? idx : best, 1);
+        selectedKs.push(bestK);
+      }
+
+      const refinedOmegas = [];
+      for (const k of selectedKs) {
+        const y1 = amps[Math.max(1, k - 1)];
+        const y2 = amps[k];
+        const y3 = amps[Math.min(maxK, k + 1)];
+        let delta = 0;
+        const denom = y1 - 2 * y2 + y3;
+        if (Math.abs(denom) > 1e-18) {
+          delta = 0.5 * (y1 - y3) / denom;
+          delta = clamp(delta, -0.5, 0.5);
+        }
+        let omega = 2 * Math.PI * (k + delta) / Nfit;
+        let step = 2 * Math.PI / Nfit;
+        for (let iter = 0; iter < (options.fourierRefineSteps ?? 5); iter++) {
+          const cand = [omega - step, omega, omega + step].map(w => ({ omega: w, ...singlePeakAtOmega(w) }));
+          cand.sort((p, q) => q.amplitude - p.amplitude);
+          omega = cand[0].omega;
+          step *= 0.35;
+        }
+        refinedOmegas.push(omega);
+      }
+
+      refinedOmegas.sort((a, b) => a - b);
+      const deduped = [];
+      const minSep = 0.02;
+      for (const omega of refinedOmegas) {
+        if (!deduped.length || Math.abs(omega - deduped[deduped.length - 1]) > minSep) deduped.push(omega);
+      }
+
+      const bestFit = solveTrigSystem(deduped);
+      const skeleton = new Float64Array(N);
+      const residual = new Float64Array(N);
+      for (let n = 1; n <= N; n++) {
+        let v = bestFit.dc;
+        for (const peak of bestFit.peaks) v += peak.cosCoeff * Math.cos(peak.frequency * n) + peak.sinCoeff * Math.sin(peak.frequency * n);
+        skeleton[n - 1] = v;
+        residual[n - 1] = sequence[n - 1] - v;
+      }
+      const residualRMS = Math.sqrt(Array.from(residual.slice(0, Nfit)).reduce((s, x) => s + x * x, 0) / Nfit);
+      const seqScale = Math.max(1e-12, rms(Array.from(sequence.slice(0, Nfit))));
+      const rel = residualRMS / seqScale;
+      if (rel > (options.fourierThreshold ?? 0.2)) {
+        return { type: "none", confidence: "poor", notes: [`fourier rejected (relative RMS=${rel})`] };
+      }
+
+      const dcWindows = [
+        sequence.slice(0, Math.min(sequence.length, 2048)),
+        sequence.slice(Math.max(0, Math.floor(sequence.length / 2) - 1024), Math.max(0, Math.floor(sequence.length / 2) - 1024) + Math.min(sequence.length, 2048)),
+        sequence.slice(Math.max(0, sequence.length - Math.min(sequence.length, 2048)))
+      ].filter(arr => arr.length > 0).map(arr => mean(Array.from(arr)));
+      const dcSpread = dcWindows.length ? Math.max(...dcWindows) - Math.min(...dcWindows) : 0;
+      const dcScale = Math.max(1e-9, Math.abs(bestFit.dc), ...dcWindows.map(v => Math.abs(v)));
+      const dcStability = clamp(1 - dcSpread / dcScale - rel, 0, 1);
+      const dcDetails = {
+        windows: dcWindows,
+        spread: dcSpread,
+        stability: dcStability,
+        note: dcStability > 0.9
+          ? 'Fourier skeleton DC component (stable time-average candidate for bounded oscillatory data)'
+          : 'Fourier skeleton DC component (time-average candidate; check diagnostics)'
+      };
+
+      return {
+        type: "fourier",
+        confidence: rel < 0.05 ? "good" : "uncertain",
+        dcComponent: bestFit.dc,
+        dcDetails,
+        peaks: bestFit.peaks.map(p => ({ ...p, rss: bestFit.rss })),
+        numPeaks: bestFit.peaks.length,
+        skeleton,
+        residual,
+        residualRMS,
+        notes: [`fourier skeleton detected: peaks=${bestFit.peaks.length}, dc≈${bestFit.dc.toFixed(6)}`]
+      };
+    }
+
+    function detectModel(sequence, options) {
+      const Ncheck = Math.min(1024, sequence.length);
+      const head = Array.from(sequence.slice(0, Ncheck));
+      const firstDiff = [];
+      for (let i = 1; i < head.length; i++) firstDiff.push(head[i] - head[i - 1]);
+      const seqScale = Math.max(1e-12, rms(head));
+      const diffScale = firstDiff.length ? rms(firstDiff) : 0;
+      const quasiSoftRel = options.quasiSoftRelativeThreshold ?? 0.0025;
+
+      const qp = detectQuasiPolynomial(sequence, options);
+      if (qp.type === "quasiPolynomial") {
+        const relResidual = (qp.residualRMS ?? Infinity) / seqScale;
+        if ((qp.period ?? 1) <= 12 && relResidual < Math.max(1e-8, 1e-6)) {
+          return qp;
+        }
+        if ((qp.period ?? 1) <= 4 && (qp.degree ?? 0) <= 2 && relResidual < quasiSoftRel) {
+          return {
+            ...qp,
+            confidence: 'uncertain',
+            notes: [...(qp.notes || []), `soft quasi acceptance (relative residual=${relResidual})`]
+          };
+        }
+      }
+
+      if (qp.type === "quasiPolynomialCandidate") {
+        const relResidual = (qp.residualRMS ?? Infinity) / seqScale;
+        if ((qp.period ?? 1) <= 4 && (qp.degree ?? 0) <= 2 && relResidual < quasiSoftRel) {
+          return {
+            ...qp,
+            type: 'quasiPolynomial',
+            confidence: 'uncertain',
+            notes: [...(qp.notes || []), `soft quasi acceptance (relative residual=${relResidual})`]
+          };
+        }
+      }
+
+      const pw = detectPowerLaw(sequence, options);
+      if (pw.type === "powerLaw") return pw;
+
+      const ext = detectExtendedSkeleton(sequence, options);
+      if (ext.type === 'extended') return ext;
+
+      const fourier = detectFourierSimple(sequence, options);
+      if (fourier.type === "fourier") {
+        const peak = fourier.peaks?.[0];
+        const omega = peak?.frequency ?? Infinity;
+        const amp = peak?.amplitude ?? 0;
+        const dc = Math.abs(fourier.dcComponent ?? 0);
+        const looksLikeTrend = diffScale < 0.02 * seqScale;
+        const lowFreq = omega < (options.fourierMinOmega ?? 0.01);
+        const dcDominant = dc > 0.25 * Math.max(1e-12, amp);
+        const tinyOscillationOnQuasi =
+          (qp.type === 'quasiPolynomial' || qp.type === 'quasiPolynomialCandidate') &&
+          (qp.residualRMS ?? Infinity) / seqScale < quasiSoftRel &&
+          amp < 0.05 * seqScale;
+        if (!(lowFreq && looksLikeTrend) && !(lowFreq && dcDominant) && !tinyOscillationOnQuasi) {
+          return fourier;
+        }
+      }
+
+      if (qp.type === "quasiPolynomial" || qp.type === "quasiPolynomialCandidate") {
+        return {
+          ...qp,
+          confidence: qp.confidence || 'uncertain',
+          notes: [...(qp.notes || []), 'quasi fallback selected']
+        };
+      }
+
+      return {
+        type: "none",
+        confidence: "poor",
+        skeleton: qp.skeleton || fourier.skeleton || new Float64Array(sequence.length),
+        residual: qp.residual || fourier.residual || new Float64Array(sequence.length),
+        residualRMS: qp.residualRMS ?? fourier.residualRMS ?? null,
+        notes: [
+          ...(qp.notes || []),
+          ...(pw.notes || []),
+          ...(ext.notes || []),
+          ...(fourier.notes || []),
+          "no supported skeleton detected in current build"
+        ]
+      };
+    }
+
+    function bernoulliPolynomial(k, x) {
+      let sum = 0;
+      for (let j = 0; j <= k; j++) {
+        const Bj = BERNOULLI[j] ?? 0;
+        sum += comb(k, j) * Bj * (x ** (k - j));
+      }
+      return sum;
+    }
+
+    function comb(n, k) {
+      if (k < 0 || k > n) return 0;
+      if (k === 0 || k === n) return 1;
+      let res = 1;
+      for (let i = 1; i <= k; i++) res = res * (n - k + i) / i;
+      return res;
+    }
+
+    function gamma(z) {
+      const p = [
+        0.99999999999980993, 676.5203681218851, -1259.1392167224028,
+        771.32342877765313, -176.61502916214059, 12.507343278686905,
+        -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7
+      ];
+      if (z < 0.5) return Math.PI / (Math.sin(Math.PI * z) * gamma(1 - z));
+      z -= 1;
+      let x = p[0];
+      for (let i = 1; i < p.length; i++) x += p[i] / (z + i);
+      const t = z + 7.5;
+      return Math.sqrt(2 * Math.PI) * Math.pow(t, z + 0.5) * Math.exp(-t) * x;
+    }
+
+    function zetaSeries(s, N = 20000) {
+      let sum = 0;
+      for (let n = 1; n <= N; n++) sum += 1 / (n ** s);
+      return sum;
+    }
+
+    function zetaViaFunctionalEquation(s) {
+      if (s > 1) return zetaSeries(s);
+      const oneMinusS = 1 - s;
+      const z = zetaSeries(oneMinusS, 50000);
+      return (2 ** s) * (Math.PI ** (s - 1)) * Math.sin(Math.PI * s / 2) * gamma(1 - s) * z;
+    }
+
+    function hurwitzRegularize(model, sequence) {
+      if (model.type === "quasiPolynomial") {
+        const m = model.period;
+        const d = model.degree;
+        let total = 0;
+        const residueBreakdown = [];
+        for (let r = 0; r < m; r++) {
+          let contrib = 0;
+          for (let k = 0; k <= d; k++) {
+            const c = model.coefficients[r][k];
+            if (Math.abs(c) < 1e-15) continue;
+            const a = r === 0 ? 1 : r / m;
+            const B = bernoulliPolynomial(k + 1, a);
+            const zetaVal = -B / (k + 1);
+            contrib += c * (m ** k) * zetaVal;
+          }
+          residueBreakdown.push({ residue: r, contribution: contrib });
+          total += contrib;
+        }
+        return {
+          method: "hurwitz",
+          status: "success",
+          value: total,
+          stability: "exact-ish",
+          notes: [...model.notes],
+          details: {
+            exactForm: model.period === 1 ? "Bernoulli-polynomial exact-ish path" : "Residue-class Hurwitz/Bernoulli path",
+            residueBreakdown
+          }
+        };
+      }
+      if (model.type === "powerLaw" && model.period === 1) {
+        const value = model.coefficient * zetaViaFunctionalEquation(-model.exponent);
+        return {
+          method: "hurwitz",
+          status: "success",
+          value,
+          stability: "exact-ish",
+          notes: [...model.notes],
+          details: {
+            exactForm: `c * zeta(${-model.exponent}) via functional equation`,
+            exponent: model.exponent,
+            coefficient: model.coefficient
+          }
+        };
+      }
+      if (model.type === 'extended') {
+        return {
+          method: 'hurwitz',
+          status: 'not_applicable',
+          value: null,
+          stability: null,
+          notes: [`extended skeleton ${model.extendedType} detected — use ExpCutoff / Window in current build`],
+          details: { basis: model.basis, coefficients: model.coefficients }
+        };
+      }
+      if (model.type === "fourier") {
+        return {
+          method: "hurwitz",
+          status: "not_applicable",
+          value: null,
+          stability: null,
+          notes: ["fourier skeleton — use Abel/ExpCutoff"],
+          details: {}
+        };
+      }
+      return {
+        method: "hurwitz",
+        status: "not_applicable",
+        value: null,
+        stability: null,
+        notes: ["supported only for quasi-polynomial and single power-law skeletons in Phase 1"],
+        details: {}
+      };
+    }
+
+    function buildExpBasis(model) {
+      const basis = [];
+      if (model.type === "quasiPolynomial") {
+        for (let p = model.degree + 1; p >= 1; p--) basis.push({ label: `eps^-${p}`, fn: eps => eps ** (-p) });
+        basis.push({ label: "1", fn: () => 1 });
+        basis.push({ label: "eps", fn: eps => eps });
+        return basis;
+      }
+      if (model.type === "powerLaw") {
+        const a = model.exponent;
+        const exponents = [a + 1, a, Math.max(a - 1, 0.5)].filter((v, i, arr) => arr.findIndex(u => Math.abs(u - v) < 1e-9) === i);
+        for (const p of exponents) basis.push({ label: `eps^-${p.toFixed(3)}`, fn: eps => eps ** (-p) });
+        basis.push({ label: "1", fn: () => 1 });
+        basis.push({ label: "eps", fn: eps => eps });
+        return basis;
+      }
+      return [
+        { label: "eps^-3", fn: eps => eps ** -3 },
+        { label: "eps^-2", fn: eps => eps ** -2 },
+        { label: "eps^-1", fn: eps => eps ** -1 },
+        { label: "log(eps)", fn: eps => Math.log(eps) },
+        { label: "1", fn: () => 1 },
+        { label: "eps", fn: eps => eps }
+      ];
+    }
+
+    function logspace(a, b, n) {
+      const out = [];
+      const la = Math.log(a), lb = Math.log(b);
+      for (let i = 0; i < n; i++) {
+        const t = i / (n - 1);
+        out.push(Math.exp(la + (lb - la) * t));
+      }
+      return out;
+    }
+
+    function expCutoffRegularize(sequence, model, options = {}) {
+      const epsMin = options.epsMin ?? 0.001;
+      const epsMax = options.epsMax ?? 0.5;
+      const samples = options.samples ?? 60;
+      const epsGrid = logspace(epsMin, epsMax, samples);
+      const basis = buildExpBasis(model);
+      const skeleton = model?.skeleton instanceof Float64Array ? model.skeleton : null;
+      const residual = model?.residual instanceof Float64Array ? model.residual : null;
+      const useResidualMode = !!(skeleton && residual && (model.type === 'quasiPolynomial' || model.type === 'powerLaw'));
+      const baseHurwitz = useResidualMode ? hurwitzRegularize(model, sequence) : null;
+
+      const curve = epsGrid.map(eps => {
+        let sFull = 0;
+        let sResidual = 0;
+        for (let i = 0; i < sequence.length; i++) {
+          const w = Math.exp(-eps * (i + 1));
+          sFull += sequence[i] * w;
+          if (useResidualMode) sResidual += residual[i] * w;
+        }
+        return { eps, sEps: useResidualMode ? sResidual : sFull, fullSEps: sFull };
+      });
+      const X = curve.map(({ eps }) => basis.map(b => b.fn(eps)));
+      const y = curve.map(p => p.sEps);
+      try {
+        const fit = leastSquares(X, y);
+        const oneIdx = basis.findIndex(b => b.label === "1");
+        const finitePartResidual = oneIdx >= 0 ? fit.coeffs[oneIdx] : null;
+        const value = useResidualMode
+          ? ((baseHurwitz?.status === 'success' ? baseHurwitz.value : 0) + (finitePartResidual ?? 0))
+          : finitePartResidual;
+        const windows = [
+          { a: epsMin, b: epsMax },
+          { a: epsMin * 1.5, b: epsMax / 1.5 },
+          { a: epsMin * 2, b: epsMax / 2 }
+        ].filter(w => w.a < w.b && w.b <= epsMax * 1.01);
+        const vals = [];
+        for (const w of windows) {
+          const subCurve = curve.filter(p => p.eps >= w.a && p.eps <= w.b);
+          if (subCurve.length < basis.length + 2) continue;
+          const subX = subCurve.map(({ eps }) => basis.map(b => b.fn(eps)));
+          const subY = subCurve.map(p => p.sEps);
+          const subFit = leastSquares(subX, subY);
+          const subResidual = subFit.coeffs[oneIdx];
+          vals.push(useResidualMode ? ((baseHurwitz?.status === 'success' ? baseHurwitz.value : 0) + subResidual) : subResidual);
+        }
+        const spread = vals.length ? Math.max(...vals) - Math.min(...vals) : 1;
+        const scale = Math.max(1e-12, Math.abs(value || 0), ...vals.map(v => Math.abs(v)));
+        const stabilityScore = clamp(1 - spread / (scale + 1e-12), 0, 1);
+        return {
+          method: "expCutoff",
+          status: "success",
+          value,
+          stability: stabilityScore,
+          notes: [
+            fit.conditionNumber > 1e8 ? `condition number high: ${formatNum(fit.conditionNumber, 6)}` : "stable fit",
+            ...(useResidualMode ? ['skeleton-subtracted residual fit'] : [])
+          ],
+          details: {
+            divergentTerms: basis.map((b, i) => ({ basis: b.label, coeff: fit.coeffs[i] })).filter(x => x.basis !== "1" && x.basis !== "eps"),
+            fitError: fit.rms,
+            conditionNumber: fit.conditionNumber,
+            stabilityScore,
+            curve: curve.map((p, i) => ({ ...p, fitted: fit.fitted[i] })),
+            basis: basis.map(b => b.label),
+            residualFinitePart: finitePartResidual,
+            skeletonMode: useResidualMode,
+            skeletonContribution: baseHurwitz?.status === 'success' ? baseHurwitz.value : null
+          }
+        };
+      } catch (err) {
+        return {
+          method: "expCutoff",
+          status: "failed",
+          value: null,
+          stability: null,
+          notes: [String(err.message || err)],
+          details: {}
+        };
+      }
+    }
+
+    function cesaroRegularize(sequence, options = {}) {
+      const N = sequence.length;
+      const partials = new Float64Array(N);
+      const cesaro = new Float64Array(N);
+      let s = 0;
+      let csum = 0;
+      for (let i = 0; i < N; i++) {
+        s += sequence[i];
+        partials[i] = s;
+        csum += s;
+        cesaro[i] = csum / (i + 1);
+      }
+      const tailStart = Math.max(0, Math.floor(N * 0.9));
+      const tail = Array.from(cesaro.slice(tailStart));
+      const tailMean = mean(tail);
+      const tailStd = Math.sqrt(variance(tail));
+      const scale = Math.max(1e-9, Math.abs(tailMean), ...tail.map(v => Math.abs(v)));
+      const relStd = tailStd / scale;
+      const trend = tail.length > 1 ? Math.abs(tail[tail.length - 1] - tail[0]) / Math.max(1, tail.length - 1) : 0;
+      const trendRel = trend / scale;
+      const sampled = [];
+      const step = Math.max(1, Math.floor(N / 256));
+      for (let i = 0; i < N; i += step) sampled.push({ n: i + 1, partial: partials[i], cesaro: cesaro[i] });
+      if (relStd < (options.stdThreshold ?? 1e-2) && trendRel < (options.trendThreshold ?? 2e-3)) {
+        return {
+          method: "cesaro",
+          status: "success",
+          value: tailMean,
+          stability: clamp(1 - 20 * relStd - 50 * trendRel, 0, 1),
+          notes: ["tail average appears convergent"],
+          details: { partials: sampled, tailStd, trendRel }
+        };
+      }
+      return {
+        method: "cesaro",
+        status: "not_applicable",
+        value: null,
+        stability: null,
+        notes: ["Cesàro tail does not stabilize"],
+        details: { partials: sampled, tailStd, trendRel }
+      };
+    }
+
+    function isBoundedSequence(sequence, options = {}) {
+      const N = Math.min(sequence.length, options.N_check ?? 8192);
+      const head = Array.from(sequence.slice(0, N));
+      const tail = Array.from(sequence.slice(Math.max(0, sequence.length - N)));
+      const ampHead = Math.max(...head) - Math.min(...head);
+      const ampTail = Math.max(...tail) - Math.min(...tail);
+      const scale = Math.max(1e-9, rms(head), rms(tail), Math.abs(mean(head)), Math.abs(mean(tail)));
+      const ratio = ampTail / Math.max(1e-9, ampHead, scale);
+      const meanShift = Math.abs(mean(tail) - mean(head)) / Math.max(1e-9, scale);
+      return {
+        bounded: ratio < (options.rangeRatioThreshold ?? 1.5) && meanShift < (options.meanShiftThreshold ?? 0.2),
+        ampHead,
+        ampTail,
+        ratio,
+        meanShift
+      };
+    }
+
+    function abelRegularize(sequence, model, options = {}) {
+      const xMin = options.xMin ?? 0.5;
+      const xMax = options.xMax ?? 0.999;
+      const samples = options.samples ?? 50;
+
+      const disallowAbel = (
+        ((model.type === 'quasiPolynomial' || model.type === 'quasiPolynomialCandidate') && (model.degree ?? 0) >= 0 && (model.period ?? 1) === 1) ||
+        (model.type === 'powerLaw') ||
+        (model.type === 'extended') ||
+        (model.type === 'none')
+      );
+      if (disallowAbel) {
+        return {
+          method: 'abel',
+          status: 'not_applicable',
+          value: null,
+          stability: null,
+          notes: [model.type === 'extended'
+            ? 'Abel disabled for extended-growth skeleton in current build'
+            : 'Abel disabled for non-oscillatory growth / unresolved skeleton'],
+          details: {}
+        };
+      }
+
+      const boundedInfo = isBoundedSequence(sequence, options);
+      const xs = logspace(1 - xMax, 1 - xMin, samples).map(t => 1 - t).sort((a, b) => a - b);
+      const curve = xs.map(x => {
+        let s = 0;
+        let xn = x;
+        for (let i = 0; i < sequence.length; i++) {
+          s += sequence[i] * xn;
+          xn *= x;
+        }
+        return { x, A: s, t: 1 - x };
+      });
+
+      if (model.type === 'quasiPolynomial' && model.period === 2 && model.degree === 0) {
+        const c0 = model.coefficients[0][0];
+        const c1 = model.coefficients[1][0];
+        if (Math.abs(c0 + c1) < 1e-10) {
+          const value = c1 / 2;
+          return {
+            method: 'abel',
+            status: 'success',
+            value,
+            stability: 'exact-ish',
+            notes: ['period-2 alternating exact path'],
+            details: { curve }
+          };
+        }
+      }
+
+      const peakAmps = (model.peaks || []).map(p => p.amplitude || 0);
+      const strongestAmp = peakAmps.length ? Math.max(...peakAmps) : 0;
+      const totalPeakAmp = peakAmps.reduce((s, x) => s + x, 0);
+      const dcAbs = Math.abs(model.dcComponent ?? 0);
+      const dcDominant = model.type === 'fourier' && dcAbs > (options.dcDominanceFactor ?? 3) * Math.max(1e-9, strongestAmp);
+      const hardDcDominant = model.type === 'fourier' && dcAbs > (options.hardDcDominanceFactor ?? 8) * Math.max(1e-9, strongestAmp);
+      const boundedMultiPeakDc = model.type === 'fourier' && boundedInfo.bounded && (model.peaks?.length ?? 0) >= 2 && dcAbs > Math.max(1e-9, strongestAmp) && dcAbs > 0.5 * totalPeakAmp;
+
+      if (model.type === 'fourier' && (((dcDominant || boundedMultiPeakDc) && boundedInfo.bounded) || hardDcDominant)) {
+        return {
+          method: 'abel',
+          status: 'not_applicable',
+          value: null,
+          stability: null,
+          notes: ['Abel disabled for DC-dominant bounded Fourier skeleton; use Cesàro / inspect dcComponent'],
+          details: { boundedInfo, dcComponent: model.dcComponent, peaks: model.peaks, dcDominant, hardDcDominant, boundedMultiPeakDc }
+        };
+      }
+
+      const tailCount = model.type === 'fourier' ? Math.min(28, curve.length) : Math.min(20, curve.length);
+      const tail = curve.slice(Math.max(0, curve.length - tailCount));
+      const X = tail.map(p => [1, p.t, p.t * p.t]);
+      const y = tail.map(p => p.A);
+
+      try {
+        const fit = leastSquares(X, y);
+        const value = fit.coeffs[0];
+        const fitVals = curve.map(p => fit.coeffs[0] + fit.coeffs[1] * p.t + fit.coeffs[2] * p.t * p.t);
+        const tailResidual = y.map((v, i) => v - (fit.coeffs[0] + fit.coeffs[1] * tail[i].t + fit.coeffs[2] * tail[i].t * tail[i].t));
+        const tailRms = rms(tailResidual);
+        const scale = Math.max(1e-9, Math.abs(value), ...tail.map(p => Math.abs(p.A)));
+        const stability = clamp(1 - tailRms / scale, 0, 1);
+
+        if (model.type === 'fourier' && model.peaks && model.peaks.length >= 1) {
+          const strongest = [...model.peaks].sort((a, b) => b.amplitude - a.amplitude)[0];
+          const omega = strongest.frequency;
+          const a = Number.isFinite(strongest.cosCoeff) ? strongest.cosCoeff : 0;
+          const b = Number.isFinite(strongest.sinCoeff) ? strongest.sinCoeff : 0;
+          const sinHalf = Math.sin(omega / 2);
+          let candidate = null;
+          if (Math.abs(sinHalf) > 1e-12) {
+            const cotHalf = Math.cos(omega / 2) / sinHalf;
+            candidate = -0.5 * a + 0.5 * b * cotHalf;
+          }
+          const candidateDiff = Number.isFinite(candidate) ? Math.abs(candidate - value) : Infinity;
+          const useCandidate = model.peaks.length === 1 && Number.isFinite(candidate) && candidateDiff < Math.max(5e-4, 8 * tailRms);
+          return {
+            method: 'abel',
+            status: 'success',
+            value: useCandidate ? candidate : value,
+            stability: useCandidate ? 'exact-ish' : stability,
+            notes: [
+              useCandidate
+                ? 'single-frequency fourier exact-ish path v5'
+                : (model.peaks.length > 1 || Math.abs(model.dcComponent ?? 0) > 0.05
+                    ? 'fourier-tail extrapolation preferred (multi-peak / DC)'
+                    : 'fourier-tail extrapolation preferred')
+            ],
+            details: {
+              curve: curve.map((p, i) => ({ ...p, fitted: fitVals[i] })),
+              fitError: fit.rms,
+              tailRms,
+              fourierCandidate: candidate,
+              chosen: useCandidate ? 'fourierCandidate' : 'tailExtrapolation',
+              boundedInfo,
+              dcDominant,
+              hardDcDominant,
+              boundedMultiPeakDc
+            }
+          };
+        }
+
+        return {
+          method: 'abel',
+          status: 'success',
+          value,
+          stability,
+          notes: [tailRms / scale < 1e-2 ? 'stable extrapolation' : 'extrapolation may be loose'],
+          details: {
+            curve: curve.map((p, i) => ({ ...p, fitted: fitVals[i] })),
+            fitError: fit.rms,
+            tailRms,
+            boundedInfo,
+            dcDominant,
+            hardDcDominant,
+            boundedMultiPeakDc
+          }
+        };
+      } catch (err) {
+        return {
+          method: 'abel',
+          status: 'failed',
+          value: null,
+          stability: null,
+          notes: [String(err.message || err)],
+          details: { curve, boundedInfo, dcDominant, hardDcDominant, boundedMultiPeakDc }
+        };
+      }
+    }
+
+    function windowRegularize(sequence, model, options = {}) {
+      const N = sequence.length;
+      const nMin = options.Nmin ?? Math.max(128, Math.floor(N / 8));
+      const nMax = Math.min(options.Nmax ?? N, N);
+      const samples = options.samples ?? 16;
+      const windowType = options.windowType ?? 'hann';
+      const Ns = [];
+      const logA = Math.log(nMin), logB = Math.log(nMax);
+      for (let i = 0; i < samples; i++) {
+        const t = samples === 1 ? 0 : i / (samples - 1);
+        const v = Math.round(Math.exp(logA + (logB - logA) * t));
+        if (!Ns.length || v > Ns[Ns.length - 1]) Ns.push(v);
+      }
+
+      function w(u) {
+        if (windowType === 'blackman') return 0.42 - 0.5 * Math.cos(2 * Math.PI * u) + 0.08 * Math.cos(4 * Math.PI * u);
+        return 0.5 - 0.5 * Math.cos(2 * Math.PI * u);
+      }
+
+      const curve = Ns.map(M => {
+        let s = 0;
+        for (let n = 1; n <= M; n++) s += sequence[n - 1] * w(n / M);
+        return { N: M, S: s, invN: 1 / M, logN: Math.log(M), sqrtN: Math.sqrt(M) };
+      });
+
+      const tail = curve.slice(Math.max(0, curve.length - Math.min(10, curve.length)));
+
+      function makeBasis(mode) {
+        if (mode === 'linearGrowth') {
+          return {
+            label: 'model-aware polynomial basis',
+            terms: [
+              { label: 'N^2', fn: p => p.N * p.N },
+              { label: 'N', fn: p => p.N },
+              { label: '1', fn: () => 1 }
+            ]
+          };
+        }
+        if (mode === 'constantGrowth') {
+          return {
+            label: 'constant-growth basis',
+            terms: [
+              { label: 'N', fn: p => p.N },
+              { label: '1', fn: () => 1 },
+              { label: '1/N', fn: p => p.invN }
+            ]
+          };
+        }
+        if (mode === 'powerLaw') {
+          const a = model.exponent ?? 0.5;
+          return {
+            label: 'power-law basis',
+            terms: [
+              { label: `N^${formatNum(a + 1, 4)}`, fn: p => p.N ** (a + 1) },
+              { label: `N^${formatNum(Math.max(a, 0), 4)}`, fn: p => p.N ** Math.max(a, 0) },
+              { label: '1', fn: () => 1 }
+            ]
+          };
+        }
+        return {
+          label: 'exploratory growth basis',
+          terms: [
+            { label: 'sqrt(N)', fn: p => p.sqrtN },
+            { label: 'log(N)', fn: p => p.logN },
+            { label: '1', fn: () => 1 }
+          ]
+        };
+      }
+
+      function chooseMode() {
+        if (model.type === 'quasiPolynomial') {
+          if ((model.degree ?? 0) >= 1) return 'linearGrowth';
+          return 'constantGrowth';
+        }
+        if (model.type === 'powerLaw') return 'powerLaw';
+        return 'exploratory';
+      }
+
+      function tryFit(basisSpec) {
+        const X = tail.map(p => basisSpec.terms.map(t => t.fn(p)));
+        const y = tail.map(p => p.S);
+        const fit = leastSquares(X, y);
+        const oneIdx = basisSpec.terms.findIndex(t => t.label === '1');
+        const value = oneIdx >= 0 ? fit.coeffs[oneIdx] : fit.coeffs[fit.coeffs.length - 1];
+        const fitVals = curve.map(p => basisSpec.terms.reduce((s, t, i) => s + fit.coeffs[i] * t.fn(p), 0));
+        const tailResidual = tail.map((p, i) => p.S - basisSpec.terms.reduce((s, t, j) => s + fit.coeffs[j] * t.fn(p), 0));
+        const tailRms = rms(tailResidual);
+        const scale = Math.max(1e-9, Math.abs(value), ...tail.map(p => Math.abs(p.S)));
+        const stability = clamp(1 - tailRms / scale, 0, 1);
+        return { basisSpec, fit, value, fitVals, tailRms, stability };
+      }
+
+      try {
+        const primaryMode = chooseMode();
+        const trialModes = primaryMode === 'exploratory'
+          ? ['exploratory', 'constantGrowth']
+          : [primaryMode, 'exploratory'];
+        let result = null;
+        let lastError = null;
+        for (const mode of trialModes) {
+          try {
+            result = tryFit(makeBasis(mode));
+            break;
+          } catch (err) {
+            lastError = err;
+          }
+        }
+        if (!result) throw lastError || new Error('window fit failed');
+        return {
+          method: 'window',
+          status: result.basisSpec.label.includes('exploratory') ? 'exploratory' : 'success',
+          value: result.value,
+          stability: result.stability,
+          notes: [
+            windowType === 'hann' ? 'Hann window finite-part estimate' : 'Blackman window finite-part estimate',
+            result.basisSpec.label,
+            ...(result.basisSpec.label.includes('exploratory') ? ['not used in ensemble'] : [])
+          ],
+          details: {
+            curve: curve.map((p, i) => ({ ...p, fitted: result.fitVals[i] })),
+            fitError: result.fit.rms,
+            tailRms: result.tailRms,
+            windowType,
+            basis: result.basisSpec.terms.map(t => t.label)
+          }
+        };
+      } catch (err) {
+        return {
+          method: 'window',
+          status: 'failed',
+          value: null,
+          stability: null,
+          notes: [String(err.message || err)],
+          details: { curve, windowType }
+        };
+      }
+    }
+
+    function buildEnsemble(results) {
+      const successResults = results.filter(r => {
+        if (!(Number.isFinite(r.value) && (r.status === "success" || r.status === "exploratory"))) return false;
+        if (r.method === 'window') {
+          const notes = r.notes || [];
+          const exploratory = notes.some(n => String(n).includes('exploratory growth basis'));
+          if (exploratory) return false;
+        }
+        return true;
+      });
+      const vals = successResults.map(r => r.value);
+      if (!vals.length) {
+        return { mean: null, median: null, maxDeviation: null, agreement: null };
+      }
+      if (vals.length === 1) {
+        const only = successResults[0];
+        const unstable = typeof only.stability === 'number' ? only.stability < 0.9 : false;
+        const suspicious = (only.details?.conditionNumber ?? 0) > 1e12;
+        return {
+          mean: vals[0],
+          median: vals[0],
+          maxDeviation: null,
+          agreement: suspicious || unstable ? 'low' : 'insufficient'
+        };
+      }
+      const sorted = [...vals].sort((a, b) => a - b);
+      const meanVal = mean(vals);
+      const medianVal = sorted.length % 2 ? sorted[(sorted.length - 1) / 2] : (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2;
+      const ref = medianVal;
+      const maxDeviation = Math.max(...vals.map(v => Math.abs(v - ref)));
+      let agreement = "split";
+      if (maxDeviation < 1e-4) agreement = "high";
+      else if (maxDeviation < 1e-3) agreement = "moderate";
+      else if (maxDeviation < 1e-2) agreement = "low";
+      return { mean: meanVal, median: medianVal, maxDeviation, agreement };
+    }
+
+    function runBuiltInTests(settings) {
+      const results = [];
+      for (const tc of TEST_CASES) {
+        try {
+          const testNmax = (
+            tc.id === 'T004' ? 8192 :
+            tc.category === 'fourier' ? 65536 :
+            tc.category === 'oscillation' ? 16384 :
+            4096
+          );
+          const bundle = runFullAnalysis({
+            expression: tc.expr,
+            params: {},
+            Nmax: testNmax,
+            settings
+          });
+          let actual = null;
+          let status = 'missing';
+          let pass = false;
+          let error = Infinity;
+
+          if (tc.method === 'modelType') {
+            actual = bundle.modelDetection?.type ?? null;
+            status = actual ? 'success' : 'missing';
+            pass = actual === tc.expected;
+            error = pass ? 0 : Infinity;
+          } else if (tc.method === 'windowStatus') {
+            const target = bundle.results.find(r => r.method === 'window');
+            actual = target?.status ?? null;
+            status = actual || 'missing';
+            pass = actual === tc.expected;
+            error = pass ? 0 : Infinity;
+          } else {
+            const target = bundle.results.find(r => r.method === tc.method);
+            actual = target?.value;
+            status = target?.status || 'missing';
+            error = Math.abs((actual ?? NaN) - tc.expected);
+            pass = Number.isFinite(actual) && error <= tc.tol;
+          }
+
+          results.push({
+            ...tc,
+            actual,
+            error,
+            pass,
+            status
+          });
+        } catch (e) {
+          results.push({ ...tc, actual: null, error: Infinity, pass: false, status: String(e.message || e) });
+        }
+      }
+      return results;
+    }
+
+    function summarizeTests(testResults) {
+      const total = testResults.length;
+      const passed = testResults.filter(t => t.pass).length;
+      const byCategory = {};
+      for (const t of testResults) {
+        const key = t.category || 'other';
+        if (!byCategory[key]) byCategory[key] = { total: 0, passed: 0 };
+        byCategory[key].total += 1;
+        if (t.pass) byCategory[key].passed += 1;
+      }
+      return { total, passed, byCategory };
+    }
+
+    function buildDiagnostics(bundle) {
+      const out = [];
+      const exp = bundle.results.find(r => r.method === "expCutoff");
+      if (bundle.input.Nmax <= 128) out.push(`⚠ Nmax=${bundle.input.Nmax} may be too small for reliable estimation.`);
+      if (bundle.modelDetection.confidence === "uncertain") out.push("⚠ Skeleton estimate is uncertain. Consider manual specification.");
+      if (exp?.details?.conditionNumber > 1e8) out.push(`⚠ Fit condition number is high (${formatNum(exp.details.conditionNumber, 6)}). Result may be unstable.`);
+      if (bundle.ensemble.maxDeviation != null && bundle.ensemble.maxDeviation > 1e-2) out.push("⚠ Methods disagree significantly. Check individual results.");
+      if (bundle.modelDetection.type === "none" && bundle.results.find(r => r.method === "hurwitz")?.status === "not_applicable") {
+        out.push("⚠ Sequence is not quasi-polynomial/power-law in the supported Phase 1 sense. Hurwitz path is skipped.");
+      }
+      if (bundle.modelDetection.type === 'fourier') {
+        const peakAmps = (bundle.modelDetection.peaks || []).map(p => p.amplitude || 0);
+        const strongestAmp = peakAmps.length ? Math.max(...peakAmps) : 0;
+        const dcAbs = Math.abs(bundle.modelDetection.dcComponent ?? 0);
+        if (dcAbs > 3 * Math.max(1e-9, strongestAmp)) {
+          out.push(`ℹ DC component is dominant (${formatNum(bundle.modelDetection.dcComponent, 6)}). For bounded oscillatory data, dcEstimate may be more informative than Abel.`);
+        }
+      }
+      return out;
+    }
+
+    function exportBundle(bundle) {
+      const replacer = (key, value) => {
+        if (value instanceof Float64Array) return Array.from(value);
+        return value;
+      };
+      return JSON.stringify(bundle, replacer, 2);
+    }
+
+    function runFullAnalysis({ expression, params, Nmax, settings }) {
+      const sequence = generateSequence(expression, params, Nmax);
+      const modelDetection = detectModel(sequence, settings.modelDetection);
+      const results = [
+        hurwitzRegularize(modelDetection, sequence),
+        expCutoffRegularize(sequence, modelDetection, settings.expCutoff),
+        windowRegularize(sequence, modelDetection, settings.window || {}),
+        cesaroRegularize(sequence, settings.cesaro || {}),
+        abelRegularize(sequence, modelDetection, settings.abel || {}),
+      ];
+
+      const hurwitzRes = results.find(r => r.method === 'hurwitz' && r.status === 'success' && Number.isFinite(r.value));
+      const expRes = results.find(r => r.method === 'expCutoff' && r.status === 'success' && Number.isFinite(r.value));
+      const winIdx = results.findIndex(r => r.method === 'window' && (r.status === 'success' || r.status === 'exploratory') && Number.isFinite(r.value));
+      if (winIdx >= 0) {
+        const refs = [hurwitzRes?.value, expRes?.value].filter(Number.isFinite);
+        if (refs.length) {
+          const ref = refs[0];
+          const w = results[winIdx];
+          const diff = Math.abs(w.value - ref);
+          const scale = Math.max(1e-9, Math.abs(ref), ...refs.map(v => Math.abs(v)));
+          if (diff > Math.max(1e-3, 1e-2 * scale)) {
+            results[winIdx] = {
+              ...w,
+              status: 'exploratory',
+              notes: [...(w.notes || []), `large disagreement with reference methods (Δ=${formatNum(diff, 6)})`, 'not used in ensemble']
+            };
+          }
+        }
+      }
+
+      const ensemble = buildEnsemble(results);
+      const bundle = {
+        input: { expression, params, Nmax },
+        sequence,
+        modelDetection,
+        results,
+        ensemble,
+        diagnostics: [],
+        meta: { version: "0.5-phase1-prototype", generatedAt: new Date().toISOString() }
+      };
+      bundle.diagnostics = buildDiagnostics(bundle);
+      return bundle;
+    }
+
+    function summaryRows(bundle) {
+      const rows = bundle.results.map(r => ({
+        method: r.method,
+        status: r.status,
+        value: r.value,
+        stability: r.stability,
+        notes: r.notes.join('; ')
+      }));
+      if (bundle.modelDetection?.type === 'fourier' && Math.abs(bundle.modelDetection.dcComponent ?? 0) > 1e-9) {
+        const dcDetails = bundle.modelDetection?.dcDetails || {};
+        const dcStability = Number.isFinite(dcDetails.stability) ? dcDetails.stability : (bundle.modelDetection.confidence === 'good' ? 0.9 : 0.75);
+        rows.push({
+          method: 'dcEstimate',
+          status: 'derived',
+          value: bundle.modelDetection.dcComponent,
+          stability: dcStability,
+          notes: dcDetails.note || 'Fourier skeleton DC component (time-average candidate for bounded oscillatory data)'
+        });
+      }
+      rows.push({
+        method: "ensemble",
+        status: "summary",
+        value: bundle.ensemble.median,
+        stability: bundle.ensemble.agreement,
+        notes: (bundle.ensemble.agreement === 'insufficient' || bundle.ensemble.maxDeviation == null)
+          ? 'only one successful method'
+          : `max deviation=${formatNum(bundle.ensemble.maxDeviation, 6)}`
+      });
+      return rows;
+    }
+
+    function toScatterData(sequence, limit = 256) {
+      const step = Math.max(1, Math.floor(sequence.length / limit));
+      const out = [];
+      for (let i = 0; i < sequence.length; i += step) out.push({ n: i + 1, a: sequence[i] });
+      return out;
+    }
+
+    function toLineData(bundle, limit = 256) {
+      const seq = bundle.sequence;
+      const sk = bundle.modelDetection.skeleton || new Float64Array(seq.length);
+      const re = bundle.modelDetection.residual || new Float64Array(seq.length);
+      const step = Math.max(1, Math.floor(seq.length / limit));
+      const out = [];
+      for (let i = 0; i < seq.length; i += step) {
+        out.push({ n: i + 1, seq: seq[i], skeleton: sk[i], residual: re[i] });
+      }
+      return out;
+    }
+
+    function download(filename, text) {
+      const blob = new Blob([text], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function App() {
+      const [preset, setPreset] = React.useState(PRESETS[1].name);
+      const [expression, setExpression] = React.useState(PRESETS[1].expr);
+      const [paramText, setParamText] = React.useState("");
+      const [Nmax, setNmax] = React.useState(4096);
+      const [tab, setTab] = React.useState("Sequence");
+      const [bundle, setBundle] = React.useState(null);
+      const [importText, setImportText] = React.useState("");
+      const [error, setError] = React.useState("");
+      const [testResults, setTestResults] = React.useState([]);
+      const [testFilter, setTestFilter] = React.useState('all');
+      const [settings, setSettings] = React.useState({
+        modelDetection: { m_max: 12, d_max: 4, N_fit: 2048, residualThreshold: 1e-6, fourierBins: 1024, fourierThreshold: 0.2, fourierRefineSteps: 4, fourierMinOmega: 0.01, fourierMaxPeaks: 3, quasiSoftRelativeThreshold: 0.0025, extendedThreshold: 5e-4 },
+        expCutoff: { epsMin: 0.001, epsMax: 0.5, samples: 60 },
+        window: { Nmin: 256, Nmax: 65536, samples: 16, windowType: 'hann' },
+        cesaro: { stdThreshold: 1e-2, trendThreshold: 2e-3 },
+        abel: { xMin: 0.5, xMax: 0.999, samples: 50, dcDominanceFactor: 3, hardDcDominanceFactor: 8, N_check: 8192, rangeRatioThreshold: 1.5, meanShiftThreshold: 0.2 }
+      });
+
+      const applyPreset = (name) => {
+        const p = PRESETS.find(x => x.name === name);
+        if (!p) return;
+        setPreset(name);
+        setExpression(p.expr);
+        const text = Object.entries(p.params).map(([k, v]) => `${k}=${v}`).join(", ");
+        setParamText(text);
+      };
+
+      React.useEffect(() => {
+        try {
+          const params = parseParams(paramText);
+          const result = runFullAnalysis({ expression, params, Nmax, settings });
+          setBundle(result);
+          setError("");
+        } catch (err) {
+          setError(String(err.message || err));
+        }
+      }, []);
+
+      const onRun = () => {
+        try {
+          const params = parseParams(paramText);
+          const result = runFullAnalysis({ expression, params, Nmax, settings });
+          setBundle(result);
+          setError("");
+        } catch (err) {
+          setError(String(err.message || err));
+          setBundle(null);
+        }
+      };
+
+      const rows = bundle ? summaryRows(bundle) : [];
+      const hurwitzResult = bundle?.results?.find(r => r.method === 'hurwitz');
+      const expResult = bundle?.results?.find(r => r.method === 'expCutoff');
+      const scatterData = bundle ? toScatterData(bundle.sequence) : [];
+      const skeletonData = bundle ? toLineData(bundle) : [];
+      const expData = bundle?.results.find(r => r.method === "expCutoff")?.details?.curve || [];
+      const testSummary = summarizeTests(testResults);
+      const filteredTests = testFilter === 'all' ? testResults : testResults.filter(t => (t.category || 'other') === testFilter);
+
+      return (
+        <div className="max-w-7xl mx-auto p-6 space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">RegSum Lab</h1>
+            <p className="text-slate-400 mt-2">発散級数・有限部抽出・複数正則化法の比較ダッシュボード。現在は <span className="text-cyan-300 font-medium">Phase 2 alpha</span> 相当で、Hurwitz / Exp Cutoff / Cesàro / Abel / single-frequency Fourier 系の検証が進んでいます。</p>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-4 bg-slate-900 border border-slate-800 rounded-2xl p-4">
+            <div>
+              <label className="block text-sm text-slate-300 mb-2">Preset</label>
+              <select className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2" value={preset}
+                onChange={(e) => applyPreset(e.target.value)}>
+                {PRESETS.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
+              </select>
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm text-slate-300 mb-2">式</label>
+              <input className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2" value={expression} onChange={e => setExpression(e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-sm text-slate-300 mb-2">Nmax</label>
+              <input type="number" min="64" max="65536" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2" value={Nmax} onChange={e => setNmax(clamp(Number(e.target.value) || 64, 64, 65536))} />
+            </div>
+            <div className="md:col-span-3">
+              <label className="block text-sm text-slate-300 mb-2">パラメータ</label>
+              <input className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2" value={paramText} onChange={e => setParamText(e.target.value)} placeholder="eps=0.001" />
+            </div>
+            <div className="flex items-end">
+              <button className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold rounded-xl px-4 py-2" onClick={onRun}>▶ Run Full Analysis</button>
+            </div>
+          </div>
+
+          <details className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+            <summary className="cursor-pointer font-semibold">Advanced Settings</summary>
+            <div className="grid md:grid-cols-3 gap-4 mt-4">
+              <div>
+                <div className="text-sm text-slate-400 mb-2">Model Detection</div>
+                <label className="block text-xs mb-1">m_max</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.m_max}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, m_max: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">d_max</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.d_max}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, d_max: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">N_fit</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.N_fit}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, N_fit: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">fourierBins</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.fourierBins}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, fourierBins: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">fourierThreshold</label>
+                <input type="number" step="0.01" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.fourierThreshold}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, fourierThreshold: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">fourierRefineSteps</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.fourierRefineSteps}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, fourierRefineSteps: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">fourierMinOmega</label>
+                <input type="number" step="0.001" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.fourierMinOmega}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, fourierMinOmega: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">fourierMaxPeaks</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.fourierMaxPeaks}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, fourierMaxPeaks: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">quasiSoftRelativeThreshold</label>
+                <input type="number" step="0.0001" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.modelDetection.quasiSoftRelativeThreshold}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, quasiSoftRelativeThreshold: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">extendedThreshold</label>
+                <input type="number" step="0.0001" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2" value={settings.modelDetection.extendedThreshold}
+                  onChange={e => setSettings(s => ({ ...s, modelDetection: { ...s.modelDetection, extendedThreshold: Number(e.target.value) } }))} />
+              </div>
+              <div>
+                <div className="text-sm text-slate-400 mb-2">Exp Cutoff</div>
+                <label className="block text-xs mb-1">epsMin</label>
+                <input type="number" step="0.0001" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.expCutoff.epsMin}
+                  onChange={e => setSettings(s => ({ ...s, expCutoff: { ...s.expCutoff, epsMin: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">epsMax</label>
+                <input type="number" step="0.001" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.expCutoff.epsMax}
+                  onChange={e => setSettings(s => ({ ...s, expCutoff: { ...s.expCutoff, epsMax: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">samples</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-4" value={settings.expCutoff.samples}
+                  onChange={e => setSettings(s => ({ ...s, expCutoff: { ...s.expCutoff, samples: Number(e.target.value) } }))} />
+                <div className="text-sm text-slate-400 mb-2">Window</div>
+                <label className="block text-xs mb-1">Nmin</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.window.Nmin}
+                  onChange={e => setSettings(s => ({ ...s, window: { ...s.window, Nmin: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">Nmax</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.window.Nmax}
+                  onChange={e => setSettings(s => ({ ...s, window: { ...s.window, Nmax: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">samples</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.window.samples}
+                  onChange={e => setSettings(s => ({ ...s, window: { ...s.window, samples: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">windowType</label>
+                <select className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.window.windowType}
+                  onChange={e => setSettings(s => ({ ...s, window: { ...s.window, windowType: e.target.value } }))}>
+                  <option value="hann">hann</option>
+                  <option value="blackman">blackman</option>
+                </select>
+              </div>
+              <div>
+                <div className="text-sm text-slate-400 mb-2">Cesàro / Abel</div>
+                <label className="block text-xs mb-1">Cesàro std threshold</label>
+                <input type="number" step="0.001" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.cesaro.stdThreshold}
+                  onChange={e => setSettings(s => ({ ...s, cesaro: { ...s.cesaro, stdThreshold: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">Abel xMax</label>
+                <input type="number" step="0.001" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.abel.xMax}
+                  onChange={e => setSettings(s => ({ ...s, abel: { ...s.abel, xMax: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">Abel samples</label>
+                <input type="number" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.abel.samples}
+                  onChange={e => setSettings(s => ({ ...s, abel: { ...s.abel, samples: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">dcDominanceFactor</label>
+                <input type="number" step="0.5" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.abel.dcDominanceFactor}
+                  onChange={e => setSettings(s => ({ ...s, abel: { ...s.abel, dcDominanceFactor: Number(e.target.value) } }))} />
+                <label className="block text-xs mb-1">hardDcDominanceFactor</label>
+                <input type="number" step="0.5" className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 mb-2" value={settings.abel.hardDcDominanceFactor}
+                  onChange={e => setSettings(s => ({ ...s, abel: { ...s.abel, hardDcDominanceFactor: Number(e.target.value) } }))} />
+                <div className="text-sm text-slate-400 mb-2 mt-3">JSON Import</div>
+                <textarea className="w-full h-40 bg-slate-950 border border-slate-700 rounded-xl p-2" value={importText} onChange={e => setImportText(e.target.value)} placeholder="Paste exported AnalysisBundle JSON here" />
+                <button className="mt-2 bg-slate-200 text-slate-950 rounded-xl px-3 py-2 font-medium" onClick={() => {
+                  try {
+                    const parsed = JSON.parse(importText);
+                    if (Array.isArray(parsed.sequence)) parsed.sequence = Float64Array.from(parsed.sequence);
+                    if (parsed?.modelDetection?.skeleton && Array.isArray(parsed.modelDetection.skeleton)) parsed.modelDetection.skeleton = Float64Array.from(parsed.modelDetection.skeleton);
+                    if (parsed?.modelDetection?.residual && Array.isArray(parsed.modelDetection.residual)) parsed.modelDetection.residual = Float64Array.from(parsed.modelDetection.residual);
+                    setBundle(parsed);
+                    setError("");
+                  } catch (err) {
+                    setError(`Import failed: ${String(err.message || err)}`);
+                  }
+                }}>Import JSON</button>
+              </div>
+            </div>
+          </details>
+
+          {error && <div className="bg-rose-950 border border-rose-800 text-rose-200 rounded-2xl p-4">{error}</div>}
+
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 overflow-x-auto">
+            <h2 className="text-xl font-semibold mb-3">Summary Table</h2>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left border-b border-slate-800 text-slate-300">
+                  <th className="py-2 pr-4">Method</th>
+                  <th className="py-2 pr-4">Status</th>
+                  <th className="py-2 pr-4">Value</th>
+                  <th className="py-2 pr-4">Stability</th>
+                  <th className="py-2">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => (
+                  <tr key={i} className="border-b border-slate-900 align-top">
+                    <td className="py-2 pr-4 font-medium">{r.method}</td>
+                    <td className="py-2 pr-4">{r.status}</td>
+                    <td className="py-2 pr-4">{formatNum(r.value)}</td>
+                    <td className="py-2 pr-4">{typeof r.stability === 'number' ? formatNum(r.stability, 4) : (r.stability ?? '—')}</td>
+                    <td className="py-2">{r.notes || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {["Sequence", "Skeleton", "ExpCutoff", "Window", "Compare", "Cesaro", "Abel"].map(name => (
+              <button key={name} className={`px-4 py-2 rounded-xl border ${tab === name ? 'bg-cyan-500 text-slate-950 border-cyan-400' : 'bg-slate-900 border-slate-700 text-slate-200'}`} onClick={() => setTab(name)}>{name}</button>
+            ))}
+          </div>
+
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 h-[420px]">
+            {tab === "Sequence" && (
+              <SimpleScatterChart data={scatterData} xKey="n" yKey="a" />
+            )}
+            {tab === "Skeleton" && (
+              <SimpleLineChart
+                data={skeletonData}
+                xKey="n"
+                lines={[
+                  { key: 'seq', label: 'a_n', color: '#22d3ee' },
+                  { key: 'skeleton', label: 'b_n', color: '#a78bfa' },
+                  { key: 'residual', label: 'e_n', color: '#f59e0b' },
+                ]}
+              />
+            )}
+            {tab === "ExpCutoff" && (
+              <SimpleLineChart
+                data={expData}
+                xKey="eps"
+                lines={[
+                  { key: 'sEps', label: 'S(eps)', color: '#22d3ee' },
+                  { key: 'fitted', label: 'fitted', color: '#f472b6' },
+                ]}
+              />
+            )}
+            {tab === "Window" && bundle && (
+              <SimpleLineChart
+                data={bundle.results.find(r => r.method === 'window')?.details?.curve || []}
+                xKey="N"
+                lines={[
+                  { key: 'S', label: 'windowed sum', color: '#22d3ee' },
+                  { key: 'fitted', label: 'fitted', color: '#a78bfa' },
+                ]}
+              />
+            )}
+            {tab === "Compare" && bundle && (
+              <div className="h-full overflow-auto">
+                <div className="grid md:grid-cols-2 gap-4">
+                  {bundle.results.filter(r => r.status === "success").map((r, i) => (
+                    <div key={i} className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+                      <div className="font-semibold">{r.method}</div>
+                      <div className="text-2xl mt-2">{formatNum(r.value)}</div>
+                      <div className="text-slate-400 mt-2">stability: {typeof r.stability === 'number' ? formatNum(r.stability, 4) : r.stability}</div>
+                      <div className="text-xs text-slate-500 mt-2">{r.notes.join('; ') || '—'}</div>
+                    </div>
+                  ))}
+                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+                    <div className="font-semibold">ensemble</div>
+                    <div className="text-2xl mt-2">{formatNum(bundle.ensemble.median)}</div>
+                    <div className="text-slate-400 mt-2">agreement: {bundle.ensemble.agreement || '—'}</div>
+                    <div className="text-xs text-slate-500 mt-2">{(bundle.ensemble.agreement === 'insufficient' || bundle.ensemble.maxDeviation == null)
+                        ? 'only one successful method'
+                        : `max deviation: ${formatNum(bundle.ensemble.maxDeviation, 6)}`}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+            {tab === "Cesaro" && bundle && (
+              <SimpleLineChart
+                data={bundle.results.find(r => r.method === 'cesaro')?.details?.partials || []}
+                xKey="n"
+                lines={[
+                  { key: 'partial', label: 'partial sum', color: '#22d3ee' },
+                  { key: 'cesaro', label: 'cesaro mean', color: '#34d399' },
+                ]}
+              />
+            )}
+            {tab === "Abel" && bundle && (
+              <SimpleLineChart
+                data={bundle.results.find(r => r.method === 'abel')?.details?.curve || []}
+                xKey="x"
+                lines={[
+                  { key: 'A', label: 'A(x)', color: '#60a5fa' },
+                  { key: 'fitted', label: 'fitted', color: '#f472b6' },
+                ]}
+              />
+            )}
+          </div>
+
+          <details className="bg-slate-900 border border-slate-800 rounded-2xl p-4" open>
+            <summary className="cursor-pointer font-semibold">Diagnostics & Warnings</summary>
+            <ul className="mt-3 space-y-2 text-sm text-slate-300 list-disc pl-5">
+              {(bundle?.diagnostics || ["No diagnostics yet"]).map((d, i) => <li key={i}>{d}</li>)}
+            </ul>
+            {bundle && (
+              <div className="mt-4 text-sm text-slate-400">
+                skeleton type: <span className="text-slate-200">{bundle.modelDetection.type}</span>
+                {bundle.modelDetection.type === 'quasiPolynomial' && ` / period=${bundle.modelDetection.period} / degree=${bundle.modelDetection.degree}`}
+                {bundle.modelDetection.type === 'powerLaw' && ` / exponent=${formatNum(bundle.modelDetection.exponent, 8)}`}
+                {bundle.modelDetection.type === 'fourier' && ` / peaks=${bundle.modelDetection.numPeaks} / ω1=${formatNum(bundle.modelDetection.peaks?.[0]?.frequency, 6)} / amp1=${formatNum(bundle.modelDetection.peaks?.[0]?.amplitude, 6)} / dc=${formatNum(bundle.modelDetection.dcComponent, 6)}`}
+              </div>
+            )}
+          </details>
+
+          <div className="flex flex-wrap gap-3">
+            <button className="bg-violet-400 text-slate-950 rounded-xl px-4 py-2 font-semibold" onClick={() => {
+              try {
+                const results = runBuiltInTests(settings);
+                setTestResults(results);
+                setError('');
+              } catch (err) {
+                setError(String(err.message || err));
+              }
+            }}>Run Built-in Tests</button>
+            <button className="bg-emerald-400 text-slate-950 rounded-xl px-4 py-2 font-semibold" onClick={() => bundle && download("regsum-analysis.json", exportBundle(bundle))}>Export JSON</button>
+          </div>
+
+          {bundle && (
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                <h3 className="font-semibold text-slate-100 mb-3">Hurwitz details</h3>
+                <div className="text-sm text-slate-300">status: {hurwitzResult?.status || '—'}</div>
+                <div className="text-sm text-slate-300 mt-2">value: {formatNum(hurwitzResult?.value)}</div>
+                <div className="text-sm text-slate-300 mt-2">path: {hurwitzResult?.details?.exactForm || '—'}</div>
+                {hurwitzResult?.details?.residueBreakdown?.length ? (
+                  <div className="mt-3 overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead><tr className="text-left text-slate-400"><th className="py-1">residue</th><th className="py-1">contribution</th></tr></thead>
+                      <tbody>
+                        {hurwitzResult.details.residueBreakdown.map((x, i) => (
+                          <tr key={i} className="border-t border-slate-800"><td className="py-1">{x.residue}</td><td className="py-1">{formatNum(x.contribution, 8)}</td></tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : null}
+              </div>
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+                <h3 className="font-semibold text-slate-100 mb-3">Exp Cutoff details</h3>
+                <div className="text-sm text-slate-300">status: {expResult?.status || '—'}</div>
+                <div className="text-sm text-slate-300 mt-2">value: {formatNum(expResult?.value)}</div>
+                {bundle?.modelDetection?.type === 'fourier' && (
+                  <div className="text-xs text-amber-300 mt-2">fourier骨格ではこのExp Cutoffはまだ一般基底フィットなので、Abel優先で読むのがおすすめです。</div>
+                )}
+                <div className="text-sm text-slate-300 mt-2">fit error: {formatNum(expResult?.details?.fitError, 6)}</div>
+                <div className="text-sm text-slate-300 mt-2">condition #: {formatNum(expResult?.details?.conditionNumber, 6)}</div>
+                {bundle?.results?.find(r => r.method === 'abel')?.details?.chosen && (
+                  <div className="text-xs text-slate-400 mt-2">Abel choice: {bundle.results.find(r => r.method === 'abel').details.chosen}</div>
+                )}
+                <div className="mt-3 overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead><tr className="text-left text-slate-400"><th className="py-1">basis</th><th className="py-1">coeff</th></tr></thead>
+                    <tbody>
+                      {(expResult?.details?.divergentTerms || []).map((x, i) => (
+                        <tr key={i} className="border-t border-slate-800"><td className="py-1">{x.basis}</td><td className="py-1">{formatNum(x.coeff, 8)}</td></tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {testResults.length > 0 && (
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 overflow-x-auto">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                <h2 className="text-xl font-semibold">Built-in Tests</h2>
+                <div className="text-sm text-slate-300">PASS {testSummary.passed} / {testSummary.total}</div>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <button className={`px-3 py-1 rounded-lg border ${testFilter === 'all' ? 'bg-cyan-500 text-slate-950 border-cyan-400' : 'bg-slate-950 border-slate-700 text-slate-200'}`} onClick={() => setTestFilter('all')}>all</button>
+                {Object.keys(testSummary.byCategory).map(cat => (
+                  <button key={cat} className={`px-3 py-1 rounded-lg border ${testFilter === cat ? 'bg-cyan-500 text-slate-950 border-cyan-400' : 'bg-slate-950 border-slate-700 text-slate-200'}`} onClick={() => setTestFilter(cat)}>
+                    {cat} ({testSummary.byCategory[cat].passed}/{testSummary.byCategory[cat].total})
+                  </button>
+                ))}
+              </div>
+              <table className="w-full text-sm mb-4">
+                <thead>
+                  <tr className="text-left border-b border-slate-800 text-slate-300">
+                    <th className="py-2 pr-4">ID</th>
+                    <th className="py-2 pr-4">Category</th>
+                    <th className="py-2 pr-4">Expr</th>
+                    <th className="py-2 pr-4">Method</th>
+                    <th className="py-2 pr-4">Expected</th>
+                    <th className="py-2 pr-4">Actual</th>
+                    <th className="py-2 pr-4">Error</th>
+                    <th className="py-2 pr-4">Tol</th>
+                    <th className="py-2">Pass</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTests.map((t, i) => (
+                    <tr key={i} className="border-b border-slate-900">
+                      <td className="py-2 pr-4 font-medium">{t.id}</td>
+                      <td className="py-2 pr-4 text-slate-400">{t.category || 'other'}</td>
+                      <td className="py-2 pr-4">{t.expr}</td>
+                      <td className="py-2 pr-4">{t.method}</td>
+                      <td className="py-2 pr-4">{typeof t.expected === 'string' ? t.expected : formatNum(t.expected, 8)}</td>
+                      <td className="py-2 pr-4">{typeof t.actual === 'string' ? t.actual : formatNum(t.actual, 8)}</td>
+                      <td className="py-2 pr-4">{Number.isFinite(t.error) ? formatNum(t.error, 6) : '—'}</td>
+                      <td className="py-2 pr-4">{t.method === 'modelType' ? '—' : formatNum(t.tol, 3)}</td>
+                      <td className={`py-2 font-semibold ${t.pass ? 'text-emerald-400' : 'text-rose-400'}`}>{t.pass ? 'PASS' : 'FAIL'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="grid md:grid-cols-3 gap-3">
+                {Object.entries(testSummary.byCategory).map(([cat, stat]) => (
+                  <div key={cat} className="bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm">
+                    <div className="font-medium text-slate-100">{cat}</div>
+                    <div className="text-slate-400 mt-1">{stat.passed} / {stat.total} passed</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 text-sm text-slate-400">
+            <div className="font-semibold text-slate-200 mb-2">この試作版に含めたもの</div>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>安全寄りの式パーサと数列生成</li>
+              <li>準多項式検出と soft quasi acceptance</li>
+              <li>単項の非整数冪の power-law 検出</li>
+              <li>軽量な extended skeleton 検出（log(n), n log n）</li>
+              <li>single-frequency と軽量 multi-peak Fourier 骨格検出</li>
+              <li>Hurwitz/Bernoulli と functional equation による exact-ish ルート</li>
+              <li>Exp Cutoff の骨格差し引き residual fit</li>
+              <li>Cesàro / Abel と適用可否判定</li>
+              <li>Summary Table / Plot / JSON Export-Import</li>
+              <li>カテゴリ別 Built-in Tests</li>
+            </ul>
+            <div className="font-semibold text-slate-200 mt-4 mb-2">読み方ガイド</div>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><span className="text-slate-200">exact-ish</span>: 閉形式または解析接続寄り。まず最優先で読む候補です。</li>
+              <li><span className="text-slate-200">0.9 以上の stability</span>: 数値的にはかなり安定。複数手法が一致していれば強いです。</li>
+              <li><span className="text-slate-200">condition number が極端に高い</span>: 値は出ても不安定なことがあります。Notes と Diagnostics を優先して読んでください。</li>
+              <li><span className="text-slate-200">not_applicable</span>: 失敗ではなく、むしろ誠実な応答です。</li>
+              <li><span className="text-slate-200">ensemble</span>: 補助的な要約です。個別手法の行を必ず優先してください。</li>
+              <li><span className="text-slate-200">dcEstimate</span>: bounded な Fourier 系で DC 成分が強いときの時間平均候補です。stability は窓ごとの平均の揺れから見積もります。</li>
+            </ul>
+            <div className="font-semibold text-slate-200 mt-4 mb-2">まだ未実装</div>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>軽量な model-aware Window regularization</li>
+              <li>より厳密な multi-peak / DC-dominant Fourier skeletons</li>
+              <li>より広い extended skeletons（power-log 混合など）</li>
+              <li>より賢い Ensemble weighting</li>
+              <li>フーリエ骨格検出</li>
+              <li>完全なテスト自動実行 UI と回帰テスト保存</li>
+            </ul>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

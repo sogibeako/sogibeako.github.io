@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>「神」概念の言語論的再構成 // 湫埜と雨滴 </title>
+    <style>
+        /* 色は出来るだけ、SB Creative出版『日本の美しい色と言葉』から取っていく。 */
+        /* 当ページはp256『しとしと』 */
+        /* 氷雨 #e3e8f1 */
+        /* 俄雨 #6290b1 */
+        /* 長雨 #afd3e6 */
+        /* 秋雨 #609aa0 */
+        /* 五月雨 #9ec8d1 */
+        body {
+            font-size: 1rem;
+            background-color: #111822;
+            /* 青っぽい背景色 */
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        h1 {
+            background-color: #609aa0;
+            /* 秋雨 175,211,230*/
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.5em;
+            /* 内側の余白で見た目よく */
+        }
+
+        h2 {
+            background-color: #609aa0;
+            /* 秋雨 */
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.5em;
+            /* 内側の余白で見た目よく */
+        }
+
+        h3 {
+            color: #333;
+            border-left: 4px solid #609aa0;
+            padding-left: 0.5em;
+            margin-top: 1.5em;
+        }
+
+        .p_left {
+            text-align: left;
+        }
+
+        .wrapper {
+            max-width: 700px;
+            width: 80%;
+            margin: 50px auto;
+            padding: 20px;
+            border: 0px solid #111;
+            background-color: #afd3e6;
+            /* 長雨 */
+            font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+        }
+
+        .inner_wrapper {
+            width: 600px;
+            margin: 10px auto;
+            padding: 20px;
+            border: 1px solid #111;
+            background-color: #ffffee;
+            font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", sans-serif;
+        }
+
+        .grid-table {
+            display: grid;
+            grid-template-columns: 90px 240px;
+            gap: 2px;
+        }
+
+        .grid-table2 {
+            display: grid;
+            grid-template-columns: 90px 240px 120px;
+            gap: 2px;
+        }
+
+        .grid-table3 {
+            display: grid;
+            grid-template-columns: 90px 90px 120px;
+            gap: 2px;
+        }
+
+        .cell {
+            border: 0px solid #cccccc;
+            padding: 4px 8px;
+            background-color: #eeeeee;
+            line-break: strict;
+            /* 日本語の自然な改行ルールに従う */
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .cell-blue {
+            border: 0px solid #aaaaff;
+            padding: 4px 8px;
+            background-color: #ddddff;
+            line-break: strict;
+            /* 日本語の自然な改行ルールに従う */
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        img.top-image {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        hr {
+            border-width: 2px 0 0 0;
+            /* 線の太さ */
+            border-style: dashed;
+            /* 線の種類 */
+            border-color: #609aa0
+                /* 線の色 */
+        }
+
+        .br-sp {
+            display: none;
+        }
+
+        pre,
+        pre code {
+            background-color: #bbbbbb;
+            color: #000;
+            padding: 0.5em;
+            display: block;
+            overflow-x: auto;
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+        }
+
+        code {
+            background-color: #bbbbbb;
+            color: #000;
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+            font-family: "Courier New", Courier, monospace;
+            display: inline-block;
+            line-height: 1.2;
+        }
+
+        blockquote {
+            border-left: 4px solid #609aa0;
+            margin: 1em 0;
+            padding: 0.5em 1em;
+            background-color: #e3e8f1;
+            font-style: italic;
+        }
+
+        ul {
+            text-align: left;
+            padding-left: 1.5em;
+        }
+
+        ol {
+            text-align: left;
+            padding-left: 1.5em;
+        }
+
+        .ref-list {
+            text-align: left;
+            font-size: 0.9em;
+            line-height: 1.8;
+        }
+
+        @media screen and (max-width: 600px) {
+            body {
+                font-size: 0.7rem;
+            }
+
+            h1,
+            h2 {
+                font-size: 1rem;
+            }
+
+            .wrapper,
+            .inner_wrapper {
+                width: 95%;
+                padding: 10px;
+                word-wrap: break-word;
+                box-sizing: border-box;
+            }
+
+            .grid-table {
+                grid-template-columns: 50px 200px;
+
+            }
+
+            .grid-table2 {
+                grid-template-columns: 50px 200px 100px;
+            }
+
+            .grid-table3 {
+                grid-template-columns: 50px 50px 100px;
+            }
+
+            .br-sp {
+                display: inline;
+            }
+        }
+    </style>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="p_left">現在位置 : <a href="nazo.html"><b>ホーム</b></a>
+            ＞ 「神」概念の言語論的再構成</div>
+        <h1>「神」概念の言語論的再構成</h1>
+        <div class="p_left">
+
+            <h2>——超越的実現者、崇高さ、そして指示対象の多層性——</h2>
+
+            <h3>要旨</h3>
+            <p>
+                本稿は、「神」という語の指示対象候補を、存在論ではなく言語論（とりわけ語用論）の観点からモデル化する。歴史的に「神」と呼ばれてきたものに共通するのは、「人間の能力を超えた可能性の実現者」という性格である。本稿はこの実現者を、三つの様相的層——物理的不可能の超越、論理的不可能の超越、そして不可能そのものの超越——に分節し、一神教・多神教・汎神論といった異なる神概念が、同一の構造の異なる断片を指示していたと再記述する。これは存在証明ではなく概念モデルであり、有神論・無神論いずれとも両立可能である。
+            </p>
+
+            <hr>
+
+            <!-- 1. 序論 -->
+            <h2>1. 序論</h2>
+
+            <h3>1.1 問題設定</h3>
+            <p>
+                「神」という語は、創造主としての人格神、自然や宇宙原理と同一視される神、世界を超越する絶対者、聖なるもの等、様々な対象を指すために用いられてきた。にもかかわらず、当の語が何を指しているかについて、宗教間・哲学的立場間で合意が成立していない。
+            </p>
+
+            <h3>1.2 目的と方法</h3>
+            <p>
+                本稿の目的は神の存在証明ではない。「神」という語が、私たちの言語実践の中でどのような対象を指示するものとして機能してきたかを、語用論的分析を通じてモデル化する。方法は記述的である。すなわち、「神」という語がどう使われるべきかを規定するのではなく、歴史的・文化的にどのような対象を指示するものとして機能してきたかを、認知的傾向を含めてモデル化する。
+            </p>
+
+            <hr>
+
+            <!-- 2. 中心概念：超越的実現者 -->
+            <h2>2. 中心概念：超越的実現者</h2>
+
+            <h3>2.1 可能性の階層</h3>
+            <p>
+                我々が「可能」「不可能」と呼ぶものには、少なくとも三つの層がある。
+            </p>
+            <p>
+                <b>第一層：物理的可能性</b>。自然法則の範囲内で実現しうること。人間が空を飛ぶことは、道具なしには物理的に不可能である。
+            </p>
+            <p>
+                <b>第二層：論理的可能性</b>。矛盾を含まない限りで思考しうること。物理法則に反していても、「人間が翼なしで飛ぶ」ことは論理的には矛盾しない。一方、「丸い四角」は我々の論理体系では矛盾であり、論理的に不可能とされる。
+            </p>
+            <p>
+                <b>第三層：超論理的可能性</b>。我々の論理体系では不可能とされるが、「より高次の視点からは可能かもしれない」と志向されうること。「丸い四角を創造する」ことを我々は整合的に想像できないが、それでもなお、そのような所業を為しうる存在を畏怖の対象として指し示すことはできる。
+            </p>
+
+            <h3>2.2 超越的実現者とは何か</h3>
+            <p>
+                本稿が「超越的実現者」と呼ぶのは、以下のような存在者である：
+            </p>
+            <blockquote>
+                人間には実現不可能な可能性を実現しうる、あるいは、我々が「不可能」と呼ぶものすら超越しうると措定される主体。
+            </blockquote>
+            <p>
+                重要なのは、この措定が存在証明を含まないことである。超越的実現者は、祈りや畏怖といった言語行為の「宛先」として機能すれば足りる。実在するかどうかは、本稿の射程外である。
+            </p>
+
+            <h3>2.3 認知的背景：なぜ我々は「実現者」を問うのか</h3>
+            <p>
+                認知科学の知見によれば、人間は自然現象や偶発的出来事に対しても「誰が／何がそれをしたのか」という問いを発する傾向を持つ（過剰エージェンシー検出）。雷鳴に神の怒りを、豊作に神の恵みを見出す思考様式は、この認知傾向の文化的表現である。
+            </p>
+            <p>
+                本稿のモデルは、この傾向を排除するのではなく、それを明示的に組み込む。「超越的実現者」という概念は、論理的必然ではなく、人間という種に特有の認知的傾向に根ざしている。
+            </p>
+
+            <hr>
+
+            <!-- 3. 神概念の三類型 -->
+            <h2>3. 神概念の三類型</h2>
+
+            <h3>3.1 一神教的類型</h3>
+            <p>
+                一神教において「神」と呼ばれるものは、典型的に以下の特徴を持つ：
+            </p>
+            <ul>
+                <li>あらゆる可能命題を真にする能力を持つ（全能）</li>
+                <li>不可能命題を「実現しない」のは能力の限界ではなく、意志による選択である</li>
+                <li>我々の論理体系すら創造した存在であり、論理的不可能にすら拘束されない可能性がある</li>
+            </ul>
+            <p>
+                デカルトの「永遠真理創造説」はこの直観を哲学的に表現したものである。神は矛盾律すら創造したのであるから、神にとっては「丸い四角」も不可能ではない——少なくとも、神は自らの意志によってそれを「しないことにしている」のである。
+            </p>
+
+            <h3>3.2 多神教的類型</h3>
+            <p>
+                多神教において「神々」と呼ばれるものは、典型的に以下の特徴を持つ：
+            </p>
+            <ul>
+                <li>人間には不可能だが論理的には可能なことを実現する能力を持つ</li>
+                <li>その能力は領域ごとに分割されている（海の神、雷の神、死の神……）</li>
+                <li>個々の神は全能ではなく、互いに制約しあう</li>
+            </ul>
+            <p>
+                ここでの「神」は、第一層（物理的不可能）を超越するが、必ずしも第二層・第三層まで超越するわけではない。
+            </p>
+
+            <h3>3.3 汎神論的類型</h3>
+            <p>
+                汎神論において「神」と呼ばれるものは、典型的に以下の特徴を持つ：
+            </p>
+            <ul>
+                <li>世界そのものと同一視される</li>
+                <li>超越的な「実現者」というより、可能性の総体そのものである</li>
+                <li>世界の外部に立つ創造者ではなく、世界に遍在する</li>
+            </ul>
+            <p>
+                この類型では、「神」は特定の主体というより、可能性と現実性の全体を指す名前となる。
+            </p>
+
+            <h3>3.4 三類型の関係</h3>
+            <p>
+                これら三類型は、超越的実現者という同一の構造の異なる断片を指示している、と本稿は提案する：
+            </p>
+            <ul>
+                <li>一神教は、超越の全体を単一の人格的主体に帰属させる</li>
+                <li>多神教は、超越の諸相を複数の主体に分配する</li>
+                <li>汎神論は、超越を主体としてではなく、世界そのものとして捉える</li>
+            </ul>
+            <p>
+                歴史的な宗教的対立の多くは、この「どの断片を『神』と呼ぶか」の選択の差異として再記述できる可能性がある。
+            </p>
+
+            <hr>
+
+            <!-- 4. 崇高さとの接続 -->
+            <h2>4. 崇高さとの接続</h2>
+
+            <h3>4.1 崇高の経験</h3>
+            <p>
+                我々が「崇高」と呼ぶ経験——星空の下での畏怖、大自然の前での絶句、無限の観念に触れたときの戦慄——は、超越的実現者の概念と深く結びついている。
+            </p>
+            <p>
+                崇高の経験において、我々は「自分の能力を超えたもの」に触れる。そしてそこには、しばしば「この可能性を可能にしているものは何か」という問いが伴う。この問いが向かう先が、本稿のいう超越的実現者である。
+            </p>
+
+            <h3>4.2 呼びかけの構造</h3>
+            <p>
+                祈りという言語行為は、超越的実現者への呼びかけとして理解できる。祈る者は、自らには不可能な可能性の実現を、何ものかに向けて願う。その「何ものか」の内実について合意がなくとも、呼びかけという行為は成立する。
+            </p>
+            <p>
+                一神教的な祈りは、全能の人格者への呼びかけである。多神教的な祈りは、特定領域の超越者への呼びかけである。汎神論的な瞑想は、世界そのものとの合一の希求である。いずれも、人間の有限性と、それを超えるものへの志向という構造を共有している。
+            </p>
+
+            <hr>
+
+            <!-- 5. 応答：予想される反論 -->
+            <h2>5. 応答：予想される反論</h2>
+
+            <h3>5.1 「それを神と呼ぶ必要があるか」</h3>
+            <p>
+                応答：呼称は規範的選択であり、本稿の射程外である。本稿は「神」という語の指示対象候補を整理・モデル化する。呼びたくなければ呼ばなくてよい。
+            </p>
+
+            <h3>5.2 「人格神はどうなるか」</h3>
+            <p>
+                応答：一神教的類型において、超越的実現者は人格・意志を持つ主体として措定される。本稿のモデルはこの措定を排除しないし、要請もしない。人格神的読解は、追加解釈として開かれている。
+            </p>
+
+            <h3>5.3 「自然法則も『実現者』ではないか」</h3>
+            <p>
+                応答：その通りであり、本稿はこれを排除しない。物理学者が自然法則の背後に「調和」や「設計」を見出すとき、彼らは暗黙のうちに超越的実現者の概念に触れている。有神論と無神論の対立は、超越的実現者をどのように——人格として、法則として、あるいは単なる事実の総体として——理解するかの差異として再記述できる。
+            </p>
+
+            <h3>5.4 「論理的不可能の超越は意味をなすか」</h3>
+            <p>
+                応答：我々の論理体系の内部からは、「丸い四角」を整合的に思考することはできない。しかし、「我々の論理を超えた視点が存在しうる」という可能性を指し示すことはできる。中世の神学者たちが「神の全能は矛盾を含むか」を論じたとき、彼らはまさにこの限界領域を探索していた。本稿は、この探索を「無意味」と切り捨てるのではなく、「神」概念の一部として記述する。
+            </p>
+
+            <h3>5.5 「擬人化に依存しすぎではないか」</h3>
+            <p>
+                応答：その通りであり、本稿はこれを認める。超越的実現者という概念が「誰が可能にしたのか」という問いに依拠している以上、本モデルは人間の認知的傾向を前提としている。しかし、「神」概念そのものが、この認知傾向の歴史的・文化的結晶である以上、その再構成モデルが同じ傾向を反映するのは欠陥ではなく忠実さの表れである。
+            </p>
+
+            <hr>
+
+            <!-- 6. 結論 -->
+            <h2>6. 結論</h2>
+            <p>
+                本稿は、「神」という語の指示対象候補を、「人間の能力を超えた可能性の実現者」としてモデル化した。この実現者は、物理的不可能の超越、論理的不可能の超越、そして不可能そのものの超越という三つの層において措定されうる。一神教・多神教・汎神論といった異なる神概念は、この構造の異なる断片を指示していたと再記述できる。
+            </p>
+            <p>
+                この観点からすれば、「神」は遠くにある特別な存在者ではなく、我々が「不可能」と呼ぶものの境界線上に、つねにすでに立ち現れている。崇高さは、壮大な自然や宗教的象徴にのみ宿るのではなく、「自分には不可能なことが、何ものかには可能かもしれない」という認識のうちにも見出されうる。もしそうであるなら、「神」の名のもとに生じてきた対立の多くは、同じ構造の異なる断片を指示していたにすぎない——という可能性が開かれる。
+            </p>
+            <p>（了）</p>
+
+            <hr>
+
+            <!-- 付録：形式的定義 -->
+            <h2>付録：形式的定義</h2>
+            <p>
+                本付録は、本文で展開した議論に形式的基盤を与えることを目的とする。様相論理に親しんだ読者向けの補足であり、本文の理解に必須ではない。
+            </p>
+
+            <hr>
+
+            <!-- A.1 基本的枠組み -->
+            <h2>A.1 基本的枠組み</h2>
+
+            <h3>A.1.1 世界と到達可能性</h3>
+
+            <p><b>定義A1（世界の集合）</b>：</p>
+            <ul>
+                <li>\(W\) を可能世界の集合とする</li>
+                <li>\(I\) を不可能世界の集合とする（矛盾が真となりうる世界）</li>
+                <li>\(W^* := W \cup I\) を拡張された世界の集合とする</li>
+            </ul>
+
+            <p><b>定義A2（到達可能性関係の階層）</b>： 主体 \(x\) に対し、以下の到達可能性関係を定める：</p>
+            \[R^{phys}_x \subseteq R^{log}_x \subseteq R^{meta} \subseteq W^* \times W^*\]
+            <p>ここで：</p>
+            <ul>
+                <li>\(R^{phys}_x\)：\(x\) にとって物理的に到達可能な世界間の関係</li>
+                <li>\(R^{log}_x\)：\(x\) にとって論理的に到達可能な世界間の関係</li>
+                <li>\(R^{meta}\)：不可能世界を含む全ての世界への到達可能性（主体に依存しない）</li>
+            </ul>
+
+            <h3>A.1.2 命題と様相</h3>
+
+            <p><b>定義A3（可能命題の階層）</b>： 現実世界を \(w_0\) とし、主体 \(x\) に対して：</p>
+            \[\Pi^{(1)}_x := \{\phi \mid \exists w \in W.\; R^{phys}_x(w_0, w) \land w \vDash \phi\}\]
+            \[\Pi^{(2)}_x := \{\phi \mid \exists w \in W.\; R^{log}_x(w_0, w) \land w \vDash \phi\}\]
+            \[\Pi^{(3)} := \{\phi \mid \exists w \in W^*.\; R^{meta}(w_0, w) \land w \vDash \phi\}\]
+            <p>直観的には：</p>
+            <ul>
+                <li>\(\Pi^{(1)}_x\)：\(x\) にとって物理的に可能な命題</li>
+                <li>\(\Pi^{(2)}_x\)：\(x\) にとって論理的に可能な命題</li>
+                <li>\(\Pi^{(3)}\)：不可能世界まで含めた「超論理的に可能な」命題</li>
+            </ul>
+
+            <hr>
+
+            <!-- A.2 エージェンシーの形式化 -->
+            <h2>A.2 エージェンシーの形式化</h2>
+
+            <h3>A.2.1 実現と能力</h3>
+            <p>STIT論理（Belnap et al. 2001）に倣い、以下の演算子を導入する。</p>
+
+            <p><b>定義A4（実現演算子）</b>：</p>
+            \[[x \textit{ stit } \phi]\]
+            <p>「主体 \(x\) が \(\phi\) であるようにする（\(x\) sees to it that \(\phi\)）」</p>
+
+            <p><b>定義A5（能力様相）</b>：</p>
+            \[\textit{Can}_x(\phi) :\Leftrightarrow \exists w.\; R^{ag}_x(w_0, w) \land w \vDash \phi\]
+            <p>ここで \(R^{ag}_x\) は、\(x\) の行為によって到達可能な世界への関係である。</p>
+
+            <h3>A.2.2 超越的能力</h3>
+
+            <p><b>定義A6（層ごとの超越的能力）</b>： 主体 \(\xi\) が第 \(n\) 層において超越的能力を持つとは：</p>
+            \[\textit{Trans}^{(n)}(\xi) :\Leftrightarrow \exists \phi \in \Pi^{(n)}.\; (\textit{Can}_\xi(\phi) \land \neg \textit{Can}_h(\phi))\]
+            <p>ここで \(h\) は任意の人間的主体を表す。</p>
+
+            <hr>
+
+            <!-- A.3 神概念の類型化 -->
+            <h2>A.3 神概念の類型化</h2>
+
+            <h3>A.3.1 一神教的類型</h3>
+
+            <p><b>定義A7（一神教的神）</b>：</p>
+            \[G_{mono} := \iota\xi.\; \forall \phi \in \Pi^{(3)}.\; [\textit{Can}_\xi(\phi) \lor \textit{Will}_\xi(\neg\textit{Do}_\xi(\phi))]\]
+            <p>ここで：</p>
+            <ul>
+                <li>\(\iota\xi.\Psi(\xi)\) は「\(\Psi\) を満たす唯一の \(\xi\)」を表す確定記述</li>
+                <li>\(\textit{Will}_\xi(\psi)\) は「\(\xi\) が \(\psi\) を意志する」</li>
+                <li>\(\textit{Do}_\xi(\phi)\) は「\(\xi\) が \(\phi\) を実行する」</li>
+            </ul>
+            <p>
+                直観的には：全ての可能命題（不可能世界のものを含む）について、それを実現する能力を持つか、あるいは意志によって実現しないことを選択している唯一の存在者。
+            </p>
+
+            <h3>A.3.2 多神教的類型</h3>
+
+            <p><b>定義A8（多神教的神々）</b>：</p>
+            \[G_{poly} := \{\xi_i\}_{i \in I}\]
+            <p>ここで各 \(\xi_i\) は以下を満たす：</p>
+            \[\exists D_i \subseteq \Pi^{(2)}.\; [D_i \neq \emptyset \;\land\; \forall \phi \in D_i.\; (\textit{Can}_{\xi_i}(\phi) \land \neg\textit{Can}_h(\phi))]\]
+            <p>かつ：</p>
+            \[\bigcup_{i \in I} D_i \subsetneq \Pi^{(3)}\]
+            <p>
+                直観的には：それぞれが特定の領域 \(D_i\) において人間を超越する能力を持つが、単独では \(\Pi^{(3)}\) 全体をカバーしない複数の存在者。
+            </p>
+
+            <h3>A.3.3 汎神論的類型</h3>
+
+            <p><b>定義A9（汎神論的神）</b>：</p>
+            \[G_{pan} := \langle W^*, \{R^{(n)}\}_{n=1,2,3}, V \rangle\]
+            <p>または同値な表現として：</p>
+            \[G_{pan} := \Pi^{(3)} \text{ 自体}\]
+            <p>
+                直観的には：特定の主体ではなく、可能性の構造そのもの、あるいは可能な事態の総体。
+            </p>
+
+            <hr>
+
+            <!-- A.4 諸類型の関係 -->
+            <h2>A.4 諸類型の関係</h2>
+
+            <p><b>定理A1（包含関係）</b>： 以下が成り立つ：</p>
+            \[\textit{Trans}^{(1)}(\xi) \Leftarrow \textit{Trans}^{(2)}(\xi) \Leftarrow \textit{Trans}^{(3)}(\xi)\]
+            <p>すなわち、より高次の超越性は低次の超越性を含意する。</p>
+
+            <p><b>定理A2（一神教と多神教の関係）</b>：</p>
+            <p>
+                \(G_{mono}\) が存在するならば、\(\forall \xi_i \in G_{poly}.\; \textit{Can}_{G_{mono}}(\phi)\) for all \(\phi \in D_i\)
+            </p>
+            <p>すなわち、一神教的神は多神教的神々の能力を全て包含する。</p>
+
+            <p><b>定理A3（汎神論との関係）</b>：</p>
+            <p>
+                \(G_{pan} = \Pi^{(3)}\) とするとき、\(G_{mono} \in G_{pan}\) かつ \(G_{poly} \subset G_{pan}\)
+            </p>
+            <p>すなわち、汎神論的神は他の類型を部分として含む。</p>
+
+            <hr>
+
+            <!-- A.5 崇高さの形式化 -->
+            <h2>A.5 崇高さの形式化</h2>
+
+            <p><b>定義A10（崇高さの経験）</b>： 主体 \(x\) が崇高さを経験するとは：</p>
+            \[\textit{Sublime}_x :\Leftrightarrow \exists \phi.\; [\phi \in (\Pi^{(2)}_x \setminus \Pi^{(1)}_x) \cup (\Pi^{(3)} \setminus \Pi^{(2)}_x)] \land \textit{Attend}_x(\phi)\]
+            <p>ここで \(\textit{Attend}_x(\phi)\) は「\(x\) が \(\phi\) に注意を向けている」ことを表す。</p>
+            <p>直観的には：自らの物理的能力を超えた可能性、あるいは自らの論理すら超えた可能性に触れること。</p>
+
+            <hr>
+
+            <!-- A.6 今後の課題 -->
+            <h2>A.6 今後の課題</h2>
+            <p>本付録で導入した形式的体系は、以下の点でさらなる精緻化を必要とする：</p>
+            <ol>
+                <li><b>不可能世界の存在論的地位</b>：\(I\) の要素をどのような存在者と見なすか</li>
+                <li><b>意志演算子の意味論</b>：\(\textit{Will}_\xi\) の厳密な真理条件</li>
+                <li><b>確定記述の扱い</b>：\(G_{mono}\) が存在しない場合の処理</li>
+                <li><b>完全性</b>：提案された体系の証明論的性質</li>
+            </ol>
+            <p>これらは将来の研究に委ねる。</p>
+
+            <hr>
+
+            <!-- 参考文献 -->
+            <h2>参考文献（付録用）</h2>
+            <div class="ref-list">
+                <ul>
+                    <li>Belnap, N., Perloff, M., &amp; Xu, M. (2001). <i>Facing the Future: Agents and Choices in Our Indeterminist World</i>. Oxford University Press.</li>
+                    <li>Berto, F. (2010). "Impossible Worlds." <i>Stanford Encyclopedia of Philosophy</i>.</li>
+                    <li>Horty, J. F. (2001). <i>Agency and Deontic Logic</i>. Oxford University Press.</li>
+                    <li>Kripke, S. (1963). "Semantical Considerations on Modal Logic." <i>Acta Philosophica Fennica</i>, 16, 83–94.</li>
+                    <li>Nolan, D. (1997). "Impossible Worlds: A Modest Approach." <i>Notre Dame Journal of Formal Logic</i>, 38(4), 535–572.</li>
+                    <li>Priest, G. (1997). "Sylvan's Box: A Short Story and Ten Morals." <i>Notre Dame Journal of Formal Logic</i>, 38(4), 573–582.</li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+</body>
+
+</html>

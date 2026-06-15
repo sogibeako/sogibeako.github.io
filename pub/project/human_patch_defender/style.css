@@ -1,0 +1,252 @@
+:root {
+  color-scheme: dark;
+  --bg: #101114;
+  --panel: #191b21;
+  --panel-2: #20242b;
+  --line: #3a4050;
+  --text: #e9edf2;
+  --muted: #aeb7c4;
+  --good: #66d19e;
+  --warn: #f0c674;
+  --bad: #f07178;
+  --info: #6ab7ff;
+  --accent: #d6ff72;
+  --shadow: rgba(0, 0, 0, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    linear-gradient(135deg, rgba(102, 209, 158, 0.07), transparent 28%),
+    linear-gradient(315deg, rgba(106, 183, 255, 0.08), transparent 32%),
+    var(--bg);
+  color: var(--text);
+  font-family: Consolas, "Cascadia Mono", "Yu Gothic UI", monospace;
+  letter-spacing: 0;
+}
+
+.terminal-shell {
+  min-height: 100%;
+  padding: 18px;
+}
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(1280px, 100%);
+  min-height: calc(100vh - 36px);
+  margin: 0 auto;
+}
+
+.topbar,
+.meter-grid,
+.panel {
+  border: 1px solid var(--line);
+  background: rgba(25, 27, 33, 0.94);
+  box-shadow: 0 14px 40px var(--shadow);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.6vw, 2.15rem);
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.topbar p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.session-badge {
+  min-width: 11ch;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--accent);
+  padding: 8px 10px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.meter-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+}
+
+.meter {
+  min-width: 0;
+  padding: 10px 12px;
+  background: var(--panel);
+}
+
+.meter span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.meter strong {
+  display: block;
+  margin-top: 4px;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+}
+
+.console-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.82fr) minmax(360px, 1.18fr);
+  gap: 12px;
+  min-height: 200px;
+}
+
+.panel {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.panel-title {
+  border-bottom: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--accent);
+  padding: 8px 11px;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.panel-body {
+  min-height: 154px;
+  padding: 10px 12px;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+.log-lines {
+  color: #cfd7e3;
+}
+
+.output-panel {
+  display: flex;
+  flex: 1;
+  min-height: 310px;
+  flex-direction: column;
+}
+
+.output {
+  flex: 1;
+  min-height: 240px;
+  max-height: 48vh;
+  overflow: auto;
+  padding: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.line-command {
+  color: var(--accent);
+}
+
+.line-system {
+  color: var(--muted);
+}
+
+.line-good {
+  color: var(--good);
+}
+
+.line-warn {
+  color: var(--warn);
+}
+
+.line-bad {
+  color: var(--bad);
+}
+
+.line-info {
+  color: var(--info);
+}
+
+.command-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  background: #0f1116;
+  padding: 10px 12px;
+}
+
+.prompt {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+#commandInput {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}
+
+.sev-low {
+  color: var(--good);
+}
+
+.sev-mid {
+  color: var(--warn);
+}
+
+.sev-high {
+  color: var(--bad);
+}
+
+@media (max-width: 760px) {
+  .terminal-shell {
+    padding: 10px;
+  }
+
+  .screen {
+    min-height: calc(100vh - 20px);
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .session-badge {
+    width: 100%;
+  }
+
+  .meter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .console-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .output {
+    max-height: 42vh;
+  }
+}

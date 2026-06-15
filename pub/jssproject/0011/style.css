@@ -1,0 +1,258 @@
+body {
+    background-color: #111;
+    color: #eee;
+    font-family: 'Courier New', Courier, monospace;
+    height: 100vh;
+    margin: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    /* Fix scroll */
+}
+
+#app-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    gap: 40px;
+    padding: 20px;
+}
+
+#left-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#title-display {
+    font-size: 24px;
+    line-height: 22px;
+    color: #eee;
+    white-space: pre;
+    font-family:
+        "MS Gothic",
+        "Noto Sans Mono CJK JP",
+        "Osaka-Mono",
+        "Courier New",
+        monospace;
+    text-align: center;
+    border: 2px solid #555;
+    padding: 20px;
+    background-color: #000;
+}
+
+#title-display.title-cold {
+    color: #0ff;
+    text-shadow: 0 0 6px rgba(0, 255, 255, 0.35);
+}
+
+#title-display.title-bomb {
+    color: #f44;
+    text-shadow: 0 0 6px rgba(255, 80, 80, 0.35);
+}
+
+#game-container {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    border: 2px solid #555;
+    background-color: #000;
+}
+
+#game-display {
+    font-size: 24px;
+    line-height: 24px;
+    margin: 0;
+    white-space: pre;
+}
+
+#info-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 140px;
+}
+
+#next-display,
+#hold-display {
+    font-size: 16px;
+    line-height: 16px;
+    margin: 0;
+    white-space: pre;
+    border: 1px solid #333;
+    padding: 5px;
+    min-height: 40px;
+}
+
+/* Instructions Panel */
+#instructions-panel {
+    width: 300px;
+    height: 80vh;
+    /* Fixed height for scrolling if needed */
+    overflow-y: auto;
+    border: 1px solid #444;
+    padding: 20px;
+    background-color: #0a0a0a;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+#instructions-panel h3 {
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #0ff;
+}
+
+#instructions-panel h3:not(:first-child) {
+    margin-top: 20px;
+}
+
+.inst-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.inst-list li {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.key {
+    display: inline-block;
+    border: 1px solid #666;
+    border-radius: 3px;
+    padding: 0 6px;
+    margin: 0 2px;
+    background-color: #222;
+    color: #fff;
+    font-family: monospace;
+    font-size: 12px;
+    min-width: 14px;
+    text-align: center;
+}
+
+.mode-desc {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #1a1a1a;
+    border-left: 3px solid #0ff;
+}
+
+.mode-desc strong {
+    color: #0ff;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.secret-hint {
+    margin-top: 30px;
+    text-align: center;
+    color: #666;
+    border-top: 1px dashed #333;
+    padding-top: 10px;
+}
+
+/* Scrollbar Styling */
+#instructions-panel::-webkit-scrollbar {
+    width: 8px;
+}
+
+#instructions-panel::-webkit-scrollbar-track {
+    background: #111;
+}
+
+#instructions-panel::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+
+#instructions-panel::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
+/* Colors for Blocks */
+.color-i {
+    color: #ff0000;
+}
+
+.color-l {
+    color: #4488ff;
+}
+
+.color-j {
+    color: #ff8800;
+}
+
+.color-o {
+    color: #ffff00;
+}
+
+.color-t {
+    color: #00ffff;
+}
+
+.color-s {
+    color: #d040d0;
+}
+
+.color-z {
+    color: #00ff00;
+}
+
+.color-special {
+    color: #ffffff;
+}
+
+.color-frozen {
+    color: #88bbff;
+    text-shadow: 0 0 4px #4488ff;
+}
+
+.color-garbage {
+    color: #888888;
+}
+
+.color-shadow {
+    color: #444444;
+}
+
+.color-blank {
+    color: #111111;
+}
+
+.color-flash {
+    animation: flash 0.1s infinite;
+    color: #fff;
+    text-shadow: 0 0 5px #fff;
+}
+
+@keyframes flash {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.hidden-row {
+    background-color: #1a1a2a;
+    opacity: 0.6;
+}
+
+.color-flash {
+    color: #ffffff;
+    text-shadow: 0 0 8px #ffffff, 0 0 16px #aaaaff;
+}

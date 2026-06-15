@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>位相ローグライク最小試作</title>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --panel: #171a22;
+            --border: #2a3140;
+            --text: #e6e9ef;
+            --muted: #9aa4b2;
+            --accent: #8bd5ca;
+            --accent-2: #f5c2e7;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: radial-gradient(circle at top, #1a1f2b 0%, var(--bg) 60%);
+            color: var(--text);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        .app {
+            width: min(100%, 1000px);
+            display: grid;
+            grid-template-columns: minmax(320px, 520px) 1fr;
+            gap: 18px;
+        }
+
+        .panel {
+            background: color-mix(in srgb, var(--panel) 90%, black 10%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .28);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: rgba(255, 255, 255, .02);
+        }
+
+        .title {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: .04em;
+            color: var(--accent);
+        }
+
+        .subtle {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .screen-wrap {
+            padding: 16px;
+            overflow: auto;
+        }
+
+        pre#screen {
+            margin: 0;
+            line-height: 1.15;
+            font-size: 18px;
+            min-height: 18em;
+            white-space: pre;
+            color: #dbe4ff;
+        }
+
+        .side {
+            display: grid;
+            gap: 18px;
+        }
+
+        .controls {
+            padding: 16px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .row {
+            display: grid;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        select,
+        button {
+            background: #11151d;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+            transition: transform .05s ease, border-color .15s ease, background .15s ease;
+        }
+
+        button:hover {
+            border-color: #4b5770;
+            background: #151b25;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .stats {
+            padding: 16px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, .03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .stat-key {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 14px;
+            color: var(--text);
+            word-break: break-word;
+        }
+
+        .legend {
+            padding: 16px;
+            display: grid;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .legend code {
+            color: var(--accent-2);
+            background: rgba(255, 255, 255, .03);
+            padding: 1px 5px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .notes {
+            padding: 16px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        @media (max-width: 860px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+
+            pre#screen {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app">
+        <section class="panel">
+            <div class="panel-header">
+                <div>
+                    <div class="title">位相ローグライク最小試作</div>
+                    <div class="subtle">矢印キー / WASD で移動</div>
+                </div>
+                <div class="subtle" id="statusText">ready</div>
+            </div>
+            <div class="screen-wrap">
+                <pre id="screen"></pre>
+            </div>
+        </section>
+
+        <div class="side">
+            <section class="panel">
+                <div class="panel-header">
+                    <div class="title">設定</div>
+                </div>
+                <div class="controls">
+                    <div class="row">
+                        <label for="topologySelect">topology</label>
+                        <select id="topologySelect">
+                            <option value="plane">plane</option>
+                            <option value="torus" selected>torus</option>
+                            <option value="mobius-horizontal">mobius-horizontal</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <label for="mapSelect">baseMap</label>
+                        <select id="mapSelect">
+                            <option value="open4" selected>4x4 all floor</option>
+                            <option value="loop8">8x8 loop playground</option>
+                            <option value="asym8">8x8 asymmetric test</option>
+                            <option value="torus12">12x12 torus playground</option>
+                        </select>
+                    </div>
+                    <button id="resetButton">再生成 / リセット</button>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-header">
+                    <div class="title">内部状態</div>
+                </div>
+                <div class="stats" id="stats"></div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-header">
+                    <div class="title">凡例</div>
+                </div>
+                <div class="legend">
+                    <div><code>@</code> 現在地</div>
+                    <div><code>d</code> 犬 追跡者</div>
+                    <div><code>f</code> 猫 うろつき中</div>
+                    <div><code>z</code> 猫 睡眠中</div>
+                    <div><code>%</code> 犬の食料</div>
+                    <div><code>*</code> 最近の足跡</div>
+                    <div><code>·</code> 既踏</div>
+                    <div><code>,</code> 既視</div>
+                    <div><code>.</code> 現在見えている床</div>
+                    <div><code>#</code> 壁</div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-header">
+                    <div class="title">メモ</div>
+                </div>
+                <div class="notes">
+                    これは「真の空間」と「いま見えている局所地図」を分けた最小試作です。<br>
+                    特に <strong>torus</strong> では、左へ歩き続けると過去の足跡が思わぬ方向に再登場しやすくなります。<br>
+                    <strong>mobius-horizontal</strong> では、横境界をまたぐたびに <code>flipY</code> が反転します。
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const DIRS = ["N", "E", "S", "W"];
+        const DIR_DELTAS = {
+            N: { dx: 0, dy: -1 },
+            E: { dx: 1, dy: 0 },
+            S: { dx: 0, dy: 1 },
+            W: { dx: -1, dy: 0 },
+        };
+
+        class BaseMap {
+            constructor(width, height, tiles) {
+                this.width = width;
+                this.height = height;
+                this.tiles = tiles;
+            }
+
+            isInBounds(x, y) {
+                return x >= 0 && x < this.width && y >= 0 && y < this.height;
+            }
+
+            getTile(x, y) {
+                if (!this.isInBounds(x, y)) return null;
+                return this.tiles[y][x];
+            }
+
+            isFloor(x, y) {
+                return this.getTile(x, y) === "floor";
+            }
+
+            isWall(x, y) {
+                return this.getTile(x, y) === "wall";
+            }
+
+            static fromAscii(lines) {
+                const height = lines.length;
+                const width = lines[0].length;
+                const tiles = lines.map(row =>
+                    [...row].map(ch => (ch === "#" ? "wall" : "floor"))
+                );
+                return new BaseMap(width, height, tiles);
+            }
+        }
+
+        class PlaneTopology {
+            constructor() {
+                this.name = "plane";
+            }
+
+            initialState() {
+                return {};
+            }
+
+            resolveStep(x, y, dir, topoState, width, height) {
+                const { dx, dy } = DIR_DELTAS[dir];
+                const nx = x + dx;
+                const ny = y + dy;
+
+                if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
+                    return { blocked: true, x, y, topoState, transform: null };
+                }
+
+                return {
+                    blocked: false,
+                    x: nx,
+                    y: ny,
+                    topoState,
+                    transform: { type: "normal" },
+                };
+            }
+        }
+
+        class TorusTopology {
+            constructor() {
+                this.name = "torus";
+            }
+
+            initialState() {
+                return {};
+            }
+
+            resolveStep(x, y, dir, topoState, width, height) {
+                const { dx, dy } = DIR_DELTAS[dir];
+                return {
+                    blocked: false,
+                    x: (x + dx + width) % width,
+                    y: (y + dy + height) % height,
+                    topoState,
+                    transform: { type: "wrap" },
+                };
+            }
+        }
+
+        class MobiusHorizontalTopology {
+            constructor() {
+                this.name = "mobius-horizontal";
+            }
+
+            initialState() {
+                return { flipY: false };
+            }
+
+            resolveStep(x, y, dir, topoState, width, height) {
+                const { dx, dy } = DIR_DELTAS[dir];
+                let nx = x + dx;
+                let ny = y + dy;
+                const nextTopoState = { ...topoState };
+                let transform = { type: "normal", flipY: false };
+
+                if (ny < 0 || ny >= height) {
+                    return { blocked: true, x, y, topoState, transform: null };
+                }
+
+                if (nx < 0) {
+                    nx = width - 1;
+                    ny = height - 1 - ny;
+                    nextTopoState.flipY = !nextTopoState.flipY;
+                    transform = { type: "mobius-wrap", flipY: true };
+                } else if (nx >= width) {
+                    nx = 0;
+                    ny = height - 1 - ny;
+                    nextTopoState.flipY = !nextTopoState.flipY;
+                    transform = { type: "mobius-wrap", flipY: true };
+                }
+
+                return {
+                    blocked: false,
+                    x: nx,
+                    y: ny,
+                    topoState: nextTopoState,
+                    transform,
+                };
+            }
+        }
+
+        class WorldNode {
+            constructor({ id, x, y, terrain }) {
+                this.id = id;
+                this.x = x;
+                this.y = y;
+                this.terrain = terrain;
+                this.neighbors = { N: null, E: null, S: null, W: null };
+            }
+        }
+
+        class WorldGraph {
+            constructor(baseMap) {
+                this.baseMap = baseMap;
+                this.nodes = new Map();
+            }
+
+            addNode(node) {
+                this.nodes.set(node.id, node);
+            }
+
+            getNode(nodeId) {
+                return this.nodes.get(nodeId) || null;
+            }
+
+            hasNode(nodeId) {
+                return this.nodes.has(nodeId);
+            }
+        }
+
+        function makeNodeId(x, y, width) {
+            return y * width + x;
+        }
+
+        function buildWorldGraph(baseMap, topology) {
+            const graph = new WorldGraph(baseMap);
+
+            for (let y = 0; y < baseMap.height; y++) {
+                for (let x = 0; x < baseMap.width; x++) {
+                    if (!baseMap.isFloor(x, y)) continue;
+                    const nodeId = makeNodeId(x, y, baseMap.width);
+                    graph.addNode(new WorldNode({ id: nodeId, x, y, terrain: "floor" }));
+                }
+            }
+
+            for (const node of graph.nodes.values()) {
+                for (const dir of DIRS) {
+                    const result = topology.resolveStep(
+                        node.x,
+                        node.y,
+                        dir,
+                        topology.initialState(),
+                        baseMap.width,
+                        baseMap.height
+                    );
+
+                    if (result.blocked || !baseMap.isFloor(result.x, result.y)) {
+                        node.neighbors[dir] = null;
+                        continue;
+                    }
+
+                    const toNodeId = makeNodeId(result.x, result.y, baseMap.width);
+                    if (!graph.hasNode(toNodeId)) {
+                        node.neighbors[dir] = null;
+                        continue;
+                    }
+
+                    node.neighbors[dir] = {
+                        to: toNodeId,
+                        transform: result.transform,
+                    };
+                }
+            }
+
+            return graph;
+        }
+
+        class PlayerState {
+            constructor(nodeId, topoState = {}, facing = "N") {
+                this.nodeId = nodeId;
+                this.topoState = topoState;
+                this.facing = facing;
+            }
+        }
+
+        class ExplorationState {
+            constructor(startNodeId) {
+                this.visitedSet = new Set([startNodeId]);
+                this.seenSet = new Set([startNodeId]);
+                this.trail = [startNodeId];
+            }
+
+            recordVisit(nodeId) {
+                this.visitedSet.add(nodeId);
+                this.seenSet.add(nodeId);
+                this.trail.push(nodeId);
+            }
+
+            markSeen(nodeId) {
+                this.seenSet.add(nodeId);
+            }
+
+            buildRecentTrailSet(length = 8) {
+                return new Set(this.trail.slice(-length));
+            }
+        }
+
+        function movePlayer(playerState, graph, topology, dir) {
+            const currentNode = graph.getNode(playerState.nodeId);
+            if (!currentNode) return false;
+
+            const result = topology.resolveStep(
+                currentNode.x,
+                currentNode.y,
+                dir,
+                playerState.topoState,
+                graph.baseMap.width,
+                graph.baseMap.height
+            );
+
+            if (result.blocked || !graph.baseMap.isFloor(result.x, result.y)) {
+                return false;
+            }
+
+            const nextNodeId = makeNodeId(result.x, result.y, graph.baseMap.width);
+            if (!graph.hasNode(nextNodeId)) return false;
+
+            playerState.nodeId = nextNodeId;
+            playerState.topoState = result.topoState;
+            playerState.facing = dir;
+            return true;
+        }
+
+        function mapInputDirToGraphDir(inputDir, topoState) {
+            const flipY = !!topoState?.flipY;
+
+            if (!flipY) return inputDir;
+
+            switch (inputDir) {
+                case "N": return "S";
+                case "E": return "E";
+                case "S": return "N";
+                case "W": return "W";
+                default: return inputDir;
+            }
+        }
+
+        class ChartCell {
+            constructor({ nodeId, localX, localY, dist, topoState }) {
+                this.nodeId = nodeId;
+                this.localX = localX;
+                this.localY = localY;
+                this.dist = dist;
+                this.topoState = topoState;
+            }
+        }
+
+        class LocalChart {
+            constructor(viewRadius) {
+                this.viewRadius = viewRadius;
+                this.chartMap = new Map();
+                this.wallMap = new Map();
+            }
+
+            key(x, y) {
+                return `${x},${y}`;
+            }
+
+            set(localX, localY, chartCell) {
+                this.chartMap.set(this.key(localX, localY), chartCell);
+            }
+
+            get(localX, localY) {
+                return this.chartMap.get(this.key(localX, localY)) || null;
+            }
+
+            setWall(localX, localY) {
+                if (!this.chartMap.has(this.key(localX, localY))) {
+                    this.wallMap.set(this.key(localX, localY), true);
+                }
+            }
+
+            isWall(localX, localY) {
+                return this.wallMap.has(this.key(localX, localY));
+            }
+        }
+
+        function projectDirToLocalOffset(dir, topoState) {
+            const flipY = !!topoState?.flipY;
+
+            if (!flipY) {
+                switch (dir) {
+                    case "N": return { dx: 0, dy: -1 };
+                    case "E": return { dx: 1, dy: 0 };
+                    case "S": return { dx: 0, dy: 1 };
+                    case "W": return { dx: -1, dy: 0 };
+                }
+            }
+
+            switch (dir) {
+                case "N": return { dx: 0, dy: 1 };
+                case "E": return { dx: 1, dy: 0 };
+                case "S": return { dx: 0, dy: -1 };
+                case "W": return { dx: -1, dy: 0 };
+            }
+        }
+
+        function shouldReplaceChartCell(prevCell, nextCell) {
+            if (!prevCell) return true;
+            if (nextCell.dist < prevCell.dist) return true;
+            return false;
+        }
+
+        function buildLocalChart(graph, playerState, topology, viewRadius = 6) {
+            const localChart = new LocalChart(viewRadius);
+
+            const queue = [
+                new ChartCell({
+                    nodeId: playerState.nodeId,
+                    localX: 0,
+                    localY: 0,
+                    dist: 0,
+                    topoState: { ...playerState.topoState },
+                })
+            ];
+
+            const seenStates = new Set();
+
+            while (queue.length > 0) {
+                const current = queue.shift();
+
+                if (
+                    Math.abs(current.localX) > viewRadius ||
+                    Math.abs(current.localY) > viewRadius ||
+                    current.dist > viewRadius
+                ) {
+                    continue;
+                }
+
+                const stateKey = [
+                    current.nodeId,
+                    current.localX,
+                    current.localY,
+                    JSON.stringify(current.topoState),
+                ].join("|");
+
+                if (seenStates.has(stateKey)) continue;
+                seenStates.add(stateKey);
+
+                const prevCell = localChart.get(current.localX, current.localY);
+                if (shouldReplaceChartCell(prevCell, current)) {
+                    localChart.set(current.localX, current.localY, current);
+                } else {
+                    continue;
+                }
+
+                const node = graph.getNode(current.nodeId);
+                if (!node) continue;
+
+                for (const dir of DIRS) {
+                    const offset = projectDirToLocalOffset(dir, current.topoState);
+                    const nextLocalX = current.localX + offset.dx;
+                    const nextLocalY = current.localY + offset.dy;
+
+                    const currentWorldNode = graph.getNode(current.nodeId);
+                    const stepResult = topology.resolveStep(
+                        currentWorldNode.x,
+                        currentWorldNode.y,
+                        dir,
+                        current.topoState,
+                        graph.baseMap.width,
+                        graph.baseMap.height
+                    );
+
+                    if (stepResult.blocked) {
+                        localChart.setWall(nextLocalX, nextLocalY);
+                        continue;
+                    }
+
+                    if (!graph.baseMap.isFloor(stepResult.x, stepResult.y)) {
+                        localChart.setWall(nextLocalX, nextLocalY);
+                        continue;
+                    }
+
+                    const nextNodeId = makeNodeId(stepResult.x, stepResult.y, graph.baseMap.width);
+                    if (!graph.hasNode(nextNodeId)) {
+                        localChart.setWall(nextLocalX, nextLocalY);
+                        continue;
+                    }
+
+                    queue.push(new ChartCell({
+                        nodeId: nextNodeId,
+                        localX: nextLocalX,
+                        localY: nextLocalY,
+                        dist: current.dist + 1,
+                        topoState: stepResult.topoState,
+                    }));
+                }
+            }
+
+            return localChart;
+        }
+
+        function getNodeGlyph({ nodeId, playerState, explorationState, recentTrailSet }) {
+            if (nodeId === playerState.nodeId) return "@";
+            if (recentTrailSet.has(nodeId)) return "*";
+            if (explorationState.visitedSet.has(nodeId)) return "·";
+            if (explorationState.seenSet.has(nodeId)) return ",";
+            return ".";
+        }
+
+        function renderChart(localChart, playerState, explorationState, actors = {}, foods = []) {
+            const radius = localChart.viewRadius;
+            const recentTrailSet = explorationState.buildRecentTrailSet(8);
+            const rows = [];
+            const actorGlyphMap = new Map();
+            const foodNodeSet = new Set(foods.filter(food => food.amount > 0).map(food => food.nodeId));
+
+            if (actors.dog) actorGlyphMap.set(actors.dog.nodeId, "d");
+            if (actors.cat) actorGlyphMap.set(actors.cat.nodeId, actors.cat.sleepTurns > 0 ? "z" : "f");
+
+            for (let y = -radius; y <= radius; y++) {
+                let row = "";
+                for (let x = -radius; x <= radius; x++) {
+                    const chartCell = localChart.get(x, y);
+                    if (chartCell) {
+                        const nodeId = chartCell.nodeId;
+                        if (nodeId === playerState.nodeId) row += "@";
+                        else if (actorGlyphMap.has(nodeId)) row += actorGlyphMap.get(nodeId);
+                        else if (foodNodeSet.has(nodeId)) row += "%";
+                        else if (recentTrailSet.has(nodeId)) row += "*";
+                        else if (explorationState.visitedSet.has(nodeId)) row += "·";
+                        else if (explorationState.seenSet.has(nodeId)) row += ",";
+                        else row += ".";
+                    } else if (localChart.isWall(x, y)) {
+                        row += "#";
+                    } else {
+                        row += " ";
+                    }
+                }
+                rows.push(row);
+            }
+
+            return rows.join("\n");
+        }
+
+        function getValidNeighborNodeIds(graph, nodeId) {
+            const node = graph.getNode(nodeId);
+            if (!node) return [];
+            const result = [];
+            for (const dir of DIRS) {
+                const edge = node.neighbors[dir];
+                if (edge) result.push(edge.to);
+            }
+            return result;
+        }
+
+        function pickActorStartNodeId(baseMap, graph, forbiddenSet, preferEdge = false) {
+            const candidates = [];
+            for (const node of graph.nodes.values()) {
+                const isEdge = node.x === 0 || node.y === 0 || node.x === baseMap.width - 1 || node.y === baseMap.height - 1;
+                if (forbiddenSet.has(node.id)) continue;
+                if (!preferEdge || isEdge) candidates.push(node.id);
+            }
+            const pool = candidates.length > 0 ? candidates : [...graph.nodes.keys()].filter(id => !forbiddenSet.has(id));
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        function findNextStepToward(graph, startNodeId, targetNodeId, blockedSet = new Set()) {
+            if (startNodeId === targetNodeId) return startNodeId;
+            const queue = [startNodeId];
+            const visited = new Set([startNodeId]);
+            const parent = new Map();
+
+            while (queue.length > 0) {
+                const cur = queue.shift();
+                for (const next of getValidNeighborNodeIds(graph, cur)) {
+                    if (blockedSet.has(next) && next !== targetNodeId) continue;
+                    if (visited.has(next)) continue;
+                    visited.add(next);
+                    parent.set(next, cur);
+                    if (next === targetNodeId) {
+                        let step = next;
+                        while (parent.get(step) !== startNodeId && parent.has(step)) {
+                            step = parent.get(step);
+                        }
+                        return step;
+                    }
+                    queue.push(next);
+                }
+            }
+            return startNodeId;
+        }
+
+        function maybeSpawnFood(game) {
+            if (Math.random() >= 0.05) return;
+
+            const forbidden = new Set([
+                game.playerState.nodeId,
+                game.actors.dog?.nodeId,
+                game.actors.cat?.nodeId,
+                ...game.foods.filter(food => food.amount > 0).map(food => food.nodeId),
+            ]);
+
+            const candidates = [...game.worldGraph.nodes.keys()].filter(id => !forbidden.has(id));
+            if (candidates.length === 0) return;
+
+            const nodeId = candidates[Math.floor(Math.random() * candidates.length)];
+            game.foods.push({ nodeId, amount: 5 });
+        }
+
+        function getClosestFoodTarget(game, dogNodeId) {
+            const activeFoods = game.foods.filter(food => food.amount > 0);
+            if (activeFoods.length === 0) return null;
+
+            let best = null;
+            for (const food of activeFoods) {
+                const nextStep = findNextStepToward(game.worldGraph, dogNodeId, food.nodeId);
+                const score = nextStep === dogNodeId && dogNodeId !== food.nodeId ? Infinity : 0;
+                if (!best || score < best.score) {
+                    best = { nodeId: food.nodeId, score };
+                }
+            }
+            return best;
+        }
+
+        function updateDog(game) {
+            const dog = game.actors.dog;
+            if (!dog) return;
+
+            const foodHere = game.foods.find(food => food.nodeId === dog.nodeId && food.amount > 0);
+            if (foodHere) {
+                foodHere.amount -= 1;
+                return;
+            }
+
+            const blocked = new Set();
+            if (game.actors.cat) blocked.add(game.actors.cat.nodeId);
+
+            const foodTarget = getClosestFoodTarget(game, dog.nodeId);
+            const targetNodeId = foodTarget ? foodTarget.nodeId : game.playerState.nodeId;
+            dog.nodeId = findNextStepToward(game.worldGraph, dog.nodeId, targetNodeId, blocked);
+        }
+
+        function updateCat(game) {
+            const cat = game.actors.cat;
+            if (!cat) return;
+
+            if (cat.sleepTurns > 0) {
+                cat.sleepTurns -= 1;
+                return;
+            }
+
+            if (Math.random() < 0.35) {
+                cat.sleepTurns = 1 + Math.floor(Math.random() * 3);
+                return;
+            }
+
+            const neighbors = getValidNeighborNodeIds(game.worldGraph, cat.nodeId)
+                .filter(id => id !== game.playerState.nodeId && id !== game.actors.dog?.nodeId);
+
+            if (neighbors.length === 0) return;
+            if (Math.random() < 0.25) return;
+
+            cat.nodeId = neighbors[Math.floor(Math.random() * neighbors.length)];
+        }
+
+        function cleanupFoods(game) {
+            game.foods = game.foods.filter(food => food.amount > 0);
+        }
+
+        function updateActors(game) {
+            maybeSpawnFood(game);
+            updateDog(game);
+            updateCat(game);
+            cleanupFoods(game);
+        }
+
+        function createBaseMap(kind) {
+            switch (kind) {
+                case "open4":
+                    return BaseMap.fromAscii([
+                        "....",
+                        "....",
+                        "....",
+                        "....",
+                    ]);
+                case "loop8":
+                    return BaseMap.fromAscii([
+                        "........",
+                        "..#...#.",
+                        "..#.....",
+                        "........",
+                        "###..###",
+                        "........",
+                        "..##....",
+                        "........",
+                    ]);
+                case "asym8":
+                    return BaseMap.fromAscii([
+                        "........",
+                        ".##.....",
+                        "...#....",
+                        ".....#..",
+                        "..#.....",
+                        "....###.",
+                        ".....#..",
+                        "........",
+                    ]);
+                default:
+                    return BaseMap.fromAscii([
+                        "....",
+                        "....",
+                        "....",
+                        "....",
+                    ]);
+                case "torus12":
+                    return BaseMap.fromAscii([
+                        "............",
+                        "..#.....#...",
+                        "....#.......",
+                        ".#......##..",
+                        "............",
+                        "...##.......",
+                        ".......#....",
+                        ".....#......",
+                        "..##.....#..",
+                        "............",
+                        "...#........",
+                        "......#.....",
+                    ]);
+            }
+        }
+
+        function createTopology(kind) {
+            switch (kind) {
+                case "plane": return new PlaneTopology();
+                case "torus": return new TorusTopology();
+                case "mobius-horizontal": return new MobiusHorizontalTopology();
+                default: return new TorusTopology();
+            }
+        }
+
+        function findStartNodeId(baseMap) {
+            const cx = Math.floor(baseMap.width / 2);
+            const cy = Math.floor(baseMap.height / 2);
+            if (baseMap.isFloor(cx, cy)) return makeNodeId(cx, cy, baseMap.width);
+
+            for (let y = 0; y < baseMap.height; y++) {
+                for (let x = 0; x < baseMap.width; x++) {
+                    if (baseMap.isFloor(x, y)) return makeNodeId(x, y, baseMap.width);
+                }
+            }
+            throw new Error("No floor tile found.");
+        }
+
+        const screenEl = document.getElementById("screen");
+        const statsEl = document.getElementById("stats");
+        const statusTextEl = document.getElementById("statusText");
+        const topologySelectEl = document.getElementById("topologySelect");
+        const mapSelectEl = document.getElementById("mapSelect");
+        const resetButtonEl = document.getElementById("resetButton");
+
+        const game = {
+            baseMap: null,
+            topology: null,
+            worldGraph: null,
+            playerState: null,
+            explorationState: null,
+            localChart: null,
+            viewRadius: 6,
+            actors: {
+                dog: null,
+                cat: null,
+            },
+            foods: [],
+            turn: 0,
+        };
+
+        function updateSeenFromChart() {
+            game.localChart = buildLocalChart(game.worldGraph, game.playerState, game.topology, game.viewRadius);
+            for (const chartCell of game.localChart.chartMap.values()) {
+                game.explorationState.markSeen(chartCell.nodeId);
+            }
+        }
+
+        function redraw() {
+            updateSeenFromChart();
+            screenEl.textContent = renderChart(game.localChart, game.playerState, game.explorationState, game.actors, game.foods);
+
+            const currentNode = game.worldGraph.getNode(game.playerState.nodeId);
+            const stats = [
+                ["topology", game.topology.name],
+                ["nodeId", String(game.playerState.nodeId)],
+                ["world(x,y)", currentNode ? `${currentNode.x}, ${currentNode.y}` : "-"],
+                ["flipY", String(!!game.playerState.topoState.flipY)],
+                ["trail length", String(game.explorationState.trail.length)],
+                ["visited", String(game.explorationState.visitedSet.size)],
+                ["dog d", game.actors.dog ? String(game.actors.dog.nodeId) : "-"],
+                ["cat f", game.actors.cat ? `${game.actors.cat.nodeId} / sleep=${game.actors.cat.sleepTurns}` : "-"],
+                ["foods %", String(game.foods.filter(food => food.amount > 0).length)],
+            ];
+
+            statsEl.innerHTML = stats.map(([k, v]) => `
+        <div class="stat">
+          <div class="stat-key">${k}</div>
+          <div class="stat-value">${v}</div>
+        </div>
+      `).join("");
+        }
+
+        function resetGame() {
+            game.baseMap = createBaseMap(mapSelectEl.value);
+            game.topology = createTopology(topologySelectEl.value);
+            game.worldGraph = buildWorldGraph(game.baseMap, game.topology);
+
+            const startNodeId = findStartNodeId(game.baseMap);
+            game.playerState = new PlayerState(startNodeId, game.topology.initialState(), "N");
+            game.explorationState = new ExplorationState(startNodeId);
+            game.turn = 0;
+            game.foods = [];
+
+            const forbidden = new Set([startNodeId]);
+            const dogNodeId = pickActorStartNodeId(game.baseMap, game.worldGraph, forbidden, true);
+            forbidden.add(dogNodeId);
+            const catNodeId = pickActorStartNodeId(game.baseMap, game.worldGraph, forbidden, false);
+
+            game.actors = {
+                dog: { kind: "dog", nodeId: dogNodeId },
+                cat: { kind: "cat", nodeId: catNodeId, sleepTurns: 0 },
+            };
+
+            statusTextEl.textContent = `map=${mapSelectEl.value} / topology=${game.topology.name}`;
+            redraw();
+        }
+
+        function step(inputDir) {
+            const graphDir = mapInputDirToGraphDir(inputDir, game.playerState.topoState);
+            const moved = movePlayer(game.playerState, game.worldGraph, game.topology, graphDir);
+            if (moved) {
+                game.explorationState.recordVisit(game.playerState.nodeId);
+                game.turn += 1;
+                updateActors(game);
+            }
+            redraw();
+        }
+
+        window.addEventListener("keydown", (e) => {
+            const key = e.key.toLowerCase();
+            if (["arrowup", "arrowright", "arrowdown", "arrowleft", "w", "a", "s", "d"].includes(key)) {
+                e.preventDefault();
+            }
+
+            if (key === "arrowup" || key === "w") step("N");
+            else if (key === "arrowright" || key === "d") step("E");
+            else if (key === "arrowdown" || key === "s") step("S");
+            else if (key === "arrowleft" || key === "a") step("W");
+        }, { passive: false });
+
+        topologySelectEl.addEventListener("change", resetGame);
+        mapSelectEl.addEventListener("change", resetGame);
+        resetButtonEl.addEventListener("click", resetGame);
+
+        resetGame();
+    </script>
+</body>
+
+</html>

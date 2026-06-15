@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GlitchMIDI — イルーム音楽生成器</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+:root{--bg-deep:#0a0a12;--bg-panel:#12121e;--bg-panel-alt:#1a1a2e;--bg-input:#0e0e1a;--border:#2a2a4a;--border-glow:#4a4a8a;--text-primary:#d0d0e8;--text-secondary:#8888aa;--text-dim:#555577;--accent-blue:#7ec8e3;--accent-purple:#a78bfa;--accent-pink:#f472b6;--accent-orange:#f59e0b;--accent-red:#ef4444;--accent-green:#34d399;--glow-blue:rgba(126,200,227,0.3);--glow-purple:rgba(167,139,250,0.3);--font-retro:'DotGothic16',monospace,sans-serif;--msg-window-border:linear-gradient(135deg,#4a4a8a,#7ec8e3,#a78bfa,#4a4a8a)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{font-size:14px;scroll-behavior:smooth}body{font-family:var(--font-retro);background:var(--bg-deep);color:var(--text-primary);min-height:100vh;overflow-x:hidden;line-height:1.7}
+body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;background:repeating-linear-gradient(0deg,transparent 0px,transparent 2px,rgba(0,0,0,0.12) 2px,rgba(0,0,0,0.12) 4px);opacity:0;transition:opacity .3s}body.crt-on::after{opacity:1}@keyframes crtFlicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.8}94%{opacity:1}}body.crt-on{animation:crtFlicker 8s infinite}
+.header{background:linear-gradient(135deg,var(--bg-panel) 0%,var(--bg-panel-alt) 100%);border-bottom:2px solid var(--border);padding:.8rem 1.5rem;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden}.header::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--msg-window-border);background-size:300% 100%;animation:borderFlow 4s linear infinite}@keyframes borderFlow{0%{background-position:0% 0}100%{background-position:300% 0}}.header-title{font-size:1.5rem;letter-spacing:.15em;background:linear-gradient(90deg,var(--accent-blue),var(--accent-purple),var(--accent-pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}.header-subtitle{font-size:.75rem;color:var(--text-secondary);letter-spacing:.1em}.header-controls{display:flex;gap:.75rem;align-items:center}
+.toggle-switch{display:flex;align-items:center;gap:.5rem;font-size:.75rem;color:var(--text-secondary);cursor:pointer}.toggle-switch input{display:none}.toggle-track{width:36px;height:18px;border-radius:9px;background:var(--border);position:relative;transition:background .3s}.toggle-switch input:checked+.toggle-track{background:var(--accent-blue)}.toggle-track::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--text-primary);transition:transform .3s}.toggle-switch input:checked+.toggle-track::after{transform:translateX(18px)}
+.main-container{display:grid;grid-template-columns:380px 1fr;gap:0;min-height:calc(100vh - 52px)}.panel{padding:1rem;border-right:1px solid var(--border);overflow-y:auto}.panel:last-child{border-right:none}.panel-section{margin-bottom:1.2rem}.panel-section-title{font-size:.8rem;color:var(--accent-blue);letter-spacing:.1em;margin-bottom:.6rem;padding-bottom:.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.5rem}.panel-section-title::before{content:'▶';font-size:.55rem}.input-panel{background:var(--bg-panel)}
+.drop-zone{width:100%;min-height:120px;background:var(--bg-input);border:2px dashed var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;cursor:pointer;transition:all .3s;color:var(--text-dim);font-size:.85rem}.drop-zone:hover,.drop-zone.dragover{border-color:var(--accent-purple);background:rgba(167,139,250,0.05)}.drop-zone .icon{font-size:2.5rem;opacity:.6}.drop-zone input{display:none}.file-info{font-size:.75rem;color:var(--accent-green);margin-top:.3rem;word-break:break-all}.instrument-info{font-size:.65rem;color:var(--text-dim);margin-top:.3rem;line-height:1.4}
+.other-world-details{background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:.5rem;margin-top:.5rem}.other-world-details summary{list-style:none;font-size:.8rem;color:var(--accent-orange);cursor:pointer;outline:none}.other-world-details summary::-webkit-details-marker{display:none}.other-world-details[open] summary{margin-bottom:.5rem;border-bottom:1px dashed var(--border);padding-bottom:.3rem}.other-world-desc{font-size:.7rem;color:var(--text-dim);margin-bottom:.5rem;line-height:1.4}
+.mode-tabs{display:flex;gap:0;margin-bottom:.5rem}.mode-tab{flex:1;padding:.4rem;text-align:center;font-size:.8rem;background:var(--bg-input);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;font-family:var(--font-retro);transition:all .2s}.mode-tab:first-child{border-radius:4px 0 0 4px}.mode-tab:last-child{border-radius:0 4px 4px 0}.mode-tab.active{background:var(--accent-purple);color:#fff;border-color:var(--accent-purple)}
+.slider-container{position:relative;margin:.3rem 0 .8rem}.slider-label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem}.destruction-value{font-size:1rem;font-weight:bold;min-width:3em;text-align:right}.destruction-name{font-size:.75rem;padding:.1rem .5rem;border-radius:3px;letter-spacing:.05em}input[type="range"]{-webkit-appearance:none;width:100%;height:6px;background:var(--border);border-radius:3px;outline:none;cursor:pointer}input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent-purple);border:2px solid #fff;box-shadow:0 0 8px var(--glow-purple);cursor:pointer;transition:transform .15s}input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+.seed-row{display:flex;align-items:center;gap:.5rem}.seed-input{width:100px;padding:.3rem .5rem;background:var(--bg-input);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);font-family:var(--font-retro);font-size:.85rem;text-align:center}.seed-input:focus{outline:none;border-color:var(--accent-blue)}.seed-random-btn{padding:.3rem .6rem;background:var(--bg-panel-alt);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-size:1rem;transition:all .2s}.seed-random-btn:hover{border-color:var(--accent-blue)}
+.btn{padding:.5rem 1rem;border:1px solid var(--border);border-radius:4px;font-family:var(--font-retro);font-size:.8rem;cursor:pointer;transition:all .2s}.btn-primary{background:var(--accent-purple);color:#fff;border-color:var(--accent-purple)}.btn-primary:hover{box-shadow:0 0 15px var(--glow-purple)}.btn-primary:disabled,.btn-secondary:disabled,.btn-play:disabled,.btn-stop:disabled{opacity:.4;cursor:not-allowed}.btn-secondary{background:var(--bg-panel-alt);color:var(--text-secondary)}.btn-secondary:hover{border-color:var(--accent-blue);color:var(--accent-blue)}.btn-play{background:var(--accent-green);color:#0a0a12;border-color:var(--accent-green)}.btn-play:hover{box-shadow:0 0 15px rgba(52,211,153,0.4)}.btn-stop{background:var(--accent-red);color:#fff;border-color:var(--accent-red)}.action-buttons{display:flex;flex-direction:column;gap:.5rem}
+.output-panel{background:var(--bg-panel-alt)}.piano-roll-container{width:100%;height:300px;background:var(--bg-input);border:1px solid var(--border);border-radius:6px;position:relative;overflow:hidden}.piano-roll-canvas{width:100%;height:100%;display:block}
+.transport-bar{display:flex;align-items:center;gap:.5rem;margin-top:.5rem;padding:.5rem;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px}.transport-time{font-size:.8rem;color:var(--accent-blue);min-width:5em;text-align:center;font-variant-numeric:tabular-nums}.transport-progress{flex:1;height:4px;background:var(--border);border-radius:2px;cursor:pointer;position:relative}.transport-progress-fill{height:100%;background:var(--accent-purple);border-radius:2px;width:0%;transition:width .1s linear}.transport-bpm{font-size:.75rem;color:var(--text-dim)}
+.history-list{max-height:250px;overflow-y:auto;display:flex;flex-direction:column;gap:.3rem}.history-item{display:flex;align-items:center;gap:.5rem;padding:.4rem .5rem;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:all .2s;font-size:.75rem}.history-item:hover{border-color:var(--accent-purple);background:var(--bg-panel-alt)}.history-item.selected{border-color:var(--accent-blue);box-shadow:0 0 8px var(--glow-blue)}.history-bookmark{font-size:.9rem;cursor:pointer;flex-shrink:0;user-select:none}.history-text{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.history-meta{color:var(--text-dim);font-size:.65rem;flex-shrink:0}.export-row{display:flex;gap:.5rem;margin-top:.5rem}
+.detail-panel{background:var(--bg-panel);border-top:2px solid var(--border);padding:.75rem 1rem;display:none;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:.6rem}.detail-panel.visible{display:grid}.mode-card{background:var(--bg-panel-alt);border:1px solid var(--border);border-radius:6px;padding:.6rem;transition:all .2s}.mode-card.enabled{border-color:var(--accent-purple);box-shadow:0 0 8px rgba(167,139,250,0.15)}.mode-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem}.mode-card-name{display:flex;align-items:center;gap:.35rem;font-size:.75rem}.mode-card-icon{font-size:1rem}.mode-card-id{color:var(--text-dim);font-size:.65rem;margin-left:.2rem}.mode-param-row{display:flex;align-items:center;gap:.3rem;font-size:.7rem;color:var(--text-secondary)}.mode-param-label{min-width:5em;text-align:right}.mode-prob-slider{width:100%;height:4px}.mode-prob-value{font-size:.65rem;color:var(--accent-blue);min-width:2.5em;text-align:right}
+.status-bar{font-size:.7rem;color:var(--text-dim);padding:.3rem 0;min-height:1.5em}.status-bar.active{color:var(--accent-green)}
+.annotation-log{max-height:200px;overflow-y:auto;font-size:.7rem;color:var(--text-dim);background:var(--bg-input);border:1px solid var(--border);border-radius:4px;padding:.5rem;display:none}.annotation-log.visible{display:block}.annotation-log .anno-entry{padding:.15rem 0;border-bottom:1px solid rgba(42,42,74,0.5)}.anno-mode{font-weight:bold}.anno-mode-A1,.anno-mode-A2,.anno-mode-A3{color:#f472b6}.anno-mode-B1,.anno-mode-B2,.anno-mode-B3{color:#a78bfa}.anno-mode-C1,.anno-mode-C2,.anno-mode-C3{color:#7ec8e3}.anno-mode-T1,.anno-mode-T2{color:#f59e0b}
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg-deep)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+@media(max-width:900px){.main-container{grid-template-columns:1fr}.panel{border-right:none;border-bottom:1px solid var(--border)}.detail-panel{grid-template-columns:1fr}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 5px var(--glow-purple)}50%{box-shadow:0 0 20px var(--glow-purple),0 0 40px var(--glow-blue)}}.generating .btn-primary{animation:pulseGlow 1s ease-in-out infinite;pointer-events:none}
+</style>
+</head>
+<body>
+<header class="header"><div><div class="header-title">GlitchMIDI</div><div class="header-subtitle">イルーム音楽生成器</div></div><div class="header-controls"><label class="toggle-switch" id="crtToggle"><span>CRT</span><input type="checkbox"><span class="toggle-track"></span></label></div></header>
+<div class="main-container" id="app">
+<div class="panel input-panel">
+<div class="panel-section"><div class="panel-section-title">MIDI入力</div><div class="drop-zone" id="dropZone"><div class="icon">🎹</div><div>MIDIファイルをドロップ / クリックで選択</div><input type="file" accept=".mid,.midi" id="midiFileInput"></div><div class="file-info" id="fileInfo"></div><div class="instrument-info" id="instrumentInfo"></div></div>
+<div class="panel-section"><details class="other-world-details"><summary>異世界MIDI（オプション）</summary><div><p class="other-world-desc">「異世界参照」「DMA転送異常」で混入するMIDIデータを指定。空欄ならランダム生成。</p><div class="drop-zone" id="otherWorldDropZone" style="min-height:70px;"><div class="icon" style="font-size:1.5rem;">🌀</div><div>異世界MIDIをドロップ</div><input type="file" accept=".mid,.midi" id="otherWorldFileInput"></div><div class="file-info" id="otherWorldFileInfo"></div></div></details></div>
+<div class="panel-section"><div class="panel-section-title">モード</div><div class="mode-tabs"><button class="mode-tab active" id="modeSimple">簡易</button><button class="mode-tab" id="modeDetail">詳細</button></div></div>
+<div class="panel-section"><div class="panel-section-title">破壊度</div><div class="slider-container"><div class="slider-label-row"><span class="destruction-name" id="destructionName" style="background:rgba(126,200,227,0.2);color:#7ec8e3;">微損</span><span class="destruction-value" id="destructionValue" style="color:#7ec8e3;">0.10</span></div><input type="range" id="destructionSlider" min="0" max="100" value="10" step="1"></div></div>
+<div class="panel-section"><div class="panel-section-title">シード値</div><div class="seed-row"><input type="number" id="seedInput" class="seed-input" value="42" min="0"><button class="seed-random-btn" id="seedRandomBtn">🎲</button></div></div>
+<div class="panel-section"><div class="action-buttons"><button class="btn btn-primary" id="generateBtn" disabled>▶ グリッチ生成</button><div style="display:flex;gap:.5rem;"><button class="btn btn-play" id="playBtn" disabled>▶ 再生</button><button class="btn btn-stop" id="stopBtn" disabled>■ 停止</button><button class="btn btn-secondary" id="playOrigBtn" disabled>♪ 原曲</button></div></div></div>
+<div class="panel-section"><div class="status-bar" id="statusBar">MIDIファイルを読み込んでください</div></div>
+</div>
+<div class="panel output-panel">
+<div class="panel-section"><div class="panel-section-title">ピアノロール</div><div class="piano-roll-container" id="pianoRollContainer"><canvas class="piano-roll-canvas" id="pianoRollCanvas"></canvas></div><div class="transport-bar"><button class="btn btn-play" id="transportPlay" style="padding:.2rem .5rem;font-size:.7rem;" disabled>▶</button><span class="transport-time" id="transportTime">0:00</span><div class="transport-progress" id="transportProgress"><div class="transport-progress-fill" id="transportProgressFill"></div></div><span class="transport-bpm" id="transportBPM">BPM: --</span></div><div style="display:flex;gap:.5rem;margin-top:.5rem;"><button class="btn btn-secondary" id="toggleAnno" style="font-size:.7rem;">注釈ログ</button></div><div class="annotation-log" id="annotationLog"></div></div>
+<div class="panel-section"><div class="panel-section-title">生成履歴</div><div class="history-list" id="historyList"></div><div class="export-row"><button class="btn btn-secondary" id="exportMidiBtn" style="flex:1;" disabled>🎹 MIDI出力</button><button class="btn btn-secondary" id="exportJsonBtn" style="flex:1;" disabled>{ } JSON出力</button></div></div>
+</div></div>
+<div class="detail-panel" id="detailPanel"></div>
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  PRNG — xoshiro128**
+// ═══════════════════════════════════════════════════════════════
+class PRNG{constructor(seed=42){this.state=new Uint32Array(4);this.seed(seed)}seed(s){let z=(s|0)>>>0;for(let i=0;i<4;i++){z=(z+0x9e3779b9)>>>0;let t=z^(z>>>16);t=Math.imul(t,0x21f0aaad);t=(t^(t>>>15))>>>0;t=Math.imul(t,0x735a2d97);t=(t^(t>>>15))>>>0;this.state[i]=t}if(this.state.every(v=>v===0))this.state[0]=1}_rotl(x,k){return((x<<k)|(x>>>(32-k)))>>>0}nextUint32(){const s=this.state;const result=Math.imul(this._rotl(Math.imul(s[1],5),7),9)>>>0;const t=(s[1]<<9)>>>0;s[2]^=s[0];s[3]^=s[1];s[1]^=s[2];s[0]^=s[3];s[2]^=t;s[3]=this._rotl(s[3],11);return result}next(){return this.nextUint32()/0x100000000}nextInt(min,max){return min+(this.nextUint32()%(max-min+1))}nextFloat(min,max){return min+(max-min)*this.next()}shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=this.nextInt(0,i);[a[i],a[j]]=[a[j],a[i]]}return a}pick(arr){return arr[this.nextInt(0,arr.length-1)]}chance(p){return this.next()<p}}
+
+// ═══════════════════════════════════════════════════════════════
+//  GM Instrument Names & Synth Presets
+// ═══════════════════════════════════════════════════════════════
+const GM_NAMES=['Acoustic Grand Piano','Bright Acoustic Piano','Electric Grand Piano','Honky-tonk Piano','Electric Piano 1','Electric Piano 2','Harpsichord','Clavi','Celesta','Glockenspiel','Music Box','Vibraphone','Marimba','Xylophone','Tubular Bells','Dulcimer','Drawbar Organ','Percussive Organ','Rock Organ','Church Organ','Reed Organ','Accordion','Harmonica','Tango Accordion','Acoustic Guitar (nylon)','Acoustic Guitar (steel)','Electric Guitar (jazz)','Electric Guitar (clean)','Electric Guitar (muted)','Overdriven Guitar','Distortion Guitar','Guitar Harmonics','Acoustic Bass','Electric Bass (finger)','Electric Bass (pick)','Fretless Bass','Slap Bass 1','Slap Bass 2','Synth Bass 1','Synth Bass 2','Violin','Viola','Cello','Contrabass','Tremolo Strings','Pizzicato Strings','Orchestral Harp','Timpani','String Ensemble 1','String Ensemble 2','Synth Strings 1','Synth Strings 2','Choir Aahs','Voice Oohs','Synth Voice','Orchestra Hit','Trumpet','Trombone','Tuba','Muted Trumpet','French Horn','Brass Section','Synth Brass 1','Synth Brass 2','Soprano Sax','Alto Sax','Tenor Sax','Baritone Sax','Oboe','English Horn','Bassoon','Clarinet','Piccolo','Flute','Recorder','Pan Flute','Blown Bottle','Shakuhachi','Whistle','Ocarina','Lead 1 (square)','Lead 2 (sawtooth)','Lead 3 (calliope)','Lead 4 (chiff)','Lead 5 (charang)','Lead 6 (voice)','Lead 7 (fifths)','Lead 8 (bass+lead)','Pad 1 (new age)','Pad 2 (warm)','Pad 3 (polysynth)','Pad 4 (choir)','Pad 5 (bowed)','Pad 6 (metallic)','Pad 7 (halo)','Pad 8 (sweep)','FX 1 (rain)','FX 2 (soundtrack)','FX 3 (crystal)','FX 4 (atmosphere)','FX 5 (brightness)','FX 6 (goblins)','FX 7 (echoes)','FX 8 (sci-fi)','Sitar','Banjo','Shamisen','Koto','Kalimba','Bag pipe','Fiddle','Shanai','Tinkle Bell','Agogo','Steel Drums','Woodblock','Taiko Drum','Melodic Tom','Synth Drum','Reverse Cymbal','Guitar Fret Noise','Breath Noise','Seashore','Bird Tweet','Telephone Ring','Helicopter','Applause','Gunshot'];
+
+function getSynthPreset(program, channel) {
+  if(channel === 9) return 'drum';
+  if(program < 8) return {osc:'triangle8',attack:0.005,decay:0.8,sustain:0.2,release:0.8};
+  if(program < 16) return {osc:'sine',attack:0.001,decay:0.4,sustain:0.05,release:0.3};
+  if(program < 24) return {osc:'square8',attack:0.01,decay:0.1,sustain:0.8,release:0.1};
+  if(program < 32) return {osc:'triangle',attack:0.005,decay:0.5,sustain:0.15,release:0.4};
+  if(program < 40) return {osc:'sawtooth4',attack:0.01,decay:0.3,sustain:0.5,release:0.2};
+  if(program < 48) return {osc:'sawtooth8',attack:0.15,decay:0.2,sustain:0.7,release:0.5};
+  if(program < 56) return {osc:'sawtooth16',attack:0.2,decay:0.3,sustain:0.6,release:0.6};
+  if(program < 64) return {osc:'sawtooth4',attack:0.05,decay:0.2,sustain:0.6,release:0.3};
+  if(program < 72) return {osc:'square4',attack:0.03,decay:0.2,sustain:0.5,release:0.3};
+  if(program < 80) return {osc:'sine',attack:0.05,decay:0.1,sustain:0.6,release:0.3};
+  if(program < 88) return {osc:'sawtooth',attack:0.01,decay:0.2,sustain:0.5,release:0.3};
+  if(program < 96) return {osc:'triangle',attack:0.5,decay:0.3,sustain:0.7,release:1.0};
+  if(program < 104) return {osc:'fmsine',attack:0.1,decay:0.5,sustain:0.3,release:0.8};
+  if(program < 112) return {osc:'triangle4',attack:0.005,decay:0.4,sustain:0.1,release:0.3};
+  if(program < 120) return {osc:'sine',attack:0.001,decay:0.2,sustain:0.0,release:0.15};
+  return {osc:'fmsawtooth',attack:0.01,decay:0.5,sustain:0.3,release:0.5};
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MIDI Parser
+// ═══════════════════════════════════════════════════════════════
+function parseMIDI(buffer){const data=new DataView(buffer);let pos=0;function readStr(len){let s='';for(let i=0;i<len;i++)s+=String.fromCharCode(data.getUint8(pos++));return s}function readU32(){const v=data.getUint32(pos);pos+=4;return v}function readU16(){const v=data.getUint16(pos);pos+=2;return v}function readU8(){return data.getUint8(pos++)}function readVarLen(){let v=0;for(let i=0;i<4;i++){const b=readU8();v=(v<<7)|(b&0x7F);if(!(b&0x80))break}return v}const hm=readStr(4);if(hm!=='MThd')throw new Error('Not a MIDI file');readU32();const format=readU16();const numTracks=readU16();const ticksPerBeat=readU16();const tracks=[];for(let t=0;t<numTracks;t++){const tm=readStr(4);if(tm!=='MTrk')throw new Error('Invalid track');const tl=readU32();const te=pos+tl;const events=[];let rs=0;while(pos<te){const delta=readVarLen();let sb=data.getUint8(pos);if(sb&0x80){pos++;rs=sb}else{sb=rs}const type=sb&0xF0;const ch=sb&0x0F;if(sb===0xFF){const mt=readU8();const ml=readVarLen();const md=new Uint8Array(buffer,pos,ml);pos+=ml;events.push({delta,type:'meta',metaType:mt,data:Array.from(md)});if(mt===0x2F)break}else if(sb===0xF0||sb===0xF7){const sl=readVarLen();pos+=sl;events.push({delta,type:'sysex'})}else if(type===0x90){const n=readU8();const v=readU8();events.push({delta,type:v>0?'noteOn':'noteOff',channel:ch,note:n,velocity:v})}else if(type===0x80){const n=readU8();const v=readU8();events.push({delta,type:'noteOff',channel:ch,note:n,velocity:v})}else if(type===0xA0){readU8();readU8();events.push({delta,type:'polyPressure',channel:ch})}else if(type===0xB0){const c=readU8();const v=readU8();events.push({delta,type:'controlChange',channel:ch,controller:c,value:v})}else if(type===0xC0){const p=readU8();events.push({delta,type:'programChange',channel:ch,program:p})}else if(type===0xD0){readU8();events.push({delta,type:'channelPressure',channel:ch})}else if(type===0xE0){const l=readU8();const m=readU8();events.push({delta,type:'pitchBend',channel:ch,value:((m<<7)|l)-8192})}else{pos++;events.push({delta,type:'unknown'})}}pos=te;tracks.push(events)}return{format,numTracks,ticksPerBeat,tracks}}
+
+// ═══════════════════════════════════════════════════════════════
+//  MIDI → Notes
+// ═══════════════════════════════════════════════════════════════
+function midiToNotes(midi){const allNotes=[];const tempos=[];const channelPrograms={};for(let t=0;t<midi.tracks.length;t++){const events=midi.tracks[t];let tick=0;const active={};for(const ev of events){tick+=ev.delta;if(ev.type==='meta'&&ev.metaType===0x51){const us=(ev.data[0]<<16)|(ev.data[1]<<8)|ev.data[2];tempos.push({tick,bpm:60000000/us})}if(ev.type==='programChange')channelPrograms[ev.channel]=ev.program;if(ev.type==='noteOn'){active[`${ev.channel}-${ev.note}`]={startTick:tick,velocity:ev.velocity,channel:ev.channel,note:ev.note,track:t}}if(ev.type==='noteOff'){const k=`${ev.channel}-${ev.note}`;if(active[k]){allNotes.push({note:active[k].note,velocity:active[k].velocity,channel:active[k].channel,track:t,startTick:active[k].startTick,duration:tick-active[k].startTick,pitchBend:0,program:channelPrograms[active[k].channel]??0});delete active[k]}}}}if(tempos.length===0)tempos.push({tick:0,bpm:120});allNotes.sort((a,b)=>a.startTick-b.startTick||a.note-b.note);return{notes:allNotes,tempos,ticksPerBeat:midi.ticksPerBeat,channelPrograms}}
+
+function tickToSeconds(tick,tempos,tpb){let time=0,pt=0,bpm=120;for(const t of tempos){if(t.tick>tick)break;time+=(t.tick-pt)/tpb*(60/bpm);pt=t.tick;bpm=t.bpm}time+=(tick-pt)/tpb*(60/bpm);return time}
+
+// ═══════════════════════════════════════════════════════════════
+//  Mode Metadata & Auto Config
+// ═══════════════════════════════════════════════════════════════
+const MODE_META={A1:{name:'ノートオフセットずれ',icon:'🔀',nickname:'ずれ読み'},A2:{name:'オクターブ跳躍',icon:'💥',nickname:'大幅ジャンプ'},A3:{name:'異世界トラック参照',icon:'🌀',nickname:'異世界参照'},B1:{name:'ノート残像',icon:'👻',nickname:'残像'},B2:{name:'フレーズ時間伸縮',icon:'✂️',nickname:'長さ異常'},B3:{name:'シーケンス途中ワープ',icon:'🦘',nickname:'途中ワープ'},C1:{name:'ノート↔CC誤認',icon:'🚫',nickname:'イベント化け'},C2:{name:'ノートオフ消失',icon:'🔗',nickname:'止まらない'},C3:{name:'ピッチテーブルずれ',icon:'🔄',nickname:'微分音ずれ'},T1:{name:'ノイズノート混入',icon:'⚡',nickname:'ノイズ混入'},T2:{name:'トラック間同期ずれ',icon:'🔁',nickname:'同期ずれ'}};
+
+function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
+function lerp(a,b,t){return a+(b-a)*t}
+
+function getAutoConfig(d){const m=[];
+m.push({id:'A1',enabled:d>=0.0,probability:clamp(d*2,0.03,0.5),params:{offset:Math.round(lerp(1,8,d))}});
+m.push({id:'C3',enabled:d>=0.03,probability:clamp(d*1.8,0.05,0.6),params:{maxCents:Math.round(lerp(10,100,d)),mode:'per_note'}});
+m.push({id:'T2',enabled:d>=0.05,probability:clamp(d*1.5,0.05,0.6),params:{driftRange:lerp(0.01,0.3,d),mode:'per_track'}});
+m.push({id:'B1',enabled:d>=0.15,probability:clamp((d-0.15)*2,0.05,0.5),params:{}});
+m.push({id:'B2',enabled:d>=0.1,probability:clamp((d-0.1)*2,0.08,0.6),params:{ratioMin:lerp(0.7,0.3,d),ratioMax:lerp(1.3,3.0,d),mode:'irrational',phraseGap:Math.round(lerp(480,120,d)),warpScope:'phrase'}});
+m.push({id:'C1',enabled:d>=0.25,probability:clamp((d-0.25)*2,0.05,0.4),params:{}});
+m.push({id:'B3',enabled:d>=0.4,probability:clamp((d-0.4)*2.5,0.08,0.6),params:{jumpScope:'within_track'}});
+m.push({id:'A2',enabled:d>=0.45,probability:clamp((d-0.45)*2.5,0.08,0.5),params:{octaveRange:Math.round(lerp(1,4,d))}});
+m.push({id:'C2',enabled:d>=0.5,probability:clamp((d-0.5)*2,0.08,0.5),params:{maxExtend:lerp(2,8,d)}});
+m.push({id:'A3',enabled:d>=0.3,probability:clamp((d-0.3)*2.5,0.08,0.7),params:{mixRatio:lerp(0.1,0.6,d)}});
+m.push({id:'T1',enabled:d>=0.6,probability:clamp((d-0.6)*3,0.08,0.5),params:{density:lerp(0.02,0.15,d),burstLen:Math.round(lerp(1,4,d))}});
+return m}
+
+function getDestructionLabel(d){if(d<0.2)return{name:'微損',color:'#7ec8e3'};if(d<0.5)return{name:'詩的',color:'#a78bfa'};if(d<0.7)return{name:'混沌',color:'#f59e0b'};if(d<0.9)return{name:'崩壊',color:'#ef4444'};return{name:'完全破壊',color:'#dc2626'}}
+
+// ═══════════════════════════════════════════════════════════════
+//  Phrase Detection
+// ═══════════════════════════════════════════════════════════════
+function detectPhrases(notes, gapThreshold) {
+  if(notes.length === 0) return [];
+  const phrases = [];
+  let cur = [notes[0]];
+  for(let i=1; i<notes.length; i++) {
+    const gap = notes[i].startTick - (notes[i-1].startTick + notes[i-1].duration);
+    if(gap > gapThreshold) { phrases.push(cur); cur = [notes[i]]; }
+    else cur.push(notes[i]);
+  }
+  if(cur.length > 0) phrases.push(cur);
+  return phrases;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GLITCH ENGINE
+// ═══════════════════════════════════════════════════════════════
+function applyMIDIGlitch(noteData, config, otherWorldNotes) {
+  const rng = new PRNG(config.seed);
+  let notes = noteData.notes.map(n => ({...n}));
+  const annotations = [];
+  const activeModes = config.modes.filter(m => m.enabled);
+
+  for(const mc of activeModes) {
+    const prob = mc.probability ?? 1.0;
+    const p = mc.params || {};
+
+    switch(mc.id) {
+      case 'A1': {
+        const offset = p.offset || 2;
+        notes = notes.map((n,i) => {
+          if(!rng.chance(prob)) return n;
+          const si = clamp(i+rng.nextInt(-offset,offset),0,notes.length-1);
+          annotations.push({mode:'A1',detail:`note[${i}] pitch ${n.note}→${notes[si].note}`});
+          return {...n, note: notes[si].note};
+        }); break;
+      }
+      case 'A2': {
+        const range = p.octaveRange || 2;
+        notes = notes.map((n,i) => {
+          if(!rng.chance(prob)) return n;
+          const os = rng.nextInt(-range,range)*12;
+          const nn = clamp(n.note+os,0,127);
+          annotations.push({mode:'A2',detail:`octave ${os>0?'+':''}${os/12}, ${n.note}→${nn}`});
+          return {...n, note:nn};
+        }); break;
+      }
+      case 'A3': {
+        const mr = p.mixRatio || 0.2;
+        const src = (otherWorldNotes && otherWorldNotes.notes.length>0) ? otherWorldNotes.notes : generateDummyNotes(rng, notes.length, noteData.ticksPerBeat);
+        const ic = Math.max(1, Math.round(notes.length*mr*prob));
+        for(let k=0;k<ic;k++){
+          if(!rng.chance(prob)) continue;
+          const sn=rng.pick(src);const ip=rng.nextInt(0,notes.length);
+          const tt=notes[Math.min(ip,notes.length-1)]?.startTick||0;
+          const nn={...sn,startTick:tt+rng.nextInt(-noteData.ticksPerBeat,noteData.ticksPerBeat),track:rng.nextInt(0,3)};
+          notes.splice(ip,0,nn);
+          annotations.push({mode:'A3',detail:`injected note=${nn.note} from other world`});
+        }
+        notes.sort((a,b)=>a.startTick-b.startTick); break;
+      }
+      case 'B1': {
+        const ghosts=[];
+        notes.forEach((n,i) => {
+          if(!rng.chance(prob)) return;
+          const pi=Math.max(0,i-rng.nextInt(1,5));
+          ghosts.push({...n,note:notes[pi].note,velocity:Math.round(n.velocity*rng.nextFloat(0.3,0.7))});
+          annotations.push({mode:'B1',detail:`ghost of [${pi}] pitch=${notes[pi].note}`});
+        });
+        notes=[...notes,...ghosts].sort((a,b)=>a.startTick-b.startTick); break;
+      }
+      case 'B2': {
+        const ratioMin=p.ratioMin||0.5, ratioMax=p.ratioMax||2.0;
+        const mode=p.mode||'irrational', warpScope=p.warpScope||'phrase', phraseGap=p.phraseGap||240;
+        const irrationals=[Math.SQRT2,Math.sqrt(3),(1+Math.sqrt(5))/2,Math.PI/2,Math.E/2,Math.sqrt(5),Math.cbrt(2),Math.cbrt(3)];
+
+        if(warpScope==='phrase') {
+          const phrases=detectPhrases(notes,phraseGap);
+          const newNotes=[];
+          let tickOffset=0;
+          for(const phrase of phrases){
+            if(!rng.chance(prob)){
+              for(const n of phrase) newNotes.push({...n,startTick:n.startTick+tickOffset});
+              continue;
+            }
+            let ratio;
+            if(mode==='irrational'){ratio=rng.pick(irrationals);if(rng.chance(0.5))ratio=1/ratio;ratio=clamp(ratio,ratioMin,ratioMax)}
+            else if(mode==='rational'){ratio=clamp(rng.nextInt(1,7)/rng.nextInt(2,7),ratioMin,ratioMax)}
+            else{ratio=rng.nextFloat(ratioMin,ratioMax)}
+            const ps=phrase[0].startTick;
+            const pe=Math.max(...phrase.map(n=>n.startTick+n.duration));
+            const pl=pe-ps, npl=Math.round(pl*ratio);
+            for(const n of phrase){
+              const rs=n.startTick-ps;
+              newNotes.push({...n,startTick:ps+tickOffset+Math.round(rs*ratio),duration:Math.max(1,Math.round(n.duration*ratio))});
+            }
+            tickOffset+=(npl-pl);
+            annotations.push({mode:'B2',detail:`phrase warp ×${ratio.toFixed(3)}: ${phrase.length}notes, ${pl}→${npl}ticks (offset=${tickOffset})`});
+          }
+          notes=newNotes;
+        } else {
+          notes=notes.map((n,i)=>{
+            if(!rng.chance(prob))return n;
+            let ratio;
+            if(mode==='irrational'){ratio=rng.pick(irrationals);if(rng.chance(0.5))ratio=1/ratio;ratio=clamp(ratio,ratioMin,ratioMax)}
+            else if(mode==='rational'){ratio=clamp(rng.nextInt(1,7)/rng.nextInt(2,7),ratioMin,ratioMax)}
+            else{ratio=rng.nextFloat(ratioMin,ratioMax)}
+            const nd=Math.max(1,Math.round(n.duration*ratio));
+            annotations.push({mode:'B2',detail:`dur ${n.duration}→${nd} (×${ratio.toFixed(3)})`});
+            return{...n,duration:nd};
+          });
+        }
+        notes.sort((a,b)=>a.startTick-b.startTick); break;
+      }
+      case 'B3': {
+        const scope=p.jumpScope||'within_track';
+        notes=notes.map((n,i)=>{
+          if(!rng.chance(prob))return n;
+          const pool=scope==='within_track'?notes.filter(nn=>nn.track===n.track):notes;
+          const dest=rng.pick(pool);
+          annotations.push({mode:'B3',detail:`warp tick ${n.startTick}→${dest.startTick}`});
+          return{...n,startTick:dest.startTick};
+        });
+        notes.sort((a,b)=>a.startTick-b.startTick); break;
+      }
+      case 'C1': {
+        notes=notes.map((n,i)=>{
+          if(!rng.chance(prob))return n;
+          annotations.push({mode:'C1',detail:`note↔vel: ${n.note},${n.velocity}→${clamp(n.velocity,0,127)},${clamp(n.note,1,127)}`});
+          return{...n,note:clamp(n.velocity,0,127),velocity:clamp(n.note,1,127)};
+        }); break;
+      }
+      case 'C2': {
+        const me=p.maxExtend||4;
+        notes=notes.map((n,i)=>{
+          if(!rng.chance(prob))return n;
+          const f=rng.nextFloat(1.5,me);const nd=Math.round(n.duration*f);
+          annotations.push({mode:'C2',detail:`noteOff lost, dur ${n.duration}→${nd}`});
+          return{...n,duration:nd};
+        }); break;
+      }
+      case 'C3': {
+        const mc=p.maxCents||50,mode=p.mode||'per_note';
+        let gb=0;if(mode==='global')gb=rng.nextFloat(-mc,mc);
+        notes=notes.map((n,i)=>{
+          if(!rng.chance(prob))return n;
+          let bend;
+          if(mode==='global')bend=gb;
+          else if(mode==='per_note')bend=rng.nextFloat(-mc,mc);
+          else{const edos=[19,22,24,31,41,53];const edo=rng.pick(edos);const step=1200/edo;bend=Math.round(rng.nextFloat(-mc,mc)/step)*step}
+          annotations.push({mode:'C3',detail:`pitch ${bend.toFixed(1)} cents`});
+          return{...n,pitchBend:(n.pitchBend||0)+bend};
+        }); break;
+      }
+      case 'T1': {
+        const dens=p.density||0.05,bl=p.burstLen||2;
+        const mt=notes.length>0?notes[notes.length-1].startTick+notes[notes.length-1].duration:1000;
+        const nn=Math.max(1,Math.round(notes.length*dens*prob));
+        for(let k=0;k<nn;k++){
+          const tick=rng.nextInt(0,mt);
+          for(let b=0;b<bl;b++){
+            const noi={note:rng.nextInt(20,108),velocity:rng.nextInt(40,127),channel:rng.nextInt(0,15),track:0,
+              startTick:tick+b*rng.nextInt(1,noteData.ticksPerBeat/4),duration:rng.nextInt(1,noteData.ticksPerBeat/2),
+              pitchBend:rng.chance(0.3)?rng.nextFloat(-50,50):0,program:rng.nextInt(0,127)};
+            notes.push(noi);annotations.push({mode:'T1',detail:`noise at ${tick}, note=${noi.note}`});
+          }
+        }
+        notes.sort((a,b)=>a.startTick-b.startTick); break;
+      }
+      case 'T2': {
+        const dr=p.driftRange||0.1,mode=p.mode||'per_track';
+        const tracks=[...new Set(notes.map(n=>n.track))];
+        if(mode==='per_track'){
+          const td={};for(const tr of tracks)td[tr]=rng.nextFloat(-dr,dr);
+          notes=notes.map((n,i)=>{
+            if(!rng.chance(prob))return n;
+            const drift=td[n.track]||0;const tickD=Math.round(n.startTick*drift);
+            if(tickD!==0)annotations.push({mode:'T2',detail:`track ${n.track} drift ${(drift*100).toFixed(1)}%`});
+            return{...n,startTick:Math.max(0,n.startTick+tickD)};
+          });
+        }else{
+          const rate=rng.nextFloat(-dr*0.1,dr*0.1);
+          notes=notes.map(n=>{if(!rng.chance(prob))return n;return{...n,startTick:Math.max(0,n.startTick+Math.round(n.startTick*rate*(n.track+1)))}});
+          annotations.push({mode:'T2',detail:`progressive drift ${(rate*100).toFixed(3)}%`});
+        }
+        notes.sort((a,b)=>a.startTick-b.startTick); break;
+      }
+    }
+  }
+  return{notes,tempos:noteData.tempos,ticksPerBeat:noteData.ticksPerBeat,channelPrograms:noteData.channelPrograms,annotations};
+}
+
+function generateDummyNotes(rng,count,tpb){const notes=[];const bn=rng.nextInt(48,72);const sc=[0,3,5,7,10];let tick=0;for(let i=0;i<Math.min(count,100);i++){notes.push({note:clamp(bn+rng.pick(sc)+rng.nextInt(-1,2)*12,0,127),velocity:rng.nextInt(50,120),channel:0,track:0,startTick:tick,duration:rng.nextInt(tpb/4,tpb*2),pitchBend:rng.chance(0.3)?rng.nextFloat(-30,30):0,program:0});tick+=rng.nextInt(tpb/4,tpb)}return notes}
+
+// ═══════════════════════════════════════════════════════════════
+//  MIDI Writer
+// ═══════════════════════════════════════════════════════════════
+function notesToMIDI(nd){const{notes,tempos,ticksPerBeat}=nd;function wvl(v){const b=[];b.push(v&0x7F);v>>=7;while(v>0){b.unshift((v&0x7F)|0x80);v>>=7}return b}const tracks=[];const t0=[];t0.push({tick:0,data:[0xFF,0x58,0x04,0x04,0x02,0x18,0x08]});for(const t of tempos){const us=Math.round(60000000/t.bpm);t0.push({tick:t.tick,data:[0xFF,0x51,0x03,(us>>16)&0xFF,(us>>8)&0xFF,us&0xFF]})}t0.sort((a,b)=>a.tick-b.tick);tracks.push(t0);const progTrack={};for(const n of notes){const ch=n.channel&0x0F;if(!progTrack[ch])progTrack[ch]={prog:n.program??0,evts:[]};const tk=progTrack[ch];if(n.pitchBend&&Math.abs(n.pitchBend)>0.5){let bv=Math.round(n.pitchBend/200*8192)+8192;bv=Math.max(0,Math.min(16383,bv));tk.evts.push({tick:Math.max(0,n.startTick-1),data:[0xE0|ch,bv&0x7F,(bv>>7)&0x7F]});tk.evts.push({tick:n.startTick+n.duration+1,data:[0xE0|ch,0x00,0x40]})}tk.evts.push({tick:n.startTick,data:[0x90|ch,Math.max(0,Math.min(127,n.note)),Math.max(1,Math.min(127,n.velocity))]});tk.evts.push({tick:n.startTick+Math.max(1,n.duration),data:[0x80|ch,Math.max(0,Math.min(127,n.note)),0]})}for(let ch=0;ch<16;ch++){if(!progTrack[ch]||progTrack[ch].evts.length===0)continue;const evts=progTrack[ch].evts;if(ch!==9)evts.push({tick:0,data:[0xC0|ch,progTrack[ch].prog&0x7F]});evts.sort((a,b)=>a.tick-b.tick);tracks.push(evts)}const tbs=[];for(const evts of tracks){const tb=[];let pt=0;for(const ev of evts){const d=Math.max(0,ev.tick-pt);pt=ev.tick;tb.push(...wvl(d));tb.push(...ev.data)}tb.push(0x00,0xFF,0x2F,0x00);tbs.push(tb)}const fb=[0x4D,0x54,0x68,0x64,0,0,0,6,0,1,(tbs.length>>8)&0xFF,tbs.length&0xFF,(ticksPerBeat>>8)&0xFF,ticksPerBeat&0xFF];for(const tb of tbs){fb.push(0x4D,0x54,0x72,0x6B);const tl=tb.length;fb.push((tl>>24)&0xFF,(tl>>16)&0xFF,(tl>>8)&0xFF,tl&0xFF);fb.push(...tb)}return new Uint8Array(fb)}
+
+// ═══════════════════════════════════════════════════════════════
+//  Tone.js Playback (multi-instrument)
+// ═══════════════════════════════════════════════════════════════
+let currentSynths=[];let isPlaying=false;let progressInterval=null;
+let playbackState={noteData:null,offsetTime:0,totalDur:0,startTime:0,evts:[]};
+
+async function togglePlay(noteData, onProgress, onDone) {
+  if (playbackState.noteData === noteData && isPlaying) {
+    const el = Tone.now() - playbackState.startTime;
+    playbackState.offsetTime += Math.max(0, el - 0.1);
+    stopPlayback();
+    return false;
+  }
+  return playNotes(noteData, onProgress, onDone, playbackState.noteData === noteData ? playbackState.offsetTime : 0);
+}
+
+async function playNotes(noteData, onProgress, onDone, offsetTime = 0) {
+  await Tone.start(); stopPlayback();
+  if(playbackState.noteData !== noteData || offsetTime === 0) {
+    playbackState.noteData = noteData;
+    const {notes,tempos,ticksPerBeat}=noteData;
+    if(notes.length===0){if(onDone)onDone();return true;}
+    let evts=notes.map(n=>{const st=tickToSeconds(n.startTick,tempos,ticksPerBeat);const dur=Math.max(0.01,tickToSeconds(n.startTick+n.duration,tempos,ticksPerBeat)-st);let freq=Tone.Frequency(clamp(n.note,0,127),'midi').toFrequency();if(n.pitchBend)freq*=Math.pow(2,n.pitchBend/1200);return{time:st,freq,dur,vel:clamp(n.velocity,1,127)/127,channel:n.channel,program:n.program??0,note:n.note}});
+    evts.sort((a,b)=>a.time-b.time);
+    const activeEnds=[];const MAX_POLYPHONY=48;const safeEvts=[];
+    for(const ev of evts){while(activeEnds.length>0&&activeEnds[0]<=ev.time)activeEnds.shift();if(activeEnds.length<MAX_POLYPHONY){safeEvts.push(ev);const end=ev.time+ev.dur;let ins=0;while(ins<activeEnds.length&&activeEnds[ins]<end)ins++;activeEnds.splice(ins,0,end)}}
+    playbackState.evts=safeEvts;playbackState.totalDur=safeEvts.length>0?Math.max(...safeEvts.map(e=>e.time+e.dur)):0;
+  }
+  const {evts,totalDur} = playbackState;
+  playbackState.offsetTime = offsetTime;
+  if(evts.length===0||offsetTime>=totalDur){playbackState.offsetTime=0;if(onDone)onDone();return true;}
+  const synthCache={};
+  function getOrCreate(ch,prog){const k=`${ch}-${prog}`;if(synthCache[k])return synthCache[k];const preset=getSynthPreset(prog??0,ch);if(preset==='drum'){const ms=new Tone.MembraneSynth({volume:-10}).toDestination();const ns=new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:0.001,decay:0.1,sustain:0},volume:-15}).toDestination();const dp={membrane:ms,noise:ns,isDrum:true};synthCache[k]=dp;currentSynths.push(ms,ns);return dp}const s=new Tone.PolySynth(Tone.Synth,{maxPolyphony:16,voice:Tone.Synth,options:{oscillator:{type:preset.osc},envelope:{attack:preset.attack,decay:preset.decay,sustain:preset.sustain,release:preset.release},volume:-12}}).toDestination();synthCache[k]=s;currentSynths.push(s);return s}
+  const now=Tone.now()+0.1;playbackState.startTime=now;
+  for(const ev of evts){if(ev.time+ev.dur<=offsetTime)continue;const synth=getOrCreate(ev.channel,ev.program);let playTime=now+Math.max(0,ev.time-offsetTime);let playDur=ev.time<offsetTime?ev.time+ev.dur-offsetTime:ev.dur;try{if(synth.isDrum){if(ev.note<50)synth.membrane.triggerAttackRelease(ev.freq*0.25,playDur,playTime,ev.vel);else synth.noise.triggerAttackRelease(Math.min(0.15,playDur),playTime,ev.vel)}else synth.triggerAttackRelease(ev.freq,playDur,playTime,ev.vel)}catch(e){}}
+  isPlaying=true;progressInterval=setInterval(()=>{if(!isPlaying){clearInterval(progressInterval);return}const el=Tone.now()-playbackState.startTime+playbackState.offsetTime-0.1;const pr=Math.min(1,Math.max(0,el/totalDur));if(onProgress)onProgress(pr,el,totalDur);if(pr>=1){clearInterval(progressInterval);isPlaying=false;if(onDone)onDone()}},50);return true;
+}
+
+function stopPlayback(){isPlaying=false;if(progressInterval)clearInterval(progressInterval);for(const s of currentSynths){try{if(s.releaseAll)s.releaseAll();s.dispose()}catch(e){}}currentSynths=[];Tone.Transport.stop();Tone.Transport.cancel()}
+
+async function seekPlayback(progress, onProgress, onDone) {
+  if(!playbackState.noteData)return;
+  playbackState.offsetTime = progress * playbackState.totalDur;
+  if(isPlaying)await playNotes(playbackState.noteData, onProgress, onDone, playbackState.offsetTime);
+  else if(onProgress)onProgress(progress, playbackState.offsetTime, playbackState.totalDur);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Piano Roll
+// ═══════════════════════════════════════════════════════════════
+function renderPianoRoll(canvas,noteData,gd){const ctx=canvas.getContext('2d');const rect=canvas.parentElement.getBoundingClientRect();canvas.width=rect.width*devicePixelRatio;canvas.height=rect.height*devicePixelRatio;ctx.scale(devicePixelRatio,devicePixelRatio);const W=rect.width,H=rect.height;ctx.fillStyle='#0a0a12';ctx.fillRect(0,0,W,H);const all=gd?[...noteData.notes,...gd.notes]:noteData.notes;if(all.length===0)return;const mn=Math.max(0,Math.min(...all.map(n=>n.note))-2);const mx=Math.min(127,Math.max(...all.map(n=>n.note))+2);const mt=Math.max(...all.map(n=>n.startTick+n.duration));const nr=Math.max(1,mx-mn);const lm=35;const pw=W-lm;const nh=Math.max(2,Math.min(8,H/nr));ctx.strokeStyle='#1a1a2e';ctx.lineWidth=0.5;for(let n=mn;n<=mx;n++){if(n%12===0){const y=H-((n-mn)/nr)*H;ctx.beginPath();ctx.moveTo(lm,y);ctx.lineTo(W,y);ctx.stroke();ctx.fillStyle='#555577';ctx.font='9px monospace';ctx.fillText(`C${Math.floor(n/12)-1}`,2,y+3)}}const tpb=noteData.ticksPerBeat;ctx.strokeStyle='#1a1a30';for(let t=0;t<mt;t+=tpb){const x=lm+(t/mt)*pw;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}if(gd){ctx.globalAlpha=0.15;for(const n of noteData.notes){ctx.fillStyle='#555577';ctx.fillRect(lm+(n.startTick/mt)*pw,H-((n.note-mn)/nr)*H-nh/2,Math.max(1,(n.duration/mt)*pw),nh)}ctx.globalAlpha=1}const dn=gd?gd.notes:noteData.notes;const colors=['#7ec8e3','#a78bfa','#f472b6','#34d399','#f59e0b','#ef4444','#38bdf8','#818cf8','#fb923c','#fbbf24','#c084fc','#22d3ee','#e879f9','#a3e635','#f87171','#94a3b8'];for(const n of dn){const x=lm+(n.startTick/mt)*pw;const y=H-((n.note-mn)/nr)*H-nh/2;const w=Math.max(1,(n.duration/mt)*pw);ctx.fillStyle=colors[(n.track*3+n.channel)%16];ctx.globalAlpha=0.3+(n.velocity/127)*0.7;ctx.fillRect(x,y,w,nh);if(n.pitchBend&&Math.abs(n.pitchBend)>1){ctx.globalAlpha=0.5;ctx.strokeStyle='#f472b6';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,y+nh/2);ctx.lineTo(x+w*0.3,y+nh/2-(n.pitchBend/100)*nh*2);ctx.stroke()}}ctx.globalAlpha=1}
+
+// ═══════════════════════════════════════════════════════════════
+//  App State & UI
+// ═══════════════════════════════════════════════════════════════
+const state={inputMode:'simple',destructionLevel:0.10,seed:42,originalMidi:null,originalNoteData:null,otherWorldMidi:null,otherWorldNoteData:null,currentGlitched:null,history:[],selectedHistoryId:null,detailModes:null,historyIdCounter:0};
+const $=s=>document.querySelector(s);
+const dom={dropZone:$('#dropZone'),midiFileInput:$('#midiFileInput'),fileInfo:$('#fileInfo'),instrumentInfo:$('#instrumentInfo'),otherWorldDropZone:$('#otherWorldDropZone'),otherWorldFileInput:$('#otherWorldFileInput'),otherWorldFileInfo:$('#otherWorldFileInfo'),modeSimple:$('#modeSimple'),modeDetail:$('#modeDetail'),destructionSlider:$('#destructionSlider'),destructionValue:$('#destructionValue'),destructionName:$('#destructionName'),seedInput:$('#seedInput'),seedRandomBtn:$('#seedRandomBtn'),generateBtn:$('#generateBtn'),playBtn:$('#playBtn'),stopBtn:$('#stopBtn'),playOrigBtn:$('#playOrigBtn'),transportPlay:$('#transportPlay'),transportTime:$('#transportTime'),transportProgress:$('#transportProgress'),transportProgressFill:$('#transportProgressFill'),transportBPM:$('#transportBPM'),pianoRollCanvas:$('#pianoRollCanvas'),statusBar:$('#statusBar'),historyList:$('#historyList'),detailPanel:$('#detailPanel'),exportMidiBtn:$('#exportMidiBtn'),exportJsonBtn:$('#exportJsonBtn'),annotationLog:$('#annotationLog'),toggleAnno:$('#toggleAnno'),crtToggle:$('#crtToggle').querySelector('input')};
+
+function setStatus(m,a=false){dom.statusBar.textContent=m;dom.statusBar.classList.toggle('active',a)}
+function updateDestructionDisplay(){const d=state.destructionLevel;const l=getDestructionLabel(d);dom.destructionValue.textContent=d.toFixed(2);dom.destructionValue.style.color=l.color;dom.destructionName.textContent=l.name;dom.destructionName.style.background=l.color+'22';dom.destructionName.style.color=l.color;dom.destructionSlider.style.background=`linear-gradient(90deg,${l.color} 0%,${l.color} ${d*100}%,var(--border) ${d*100}%)`}
+
+async function loadMIDIFile(file,isOW=false){const buf=await file.arrayBuffer();try{const midi=parseMIDI(buf);const nd=midiToNotes(midi);if(isOW){state.otherWorldMidi=midi;state.otherWorldNoteData=nd;dom.otherWorldFileInfo.textContent=`✓ ${file.name} (${nd.notes.length}ノート)`;setStatus('異世界MIDI読込完了',true)}else{state.originalMidi=midi;state.originalNoteData=nd;state.currentGlitched=null;dom.fileInfo.textContent=`✓ ${file.name} (${nd.notes.length}ノート, ${midi.numTracks}トラック, ${nd.tempos[0]?.bpm.toFixed(0)}BPM)`;dom.generateBtn.disabled=false;dom.playOrigBtn.disabled=false;dom.transportBPM.textContent=`BPM: ${nd.tempos[0]?.bpm.toFixed(0)||'?'}`;const cp=nd.channelPrograms||{};const inst=Object.entries(cp).map(([ch,p])=>`Ch${ch}: ${GM_NAMES[p]||'Program '+p}`);dom.instrumentInfo.textContent=inst.length>0?`楽器: ${inst.join(' / ')}`:'楽器: (デフォルトピアノ)';setStatus(`${file.name} — ${nd.notes.length}ノート`,true);renderPianoRoll(dom.pianoRollCanvas,nd,null)}}catch(e){(isOW?dom.otherWorldFileInfo:dom.fileInfo).textContent=`❌ ${e.message}`;setStatus(`エラー: ${e.message}`)}}
+
+function handleGenerate(){if(!state.originalNoteData)return;const modes=state.detailModes||getAutoConfig(state.destructionLevel);const config={seed:state.seed,destructionLevel:state.destructionLevel,modes};const g=applyMIDIGlitch(state.originalNoteData,config,state.otherWorldNoteData);state.currentGlitched=g;renderPianoRoll(dom.pianoRollCanvas,state.originalNoteData,g);renderAnnotations(g.annotations);dom.playBtn.disabled=false;dom.stopBtn.disabled=false;dom.transportPlay.disabled=false;dom.exportMidiBtn.disabled=false;dom.exportJsonBtn.disabled=false;const id=state.historyIdCounter++;const mn=modes.filter(m=>m.enabled).map(m=>m.id).join(',');state.history.unshift({id,label:`#${id} d:${state.destructionLevel.toFixed(2)} s:${state.seed} [${mn}]`,seed:state.seed,destructionLevel:state.destructionLevel,noteCount:g.notes.length,annotationCount:g.annotations.length,modes:mn,data:g,bookmarked:false});state.selectedHistoryId=id;renderHistory();state.seed++;dom.seedInput.value=state.seed;setStatus(`生成完了: ${g.notes.length}ノート, ${g.annotations.length}件の変換`,true)}
+
+function renderAnnotations(ann){const log=dom.annotationLog;log.innerHTML='';for(const a of ann.slice(0,200)){const d=document.createElement('div');d.className='anno-entry';d.innerHTML=`<span class="anno-mode anno-mode-${a.mode}">[${a.mode}]</span> ${a.detail||''}`;log.appendChild(d)}if(ann.length>200){const m=document.createElement('div');m.className='anno-entry';m.textContent=`… 他 ${ann.length-200} 件`;log.appendChild(m)}}
+
+function renderHistory(){const list=dom.historyList;list.innerHTML='';for(const item of state.history.slice(0,50)){const el=document.createElement('div');el.className=`history-item ${item.id===state.selectedHistoryId?'selected':''}`;const bm=document.createElement('span');bm.className='history-bookmark';bm.textContent=item.bookmarked?'★':'☆';bm.addEventListener('click',e=>{e.stopPropagation();item.bookmarked=!item.bookmarked;bm.textContent=item.bookmarked?'★':'☆'});const t=document.createElement('span');t.className='history-text';t.textContent=item.label;const m=document.createElement('span');m.className='history-meta';m.textContent=`${item.noteCount}n`;el.appendChild(bm);el.appendChild(t);el.appendChild(m);el.addEventListener('click',()=>{state.selectedHistoryId=item.id;state.currentGlitched=item.data;renderPianoRoll(dom.pianoRollCanvas,state.originalNoteData,item.data);renderAnnotations(item.data.annotations);dom.playBtn.disabled=false;dom.stopBtn.disabled=false;dom.transportPlay.disabled=false;dom.exportMidiBtn.disabled=false;dom.exportJsonBtn.disabled=false;renderHistory()});list.appendChild(el)}}
+
+function buildDetailPanel(){const am=getAutoConfig(state.destructionLevel);const panel=dom.detailPanel;panel.innerHTML='';for(const mid of['A1','A2','A3','B1','B2','B3','C1','C2','C3','T1','T2']){const meta=MODE_META[mid];const auto=am.find(m=>m.id===mid);const cur=state.detailModes?state.detailModes.find(m=>m.id===mid)||{id:mid,enabled:false,probability:0,params:{}}:auto||{id:mid,enabled:false,probability:0,params:{}};const card=document.createElement('div');card.className=`mode-card ${cur.enabled?'enabled':''}`;card.innerHTML=`<div class="mode-card-header"><div class="mode-card-name"><span class="mode-card-icon">${meta.icon}</span><span>${meta.nickname}</span><span class="mode-card-id">${mid}</span></div><label class="toggle-switch mode-card-toggle"><input type="checkbox" data-mode-id="${mid}" ${cur.enabled?'checked':''}><span class="toggle-track"></span></label></div><div class="mode-param-row"><span class="mode-param-label">適用確率</span><input type="range" class="mode-prob-slider" min="0" max="100" value="${Math.round((cur.probability||0)*100)}" data-mode-id="${mid}"><span class="mode-prob-value">${Math.round((cur.probability||0)*100)}%</span></div>`;panel.appendChild(card)}panel.querySelectorAll('input[type="checkbox"][data-mode-id]').forEach(cb=>{cb.addEventListener('change',e=>{ensureDetailModes();const m=state.detailModes.find(m=>m.id===e.target.dataset.modeId);if(m)m.enabled=e.target.checked;e.target.closest('.mode-card').classList.toggle('enabled',e.target.checked)})});panel.querySelectorAll('.mode-prob-slider').forEach(sl=>{sl.addEventListener('input',e=>{ensureDetailModes();const m=state.detailModes.find(m=>m.id===e.target.dataset.modeId);if(m)m.probability=parseInt(e.target.value)/100;e.target.nextElementSibling.textContent=`${e.target.value}%`})})}
+
+function ensureDetailModes(){if(!state.detailModes)state.detailModes=getAutoConfig(state.destructionLevel).map(m=>({...m,params:{...m.params}}))}
+
+function exportMIDI(){if(!state.currentGlitched)return;const mb=notesToMIDI(state.currentGlitched);const blob=new Blob([mb],{type:'audio/midi'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`glitchmidi_d${state.destructionLevel.toFixed(2)}_s${state.seed-1}.mid`;a.click();URL.revokeObjectURL(url)}
+function exportJSON(){if(!state.currentGlitched)return;const d={seed:state.seed-1,destructionLevel:state.destructionLevel,noteCount:state.currentGlitched.notes.length,annotations:state.currentGlitched.annotations,notes:state.currentGlitched.notes.slice(0,5000)};const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`glitchmidi_d${state.destructionLevel.toFixed(2)}_s${state.seed-1}.json`;a.click();URL.revokeObjectURL(url)}
+
+function init(){updateDestructionDisplay();
+for(const[zone,input,isOW]of[[dom.dropZone,dom.midiFileInput,false],[dom.otherWorldDropZone,dom.otherWorldFileInput,true]]){zone.addEventListener('click',()=>input.click());zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('dragover')});zone.addEventListener('dragleave',()=>zone.classList.remove('dragover'));zone.addEventListener('drop',e=>{e.preventDefault();zone.classList.remove('dragover');if(e.dataTransfer.files[0])loadMIDIFile(e.dataTransfer.files[0],isOW)});input.addEventListener('change',e=>{if(e.target.files[0])loadMIDIFile(e.target.files[0],isOW)})}
+dom.modeSimple.addEventListener('click',()=>{state.inputMode='simple';state.detailModes=null;dom.modeSimple.classList.add('active');dom.modeDetail.classList.remove('active');dom.detailPanel.classList.remove('visible')});
+dom.modeDetail.addEventListener('click',()=>{state.inputMode='detail';ensureDetailModes();dom.modeDetail.classList.add('active');dom.modeSimple.classList.remove('active');buildDetailPanel();dom.detailPanel.classList.add('visible')});
+dom.destructionSlider.addEventListener('input',()=>{state.destructionLevel=parseInt(dom.destructionSlider.value)/100;updateDestructionDisplay();if(state.inputMode==='simple')state.detailModes=null;if(state.inputMode==='detail'){state.detailModes=null;ensureDetailModes();buildDetailPanel()}});
+dom.seedInput.addEventListener('change',()=>{state.seed=parseInt(dom.seedInput.value)||0});
+dom.seedRandomBtn.addEventListener('click',()=>{state.seed=Math.floor(Math.random()*100000);dom.seedInput.value=state.seed});
+dom.generateBtn.addEventListener('click',handleGenerate);
+function doPlay(d, isOrig=false){
+  const progressCb=(p,el)=>{dom.transportProgressFill.style.width=`${p*100}%`;const m=Math.floor(el/60),s=Math.floor(el%60);dom.transportTime.textContent=`${m}:${String(s).padStart(2,'0')}`};
+  const doneCb=()=>{setStatus('再生完了');dom.transportProgressFill.style.width='0%';dom.playBtn.textContent='▶ 再生';dom.playOrigBtn.textContent='♪ 原曲';playbackState.offsetTime=0};
+  togglePlay(d,progressCb,doneCb).then(playing=>{
+    if(playing){setStatus('再生中…',true);dom.playBtn.textContent=(!isOrig?'⏸ 一時停止':'▶ 再生');dom.playOrigBtn.textContent=(isOrig?'⏸ 一時停止':'♪ 原曲')}
+    else{setStatus('一時停止');dom.playBtn.textContent=(!isOrig?'▶ 再生 (再開)':'▶ 再生');dom.playOrigBtn.textContent=(isOrig?'♪ 原曲 (再開)':'♪ 原曲')}
+  });
+}
+dom.playBtn.addEventListener('click',()=>{if(state.currentGlitched)doPlay(state.currentGlitched,false)});
+dom.stopBtn.addEventListener('click',()=>{stopPlayback();playbackState.offsetTime=0;setStatus('停止');dom.transportProgressFill.style.width='0%';dom.transportTime.textContent='0:00';dom.playBtn.textContent='▶ 再生';dom.playOrigBtn.textContent='♪ 原曲'});
+dom.playOrigBtn.addEventListener('click',()=>{if(state.originalNoteData)doPlay(state.originalNoteData,true)});
+dom.transportPlay.addEventListener('click',()=>dom.playBtn.click());
+dom.transportProgress.addEventListener('mousedown',(e)=>{
+  if(!playbackState.noteData)return;
+  const progressCb=(p,el)=>{dom.transportProgressFill.style.width=`${p*100}%`;const m=Math.floor(el/60),s=Math.floor(el%60);dom.transportTime.textContent=`${m}:${String(s).padStart(2,'0')}`};
+  const doneCb=()=>{setStatus('再生完了');dom.transportProgressFill.style.width='0%';dom.playBtn.textContent='▶ 再生';dom.playOrigBtn.textContent='♪ 原曲';playbackState.offsetTime=0};
+  function onMove(ev){const rect=dom.transportProgress.getBoundingClientRect();const p=clamp((ev.clientX-rect.left)/rect.width,0,1);seekPlayback(p,progressCb,doneCb)}
+  onMove(e);
+  function onUp(){document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp)}
+  document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onUp);
+});
+dom.toggleAnno.addEventListener('click',()=>{dom.annotationLog.classList.toggle('visible');dom.toggleAnno.classList.toggle('active',dom.annotationLog.classList.contains('visible'))});
+dom.exportMidiBtn.addEventListener('click',exportMIDI);
+dom.exportJsonBtn.addEventListener('click',exportJSON);
+dom.crtToggle.addEventListener('change',()=>{document.body.classList.toggle('crt-on',dom.crtToggle.checked)});
+document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.key==='Enter'){e.preventDefault();handleGenerate()}if(e.key===' '&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){e.preventDefault();if(isPlaying)stopPlayback();else dom.playBtn.click()}});
+window.addEventListener('resize',()=>{if(state.originalNoteData)renderPianoRoll(dom.pianoRollCanvas,state.originalNoteData,state.currentGlitched)})}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>

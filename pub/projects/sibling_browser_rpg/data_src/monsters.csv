@@ -1,0 +1,3 @@
+id,name,vitBase,vitGrowth,intBase,intGrowth,strBase,strGrowth,dexBase,dexGrowth,spdBase,spdGrowth,judge,tags,defaultTargetRule,note
+fire_slime,炎のスライム,15,2.0,8,1.0,20,3.5,10,1.5,12,1.2,35,"slime,fire",normal_enemy,Lv40から炎魔法追加
+magic_slime,魔法スライム,10,1.5,18,3.0,10,1.5,12,1.5,10,1.8,70,"slime,magic",weakpoint_enemy,Lv20から上位魔法

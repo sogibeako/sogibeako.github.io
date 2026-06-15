@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Broken Mino Lab</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: #121a30;
+      --panel-2: #18223d;
+      --text: #e8eefc;
+      --muted: #9fb0d8;
+      --accent: #7dd3fc;
+      --accent-2: #c084fc;
+      --good: #86efac;
+      --warn: #fca5a5;
+      --grid: #30415f;
+      --cell-off: #0f172a;
+      --cell-on: #e8eefc;
+      --cell-broken: #7dd3fc;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+      background:
+        radial-gradient(circle at top, #1b2750 0%, #0b1020 45%),
+        linear-gradient(180deg, #0b1020, #0b1020);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 20px;
+    }
+
+    .panel {
+      background: rgba(18, 26, 48, 0.92);
+      border: 1px solid rgba(125, 211, 252, 0.18);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.32);
+      backdrop-filter: blur(6px);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.7rem;
+    }
+
+    .subtitle {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+
+    .section-title {
+      font-size: 0.9rem;
+      color: var(--accent);
+      margin: 20px 0 10px;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+
+    label {
+      display: block;
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    textarea, select, input[type="number"], input[type="text"] {
+      width: 100%;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid rgba(159, 176, 216, 0.24);
+      border-radius: 12px;
+      padding: 12px;
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+      font-family: "MS Gothic", "Consolas", monospace;
+      line-height: 1.2;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .row-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .toggles {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: rgba(24, 34, 61, 0.85);
+      border: 1px solid rgba(159, 176, 216, 0.18);
+      border-radius: 12px;
+      color: var(--text);
+    }
+
+    .toggle input { accent-color: var(--accent); }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      color: #08101d;
+      background: linear-gradient(135deg, var(--accent), #a5f3fc);
+      transition: transform 0.08s ease, opacity 0.15s ease;
+    }
+
+    button.secondary {
+      background: linear-gradient(135deg, #d8b4fe, #c084fc);
+    }
+
+    button.ghost {
+      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .main {
+      display: grid;
+      gap: 16px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .stat {
+      background: rgba(24, 34, 61, 0.92);
+      border: 1px solid rgba(159, 176, 216, 0.16);
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+
+    .stat .k {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .stat .v {
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .mino-card {
+      background: rgba(24, 34, 61, 0.92);
+      border: 1px solid rgba(159, 176, 216, 0.16);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .mino-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+    }
+
+    .mino-title .name {
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .mino-title .meta {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .render-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .aa {
+      background: #0b1121;
+      border: 1px solid rgba(159, 176, 216, 0.14);
+      border-radius: 12px;
+      padding: 10px;
+      font-family: "MS Gothic", "Consolas", monospace;
+      white-space: pre;
+      margin: 0;
+      min-height: 130px;
+      color: var(--text);
+    }
+
+    .pixel {
+      display: inline-grid;
+      gap: 4px;
+      padding: 10px;
+      background: #0b1121;
+      border: 1px solid rgba(159, 176, 216, 0.14);
+      border-radius: 12px;
+      justify-content: start;
+      align-content: start;
+      min-height: 130px;
+    }
+
+    .cell {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: var(--cell-off);
+    }
+
+    .cell.on { background: var(--cell-on); }
+    .cell.broken { background: var(--cell-broken); }
+
+    .history {
+      display: grid;
+      gap: 10px;
+      max-height: 320px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .history-item {
+      display: grid;
+      grid-template-columns: 84px 1fr;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(24, 34, 61, 0.72);
+      border: 1px solid rgba(159, 176, 216, 0.1);
+    }
+
+    .mini {
+      font-family: "MS Gothic", "Consolas", monospace;
+      white-space: pre;
+      margin: 0;
+      color: var(--text);
+      font-size: 12px;
+      line-height: 1.1;
+    }
+
+    .history-meta {
+      font-size: 0.84rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .chip {
+      border: 1px solid rgba(125, 211, 252, 0.2);
+      background: rgba(125, 211, 252, 0.08);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .warning {
+      color: var(--warn);
+      font-size: 0.86rem;
+      margin-top: 10px;
+      min-height: 1.3em;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+      .preview-grid,
+      .render-wrap,
+      .stats,
+      .row,
+      .row-3,
+      .buttons {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="panel">
+      <h1>Broken Mino Lab</h1>
+      <p class="subtitle">AA を少し壊して、回して、眺めるための実験室です。普通の <code>#</code> / <code>.</code> モードと、7セグっぽい数字遊びモードを切り替えられます。</p>
+
+      <div class="section-title">入力</div>
+      <label for="modeSelect">モード</label>
+      <select id="modeSelect">
+        <option value="ascii">ASCII MODE (# / .)</option>
+        <option value="sevenseg">7SEG MODE (0-9 / A-F / # / .)</option>
+      </select>
+
+      <div style="height:10px"></div>
+      <label for="sourceInput">AA / 記号入力</label>
+      <textarea id="sourceInput">.#.
+###
+...</textarea>
+
+      <div class="chip-row" id="presetChips"></div>
+
+      <div class="section-title">壊し方</div>
+      <div class="row">
+        <div>
+          <label for="breakCount">減らす個数</label>
+          <input id="breakCount" type="number" min="1" max="8" value="1" />
+        </div>
+        <div>
+          <label for="moveChance">ずらし率 (0〜100)</label>
+          <input id="moveChance" type="number" min="0" max="100" value="0" />
+        </div>
+      </div>
+
+      <div class="toggles">
+        <label class="toggle"><input id="keepConnected" type="checkbox" checked /> 連結を保つ候補を優先する</label>
+        <label class="toggle"><input id="trimResult" type="checkbox" checked /> 余白をトリミングする</label>
+        <label class="toggle"><input id="dedupeRotations" type="checkbox" checked /> 同一回転をまとめる</label>
+      </div>
+
+      <div class="buttons">
+        <button id="generateBtn">壊す</button>
+        <button id="randomizeBtn" class="secondary">ランダム例</button>
+        <button id="rotateBtn" class="ghost">入力を90°回転</button>
+        <button id="copyBtn" class="ghost">Brokenをコピー</button>
+      </div>
+
+      <div class="warning" id="warning"></div>
+      <p class="footer-note">7セグモードでは、1文字を 7 セグメント風の小さな図形に展開してから壊します。数字や A〜F が混ざると、ちょっと壊れた電光掲示板みたいになります。</p>
+    </section>
+
+    <section class="main">
+      <div class="stats">
+        <div class="stat"><div class="k">元の # 数</div><div class="v" id="srcCount">0</div></div>
+        <div class="stat"><div class="k">Broken 後の # 数</div><div class="v" id="brokenCount">0</div></div>
+        <div class="stat"><div class="k">非連結</div><div class="v" id="isDisconnected">-</div></div>
+        <div class="stat"><div class="k">回転種類</div><div class="v" id="rotationKinds">0</div></div>
+      </div>
+
+      <div class="preview-grid">
+        <div class="mino-card">
+          <div class="mino-title"><span class="name">SOURCE</span><span class="meta" id="srcMeta"></span></div>
+          <div class="render-wrap">
+            <pre class="aa" id="sourceAA"></pre>
+            <div class="pixel" id="sourcePixel"></div>
+          </div>
+        </div>
+
+        <div class="mino-card">
+          <div class="mino-title"><span class="name">BROKEN</span><span class="meta" id="brokenMeta"></span></div>
+          <div class="render-wrap">
+            <pre class="aa" id="brokenAA"></pre>
+            <div class="pixel" id="brokenPixel"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mino-card">
+        <div class="mino-title"><span class="name">ROTATIONS</span><span class="meta">0°, 90°, 180°, 270°</span></div>
+        <div class="preview-grid" id="rotationGrid"></div>
+      </div>
+
+      <div class="mino-card">
+        <div class="mino-title"><span class="name">HISTORY</span><span class="meta">最近つくった Broken 候補</span></div>
+        <div class="history" id="history"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const SEGMENTS = {
+      '0': ['a','b','c','d','e','f'],
+      '1': ['b','c'],
+      '2': ['a','b','g','e','d'],
+      '3': ['a','b','g','c','d'],
+      '4': ['f','g','b','c'],
+      '5': ['a','f','g','c','d'],
+      '6': ['a','f','g','e','c','d'],
+      '7': ['a','b','c'],
+      '8': ['a','b','c','d','e','f','g'],
+      '9': ['a','b','c','d','f','g'],
+      'A': ['a','b','c','e','f','g'],
+      'B': ['f','e','g','c','d'],
+      'C': ['a','f','e','d'],
+      'D': ['b','c','d','e','g'],
+      'E': ['a','f','g','e','d'],
+      'F': ['a','f','g','e']
+    };
+
+    const presets = {
+      ascii: [
+        { name: 'T', value: '.#.\n###\n...' },
+        { name: 'L', value: '..#\n###' },
+        { name: 'I', value: '####' },
+        { name: 'Zig', value: '##.\n.##' },
+        { name: 'Weird', value: '#..#\n.##.\n..#.' }
+      ],
+      sevenseg: [
+        { name: '404', value: '404' },
+        { name: '8F', value: '8F' },
+        { name: '123', value: '123' },
+        { name: 'DEAD', value: 'DEAD' },
+        { name: 'A0F', value: 'A0F' }
+      ]
+    };
+
+    const sourceInput = document.getElementById('sourceInput');
+    const modeSelect = document.getElementById('modeSelect');
+    const breakCountInput = document.getElementById('breakCount');
+    const moveChanceInput = document.getElementById('moveChance');
+    const keepConnectedInput = document.getElementById('keepConnected');
+    const trimResultInput = document.getElementById('trimResult');
+    const dedupeRotationsInput = document.getElementById('dedupeRotations');
+    const sourceAA = document.getElementById('sourceAA');
+    const brokenAA = document.getElementById('brokenAA');
+    const sourcePixel = document.getElementById('sourcePixel');
+    const brokenPixel = document.getElementById('brokenPixel');
+    const srcCount = document.getElementById('srcCount');
+    const brokenCount = document.getElementById('brokenCount');
+    const isDisconnected = document.getElementById('isDisconnected');
+    const rotationKinds = document.getElementById('rotationKinds');
+    const srcMeta = document.getElementById('srcMeta');
+    const brokenMeta = document.getElementById('brokenMeta');
+    const rotationGrid = document.getElementById('rotationGrid');
+    const historyEl = document.getElementById('history');
+    const warningEl = document.getElementById('warning');
+    const presetChips = document.getElementById('presetChips');
+
+    let history = [];
+    let lastBrokenGrid = [['.']];
+
+    function parseAsciiAA(text) {
+      const lines = text.replace(/\r/g, '').split('\n');
+      const clean = lines.filter(line => line.length > 0);
+      if (clean.length === 0) return [['.']];
+      const width = Math.max(...clean.map(line => line.length));
+      return clean.map(line => [...line.padEnd(width, '.')].map(ch => ch === '#' ? '#' : '.'));
+    }
+
+    function render7SegText(text) {
+      const chars = [...text.toUpperCase()].filter(ch => ch !== ' ');
+      if (chars.length === 0) return [['.']];
+      const glyphs = chars.map(ch => sevenSegGlyph(ch));
+      const height = Math.max(...glyphs.map(g => g.length));
+      const rows = Array.from({ length: height }, () => []);
+      glyphs.forEach((glyph, index) => {
+        for (let y = 0; y < height; y++) {
+          const row = glyph[y] || Array(glyph[0].length).fill('.');
+          rows[y].push(...row);
+          if (index < glyphs.length - 1) rows[y].push('.');
+        }
+      });
+      return trimGrid(rows);
+    }
+
+    function sevenSegGlyph(ch) {
+      if (ch === '#') return [['#']];
+      if (ch === '.') return [['.']];
+      const segs = SEGMENTS[ch] || [];
+      const grid = Array.from({ length: 5 }, () => Array(3).fill('.'));
+      if (segs.includes('a')) fillH(grid, 0);
+      if (segs.includes('g')) fillH(grid, 2);
+      if (segs.includes('d')) fillH(grid, 4);
+      if (segs.includes('f')) fillV(grid, 0, 0, 2);
+      if (segs.includes('b')) fillV(grid, 2, 0, 2);
+      if (segs.includes('e')) fillV(grid, 0, 2, 4);
+      if (segs.includes('c')) fillV(grid, 2, 2, 4);
+      return grid;
+    }
+
+    function fillH(grid, y) {
+      for (let x = 0; x < grid[y].length; x++) grid[y][x] = '#';
+    }
+
+    function fillV(grid, x, y1, y2) {
+      for (let y = y1; y <= y2; y++) grid[y][x] = '#';
+    }
+
+    function stringify(grid) {
+      return grid.map(row => row.join('')).join('\n');
+    }
+
+    function cloneGrid(grid) {
+      return grid.map(row => [...row]);
+    }
+
+    function countBlocks(grid) {
+      return grid.flat().filter(c => c === '#').length;
+    }
+
+    function trimGrid(grid) {
+      let top = 0;
+      let bottom = grid.length - 1;
+      let left = 0;
+      let right = grid[0].length - 1;
+
+      while (top <= bottom && grid[top].every(c => c === '.')) top++;
+      while (bottom >= top && grid[bottom].every(c => c === '.')) bottom--;
+      while (left <= right && grid.every(row => row[left] === '.')) left++;
+      while (right >= left && grid.every(row => row[right] === '.')) right--;
+
+      if (top > bottom || left > right) return [['.']];
+      return grid.slice(top, bottom + 1).map(row => row.slice(left, right + 1));
+    }
+
+    function getCells(grid) {
+      const cells = [];
+      for (let y = 0; y < grid.length; y++) {
+        for (let x = 0; x < grid[y].length; x++) {
+          if (grid[y][x] === '#') cells.push({ x, y });
+        }
+      }
+      return cells;
+    }
+
+    function neighbors4(x, y) {
+      return [
+        { x: x + 1, y },
+        { x: x - 1, y },
+        { x, y: y + 1 },
+        { x, y: y - 1 }
+      ];
+    }
+
+    function isConnected(grid) {
+      const cells = getCells(grid);
+      if (cells.length <= 1) return true;
+      const set = new Set(cells.map(c => `${c.x},${c.y}`));
+      const stack = [cells[0]];
+      const seen = new Set([`${cells[0].x},${cells[0].y}`]);
+
+      while (stack.length) {
+        const cur = stack.pop();
+        for (const n of neighbors4(cur.x, cur.y)) {
+          const key = `${n.x},${n.y}`;
+          if (set.has(key) && !seen.has(key)) {
+            seen.add(key);
+            stack.push(n);
+          }
+        }
+      }
+      return seen.size === cells.length;
+    }
+
+    function rotateCW(grid) {
+      const h = grid.length;
+      const w = grid[0].length;
+      const out = Array.from({ length: w }, () => Array(h).fill('.'));
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          out[x][h - 1 - y] = grid[y][x];
+        }
+      }
+      return trimResultInput.checked ? trimGrid(out) : out;
+    }
+
+    function renderPixelGrid(container, grid, highlightSet = new Set()) {
+      container.innerHTML = '';
+      container.style.gridTemplateColumns = `repeat(${grid[0].length}, 18px)`;
+      for (let y = 0; y < grid.length; y++) {
+        for (let x = 0; x < grid[y].length; x++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          if (grid[y][x] === '#') cell.classList.add('on');
+          if (highlightSet.has(`${x},${y}`)) {
+            cell.classList.remove('on');
+            cell.classList.add('broken');
+          }
+          container.appendChild(cell);
+        }
+      }
+    }
+
+    function parseInput() {
+      const mode = modeSelect.value;
+      const raw = sourceInput.value;
+      const grid = mode === 'sevenseg' ? render7SegText(raw) : parseAsciiAA(raw);
+      return trimResultInput.checked ? trimGrid(grid) : grid;
+    }
+
+    function findMoveTargets(grid, x, y) {
+      const targets = [];
+      for (const n of neighbors4(x, y)) {
+        if (n.y >= 0 && n.y < grid.length && n.x >= 0 && n.x < grid[0].length && grid[n.y][n.x] === '.') {
+          targets.push(n);
+        }
+      }
+      return targets;
+    }
+
+    function performBreak(grid, steps, moveChance, keepConnected) {
+      let working = cloneGrid(grid);
+      const removed = [];
+
+      for (let i = 0; i < steps; i++) {
+        const cells = getCells(working);
+        if (cells.length <= 1) break;
+
+        const preferred = [];
+        const fallback = [];
+
+        for (const c of cells) {
+          const test = cloneGrid(working);
+          test[c.y][c.x] = '.';
+          const ok = isConnected(trimGrid(test));
+          if (ok) preferred.push(c);
+          fallback.push(c);
+        }
+
+        const pool = keepConnected && preferred.length > 0 ? preferred : fallback;
+        const chosen = pool[Math.floor(Math.random() * pool.length)];
+
+        const shouldMove = Math.random() * 100 < moveChance;
+        let movedTo = null;
+
+        if (shouldMove) {
+          const targets = findMoveTargets(working, chosen.x, chosen.y);
+          if (targets.length > 0) {
+            movedTo = targets[Math.floor(Math.random() * targets.length)];
+            working[movedTo.y][movedTo.x] = '#';
+          }
+        }
+
+        working[chosen.y][chosen.x] = '.';
+        removed.push({ x: chosen.x, y: chosen.y, movedTo });
+      }
+
+      return {
+        grid: trimResultInput.checked ? trimGrid(working) : working,
+        removed
+      };
+    }
+
+    function uniqueRotations(grid) {
+      const rots = [];
+      let cur = grid;
+      const seen = new Set();
+      for (let i = 0; i < 4; i++) {
+        const t = stringify(cur);
+        if (!dedupeRotationsInput.checked || !seen.has(t)) {
+          rots.push({ angle: i * 90, grid: cur });
+          seen.add(t);
+        }
+        cur = rotateCW(cur);
+      }
+      return rots;
+    }
+
+    function updateSourcePreview() {
+      const src = parseInput();
+      sourceAA.textContent = stringify(src);
+      renderPixelGrid(sourcePixel, src);
+      srcCount.textContent = String(countBlocks(src));
+      srcMeta.textContent = `${src[0].length}×${src.length}`;
+      return src;
+    }
+
+    function updateBrokenPreview(src, broken, removed) {
+      const trimmedBroken = trimResultInput.checked ? trimGrid(broken) : broken;
+      lastBrokenGrid = trimmedBroken;
+      brokenAA.textContent = stringify(trimmedBroken);
+      renderPixelGrid(brokenPixel, trimmedBroken);
+      brokenCount.textContent = String(countBlocks(trimmedBroken));
+      const disconnected = isConnected(trimmedBroken) ? 'NO' : 'YES';
+      isDisconnected.textContent = disconnected;
+      brokenMeta.textContent = `${trimmedBroken[0].length}×${trimmedBroken.length} / removed ${removed.length}`;
+
+      const rots = uniqueRotations(trimmedBroken);
+      rotationKinds.textContent = String(rots.length);
+      renderRotationCards(rots);
+      pushHistory(trimmedBroken, removed, disconnected);
+    }
+
+    function renderRotationCards(rots) {
+      rotationGrid.innerHTML = '';
+      for (const rot of rots) {
+        const card = document.createElement('div');
+        card.className = 'mino-card';
+        const title = document.createElement('div');
+        title.className = 'mino-title';
+        title.innerHTML = `<span class="name">${rot.angle}°</span><span class="meta">${rot.grid[0].length}×${rot.grid.length}</span>`;
+        const wrap = document.createElement('div');
+        wrap.className = 'render-wrap';
+        const aa = document.createElement('pre');
+        aa.className = 'aa';
+        aa.textContent = stringify(rot.grid);
+        const px = document.createElement('div');
+        px.className = 'pixel';
+        renderPixelGrid(px, rot.grid);
+        wrap.appendChild(aa);
+        wrap.appendChild(px);
+        card.appendChild(title);
+        card.appendChild(wrap);
+        rotationGrid.appendChild(card);
+      }
+    }
+
+    function pushHistory(grid, removed, disconnected) {
+      history.unshift({
+        aa: stringify(grid),
+        count: countBlocks(grid),
+        removed: removed.length,
+        disconnected
+      });
+      history = history.slice(0, 10);
+      renderHistory();
+    }
+
+    function renderHistory() {
+      historyEl.innerHTML = '';
+      for (const item of history) {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        const pre = document.createElement('pre');
+        pre.className = 'mini';
+        pre.textContent = item.aa;
+        const meta = document.createElement('div');
+        meta.className = 'history-meta';
+        meta.innerHTML = `blocks: <strong>${item.count}</strong><br>removed: <strong>${item.removed}</strong><br>disconnected: <strong>${item.disconnected}</strong>`;
+        div.appendChild(pre);
+        div.appendChild(meta);
+        historyEl.appendChild(div);
+      }
+    }
+
+    function generate() {
+      warningEl.textContent = '';
+      const src = updateSourcePreview();
+      const total = countBlocks(src);
+      if (total === 0) {
+        warningEl.textContent = '入力に # がありません。';
+        return;
+      }
+
+      const breakCount = Math.max(1, Number(breakCountInput.value) || 1);
+      const moveChance = Math.max(0, Math.min(100, Number(moveChanceInput.value) || 0));
+      const keepConnected = keepConnectedInput.checked;
+
+      const { grid, removed } = performBreak(src, breakCount, moveChance, keepConnected);
+      updateBrokenPreview(src, grid, removed);
+    }
+
+    function rotateInput() {
+      const src = parseInput();
+      const rotated = rotateCW(src);
+      sourceInput.value = stringify(rotated);
+      generate();
+    }
+
+    async function copyBroken() {
+      try {
+        await navigator.clipboard.writeText(stringify(lastBrokenGrid));
+        warningEl.textContent = 'Broken をコピーしました。';
+      } catch {
+        warningEl.textContent = 'コピーに失敗しました。ブラウザの権限をご確認ください。';
+      }
+    }
+
+    function randomAsciiPreset() {
+      const examples = [
+        '.#.\n###\n...',
+        '..#\n###',
+        '####',
+        '##.\n.##',
+        '#..#\n.##.\n..#.'
+      ];
+      sourceInput.value = examples[Math.floor(Math.random() * examples.length)];
+    }
+
+    function random7SegPreset() {
+      const examples = ['404', '8F', '123', 'DEAD', 'A0F', '7E6', 'BEEF'];
+      sourceInput.value = examples[Math.floor(Math.random() * examples.length)];
+    }
+
+    function randomizeExample() {
+      if (modeSelect.value === 'sevenseg') random7SegPreset();
+      else randomAsciiPreset();
+      generate();
+    }
+
+    function renderPresetChips() {
+      const list = presets[modeSelect.value] || [];
+      presetChips.innerHTML = '';
+      for (const preset of list) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'chip';
+        btn.textContent = preset.name;
+        btn.addEventListener('click', () => {
+          sourceInput.value = preset.value;
+          generate();
+        });
+        presetChips.appendChild(btn);
+      }
+    }
+
+    modeSelect.addEventListener('change', () => {
+      renderPresetChips();
+      if (modeSelect.value === 'sevenseg' && sourceInput.value.includes('#')) {
+        sourceInput.value = '404';
+      }
+      if (modeSelect.value === 'ascii' && !sourceInput.value.includes('#')) {
+        sourceInput.value = '.#.\n###\n...';
+      }
+      generate();
+    });
+
+    sourceInput.addEventListener('input', updateSourcePreview);
+    document.getElementById('generateBtn').addEventListener('click', generate);
+    document.getElementById('randomizeBtn').addEventListener('click', randomizeExample);
+    document.getElementById('rotateBtn').addEventListener('click', rotateInput);
+    document.getElementById('copyBtn').addEventListener('click', copyBroken);
+    breakCountInput.addEventListener('change', generate);
+    moveChanceInput.addEventListener('change', generate);
+    keepConnectedInput.addEventListener('change', generate);
+    trimResultInput.addEventListener('change', generate);
+    dedupeRotationsInput.addEventListener('change', generate);
+
+    renderPresetChips();
+    generate();
+  </script>
+</body>
+</html>

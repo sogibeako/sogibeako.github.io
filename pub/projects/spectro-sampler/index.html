@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpectroSampler — Spectral Audio Editor</title>
+    <meta name="description" content="Spectrogram-based audio sampler with glitch, blur, warp and real-time editing">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Header / Transport Bar -->
+    <header id="transport-bar">
+        <div class="transport-left">
+            <h1 class="logo">
+                <span class="logo-icon">◈</span>
+                <span class="logo-text">Spectro<span class="logo-accent">Sampler</span></span>
+            </h1>
+            <button id="btn-load" class="transport-btn" title="Load WAV">
+                <span>📂</span>
+            </button>
+            <button id="btn-load-image" class="transport-btn" title="Load Image as Spectrogram">
+                <span>🖼</span>
+            </button>
+            <input type="file" id="file-input" accept=".wav,.wave" hidden>
+            <input type="file" id="image-input" accept="image/*" hidden>
+            <span id="file-name" class="file-name">No file loaded</span>
+        </div>
+
+        <div class="transport-center">
+            <button id="btn-stop" class="transport-btn" title="Stop">⏹</button>
+            <button id="btn-play" class="transport-btn play-btn" title="Play/Pause">▶</button>
+            <button id="btn-loop" class="transport-btn" title="Loop">🔁</button>
+            <span id="time-display" class="time-display">00:00.00 / 00:00.00</span>
+        </div>
+
+        <div class="transport-right">
+            <button id="btn-undo" class="transport-btn undo-btn" title="Undo (Ctrl+Z)" disabled>
+                <span>↩</span>
+            </button>
+            <button id="btn-redo" class="transport-btn redo-btn" title="Redo (Ctrl+Shift+Z)" disabled>
+                <span>↪</span>
+            </button>
+            <div class="volume-control">
+                <span class="volume-icon" id="volume-icon" title="Mute/Unmute">🔊</span>
+                <input type="range" id="volume-slider" min="0" max="2" step="0.01" value="1" title="Volume">
+                <span id="volume-val" class="volume-val">100%</span>
+            </div>
+            <button id="btn-resynth" class="transport-btn resynth-btn" title="Commit: flatten edits as new base audio">
+                <span>✔</span> Commit
+            </button>
+            <button id="btn-export-wav" class="transport-btn export-btn" title="Export as WAV">
+                <span>💾</span> WAV
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div id="app-body">
+        <!-- Left Panel: Regions & Browser -->
+        <aside id="left-panel" class="panel">
+            <div class="panel-section">
+                <h3 class="panel-title">Regions</h3>
+                <div id="region-list" class="list-container">
+                    <div class="empty-hint">Select "Region" tool and drag on the spectrogram to create regions</div>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3 class="panel-title">Retrigger</h3>
+                <div class="param-group">
+                    <label>Interval <span id="retrigger-interval-val" class="param-val">100ms</span></label>
+                    <input type="range" id="retrigger-interval" min="5" max="2000" value="100" step="1">
+                </div>
+                <div class="param-group">
+                    <label>Fade In <span id="retrigger-fadein-val" class="param-val">5ms</span></label>
+                    <input type="range" id="retrigger-fadein" min="0" max="50" value="5" step="1">
+                </div>
+                <div class="param-group">
+                    <label>Fade Out <span id="retrigger-fadeout-val" class="param-val">5ms</span></label>
+                    <input type="range" id="retrigger-fadeout" min="0" max="50" value="5" step="1">
+                </div>
+                <button id="btn-stop-retrigger" class="small-btn">Stop Retrigger</button>
+            </div>
+        </aside>
+
+        <!-- Center: Toolbar + Main View -->
+        <main id="center-area">
+            <!-- Toolbar -->
+            <div id="toolbar">
+                <div class="tool-group">
+                    <button class="tool-btn active" data-tool="select" title="Select / Set Position (click or drag)">
+                        <span class="tool-icon">⬚</span>
+                        <span class="tool-label">Select</span>
+                    </button>
+                    <button class="tool-btn" data-tool="rect-select" title="2D Rect Select">
+                        <span class="tool-icon">▣</span>
+                        <span class="tool-label">2D Sel</span>
+                    </button>
+                    <button class="tool-btn" data-tool="region" title="Create Region">
+                        <span class="tool-icon">▬</span>
+                        <span class="tool-label">Region</span>
+                    </button>
+                </div>
+                <div class="tool-divider"></div>
+                <div class="tool-group">
+                    <button class="tool-btn" data-tool="brush-amp" title="Amplify Brush">
+                        <span class="tool-icon">🖌️</span>
+                        <span class="tool-label">Amplify</span>
+                    </button>
+                    <button class="tool-btn" data-tool="brush-att" title="Attenuate Brush">
+                        <span class="tool-icon">🧹</span>
+                        <span class="tool-label">Attenuate</span>
+                    </button>
+                </div>
+                <div class="tool-divider"></div>
+                <div class="tool-group">
+                    <button class="tool-btn" data-tool="hand" title="Pan / Scroll">
+                        <span class="tool-icon">✋</span>
+                        <span class="tool-label">Hand</span>
+                    </button>
+                </div>
+                <div class="tool-divider"></div>
+                <div class="tool-group edit-actions">
+                    <button id="btn-copy" class="tool-btn" title="Copy (Ctrl+C)" disabled>
+                        <span class="tool-icon">📋</span>
+                        <span class="tool-label">Copy</span>
+                    </button>
+                    <button id="btn-paste" class="tool-btn" title="Paste Overwrite (Ctrl+V)" disabled>
+                        <span class="tool-icon">📥</span>
+                        <span class="tool-label">Paste</span>
+                    </button>
+                    <button id="btn-paste-insert" class="tool-btn" title="Paste Insert (Ctrl+Shift+V)" disabled>
+                        <span class="tool-icon">⤵</span>
+                        <span class="tool-label">Insert</span>
+                    </button>
+                    <button id="btn-delete" class="tool-btn" title="Delete (Delete key)" disabled>
+                        <span class="tool-icon">🗑</span>
+                        <span class="tool-label">Delete</span>
+                    </button>
+                </div>
+
+                <!-- Brush parameters (hidden by default) -->
+                <div id="brush-params" class="tool-params" style="display: none;">
+                    <label>Size <span id="brush-size-val" class="param-val">10</span></label>
+                    <input type="range" id="brush-size" min="1" max="50" value="10">
+                    <label>Strength <span id="brush-strength-val" class="param-val">2.0</span></label>
+                    <input type="range" id="brush-strength" min="0.1" max="5" step="0.1" value="2">
+                    <label>Hardness <span id="brush-hardness-val" class="param-val">0.50</span></label>
+                    <input type="range" id="brush-hardness" min="0" max="1" step="0.05" value="0.5">
+                </div>
+            </div>
+
+            <!-- Main View -->
+            <div id="main-view">
+                <div id="spectrogram-container" class="canvas-container">
+                    <canvas id="spectrogram-canvas"></canvas>
+                </div>
+                <div id="waveform-container" class="canvas-container waveform">
+                    <canvas id="waveform-canvas"></canvas>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Panel: Effects & Settings -->
+        <aside id="right-panel" class="panel">
+            <!-- Effect Layers -->
+            <div class="panel-section">
+                <h3 class="panel-title">Effect Layers</h3>
+                <div class="add-effect-row">
+                    <select id="effect-type-select" class="effect-select"></select>
+                    <button id="btn-add-effect" class="small-btn accent">+ Add</button>
+                </div>
+                <div id="layer-list" class="list-container">
+                    <div class="empty-hint">Add effects to process the spectrogram</div>
+                </div>
+            </div>
+
+            <!-- Transform -->
+            <div class="panel-section">
+                <h3 class="panel-title">Transform</h3>
+                <div class="param-group">
+                    <label>Rotation <span id="transform-rotation-val" class="param-val">0°</span></label>
+                    <input type="range" id="transform-rotation" min="-180" max="180" value="0" step="0.1">
+                </div>
+                <div class="param-group">
+                    <label>Scale X <span id="transform-scaleX-val" class="param-val">1.00</span></label>
+                    <input type="range" id="transform-scaleX" min="0.1" max="4" value="1" step="0.05">
+                </div>
+                <div class="param-group">
+                    <label>Scale Y <span id="transform-scaleY-val" class="param-val">1.00</span></label>
+                    <input type="range" id="transform-scaleY" min="0.1" max="4" value="1" step="0.05">
+                </div>
+                <div class="param-group">
+                    <label>Translate X <span id="transform-translateX-val" class="param-val">0</span></label>
+                    <input type="range" id="transform-translateX" min="-500" max="500" value="0" step="1">
+                </div>
+                <div class="param-group">
+                    <label>Translate Y <span id="transform-translateY-val" class="param-val">0</span></label>
+                    <input type="range" id="transform-translateY" min="-500" max="500" value="0" step="1">
+                </div>
+                <div class="param-group">
+                    <label>Shear X <span id="transform-shearX-val" class="param-val">0.00</span></label>
+                    <input type="range" id="transform-shearX" min="-1" max="1" value="0" step="0.01">
+                </div>
+                <div class="param-group">
+                    <label>Shear Y <span id="transform-shearY-val" class="param-val">0.00</span></label>
+                    <input type="range" id="transform-shearY" min="-1" max="1" value="0" step="0.01">
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: 6px;">
+                    <button id="btn-apply-transform" class="small-btn accent" style="flex:1;">Apply Transform</button>
+                    <button id="btn-reset-transform" class="small-btn" style="flex:1;">Reset</button>
+                </div>
+            </div>
+
+            <!-- Filter -->
+            <div class="panel-section">
+                <h3 class="panel-title">Filter</h3>
+                <div class="param-group">
+                    <label>Type</label>
+                    <select id="filter-type" class="param-select">
+                        <option value="lowpass">Low Pass</option>
+                        <option value="highpass">High Pass</option>
+                        <option value="bandpass">Band Pass</option>
+                        <option value="notch">Notch</option>
+                    </select>
+                </div>
+                <div class="param-group">
+                    <label>Cutoff <span id="filter-cutoff-val" class="param-val">20k</span></label>
+                    <input type="range" id="filter-cutoff" min="20" max="20000" value="20000" step="1">
+                </div>
+                <div class="param-group">
+                    <label>Resonance <span id="filter-resonance-val" class="param-val">0.0</span></label>
+                    <input type="range" id="filter-resonance" min="0" max="30" step="0.1" value="0">
+                </div>
+            </div>
+
+            <!-- Reverb -->
+            <div class="panel-section">
+                <h3 class="panel-title">Reverb</h3>
+                <div class="param-group">
+                    <label>Mix <span id="reverb-mix-val" class="param-val">0%</span></label>
+                    <input type="range" id="reverb-mix" min="0" max="1" step="0.01" value="0">
+                </div>
+                <div class="param-group">
+                    <label>Decay <span id="reverb-decay-val" class="param-val">2.0s</span></label>
+                    <input type="range" id="reverb-decay" min="0.1" max="10" step="0.1" value="2">
+                </div>
+            </div>
+
+            <!-- Analysis Settings -->
+            <div class="panel-section">
+                <h3 class="panel-title">Analysis</h3>
+                <div class="param-group">
+                    <label>FFT Size</label>
+                    <select id="fft-size" class="param-select">
+                        <option value="1024">1024</option>
+                        <option value="2048">2048</option>
+                        <option value="4096" selected>4096</option>
+                        <option value="8192">8192</option>
+                        <option value="16384">16384</option>
+                    </select>
+                </div>
+                <div class="param-group">
+                    <label>Freq Scale</label>
+                    <select id="freq-scale" class="param-select">
+                        <option value="linear">Linear</option>
+                        <option value="log">Logarithmic</option>
+                    </select>
+                </div>
+                <div class="param-group">
+                    <label>Min dB <span id="db-min-val" class="param-val">-90 dB</span></label>
+                    <input type="range" id="db-min" min="-120" max="-20" value="-90" step="1">
+                </div>
+                <div class="param-group">
+                    <label>Max dB <span id="db-max-val" class="param-val">0 dB</span></label>
+                    <input type="range" id="db-max" min="-40" max="20" value="0" step="1">
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Status Bar -->
+    <footer id="status-bar">
+        <span id="status-msg">Ready — drop a WAV file to begin</span>
+        <span id="status-pos">0.000s | 0 Hz</span>
+    </footer>
+
+    <!-- Image Import Dialog -->
+    <div id="image-import-dialog" class="modal-overlay" style="display:none">
+        <div class="modal-panel">
+            <h2 class="modal-title">🖼 Import Image as Spectrogram</h2>
+            <div class="modal-body">
+                <div class="modal-preview">
+                    <canvas id="image-preview-canvas" width="200" height="120"></canvas>
+                    <span id="image-info" class="modal-info">No image</span>
+                </div>
+                <div class="modal-fields">
+                    <div class="modal-field">
+                        <label>Mapping Mode</label>
+                        <select id="img-mode" class="param-select">
+                            <option value="brightness">Brightness (Luminance)</option>
+                            <option value="red">Red Channel</option>
+                            <option value="green">Green Channel</option>
+                            <option value="blue">Blue Channel</option>
+                            <option value="hue">Hue (HSL)</option>
+                            <option value="saturation">Saturation (HSL)</option>
+                            <option value="inverted">Inverted Brightness</option>
+                        </select>
+                    </div>
+                    <div class="modal-field">
+                        <label>Duration <span id="img-duration-val" class="param-val">3.0s</span></label>
+                        <input type="range" id="img-duration" min="0.5" max="30" step="0.5" value="3">
+                    </div>
+                    <div class="modal-field">
+                        <label>FFT Size</label>
+                        <select id="img-fft" class="param-select">
+                            <option value="1024">1024 (512 bins)</option>
+                            <option value="2048">2048 (1024 bins)</option>
+                            <option value="4096" selected>4096 (2048 bins)</option>
+                            <option value="8192">8192 (4096 bins)</option>
+                        </select>
+                    </div>
+                    <div class="modal-field">
+                        <label>Magnitude Scale <span id="img-mag-val" class="param-val">10</span></label>
+                        <input type="range" id="img-magnitude" min="1" max="50" step="1" value="10">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="img-cancel" class="small-btn">Cancel</button>
+                <button id="img-import" class="small-btn accent">Import</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+
+</html>

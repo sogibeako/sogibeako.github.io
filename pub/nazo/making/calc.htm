@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PFD 電卓</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 24px;
+      background: #f7f7fb;
+      color: #222;
+    }
+
+    .wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      padding: 24px;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.8rem;
+    }
+
+    .desc {
+      color: #555;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      font-size: 16px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #cfd4dc;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      margin-bottom: 20px;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 15px;
+      cursor: pointer;
+      background: #222;
+      color: white;
+    }
+
+    button.secondary {
+      background: #eef1f6;
+      color: #222;
+    }
+
+    .panel {
+      background: #fafbfe;
+      border: 1px solid #e6e9f0;
+      border-radius: 14px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+
+    .label {
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      line-height: 1.7;
+    }
+
+    .small {
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    .ok {
+      color: #0b7a34;
+      font-weight: 700;
+    }
+
+    .err {
+      color: #b42318;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>PFD 電卓</h1>
+    <div class="desc">
+      入力例: <code>pfd{1/((n^2)-1)}</code><br>
+      今はまず <strong>変数 n の有理式</strong> を対象にした、最初の土台です。<br>
+      結果表示は LaTeX 風に整形しています。<br>
+      式木を作る設計にしてあるので、あとから <code>factor</code>、<code>expand</code>、<code>simplify</code> なども足しやすい構造になっています.
+    </div>
+
+    <textarea id="input">pfd{1/((n^2)-1)}</textarea>
+
+    <div class="row">
+      <button id="runBtn">実行</button>
+      <button id="sampleBtn" class="secondary">サンプルを入れる</button>
+    </div>
+
+    <div class="panel">
+      <div class="label">結果</div>
+      <pre id="output">ここに結果が出ます。</pre>
+    </div>
+
+    <div class="panel">
+      <div class="label">内部ログ</div>
+      <pre id="debug">まだ実行されていません。</pre>
+    </div>
+
+    <div class="panel small">
+      <div class="label">現状の仕様</div>
+      <pre>- 対応入力: pfd{...}
+- 変数は n 固定
+- まずは「分母が 2次式で、整数係数の一次式に因数分解できる」ケースを対象
+- 例: 1/(n^2-1), 3/(n^2-1), (2*n+5)/(n^2-1)
+- 将来は AST を増やして拡張できる構成</pre>
+    </div>
+  </div>
+
+  <script>
+    // =========================
+    // 基本ユーティリティ
+    // =========================
+    function gcd(a, b) {
+      a = Math.abs(a);
+      b = Math.abs(b);
+      while (b !== 0) {
+        const t = a % b;
+        a = b;
+        b = t;
+      }
+      return a || 1;
+    }
+
+    class Rational {
+      constructor(num, den = 1) {
+        if (den === 0) throw new Error('0で割ることはできません');
+        this.num = num;
+        this.den = den;
+        this.normalize();
+      }
+
+      normalize() {
+        if (this.den < 0) {
+          this.num = -this.num;
+          this.den = -this.den;
+        }
+        const g = gcd(this.num, this.den);
+        this.num /= g;
+        this.den /= g;
+      }
+
+      add(other) {
+        return new Rational(this.num * other.den + other.num * this.den, this.den * other.den);
+      }
+
+      sub(other) {
+        return new Rational(this.num * other.den - other.num * this.den, this.den * other.den);
+      }
+
+      mul(other) {
+        return new Rational(this.num * other.num, this.den * other.den);
+      }
+
+      div(other) {
+        return new Rational(this.num * other.den, this.den * other.num);
+      }
+
+      neg() {
+        return new Rational(-this.num, this.den);
+      }
+
+      isZero() {
+        return this.num === 0;
+      }
+
+      equals(other) {
+        return this.num === other.num && this.den === other.den;
+      }
+
+      toString() {
+        return this.den === 1 ? String(this.num) : `${this.num}/${this.den}`;
+      }
+    }
+
+    // =========================
+    // 1変数多項式 a0 + a1*n + a2*n^2 + ...
+    // coefficients[i] = n^i の係数（Rational）
+    // =========================
+    class Polynomial {
+      constructor(coefficients = []) {
+        this.coefficients = coefficients.map(c => c instanceof Rational ? c : new Rational(c));
+        this.trim();
+      }
+
+      static zero() {
+        return new Polynomial([new Rational(0)]);
+      }
+
+      static one() {
+        return new Polynomial([new Rational(1)]);
+      }
+
+      static constant(value) {
+        return new Polynomial([value instanceof Rational ? value : new Rational(value)]);
+      }
+
+      static variable() {
+        return new Polynomial([new Rational(0), new Rational(1)]);
+      }
+
+      clone() {
+        return new Polynomial(this.coefficients.map(c => new Rational(c.num, c.den)));
+      }
+
+      trim() {
+        let i = this.coefficients.length - 1;
+        while (i > 0 && this.coefficients[i].isZero()) i--;
+        this.coefficients = this.coefficients.slice(0, i + 1);
+      }
+
+      degree() {
+        this.trim();
+        return this.coefficients.length - 1;
+      }
+
+      coeff(i) {
+        return this.coefficients[i] || new Rational(0);
+      }
+
+      add(other) {
+        const len = Math.max(this.coefficients.length, other.coefficients.length);
+        const out = [];
+        for (let i = 0; i < len; i++) {
+          out[i] = this.coeff(i).add(other.coeff(i));
+        }
+        return new Polynomial(out);
+      }
+
+      sub(other) {
+        const len = Math.max(this.coefficients.length, other.coefficients.length);
+        const out = [];
+        for (let i = 0; i < len; i++) {
+          out[i] = this.coeff(i).sub(other.coeff(i));
+        }
+        return new Polynomial(out);
+      }
+
+      mul(other) {
+        const out = Array(this.degree() + other.degree() + 1).fill(null).map(() => new Rational(0));
+        for (let i = 0; i <= this.degree(); i++) {
+          for (let j = 0; j <= other.degree(); j++) {
+            out[i + j] = out[i + j].add(this.coeff(i).mul(other.coeff(j)));
+          }
+        }
+        return new Polynomial(out);
+      }
+
+      pow(exp) {
+        if (!Number.isInteger(exp) || exp < 0) {
+          throw new Error('多項式のべきは 0以上の整数にしてください');
+        }
+        let result = Polynomial.one();
+        let base = this.clone();
+        let e = exp;
+        while (e > 0) {
+          if (e % 2 === 1) result = result.mul(base);
+          base = base.mul(base);
+          e = Math.floor(e / 2);
+        }
+        return result;
+      }
+
+      scale(r) {
+        return new Polynomial(this.coefficients.map(c => c.mul(r)));
+      }
+
+      evalAtInt(x) {
+        let sum = new Rational(0);
+        let power = new Rational(1);
+        for (let i = 0; i < this.coefficients.length; i++) {
+          sum = sum.add(this.coefficients[i].mul(power));
+          power = power.mul(new Rational(x));
+        }
+        return sum;
+      }
+
+      toString() {
+        this.trim();
+        if (this.coefficients.every(c => c.isZero())) return '0';
+
+        const parts = [];
+        for (let i = this.degree(); i >= 0; i--) {
+          const c = this.coeff(i);
+          if (c.isZero()) continue;
+
+          const negative = c.num < 0;
+          const abs = new Rational(Math.abs(c.num), c.den);
+
+          let term = '';
+          const coeffIsOne = abs.equals(new Rational(1));
+
+          if (i === 0) {
+            term = abs.toString();
+          } else if (i === 1) {
+            term = coeffIsOne ? 'n' : `${abs.toString()}*n`;
+          } else {
+            term = coeffIsOne ? `n^${i}` : `${abs.toString()}*n^${i}`;
+          }
+
+          if (parts.length === 0) {
+            parts.push(negative ? `-${term}` : term);
+          } else {
+            parts.push(negative ? `- ${term}` : `+ ${term}`);
+          }
+        }
+
+        return parts.join(' ');
+      }
+    }
+
+    // =========================
+    // Tokenizer
+    // =========================
+    function tokenize(input) {
+      const tokens = [];
+      let i = 0;
+
+      while (i < input.length) {
+        const ch = input[i];
+
+        if (/\s/.test(ch)) {
+          i++;
+          continue;
+        }
+
+        if (/[0-9]/.test(ch)) {
+          let j = i;
+          while (j < input.length && /[0-9]/.test(input[j])) j++;
+          tokens.push({ type: 'number', value: input.slice(i, j) });
+          i = j;
+          continue;
+        }
+
+        if (/[a-zA-Z_]/.test(ch)) {
+          let j = i;
+          while (j < input.length && /[a-zA-Z0-9_]/.test(input[j])) j++;
+          tokens.push({ type: 'identifier', value: input.slice(i, j) });
+          i = j;
+          continue;
+        }
+
+        if ('+-*/^(){}'.includes(ch)) {
+          tokens.push({ type: ch, value: ch });
+          i++;
+          continue;
+        }
+
+        throw new Error(`未対応の文字です: ${ch}`);
+      }
+
+      return tokens;
+    }
+
+    // =========================
+    // Parser
+    // 対象: 数, 変数n, + - * / ^, (), bubunbunsubunkai{...}
+    // =========================
+    class Parser {
+      constructor(tokens) {
+        this.tokens = tokens;
+        this.pos = 0;
+      }
+
+      current() {
+        return this.tokens[this.pos] || null;
+      }
+
+      eat(type) {
+        const token = this.current();
+        if (!token || token.type !== type) {
+          throw new Error(`${type} を期待しました`);
+        }
+        this.pos++;
+        return token;
+      }
+
+      match(type) {
+        const token = this.current();
+        if (token && token.type === type) {
+          this.pos++;
+          return true;
+        }
+        return false;
+      }
+
+      parseCommand() {
+        const token = this.current();
+        if (!token || token.type !== 'identifier') {
+          throw new Error('コマンド名が必要です');
+        }
+        const name = token.value;
+        this.eat('identifier');
+        this.eat('{');
+        const expr = this.parseExpression();
+        this.eat('}');
+
+        if (this.current()) {
+          throw new Error('余分な入力があります');
+        }
+
+        return {
+          type: 'command',
+          name,
+          expr
+        };
+      }
+
+      parseExpression() {
+        let node = this.parseTerm();
+        while (true) {
+          if (this.match('+')) {
+            node = { type: 'binary', op: '+', left: node, right: this.parseTerm() };
+          } else if (this.match('-')) {
+            node = { type: 'binary', op: '-', left: node, right: this.parseTerm() };
+          } else {
+            break;
+          }
+        }
+        return node;
+      }
+
+      parseTerm() {
+        let node = this.parsePower();
+        while (true) {
+          if (this.match('*')) {
+            node = { type: 'binary', op: '*', left: node, right: this.parsePower() };
+          } else if (this.match('/')) {
+            node = { type: 'binary', op: '/', left: node, right: this.parsePower() };
+          } else {
+            break;
+          }
+        }
+        return node;
+      }
+
+      parsePower() {
+        let node = this.parseUnary();
+        if (this.match('^')) {
+          node = { type: 'binary', op: '^', left: node, right: this.parsePower() };
+        }
+        return node;
+      }
+
+      parseUnary() {
+        if (this.match('+')) {
+          return this.parseUnary();
+        }
+        if (this.match('-')) {
+          return { type: 'unary', op: '-', expr: this.parseUnary() };
+        }
+        return this.parsePrimary();
+      }
+
+      parsePrimary() {
+        const token = this.current();
+        if (!token) throw new Error('式が途中で終わっています');
+
+        if (token.type === 'number') {
+          this.eat('number');
+          return { type: 'number', value: Number(token.value) };
+        }
+
+        if (token.type === 'identifier') {
+          this.eat('identifier');
+          return { type: 'identifier', name: token.value };
+        }
+
+        if (this.match('(')) {
+          const expr = this.parseExpression();
+          this.eat(')');
+          return expr;
+        }
+
+        throw new Error(`未対応のトークンです: ${token.type}`);
+      }
+    }
+
+    // =========================
+    // AST -> RationalFunction
+    // RationalFunction = numerator Polynomial / denominator Polynomial
+    // =========================
+    class RationalFunction {
+      constructor(numerator, denominator) {
+        this.numerator = numerator;
+        this.denominator = denominator;
+      }
+
+      add(other) {
+        return new RationalFunction(
+          this.numerator.mul(other.denominator).add(other.numerator.mul(this.denominator)),
+          this.denominator.mul(other.denominator)
+        );
+      }
+
+      sub(other) {
+        return new RationalFunction(
+          this.numerator.mul(other.denominator).sub(other.numerator.mul(this.denominator)),
+          this.denominator.mul(other.denominator)
+        );
+      }
+
+      mul(other) {
+        return new RationalFunction(
+          this.numerator.mul(other.numerator),
+          this.denominator.mul(other.denominator)
+        );
+      }
+
+      div(other) {
+        return new RationalFunction(
+          this.numerator.mul(other.denominator),
+          this.denominator.mul(other.numerator)
+        );
+      }
+
+      toString() {
+        return `(${this.numerator.toString()}) / (${this.denominator.toString()})`;
+      }
+    }
+
+    function evalAst(node) {
+      switch (node.type) {
+        case 'number':
+          return new RationalFunction(Polynomial.constant(node.value), Polynomial.one());
+
+        case 'identifier':
+          if (node.name !== 'n') {
+            throw new Error(`今は変数 n のみ対応です: ${node.name}`);
+          }
+          return new RationalFunction(Polynomial.variable(), Polynomial.one());
+
+        case 'unary': {
+          const value = evalAst(node.expr);
+          if (node.op === '-') {
+            return new RationalFunction(value.numerator.scale(new Rational(-1)), value.denominator);
+          }
+          throw new Error(`未対応の単項演算です: ${node.op}`);
+        }
+
+        case 'binary': {
+          const left = evalAst(node.left);
+          const right = evalAst(node.right);
+
+          switch (node.op) {
+            case '+': return left.add(right);
+            case '-': return left.sub(right);
+            case '*': return left.mul(right);
+            case '/': return left.div(right);
+            case '^': {
+              if (right.denominator.degree() !== 0 || right.numerator.degree() !== 0) {
+                throw new Error('べき指数は整数定数のみ対応です');
+              }
+              const expRat = right.numerator.coeff(0);
+              if (expRat.den !== 1) {
+                throw new Error('べき指数は整数にしてください');
+              }
+              const exp = expRat.num;
+              if (left.denominator.degree() !== 0 || !left.denominator.coeff(0).equals(new Rational(1))) {
+                throw new Error('今は分数全体のべき乗ではなく、多項式のべきのみ対応です');
+              }
+              return new RationalFunction(left.numerator.pow(exp), Polynomial.one());
+            }
+            default:
+              throw new Error(`未対応の演算子です: ${node.op}`);
+          }
+        }
+
+        default:
+          throw new Error(`未知のASTノードです: ${node.type}`);
+      }
+    }
+
+    // =========================
+    // 部分分数分解
+    // まずは denominator = a*n^2 + b*n + c が整数根を持つ場合を対象
+    // 分子次数 < 分母次数 を想定
+    // =========================
+    function divisors(n) {
+      n = Math.abs(n);
+      if (n === 0) return [0];
+      const out = new Set();
+      for (let i = 1; i * i <= n; i++) {
+        if (n % i === 0) {
+          out.add(i);
+          out.add(-i);
+          out.add(n / i);
+          out.add(-(n / i));
+        }
+      }
+      return [...out].sort((a, b) => a - b);
+    }
+
+    function factorQuadraticToLinear(poly) {
+      if (poly.degree() !== 2) {
+        throw new Error('今は分母が2次式の場合のみ対応です');
+      }
+
+      const a = poly.coeff(2);
+      const b = poly.coeff(1);
+      const c = poly.coeff(0);
+
+      if (a.den !== 1 || b.den !== 1 || c.den !== 1) {
+        throw new Error('今は整数係数の2次式のみ対応です');
+      }
+
+      if (a.num !== 1) {
+        throw new Error('今は最高次係数が 1 の2次式のみ対応です');
+      }
+
+      const cand = divisors(c.num);
+      for (const r of cand) {
+        if (poly.evalAtInt(r).isZero()) {
+          const s = -b.num - r;
+          if (r * s === c.num) {
+            return [r, s];
+          }
+        }
+      }
+
+      throw new Error('整数係数の一次式へうまく因数分解できませんでした');
+    }
+
+    function formatLinearFactorFromRoot(root) {
+      if (root === 0) return 'n';
+      if (root > 0) return '(n - ' + root + ')';
+      return '(n + ' + Math.abs(root) + ')';
+    }
+
+    function formatLatexLinearFactorFromRoot(root) {
+      if (root === 0) return 'n';
+      if (root > 0) return '(n - ' + root + ')';
+      return '(n + ' + Math.abs(root) + ')';
+    }
+
+    function formatLatexFraction(numerator, denominator) {
+      return '\frac{' + numerator + '}{' + denominator + '}';
+    }
+
+    function formatSignedRationalLatex(r) {
+      const absNum = Math.abs(r.num);
+      const abs = new Rational(absNum, r.den);
+      const latex = abs.den === 1 ? String(abs.num) : formatLatexFraction(String(abs.num), String(abs.den));
+      return {
+        negative: r.num < 0,
+        body: latex
+      };
+    }
+
+    function joinLatexTerms(terms) {
+      if (terms.length === 0) return '0';
+      return terms.map((term, index) => {
+        if (index === 0) {
+          return term.negative ? '-' + term.body : term.body;
+        }
+        return term.negative ? ' - ' + term.body : ' + ' + term.body;
+      }).join('');
+    }
+
+    function decomposePartialFraction(rf) {
+      const num = rf.numerator;
+      const den = rf.denominator;
+
+      if (num.degree() >= den.degree()) {
+        throw new Error('今は真分数のみ対応です（分子次数 < 分母次数）');
+      }
+
+      const [r1, r2] = factorQuadraticToLinear(den);
+      if (r1 === r2) {
+        throw new Error('重解はまだ未対応です');
+      }
+
+      // A/(n-r1) + B/(n-r2)
+      // A = P(r1)/(r1-r2), B = P(r2)/(r2-r1)
+      const p1 = num.evalAtInt(r1);
+      const p2 = num.evalAtInt(r2);
+      const A = p1.div(new Rational(r1 - r2));
+      const B = p2.div(new Rational(r2 - r1));
+
+      const f1 = formatLinearFactorFromRoot(r1);
+      const f2 = formatLinearFactorFromRoot(r2);
+
+      const latexTerms = [
+        {
+          ...formatSignedRationalLatex(A),
+          body: formatLatexFraction(formatSignedRationalLatex(A).body, formatLatexLinearFactorFromRoot(r1))
+        },
+        {
+          ...formatSignedRationalLatex(B),
+          body: formatLatexFraction(formatSignedRationalLatex(B).body, formatLatexLinearFactorFromRoot(r2))
+        }
+      ];
+
+      return {
+        roots: [r1, r2],
+        A,
+        B,
+        text: `${A.toString()}/${f1} + ${B.toString()}/${f2}`,
+        latex: joinLatexTerms(latexTerms)
+      };
+    }
+
+    // =========================
+    // コマンド実行
+    // =========================
+    function runCommand(input) {
+      const tokens = tokenize(input);
+      const parser = new Parser(tokens);
+      const command = parser.parseCommand();
+
+      if (command.name !== 'pfd') {
+        throw new Error(`未対応コマンドです: ${command.name}`);
+      }
+
+      const rf = evalAst(command.expr);
+      const result = decomposePartialFraction(rf);
+
+      return {
+        tokens,
+        command,
+        rf,
+        result
+      };
+    }
+
+    // =========================
+    // UI
+    // =========================
+    const inputEl = document.getElementById('input');
+    const outputEl = document.getElementById('output');
+    const debugEl = document.getElementById('debug');
+    const runBtn = document.getElementById('runBtn');
+    const sampleBtn = document.getElementById('sampleBtn');
+
+    function renderSuccess(data) {
+      const { rf, result } = data;
+      outputEl.textContent = [
+        '[成功]',
+        `入力された有理式: ${rf.toString()}`,
+        `部分分数分解: ${result.text}`,
+        `LaTeX風: ${result.latex}`
+      ].join('\n');
+
+      debugEl.textContent = [
+        'トークン:',
+        JSON.stringify(data.tokens, null, 2),
+        '',
+        '分子:',
+        rf.numerator.toString(),
+        '',
+        '分母:',
+        rf.denominator.toString(),
+        '',
+        `根: ${result.roots.join(', ')}`,
+        `A = ${result.A.toString()}`,
+        `B = ${result.B.toString()}`
+      ].join('\n');
+    }
+
+    function renderError(error) {
+      outputEl.textContent = `[エラー]\n${error.message}`;
+      debugEl.textContent = error.stack || String(error);
+    }
+
+    runBtn.addEventListener('click', () => {
+      try {
+        const data = runCommand(inputEl.value);
+        renderSuccess(data);
+      } catch (error) {
+        renderError(error);
+      }
+    });
+
+    sampleBtn.addEventListener('click', () => {
+      inputEl.value = 'pfd{1/((n^2)-1)}';
+    });
+
+    // 初回実行
+    try {
+      const data = runCommand(inputEl.value);
+      renderSuccess(data);
+    } catch (error) {
+      renderError(error);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>素イデアル分解電卓 v0.1</title>
+  <meta name="description" content="代数の通訳猫 — イデアルの計算と素イデアル分解">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    MathJax = {
+      tex: { inlineMath: [['$', '$']], displayMath: [['$$', '$$']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>✦ 素イデアル分解電卓 <span style="font-size: 0.5em; opacity: 0.7;">v0.1</span></h1>
+    <p>小さいけれど頼れる代数エンジン。イデアルの加法・乗法・共通部分から素イデアル分解まで。</p>
+  </header>
+
+  <div class="main-col">
+    <!-- 環の設定 -->
+    <div class="card">
+      <h2>環の設定 Ring Setting</h2>
+      <div class="input-row">
+        <div class="field" style="flex: 2;">
+          <label>対象の環 R</label>
+          <select id="ring-type">
+            <option value="Z">Z (整数環)</option>
+            <option value="Fp[x]">F_p[x] (有限体係数多項式環)</option>
+            <!-- Q[x]はv0.1では未サポートとしてdisableにするか、v0.2候補として残す -->
+            <option value="Q[x]" disabled>Q[x] (有理数係数多項式環) - 準備中</option>
+          </select>
+        </div>
+        <div class="field fpx-only" style="display: none; flex: 1;">
+          <label>法 p (素数)</label>
+          <input type="number" id="ring-p" value="5" min="2">
+        </div>
+        <div class="field fpx-only" style="display: none; flex: 1;">
+          <label>変数</label>
+          <input type="text" id="ring-var" value="x" maxlength="1">
+        </div>
+      </div>
+    </div>
+
+    <!-- イデアルの入力 -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h2 style="margin:0">イデアルの入力 Ideals</h2>
+        <div class="presets-row" style="margin:0" id="presets-z">
+          <button class="preset" onclick="window.loadPreset('Z_12_18')">基本 (12, 18)</button>
+          <button class="preset" onclick="window.loadPreset('Z_60')">分解向け (60)</button>
+          <button class="preset" onclick="window.loadPreset('Z_coprime')">互いに素 (14, 15)</button>
+        </div>
+        <div class="presets-row" style="margin:0; display:none;" id="presets-fpx">
+          <button class="preset" onclick="window.loadPreset('Fp_x21_x1')">基本 (x^2+1, x+1)</button>
+          <button class="preset" onclick="window.loadPreset('Fp_factor')">分解向け (x^4+x)</button>
+          <button class="preset" onclick="window.loadPreset('Fp_intersect')">共通部分 (x^2-1, x^2+x)</button>
+        </div>
+      </div>
+      
+      <div class="input-row" style="margin-bottom: 12px;">
+        <div class="field full">
+          <label>イデアル I の生成元 (カンマ区切り)</label>
+          <input type="text" id="ideal-i" placeholder="例: 12 または 12, 18" value="12">
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="field full">
+          <label>イデアル J の生成元 (カンマ区切り)</label>
+          <input type="text" id="ideal-j" placeholder="例: 18 または x + 2" value="18">
+        </div>
+      </div>
+      <p style="font-size:0.75rem;color:var(--muted);margin-top:8px;">
+        ※ v0.1ではPID(単項イデアル整域)を扱うため、複数生成元 (a, b) は自動で標準化 (gcd) されます。
+      </p>
+    </div>
+
+    <!-- 操作 -->
+    <div class="card">
+      <h2>操作 Operations</h2>
+      <div class="ops-grid">
+        <button class="op-btn" id="btn-normalize"><span class="icon">✨</span><span class="code">標準化 (I)</span></button>
+        <button class="op-btn" id="btn-factor"><span class="icon">🔍</span><span class="code">素イデアル分解 (I)</span></button>
+        <button class="op-btn" id="btn-add"><span class="icon">＋</span><span class="code">I + J</span></button>
+        <button class="op-btn" id="btn-mul"><span class="icon">×</span><span class="code">I * J</span></button>
+        <button class="op-btn" id="btn-intersect"><span class="icon">∩</span><span class="code">I ∩ J</span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="side-col">
+    <div class="card" id="result-card" style="flex: 1; display: flex; flex-direction: column;">
+      <h2 style="margin-bottom:0">計算結果 Result</h2>
+      <div id="result-area" style="margin-top:16px; flex: 1; display: flex; flex-direction: column; gap: 12px;">
+        <div style="color:var(--muted);font-size:0.85rem;text-align:center;padding:40px 20px;margin:auto">
+          左のパネルからイデアルを入力し、<br>操作ボタンを押してください
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

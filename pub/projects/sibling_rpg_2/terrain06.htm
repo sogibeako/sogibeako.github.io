@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <link rel="icon" href="data:,">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>変な地形 - Strange Terrain Battle</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    html,
+    body {
+      overflow-anchor: none;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(180deg, #0a0a12 0%, #12121f 50%, #0a0a12 100%);
+      color: #fffefd;
+      font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        text-shadow: 0 0 8px rgba(255, 100, 100, .3)
+      }
+
+      50% {
+        text-shadow: 0 0 20px rgba(255, 100, 100, .7)
+      }
+    }
+
+    @keyframes glitch {
+
+      0%,
+      90%,
+      100% {
+        transform: none
+      }
+
+      92% {
+        transform: translate(-2px, 1px)
+      }
+
+      94% {
+        transform: translate(2px, -1px)
+      }
+
+      96% {
+        transform: translate(-1px, -2px)
+      }
+
+      98% {
+        transform: translate(1px, 2px)
+      }
+    }
+
+    @keyframes tripleGlitch {
+
+      0%,
+      85%,
+      100% {
+        transform: none;
+        filter: none
+      }
+
+      87% {
+        transform: translate(-3px, 2px) skewX(2deg);
+        filter: hue-rotate(90deg)
+      }
+
+      89% {
+        transform: translate(3px, -1px);
+        filter: hue-rotate(180deg)
+      }
+
+      91% {
+        transform: translate(-2px, -3px);
+        filter: hue-rotate(270deg)
+      }
+
+      93% {
+        transform: translate(2px, 3px) skewX(3deg)
+      }
+
+      95% {
+        transform: translate(-1px, -2px);
+        filter: hue-rotate(45deg)
+      }
+    }
+
+    .section {
+      animation: fadeIn .5s ease-out both;
+      margin-bottom: 20px;
+      padding: 20px;
+      border: 1px solid #1a1a2a;
+      background: linear-gradient(180deg, #0e0e1a00, #0e0e1a)
+    }
+
+    .section:nth-child(2) {
+      animation-delay: .05s
+    }
+
+    .section:nth-child(3) {
+      animation-delay: .1s
+    }
+
+    .section:nth-child(4) {
+      animation-delay: .15s
+    }
+
+    .section:nth-child(5) {
+      animation-delay: .2s
+    }
+
+    .section:nth-child(6) {
+      animation-delay: .25s
+    }
+
+    .section:nth-child(7) {
+      animation-delay: .3s
+    }
+
+    .section:nth-child(8) {
+      animation-delay: .35s
+    }
+
+    .section:nth-child(9) {
+      animation-delay: .4s
+    }
+
+    .section:nth-child(10) {
+      animation-delay: .45s
+    }
+
+    .section h3 {
+      font-size: 13px;
+      color: #777;
+      letter-spacing: 4px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #1a1a2a;
+      padding-bottom: 8px;
+      font-weight: normal
+    }
+
+    .chaos-text {
+      animation: glitch 3s infinite
+    }
+
+    .triple-chaos-text {
+      animation: tripleGlitch 2s infinite
+    }
+
+    .high-level {
+      animation: pulse 2s infinite
+    }
+
+    .gen-btn {
+      background: linear-gradient(135deg, #1a1a2e, #2a2a4a);
+      border: 1px solid #444;
+      color: #e0dcd0;
+      padding: 16px 48px;
+      font-size: 18px;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 4px;
+      transition: all .3s
+    }
+
+    .gen-btn:hover {
+      border-color: #888;
+      background: linear-gradient(135deg, #2a2a4e, #3a3a6a);
+      box-shadow: 0 0 30px rgba(100, 100, 200, .2)
+    }
+
+    .gen-btn:active {
+      transform: scale(.97)
+    }
+
+    .hist-btn {
+      background: transparent;
+      border: 1px solid #333;
+      color: #777;
+      padding: 8px 20px;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 2px
+    }
+
+    .hist-btn:hover {
+      border-color: #666;
+      color: #aaa
+    }
+
+    .chimera-tag {
+      display: inline-block;
+      background: rgba(255, 50, 50, .15);
+      border: 1px solid rgba(255, 50, 50, .3);
+      padding: 1px 6px;
+      font-size: 10px;
+      color: #ff6666;
+      margin-left: 6px;
+      letter-spacing: 1px
+    }
+
+    .chaos-badge {
+      display: inline-block;
+      background: linear-gradient(90deg, #ff006620, #ff00ff20, #00ffff20);
+      border: 1px solid #ff00ff44;
+      padding: 2px 10px;
+      font-size: 11px;
+      color: #ff66ff;
+      letter-spacing: 2px;
+      margin-left: 8px
+    }
+
+    .triple-badge {
+      background: linear-gradient(90deg, #ff000030, #ff00ff30, #00ffff30, #ffff0030) !important;
+      border: 1px solid #ff44ff66 !important;
+      color: #ff88ff !important;
+      animation: tripleGlitch 4s infinite
+    }
+
+    .diff-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      max-width: 700px;
+      margin: 0 auto
+    }
+
+    .diff-btn {
+      background: transparent;
+      border: 1px solid #222;
+      color: #555;
+      padding: 10px 4px;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all .2s;
+      text-align: center;
+      line-height: 1.4
+    }
+
+    .diff-btn.active {
+      background: linear-gradient(135deg, #2a2a4e, #3a3a6a);
+      border: 1px solid #6666aa;
+      color: #e0dcd0
+    }
+
+    .diff-btn .icon {
+      font-size: 18px;
+      margin-bottom: 2px
+    }
+
+    .diff-btn .label {
+      letter-spacing: 1px
+    }
+
+    .item-tag {
+      padding: 4px 12px;
+      border: 1px solid #333;
+      font-size: 13px;
+      background: #0a0a16;
+      color: #bbb;
+      display: inline-block;
+      margin: 0 4px 4px 0
+    }
+
+    .hist-item {
+      padding: 6px 8px;
+      border-bottom: 1px solid #1a1a2a;
+      cursor: pointer;
+      font-size: 13px
+    }
+
+    .hist-item:hover {
+      background: #1a1a2a
+    }
+
+    .event-card {
+      padding: 16px;
+      border: 1px solid;
+      animation: fadeIn .4s ease-out both
+    }
+
+    .event-card+.event-card {
+      margin-top: 12px
+    }
+
+    #content {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0 20px 60px
+    }
+
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      background: #0a0a16;
+      border: 1px solid #2a2a3a;
+    }
+
+    .info-table th,
+    .info-table td {
+      border: 1px solid #222638;
+      padding: 12px 14px;
+      vertical-align: top;
+    }
+
+    .info-table th {
+      width: 180px;
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: #c7c7d4;
+      background: #111120;
+      font-weight: normal;
+      text-align: left;
+    }
+
+    .info-table td {
+      font-size: 14px;
+      line-height: 1.9;
+      color: #e0dcd0;
+      white-space: pre-wrap;
+    }
+
+    .compact-table th {
+      width: 160px;
+    }
+
+    .tags-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .monster-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .monster-row {
+      padding: 8px 12px;
+      border: 1px solid #222638;
+      background: #0a0a16;
+      font-size: 14px;
+    }
+
+    .status-good {
+      color: #8bc34a;
+    }
+
+    .status-warn {
+      color: #ffc107;
+    }
+
+    .status-danger {
+      color: #ff7043;
+    }
+
+    .status-rest {
+      color: #ff88aa;
+    }
+
+    .result-log-line {
+      margin-bottom: 6px;
+    }
+
+    .dex-tag {
+      display: inline-block;
+      margin: 0 6px 6px 0;
+      padding: 4px 10px;
+      border: 1px solid #2a2f42;
+      background: #0a0a16;
+      color: #d8d2c8;
+      font-size: 13px;
+    }
+
+    .dex-count {
+      color: #8c95b5;
+      margin-left: 6px;
+      font-size: 11px;
+    }
+
+    .fx-pop {
+      animation: fadeUpPoint 1.2s ease-out forwards;
+    }
+
+    #mapTop {
+      scroll-margin-top: 16px;
+    }
+
+    @keyframes fadeUpPoint {
+      0% {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      20% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(-8px);
+      }
+    }
+
+    /* ─── BATTLE SYSTEM CSS ───────────────────────────── */
+    .offer-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .offer-card {
+      background: linear-gradient(135deg, #12121f, #1a1a2e);
+      border: 1px solid #2a2a4a;
+      padding: 18px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .3s;
+      border-radius: 4px;
+    }
+
+    .offer-card:hover {
+      border-color: #6666aa;
+      background: linear-gradient(135deg, #1a1a2e, #2a2a5a);
+      box-shadow: 0 0 20px rgba(100, 100, 200, .15);
+      transform: translateY(-2px);
+    }
+
+    .offer-card .offer-icon {
+      font-size: 28px;
+      margin-bottom: 6px;
+    }
+
+    .offer-card .offer-name {
+      font-size: 14px;
+      color: #e0dcd0;
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+    }
+
+    .offer-card .offer-info {
+      font-size: 11px;
+      color: #888;
+      letter-spacing: 1px;
+    }
+
+    .rest-btn-wrap {
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    .battle-panel {
+      border: 1px solid #2a2a3a;
+      background: #0a0a16;
+      padding: 16px;
+      margin-bottom: 16px;
+      animation: fadeIn .4s ease-out both;
+    }
+
+    .battle-header {
+      text-align: center;
+      font-size: 13px;
+      color: #aaa;
+      letter-spacing: 3px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #1a1a2a;
+    }
+
+    .battle-grid {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .battle-side {
+      flex: 1;
+      min-width: 180px;
+    }
+
+    .battle-vs {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #ff6666;
+      font-weight: bold;
+      letter-spacing: 4px;
+      padding: 0 8px;
+      min-width: 40px;
+    }
+
+    .battle-unit {
+      padding: 10px;
+      border: 1px solid #222638;
+      background: #0e0e1a;
+      margin-bottom: 8px;
+    }
+
+    .battle-unit-name {
+      font-size: 13px;
+      font-weight: bold;
+      color: #e0dcd0;
+      margin-bottom: 4px;
+    }
+
+    .battle-unit-name .status-icons {
+      margin-left: 6px;
+      font-size: 12px;
+    }
+
+    .battle-unit-info {
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 6px;
+    }
+
+    .battle-log-entry {
+      margin: 0 0 1.25em 0;
+    }
+
+    #battleLogTerminal .battle-log-entry blockquote {
+      margin: 0;
+      padding: 0;
+    }
+
+    .hp-bar-wrap {
+      width: 100%;
+      height: 10px;
+      background: #1a1a2a;
+      border: 1px solid #333;
+      overflow: hidden;
+    }
+
+    .hp-bar {
+      height: 100%;
+      transition: width .4s ease-out;
+      background: linear-gradient(90deg, #4caf50, #8bc34a);
+    }
+
+    .hp-bar.low {
+      background: linear-gradient(90deg, #ff9800, #ffc107);
+    }
+
+    .hp-bar.critical {
+      background: linear-gradient(90deg, #f44336, #ff5722);
+      animation: pulse 1s infinite;
+    }
+
+    .hp-bar.enemy {
+      background: linear-gradient(90deg, #e53935, #c62828);
+    }
+
+    .battle-log {
+      border: 1px solid #1a1a2a;
+      background: #08080f;
+      padding: 12px;
+      margin-top: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.8;
+      color: #b0aca0;
+    }
+
+    .battle-log .log-line {
+      margin-bottom: 3px;
+    }
+
+    .battle-log .log-dmg {
+      color: #ff8866;
+      font-weight: bold;
+    }
+
+    .battle-log .log-heal {
+      color: #8bc34a;
+    }
+
+    .battle-log .log-crit {
+      color: #ffd700;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .battle-log .log-limit {
+      color: #ff44cc;
+      font-weight: bold;
+      font-size: 15px;
+      text-shadow: 0 0 8px rgba(255, 68, 204, .4);
+    }
+
+    .battle-log .log-status {
+      color: #bb88ff;
+    }
+
+    .battle-log .log-miss {
+      color: #666;
+      font-style: italic;
+    }
+
+    .battle-log .log-defeat {
+      color: #ff4444;
+      font-weight: bold;
+    }
+
+    .battle-log .log-victory {
+      color: #ffd700;
+      font-weight: bold;
+    }
+
+    .battle-log .log-sister {
+      color: #ffaacc;
+    }
+
+    .battle-log .log-levelup {
+      color: #66ffcc;
+      font-weight: bold;
+    }
+
+    .floor-separator {
+      text-align: center;
+      padding: 20px;
+      margin: 16px 0;
+      border: 1px solid #1a1a2a;
+      background: linear-gradient(180deg, #0e0e1a00, #0e0e1a);
+      animation: fadeIn .4s ease-out both;
+    }
+
+    .floor-separator .floor-num {
+      font-size: 18px;
+      color: #c8c0b0;
+      letter-spacing: 6px;
+      font-weight: 700;
+    }
+
+    .dungeon-result {
+      text-align: center;
+      padding: 24px;
+      border: 1px solid #2a2a4a;
+      background: linear-gradient(135deg, #12121f, #1a1a2e);
+      margin-top: 16px;
+      animation: fadeIn .5s ease-out both;
+    }
+
+    .dungeon-result .result-title {
+      font-size: 18px;
+      letter-spacing: 4px;
+      margin-bottom: 12px;
+    }
+
+    .limit-gauge-wrap {
+      width: 100%;
+      height: 6px;
+      background: #1a1a2a;
+      border: 1px solid #333;
+      margin-top: 4px;
+      overflow: hidden;
+    }
+
+    .limit-gauge {
+      height: 100%;
+      background: linear-gradient(90deg, #9c27b0, #e040fb);
+      transition: width .3s;
+    }
+
+    .limit-gauge.full {
+      background: linear-gradient(90deg, #ff4081, #ff80ab);
+      animation: pulse 1s infinite;
+    }
+
+    .sister-comment-box {
+      padding: 12px 16px;
+      border-left: 3px solid #ffaacc44;
+      background: #0e0e1a;
+      margin: 8px 0;
+      font-size: 13px;
+      color: #e0c8d0;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 640px) {
+
+      .info-table,
+      .info-table tbody,
+      .info-table tr,
+      .info-table th,
+      .info-table td {
+        display: block;
+        width: 100%;
+      }
+
+      #statusGrid {
+        grid-template-columns: 1fr !important;
+      }
+
+      .info-table th {
+        border-bottom: none;
+      }
+
+      .info-table td {
+        border-top: none;
+        margin-bottom: 8px;
+      }
+
+      .offer-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .battle-grid {
+        flex-direction: column;
+      }
+
+      .battle-vs {
+        padding: 4px 0;
+      }
+    }
+
+    /* FFA BATTLE STYLE */
+    .ffa-b1 {
+      background: #9ac;
+      border: 1px solid #ccf;
+      border-color: #ccf #669 #669 #ccf;
+      color: #fff;
+      font-size: 11pt;
+      padding: 4px;
+    }
+
+    .ffa-b2 {
+      background: #669;
+      border: 1px solid #99c;
+      border-color: #99c #336 #336 #99c;
+      color: #fff;
+      text-align: center;
+      font-size: 11pt;
+      font-weight: bold;
+      padding: 4px;
+    }
+
+    .ffa-dmg {
+      color: #FF0000;
+      font-size: 18pt;
+      font-weight: bold;
+    }
+
+    .ffa-heal {
+      color: #00FF00;
+      font-size: 18pt;
+      font-weight: bold;
+    }
+
+    .ffa-crit {
+      color: #0000FF;
+      font-size: 18pt;
+      font-weight: bold;
+    }
+
+    .ffa-table {
+      border-collapse: collapse;
+      width: 100%;
+      border: 1px solid #333;
+    }
+
+    .ffa-table td {
+      font-size: 11pt;
+      color: #333333;
+      background: #ffffff;
+      padding: 4px;
+      border: 1px solid #333;
+    }
+
+    .ffa-hp-bar {
+      display: inline-block;
+      height: 5px;
+      background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAFCAMAAACwQz+XAAAAA1BMVEUAAACnej3aAAAAFElEQVQImWNgYGIAEwxYBBhgYAAAAwgAATV1m2AAAAAASUVORK5CYII=') repeat-x;
+    }
+
+    .ffa-hp-empty {
+      display: inline-block;
+      height: 5px;
+      background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAMAAAC6s1CPAAAAA1BMVEWAgICAX0AAAAAEQVR42mNgAAAAQwABR0f6cwAAAABJRU5ErkJggg==') repeat-x;
+    }
+
+    #battleLogTerminal {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #FFFFFF;
+      color: #333;
+      border: 2px solid #555;
+      padding: 16px;
+      min-height: 400px;
+      height: auto;
+      overflow-y: visible;
+      border-radius: 4px;
+      font-family: "MS Gothic", "ＭＳ ゴシック", "MS PGothic", "ＭＳ Ｐゴシック", monospace;
+    }
+  </style>
+
+
+</head>
+
+<body>
+
+  <div id="scrollAnchorTop" style="height:0; margin:0; padding:0;"></div>
+  <div id="errorDisplay"
+    style="color:red; background:black; position:fixed; top:0; left:0; z-index:9999; font-size:12px;"></div>
+  <script>
+    window.onerror = function (msg, url, line, col, error) {
+      document.getElementById('errorDisplay').textContent += msg + " at line " + line + "\n";
+      return false; // let default handler run too
+    };
+  </script>
+
+  <div id="pageTopLogo" style="text-align:center;padding:40px 20px 20px;border-bottom:1px solid #222">
+    <h1 style="font-size:28px;font-weight:900;letter-spacing:8px;color:#c8c0b0;margin-bottom:8px">変 な 地 形</h1>
+    <p style="font-size:12px;color:#666;letter-spacing:3px">STRANGE TERRAIN GENERATOR</p>
+  </div>
+
+  <div id="content"></div>
+
+  <div id="gamePanel" style="max-width:700px;margin:0 auto 20px;padding:0 20px;">
+    <div class="section" style="margin-bottom:16px">
+      <h3>🧑‍🤝‍🧑 兄妹ステータス</h3>
+
+      <div id="statusGrid" style="
+    display:grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap:12px;
+  ">
+        <div style="border:1px solid #222638;background:#0a0a16;padding:12px;">
+          <div id="brotherStatus">読み込み中...</div>
+        </div>
+
+        <div style="border:1px solid #222638;background:#0a0a16;padding:12px;">
+          <div id="sisterStatus">読み込み中...</div>
+        </div>
+
+        <div style="border:1px solid #222638;background:#0a0a16;padding:12px;">
+          <div style="font-size:12px;color:#c7c7d4;letter-spacing:2px;margin-bottom:8px;">次の冒険</div>
+          <div id="timerStatus">読み込み中...</div>
+        </div>
+
+        <div style="border:1px solid #222638;background:#0a0a16;padding:12px;">
+          <div style="font-size:12px;color:#c7c7d4;letter-spacing:2px;margin-bottom:8px;">冒険ポイント</div>
+          <div id="adventurePointStatus">0</div>
+          <div id="pointGainFx" style="font-size:12px;color:#8bc34a;margin-top:6px;min-height:18px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="section" style="margin-bottom:16px">
+      <h3>📜 最近の冒険結果</h3>
+      <div id="adventureResult" style="line-height:1.9;color:#d8d2c8;font-size:14px">
+        まだ冒険していません。
+      </div>
+    </div>
+  </div>
+  <!--
+  <div class="section" style="margin-bottom:16px">
+    <h3>📚 地形図鑑</h3>
+    <div id="biomeDex" style="line-height:1.9;color:#d8d2c8;font-size:14px">
+      まだ地形が記録されていません。
+    </div>
+  </div>
+  -->
+  <div id="actionArea" style="max-width:700px;margin:0 auto;padding:24px 20px 0">
+
+    <div id="dungeonSetupView">
+      <p style="font-size:11px;color:#555;letter-spacing:3px;text-align:center;margin-bottom:12px">ダンジョン難易度</p>
+      <div class="diff-grid" id="diffGrid"></div>
+      <p id="diffDesc" style="font-size:11px;color:#444;text-align:center;margin-top:8px;letter-spacing:1px"></p>
+    </div>
+
+    <div id="dungeonActiveView" style="display:none; text-align:center;">
+      <div id="dungeonProgress"
+        style="font-size:16px; color:#c8c0b0; letter-spacing:4px; margin-bottom:16px; font-weight:bold;">
+        ダンジョン進行中
+      </div>
+
+      <div id="dungeonIntroPanel"
+        style="display:none; border:1px solid #222638; background:#0a0a16; padding:20px; margin-bottom:16px; border-radius:4px;">
+        <div id="dungeonIntroBody" style="line-height:1.9; color:#d8d2c8; font-size:14px;"></div>
+
+        <div style="text-align:center; margin-top:20px;">
+          <button class="gen-btn" id="enterDungeonBtn">この地形へ進む</button>
+        </div>
+      </div>
+
+      <!-- Linear Dungeon View Elements -->
+      <div id="dungeonFloorPanel"
+        style="border:1px solid #222638; background:#0a0a16; padding:16px; margin-bottom:16px; border-radius:4px;">
+        <div id="floorScenery"
+          style="font-size:14px; color:#d8d2c8; line-height:1.8; margin-bottom:12px; min-height:40px;">
+          (風景描写がここに入ります)
+        </div>
+        <div id="floorEvent" style="font-size:14px; color:#ffddaa; line-height:1.6; min-height:24px;">
+          (トラップや宝箱の結果)
+        </div>
+
+        <div id="proceedToBattleBtnWrap" style="margin-top:16px; display:none;">
+          <button class="gen-btn" id="proceedToBattleBtn">戦闘へ進む</button>
+        </div>
+      </div>
+
+      <div id="battleView" style="display:none; margin-top:24px;">
+        <div id="battleLogTerminal">
+          <!-- ログが流れる -->
+        </div>
+      </div>
+
+      <div id="nextFloorBtnWrap" style="display:none; margin-top:16px;">
+        <button class="gen-btn" id="proceedFloorBtn" onclick="proceedFloor()">次の階層へ</button>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="text-align:center;padding:20px 20px 32px">
+    <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">
+      <button class="gen-btn" id="genBtn" onclick="startDungeon()">ダンジョンに出発</button>
+      <button class="hist-btn" id="restBtn" onclick="restNow()">休む</button>
+    </div>
+
+    <div id="histBtnWrap" style="margin-top:12px;display:none">
+      <button class="hist-btn" onclick="toggleHistory()">履歴</button>
+    </div>
+  </div>
+
+  <div id="histPanel" style="max-width:700px;margin:0 auto 20px;padding:0 20px;display:none">
+    <div id="histList" style="border:1px solid #222;padding:12px;background:#0e0e1a;max-height:200px;overflow-y:auto">
+    </div>
+  </div>
+  <div id="empty" style="text-align:center;padding:60px 20px;color:#444;font-size:14px;letter-spacing:2px">
+    ボタンを押して地形を生成してください
+  </div>
+
+  <script src="js/engine-utils.js"></script>
+  <script src="js/data-biomes.js"></script>
+  <script src="js/data-world.js"></script>
+  <script src="js/data-architecture.js"></script>
+  <script src="js/data-events.js"></script>
+  <script src="js/data-skills.js"></script>
+  <script src="js/engine-battle.js"></script>
+  <script src="js/engine-save.js"></script>
+  <script src="js/engine-dungeon.js"></script>
+  <script src="js/main.js"></script>
+
+</body>
+
+</html>

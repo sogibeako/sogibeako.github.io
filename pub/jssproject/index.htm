@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>* JSProject // 湫埜と雨滴 *</title>
+    <link rel="preload" as="font" href="/seoremium/Seoremium_clg.ttf" type="ttf" crossorigin />
+    <style>
+        /* 色は出来るだけ、SB Creative出版『日本の美しい色と言葉』から取っていく。 */
+        /* 当ページはp256『しとしと』 */
+        /* 氷雨 #e3e8f1 */
+        /* 俄雨 #6290b1 */
+        /* 長雨 #afd3e6 */
+        /* 秋雨 #609aa0 */
+        /* 五月雨 #9ec8d1 */
+        @font-face {
+            font-family: "Seoremium_clg";
+            src: url("/seoremium/Seoremium_clg.ttf") format("truetype");
+            font-display: swap;
+        }
+
+        body {
+            font-size: 1rem;
+            background-color: #111822;
+            /* 青っぽい背景色 */
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+            line-height: 1.6;
+        }
+
+        h1 {
+            background-color: #609aa0;
+            /* 秋雨 */
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.5em;
+            /* 内側の余白で見た目よく */
+        }
+
+        h2 {
+            background-color: #609aa0;
+            /* 秋雨 */
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.5em;
+            /* 内側の余白で見た目よく */
+        }
+
+        .p_left {
+            text-align: left;
+        }
+
+        .wrapper {
+            max-width: 700px;
+            width: 80%;
+            margin: 50px auto;
+            padding: 20px;
+            border: 0px solid #111;
+            background-color: #afd3e6;
+            /* 長雨 */
+            font-family: inherit;
+        }
+
+        .inner_wrapper {
+            width: 600px;
+            margin: 10px auto;
+            padding: 20px;
+            border: 1px solid #111;
+            background-color: #ffffee;
+            font-family: inherit;
+        }
+
+        .grid-table {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 2px;
+        }
+
+        .grid-table2 {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 2px;
+        }
+
+        .cell {
+            border: 0px solid #ccc;
+            padding: 4px 8px;
+            line-break: strict;
+            /* 日本語の自然な改行ルールに従う */
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        img.top-image {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        hr {
+            border-width: 2px 0 0 0;
+            /* 線の太さ */
+            border-style: dashed;
+            /* 線の種類 */
+            border-color: #609aa0;
+            /* 線の色 */
+        }
+
+        .seoremium {
+            font-family: "Seoremium_clg";
+            font-size: 1.4rem;
+            font-weight: 599;
+            letter-spacing: 0.1rem;
+        }
+
+        .annotation {
+            font-size: 0.8rem;
+        }
+
+        .br-sp {
+            display: none;
+        }
+
+        .app-category {
+            margin-bottom: 64px;
+        }
+
+        .app-category h2 {
+            margin-bottom: 12px;
+            border-left: 6px solid #666;
+            padding-left: 12px;
+        }
+
+
+
+        .category-description {
+            margin-bottom: 24px;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .app-card {
+            border: 1px solid #ccc;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .app-card a {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+            padding: 16px;
+        }
+
+        .app-card img {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            object-fit: cover;
+            display: block;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .app-card h3 {
+            margin: 0 0 8px;
+            font-size: 1.1rem;
+        }
+
+        .app-card p {
+            margin: 0;
+            line-height: 1.7;
+            color: #444;
+        }
+
+        .app-card a:hover {
+            background: #f8f8f8;
+        }
+
+        /* ============================================================
+         案D: 雨窓ボタン（Canvas雨粒アニメーション背景）
+        ============================================================ */
+        .rain-window-btn {
+            position: relative;
+            width: 200px;
+            height: 64px;
+            background: rgba(17, 24, 34, 0.85);
+            border: 2px solid #609aa055;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: border-color 0.4s, box-shadow 0.4s;
+            margin: 0 auto;
+        }
+
+        .rain-window-btn canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .rain-window-btn .rw-label {
+            position: relative;
+            z-index: 1;
+            font-family: 'Zen Maru Gothic', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.2em;
+            color: #e3e8f1;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+            transition: text-shadow 0.4s;
+        }
+
+        .rain-window-btn:hover {
+            border-color: #9ec8d1;
+            box-shadow: 0 0 24px rgba(158, 200, 209, 0.15);
+        }
+
+        .rain-window-btn:hover .rw-label {
+            text-shadow: 0 0 10px rgba(158, 200, 209, 0.5), 0 1px 4px rgba(0, 0, 0, 0.6);
+        }
+
+        /* ====== レスポンシブ ====== */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1rem;
+            }
+
+            .rain-badge {
+                width: 140px;
+                height: 46px;
+            }
+
+            .rain-badge .badge-label {
+                font-size: 0.75rem;
+            }
+
+            .ripple-btn {
+                width: 150px;
+                height: 48px;
+            }
+
+            .rain-window-btn {
+                width: 160px;
+                height: 54px;
+            }
+
+            .drop-links-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media screen and (max-width: 600px) {
+            body {
+                font-size: 0.7rem;
+            }
+
+            .seoremium {
+                font-size: 1rem;
+            }
+
+            h1,
+            h2 {
+                font-size: 1rem;
+            }
+
+            .wrapper,
+            .inner_wrapper {
+                width: 95%;
+                padding: 10px;
+                word-wrap: break-word;
+                box-sizing: border-box;
+            }
+
+            .grid-table,
+            .grid-table2 {
+                grid-template-columns: 1fr;
+            }
+
+            .annotation {
+                font-size: 0.6rem;
+            }
+
+            .br-sp {
+                display: inline;
+            }
+        }
+    </style>
+    <script>
+        window.addEventListener("blur", () => pressed.clear());
+    </script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="p_left">
+            現在位置 : <a href="../index.html">ホーム</a> ＞ <a href="index.htm"><b>JS Project</b></a>
+        </div>
+        <h1>* JSProject *</h1>
+        <h3>このページは？</h3>
+        <hr />
+        LLMたちに習ったりAntigravityを活用しながら実験しているJavaScript作品置き場です。<br />
+        再利用などはご自由にどうぞ。教えてくれるとちょっとウレシイです。<br />
+        <br />
+
+        <section class="app-category">
+            <h2>ゲーム系</h2>
+            <p class="category-description">
+                画像を加工したり、視覚効果を試したりできるJavaScript作品です。
+            </p>
+
+            <div class="app-grid">
+                <article class="app-card">
+                    <a href="0011/index.htm">
+                        <img src="img/0011.png" alt="ASCII TET の操作画面">
+                        <h3>ASCII TET</h3>
+                        <p>3つのモードを持つASCII画面のテトリスです。</p>
+                    </a>
+                </article>
+                <article class="app-card">
+                    <a href="0015_topowalk.htm">
+                        <img src="img/0015.png" alt="Topowalk の操作画面">
+                        <h3>Topowalk</h3>
+                        <p>ヘンな位相空間上を歩くゲームです。特に無目的。clockwiseはちょっとヤバいです。</p>
+                    </a>
+                </article>
+                <article class="app-card">
+                    <a href="0025/index.html">
+                        <img src="img/0025.png" alt="Hungle Typing Game の操作画面">
+                        <h3>Hungle Typing Game</h3>
+                        <p>ハングルの単語や短文をタイピングするゲームです。</p>
+                    </a>
+                </article>
+        </section>
+
+        <section class="app-category">
+            <h2>音系</h2>
+            <p class="category-description">
+                音声生成、加工、可視化などを扱うJavaScript作品です。
+            </p>
+
+            <div class="app-grid">
+                <article class="app-card">
+                    <a href="0007_formulaSynth.htm">
+                        <img src="img/0007.png" alt="Formula Synthの操作画面">
+                        <h3>Formula Synth</h3>
+                        <p>数式から波形を生成するシンセサイザーです。音律変更が利きます。<br />キーボードで演奏機能はPCブラウザ限定です。</p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0007/0007_20260216.htm">
+                        <img src="img/0007r.png" alt="Formula Synth+ADSRFの操作画面">
+                        <h3>Formula Synth+ADSRF</h3>
+                        <p>Formula SynthのADSR+フィルター版。クラドニ図形が見られます。</p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0008_TEtuning.htm">
+                        <img src="img/0008.png" alt="TE Tuning Calcの操作画面">
+                        <h3>TE Tuning Calc</h3>
+                        <p>TE Tuning, POTE Tuningなどの調律法を計算します。分からない人はXenharmonic.wikiを閲覧のこと。
+                            Prime Basis Qに求めたい素数、Mapping Vにステップ数を入れてください。
+                        </p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0013/index.htm">
+                        <img src="img/0013.png" alt="Spectro Samplerの操作画面">
+                        <h3>Spectro Sampler</h3>
+                        <p>wavまたは画像を読み込んでスペクトログラムを弄れます。まだ未完成です。</p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0016_glitchMidi.htm">
+                        <img src="img/0016.png" alt="Glitch MIDIの操作画面">
+                        <h3>Glitch MIDI</h3>
+                        <p>midiファイルを読み込んでバグらせる。イルーム音楽とかお好きなら……。音楽は　脳が腐りそうよ。</p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0021_edo_scale.htm">
+                        <img src="img/0021.png" alt="EDO Scale Calculatorの操作画面">
+                        <h3>EDO Scale Calculator</h3>
+                        <p>MoS Scaleの解析。シンボルはLsだけじゃなくて、L≧M≧N≧...≧sとたくさん使えます。MoS Scale同士の足し算も出来ます。
+                            クリップボードにコピーしてMathSynthとかに貼ってもいいかも。
+                        </p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0022/index.htm">
+                        <img src="img/0022.png" alt="JI Explorerの操作画面">
+                        <h3>JI Explorer</h3>
+                        <p>純正音階探索機。LMNO...sの語形式にも出来るので、右上のEDO Scale Calculatorとの合わせ技（得られた純正音階をMOSで近似するとか）もあるかと思います。
+                            精密なconvexキャプチャが効かないのと、純正音階をクリップボードにコピーが出来ないためそこはこれから。</p>
+                    </a>
+                </article>
+            </div>
+        </section>
+
+        <section class="app-category">
+            <h2>画像系</h2>
+            <p class="category-description">
+                画像を加工したり、視覚効果を試したりできるJavaScript作品です。
+            </p>
+
+            <div class="app-grid">
+                <article class="app-card">
+                    <a href="0001_matrix_8bit.htm">
+                        <img src="img/0001.png" alt="8bit Matrix の操作画面">
+                        <h3>8bit Matrix</h3>
+                        <p>方眼上に並んだ数字が、文字色と背景色を激しく変更します。スマホOK。</p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0002_linea_and_blur.htm">
+                        <img src="img/0002.png" alt="Polyline & Blurの操作画面">
+                        <h3>Polyline & Blur</h3>
+                        <p>折れ線をランダム描画→ぼかし、を繰り返すデモ。PCブラウザ推奨。</p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0003_eb_bg.htm">
+                        <img src="img/0003.png" alt="Imageboundの操作画面">
+                        <h3>Imagebound</h3>
+                        <p>画像を読み込ませると揺らぐデモ。マザー2の戦闘画面が元ネタ。PCブラウザ推奨。</p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0004_mathPattern.htm">
+                        <img src="img/0004.png" alt="MathPattern Img Drawerの操作画面">
+                        <h3>MathPattern Img Drawer</h3>
+                        <p>数式を与えると画像を生成。スマホOK。</p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0005_hexTiling.htm">
+                        <img src="img/0005.png" alt="Hex Tilingの操作画面">
+                        <h3>Hex Tiling</h3>
+                        <p>画像を読み込ませると万華鏡のような画像を生成します。スマホOK。</p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0006_PenroseTiling.htm">
+                        <img src="img/0006.png" alt="Penrose Tilingの操作画面">
+                        <h3>Penrose Tiling</h3>
+                        <p>画像を読み込ませるとペンローズタイルに描き込みます。スマホOK。</p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0010/index.htm">
+                        <img src="img/0010.png" alt="Glitch Toolの操作画面">
+                        <h3>Glitch Tool</h3>
+                        <p>与えられた画像をバグっぽく加工します。</p>
+                    </a>
+                    <a href="0010/material.htm"><span style="color: blue">上書き用素材</span>があるので、こちらを読み込ませてよしなに。</a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0012/index.htm">
+                        <img src="img/0012.png" alt="Glitch Matrixの操作画面">
+                        <h3>Glitch Matrix</h3>
+                        <p>画像を読み込ませると、与えられた画像を16×16の方眼で分割し、色調を変えながら再配置。</p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0014_geometricVJ.htm">
+                        <img src="img/0014.png" alt="geometricVJの操作画面">
+                        <h3>geometricVJ</h3>
+                        <p>数式から与えられた画像のパレットや模様を連続変化。</p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0017_paletteAnimator.htm">
+                        <img src="img/0017.png" alt="Palette Animatorの操作画面">
+                        <h3>Palette Animator</h3>
+                        <p>画像を読み込ませてパレットを回転させてジラジラさせる。簡易なペイント機能もあります。</p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0018/index.htm">
+                        <img src="img/0018.png" alt="Rectangle Tile Generatorの操作画面">
+                        <h3>Rectangle Tile Generator</h3>
+                        <p>画像を組み合わせてタイルテクスチャを作成。目地処理あり。縦横比を変えられるので床フローリングなどにも。また、行か列の末尾に整数を書くと（a b 5みたいに）それぞれズラせます。</p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0019/0019_gif_merger.htm">
+                        <img src="img/0019.png" alt="GIF Mergerの操作画面">
+                        <h3>GIF Merger</h3>
+                        <p>アニメーションGIFをレイヤー的に統合します。上は透過させてね。</p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0023_geometricVJ2.htm">
+                        <img src="img/0023.png" alt="Geometric VJ2の操作画面">
+                        <h3>Geometric VJ 2</h3>
+                        <p>重たくなって新登場！ ……ではなく、GIF出力+Earthboundっぽいディストーションが出来るようになりました。</p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0024_glitchClock.htm">
+                        <img src="img/0024.png" alt="Glitch Clockの操作画面">
+                        <h3>Glitch Clock</h3>
+                        <p>有意味と無意味のあわいを漂う7セグデジタル時計。</p>
+                    </a>
+                </article>
+            </div>
+        </section>
+
+        <section class="app-category">
+            <h2>テキスト系</h2>
+            <p class="category-description">
+                テキストをいじったりして効果を得るJavaScript作品です。
+            </p>
+
+            <div class="app-grid">
+                <article class="app-card">
+                    <a href="0009/index.html">
+                        <img src="img/0009.png" alt="Glitch Poetの操作画面">
+                        <h3>Glitch Poet</h3>
+                        <p>入力された文字列をバグらせます。真価は詳細モード＋「異世界参照」オン＋「異世界データ」に無関係なものを入れること（必殺技名や捻った一言などがおすすめ）。己自身の意表すらも突く表現を作ってみませんか？
+                        </p>
+                    </a>
+                </article>
+
+                <article class="app-card">
+                    <a href="0020_glitchConverter.htm">
+                        <img src="img/0020.png" alt="Glitch Converterの操作画面">
+                        <h3>Glitch Converter</h3>
+                        <p>あらゆるものをバイナリ化して色んな表現をします。</p>
+                    </a>
+                </article>
+                <article class="app-card">
+                    <a href="0026/index.html">
+                        <img src="img/0026.png" alt="Multi-Keyboard Notepad の操作画面">
+                        <h3>Multi-Keyboard Notepad</h3>
+                        <p>入力支援。画面上のキーボードを見ながら韓国語、ロシア語、ギリシャ語のタイピングが出来ます。</p>
+                    </a>
+                </article>
+                <article class="app-card">
+                    <a href="0027_binaryGlitchLab.htm">
+                        <img src="img/0027.svg" alt="Binary Glitch Laboratory の操作画面">
+                        <h3>Binary Glitch Laboratory</h3>
+                        <p>Hex Editorでbyte列と構造を見ながら、画像・音声・テキストの実データ領域を確率的に操作する学習用ラボです。</p>
+                    </a>
+                </article>
+            </div>
+        </section>
+
+        <section class="app-category">
+            <h2>数学系</h2>
+            <p class="category-description">
+                数学勉強のためのJavaScript作品です。
+            </p>
+
+            <div class="app-grid">
+                <article class="app-card">
+                    <a href="0028/index.html">
+                        <img src="img/0028.png" alt="Eliptic Curve Visualizerの操作画面">
+                        <h3>Eliptic Vurve Visualizer</h3>
+                        <p>楕円曲線の和やn倍点を図示します。有限体モードもあります。
+                        </p>
+                    </a>
+                </article>
+            </div>
+        </section>
+
+        <br />
+        <hr />
+        <br />
+        <div style="text-align: center;">
+            <a href="../index.html" class="rain-window-btn">
+                <canvas data-rainwindow="true"></canvas>
+                <span class="rw-label">Back</span>
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        /* ============================================================
+           案D: 雨窓 — 常に降る雨粒
+           ============================================================ */
+        document.querySelectorAll('canvas[data-rainwindow]').forEach(cv => {
+            const dpr = window.devicePixelRatio || 1;
+            const parent = cv.parentElement;
+            const rect = parent.getBoundingClientRect();
+            cv.width = rect.width * dpr;
+            cv.height = rect.height * dpr;
+            const ctx = cv.getContext('2d');
+            ctx.scale(dpr, dpr);
+            const w = rect.width, h = rect.height;
+
+            const drops = Array.from({ length: 30 }, () => ({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                speed: 0.5 + Math.random() * 1.5,
+                len: 4 + Math.random() * 10,
+                opacity: 0.15 + Math.random() * 0.35,
+                width: 0.5 + Math.random() * 0.8
+            }));
+
+            // 水滴の着弾スプラッシュ
+            const splashes = [];
+
+            function draw() {
+                ctx.clearRect(0, 0, w, h);
+
+                // 雨粒
+                drops.forEach(d => {
+                    ctx.beginPath();
+                    ctx.moveTo(d.x, d.y);
+                    ctx.lineTo(d.x - 0.3, d.y + d.len);
+                    ctx.strokeStyle = `rgba(158,200,209,${d.opacity})`;
+                    ctx.lineWidth = d.width;
+                    ctx.stroke();
+                    d.y += d.speed;
+                    if (d.y > h) {
+                        splashes.push({ x: d.x, y: h - 2, r: 0, opacity: 0.4 });
+                        d.y = -d.len - Math.random() * 20;
+                        d.x = Math.random() * w;
+                    }
+                });
+
+                // スプラッシュ
+                splashes.forEach(s => {
+                    s.r += 0.3;
+                    s.opacity -= 0.015;
+                    if (s.opacity <= 0) return;
+                    ctx.beginPath();
+                    ctx.ellipse(s.x, s.y, s.r * 1.5, s.r * 0.5, 0, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(158,200,209,${s.opacity})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                });
+
+                // 古いスプラッシュを除去
+                while (splashes.length > 0 && splashes[0].opacity <= 0) splashes.shift();
+
+                requestAnimationFrame(draw);
+            }
+            draw();
+        });
+    </script>
+</body>
+
+</html>

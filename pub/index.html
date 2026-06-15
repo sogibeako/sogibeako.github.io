@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>* 湫埜と雨滴 *</title>
+    <link rel="preload" as="font" href="/seoremium/Seoremium41.ttf" type="ttf" crossorigin />
+    <style>
+        /* 色は出来るだけ、SB Creative出版『日本の美しい色と言葉』から取っていく。 */
+        /* 当ページはp256『しとしと』 */
+        /* 氷雨 #e3e8f1 */
+        /* 俄雨 #6290b1 */
+        /* 長雨 #afd3e6 */
+        /* 秋雨 #609aa0 */
+        /* 五月雨 #9ec8d1 */
+        @font-face {
+            font-family: "seoremium41";
+            src: url("/seoremium/seoremium41.ttf") format("truetype");
+            font-display: swap;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=Zen+Maru+Gothic:wght@400;700&display=swap');
+
+        body {
+            font-size: 1rem;
+            background-color: #111822;
+            /* 青っぽい背景色 */
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+            line-height: 1.6;
+        }
+
+        h1 {
+            background-color: #609aa0;
+            /* 秋雨 */
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.5em;
+            /* 内側の余白で見た目よく */
+        }
+
+        h2 {
+            background-color: #609aa0;
+            /* 秋雨 */
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.5em;
+            /* 内側の余白で見た目よく */
+        }
+
+        .p_left {
+            text-align: left;
+        }
+
+        .wrapper {
+            max-width: 700px;
+            width: 80%;
+            margin: 50px auto;
+            padding: 20px;
+            border: 0px solid #111;
+            background-color: #afd3e6;
+            /* 長雨 */
+            font-family: inherit;
+        }
+
+        .inner_wrapper {
+            width: 600px;
+            margin: 10px auto;
+            padding: 20px;
+            border: 1px solid #111;
+            background-color: #ffffee;
+            font-family: inherit;
+        }
+
+        .grid-table {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 2px;
+        }
+
+        .grid-table2 {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 2px;
+        }
+
+        .grid-table-menu {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 2px;
+            align-items: center;
+        }
+
+        .cell {
+            border: 0px solid #ccc;
+            padding: 4px 8px;
+            line-break: strict;
+            /* 日本語の自然な改行ルールに従う */
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        img.top-image {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        hr {
+            border-width: 2px 0 0 0;
+            /* 線の太さ */
+            border-style: dashed;
+            /* 線の種類 */
+            border-color: #609aa0;
+            /* 線の色 */
+        }
+
+        .seoremium {
+            font-family: "seoremium41";
+            font-size: 1.0rem;
+            font-weight: 599;
+            letter-spacing: 0.1rem;
+        }
+
+        .annotation {
+            font-size: 0.8rem;
+        }
+
+        .br-sp {
+            display: none;
+        }
+
+        /* ============================================================
+        案A: 雨滴バッジボタン（レトロ個人サイト風 88x31 オマージュ）
+        ============================================================ */
+        .rain-badge {
+            position: relative;
+            width: 160px;
+            height: 52px;
+            border: 2px solid;
+            background: #1a2a38;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .rain-badge .badge-icon {
+            width: 42px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .rain-badge .badge-icon canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .rain-badge .badge-label {
+            flex: 1;
+            text-align: center;
+            font-family: 'DotGothic16', monospace;
+            font-size: 0.9rem;
+            font-weight: bold;
+            letter-spacing: 0.12em;
+            padding-right: 6px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* カテゴリ色分け */
+        .rain-badge.diary {
+            border-color: #7ab8a8;
+            color: #7ab8a8;
+        }
+
+        .rain-badge.diary .badge-icon {
+            background: #7ab8a8;
+        }
+
+        .rain-badge.js {
+            border-color: #6290b1;
+            color: #6290b1;
+        }
+
+        .rain-badge.js .badge-icon {
+            background: #6290b1;
+            font-weight: bold;
+        }
+
+        .rain-badge.music {
+            border-color: #9ec8d1;
+            color: #9ec8d1;
+        }
+
+        .rain-badge.music .badge-icon {
+            background: #9ec8d1;
+        }
+
+        .rain-badge.novels {
+            border-color: #609aa0;
+            color: #609aa0;
+        }
+
+        .rain-badge.novels .badge-icon {
+            background: #609aa0;
+        }
+
+        .rain-badge.material {
+            border-color: #bea88b;
+            color: #bea88b;
+        }
+
+        .rain-badge.material .badge-icon {
+            background: #bea88b;
+        }
+
+
+        .rain-badge.gallery {
+            border-color: #7ab8a8;
+            color: #7ab8a8;
+        }
+
+        .rain-badge.gallery .badge-icon {
+            background: #7ab8a8;
+        }
+
+
+        .rain-badge.seoremium {
+            border-color: #6290b1;
+            font-family: "seoremium41";
+            color: #6290b1;
+        }
+
+        .rain-badge.seoremium .badge-icon {
+            background: #6290b1;
+        }
+
+        .rain-badge.column {
+            border-color: #9ec8d1;
+            color: #9ec8d1;
+        }
+
+        .rain-badge.column .badge-icon {
+            background: #9ec8d1;
+        }
+
+        .rain-badge.link {
+            border-color: #609aa0;
+            color: #609aa0;
+        }
+
+        .rain-badge.link .badge-icon {
+            background: #609aa0;
+        }
+
+        .rain-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(98, 144, 177, 0.35);
+        }
+
+        .rain-badge:hover .badge-label {
+            color: #ffffee;
+        }
+
+        @media screen and (max-width: 600px) {
+            body {
+                font-size: 0.7rem;
+            }
+
+            .seoremium {
+                font-size: 0.7rem;
+            }
+
+            h1,
+            h2 {
+                font-size: 1rem;
+            }
+
+            .wrapper,
+            .inner_wrapper {
+                width: 95%;
+                padding: 10px;
+                word-wrap: break-word;
+                box-sizing: border-box;
+            }
+
+            .grid-table,
+            .grid-table2 {
+                grid-template-columns: 1fr;
+            }
+
+            .annotation {
+                font-size: 0.6rem;
+            }
+
+            .br-sp {
+                display: inline;
+            }
+        }
+    </style>
+    <script src="js/index_secret_gesture.js"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="p_left">
+            現在位置 : <a href="../index.html"><b>ホーム</b></a>
+        </div>
+        <h1>* 湫埜と雨滴 *</h1>
+        Sorry, this page is in Japanese only.<br />
+        Thank you for understanding.<br />
+        <br />
+        <script type="text/javascript">
+            var imglist = new Array(
+                "top-image/top-0014.png",
+                "top-image/top-0015.png",
+                "top-image/top-0016.png",
+            );
+            var selectnum = Math.floor(Math.random() * imglist.length);
+            var output =
+                '<img src="' +
+                imglist[selectnum] +
+                '" class="top-image" alt="トップ画像。一埜の春イラスト。"' +
+                ">";
+            document.write(output);
+        </script>
+        <noscript>
+            <img src="top-image/top-0014.jpg" alt="トップ画像。一埜の春イラスト。" />
+        </noscript>
+        <img src="dream/dream.cgi?id=index" /><br />
+        <div class="annotation">
+            KENT Web様の<a href="https://www.kent-web.com/count/dream.html">『夢カウンター』</a>をお借りしてます。
+        </div>
+        <br />
+        <h2>* Information *</h2>
+        <h3>そもそも誰？ このサイトは何？</h3>
+        <hr />
+        Twitterでは「かずのこ」と名乗っています<span class="br-sp"><br /></span>（某プロゲーマーの方とは関係ありません）。<br />
+        名前の由来は、オリジナルキャラクターのもじりです。<br />
+        <br />
+        このサイトには私の創作物が集約されていくことになります。<br />
+        （あくまでアマチュアクオリティの物ですが。最近みんな上手いし……！）<br />
+        <br />
+        以前は他の名前を名乗って geocities などに<span class="br-sp"><br /></span>サイトを持っていました。<br />
+        SNSから一歩引いて、<span class="br-sp"><br /></span>思ったこととかをゆっくり書き溜める場所が<br />あればいいなと思って開設した次第です。<br />
+        <br />
+        このページは
+        <a href="https://lsv.jp/">Little Server</a> で作られています。<br />
+        <br />
+        <h2>* 直近の更新 / ひとこと *</h2>
+        <div class="grid-table">
+            <div class="cell p_left">2026/05/11</div>
+            <div class="cell p_left">
+                JSProjectを二件追加
+            </div>
+        </div>
+        　<br />
+        <h2>* Contents *</h2>
+        <h3>
+            メインのコンテンツたちです。
+        </h3>
+        <hr />
+        <div class="grid-table-menu">
+
+            <div class="cell p_left"> <a href="diary/20260406.htm" class="rain-badge diary">
+                    <div class="badge-icon"><canvas data-rain="true"></canvas></div>
+                    <span class="badge-label">Diary</span>
+                </a></div>
+            <div class="cell p_left">Twitterに書きづらかったりした日記。</div>
+            <div class="cell p_left">
+                <a href="jssproject/index.htm" class="rain-badge js">
+                    <div class="badge-icon"><canvas data-rain="true"></canvas></div>
+                    <span class="badge-label">JS Project</span>
+                </a>
+            </div>
+            <div class="cell p_left">LLMたちに習いつつ、色々実験中です。<br />最近はAntigravityで作ったものが多め。</div>
+            <div class="cell p_left"> <a href="music/music.htm" class="rain-badge music">
+                    <div class="badge-icon"><canvas data-rain="true"></canvas></div>
+                    <span class="badge-label">Music</span>
+                </a>
+            </div>
+            <div class="cell p_left">作曲したり生成した音楽が集積されていきます。</div>
+            <div class="cell p_left">
+                <a href="novels/index.htm" class="rain-badge novels">
+                    <div class="badge-icon"><canvas data-rain="true"></canvas></div>
+                    <span class="badge-label">Novels</span>
+                </a>
+            </div>
+            <div class="cell p_left">
+                Novelsと言いつつ、雑多なジャンルの（架空を描いた）創作文たちです。
+            </div>
+
+            <div class="cell p_left"> <a href="material/index.htm" class="rain-badge material">
+                    <div class="badge-icon"><canvas data-rain="true"></canvas></div>
+                    <span class="badge-label">Material</span>
+                </a></div>
+            <div class="cell p_left">作成した素材集です。</div>
+
+            <div class="cell p_left"> <a href="img_gallery/gallery.htm" class="rain-badge gallery">
+                    <div class="badge-icon"><canvas data-rain="true"></canvas></div>
+                    <span class="badge-label">Gallery</span>
+                </a></div>
+            <div class="cell p_left">時々触る生成イラスト集です。</div>
+
+            <div class="cell p_left"> <a href="seoremium/index.htm" class="rain-badge seoremium">
+                    <div class="badge-icon"><canvas data-rain="true"></canvas></div>
+                    <span class="badge-label">Seoremium</span>
+                </a>
+            </div>
+            <div class="cell p_left seoremium">es-a is-"seoremium"-nun sa yol!</div>
+
+            <div class="cell p_left"> <a href="column/columnIndex.htm" class="rain-badge column">
+                    <div class="badge-icon"><canvas data-rain="true"></canvas></div>
+                    <span class="badge-label">Column</span>
+                </a></div>
+            <div class="cell p_left">見る価値は決して保証できないコラムです。</div>
+            <div class="cell p_left"> <a href="link/index.htm" class="rain-badge link">
+                    <div class="badge-icon"><canvas data-rain="true"></canvas></div>
+                    <span class="badge-label">Link</span>
+                </a></div>
+            <div class="cell p_left">私の外部活動、あるいは片思いしてる素敵サイトたちへのリンク集です。</div>
+        </div>
+        <br />
+        <br />
+        <h2>* my link *</h2>
+        <h3>私の外部活動がまとまっています。</h3>
+        <hr />
+        <div class="grid-table2">
+            <div class="cell p_left">
+                <a href="https://x.com/mel_xen">Twitter (@mel_xen)</a>
+            </div>
+            <div class="cell p_left">
+                ほぼえっち絵RTer + 好きな人を見に行く用。<br />
+                フォローすると、えっちorかわいい絵が流れてきます。<br />
+                色んな方にお世話になっています。m(_ _)m<br /><br />
+            </div>
+            <div class="cell p_left">
+                <a href="https://fedibird.com/@htk5">Fedibird (@htk5)</a>
+            </div>
+            <div class="cell p_left">
+                同じく、いつも色んな方にお世話になっています。<span class="br-sp"><br /></span>
+                m(_ _)m<br /><br />
+            </div>
+            <div class="cell p_left">
+                <a href="https://note.com/mel_xen">note</a>
+            </div>
+            <div class="cell p_left">
+                ときおり思い出したように書かれるnote。<br /><br />
+            </div>
+            <div class="cell p_left">
+                <a href="https://www.pixiv.net/users/99421456">pixiv</a>
+            </div>
+            <div class="cell p_left">ほぼお話置き場。<br /><br /></div>
+            <div class="cell p_left">
+                <a href="https://soundcloud.com/user-722558847">soundcloud</a>
+            </div>
+            <div class="cell p_left">
+                音楽を聴くことが出来ます。<br />
+                データはそのうちこちらにお引っ越しするかも。<br /><br />
+            </div>
+            <div class="cell p_left">
+                <a href="https://www.youtube.com/@kazunoko_m8939/videos">YouTube</a>
+            </div>
+            <div class="cell p_left">
+                YouTubeチャンネルです。<br />ほぼsoundcloudと内容被りで放置気味💦
+            </div>
+        </div>
+        <h2>* 更新履歴 *</h2>
+        <div class="grid-table2">
+            <div class="cell p_left">2026/05/11</div>
+            <div class="cell p_left">
+                JSProjectを二件追加（タイピング）
+            </div>
+            <div class="cell p_left">2026/04/16</div>
+            <div class="cell p_left">
+                JSProjectを一件追加（時計）、ASCII TET更新
+            </div>
+            <div class="cell p_left">2026/04/07</div>
+            <div class="cell p_left">
+                JSProjectを二件追加
+            </div>
+            <div class="cell p_left">2026/03/29</div>
+            <div class="cell p_left">
+                JSProjectを一件追加／Materialページを作成／Novelsにコピーボタンを追加
+            </div>
+            <div class="cell p_left">2026/03/28<br /></div>
+            <div class="cell p_left">JS Projectを三件追加。</div>
+            <div class="cell p_left">2026/03/17<br /></div>
+            <div class="cell p_left">JS Projectを二件追加。</div>
+            <div class="cell p_left">2026/03/07<br /></div>
+            <div class="cell p_left">デザインを大幅改修。</div>
+            <div class="cell p_left">2026/02/20<br /></div>
+            <div class="cell p_left">JS Projectを四件追加+007の更新。</div>
+            <div class="cell p_left">2026/01/13</div>
+            <div class="cell p_left">JS Projectを一件追加。<br /></div>
+            <div class="cell p_left">2026/01/01</div>
+            <div class="cell p_left">
+                トップ絵をお正月仕様にしてみました。<br />
+                7枚くらいのうちからランダムで出ます。<br />
+            </div>
+            <div class="cell p_left">2025/12/26</div>
+            <div class="cell p_left">
+                カウンターを設置しました。<br />
+                同一IPは一日1回まで回ります。ほそぼそと回ってゆけ……。<br />
+            </div>
+            <div class="cell p_left">2025/12/12</div>
+            <div class="cell p_left">
+                トップ絵更新。<br />
+                <a href="img_gallery/gallery.htm">ギャラリー</a>
+                にNSFW的な何かを追加しました。<br />
+                （いにしえのドラッグ・アンド・ドロップとか試してみてください）
+            </div>
+            <div class="cell p_left">2025/12/07</div>
+            <div class="cell p_left">
+                コラムに<a href="column/music/waveform_museum.htm">波形博物館</a>のページを追加。
+            </div>
+            <div class="cell p_left">2025/11/17</div>
+            <div class="cell p_left">
+                <a href="music/music.htm">音楽</a>のページを作成。
+            </div>
+            <div class="cell p_left">2025/10/01</div>
+            <div class="cell p_left">細かく調整、片思いリンクを二件追加。</div>
+            <div class="cell p_left">2025/08/25</div>
+            <div class="cell p_left">
+                <a href="/seoremium/index.htm"><span class="seoremium">seoremium</span></a>のページを作成。
+            </div>
+            <div class="cell p_left">2025/08/13</div>
+            <div class="cell p_left">JS Projectを一件追加。<br /></div>
+            <div class="cell p_left">2025/08/04</div>
+            <div class="cell p_left">JS Projectを三件追加。<br /></div>
+            <div class="cell p_left">2025/07/27</div>
+            <div class="cell p_left">
+                <a href="img_gallery/gallery.htm">ギャラリー</a>を追加。<br />
+            </div>
+            <div class="cell p_left">2025/07/15</div>
+            <div class="cell p_left">JS Projectを一件追加。<br /></div>
+            <div class="cell p_left">2025/07/10</div>
+            <div class="cell p_left">Diaryの欄を追加。<br /></div>
+            <div class="cell p_left">2025/06/24</div>
+            <div class="cell p_left">Novelsを数件追加。<br /></div>
+            <div class="cell p_left">2025/05/14</div>
+            <div class="cell p_left">
+                index.htmlを仮作成。JS Projectを二件追加。<br />
+            </div>
+        </div>
+        <br />
+        <img src="top-image/top-0001.png"
+            alt="トップ画像。横長の構図で、画像の左半分を、青いロングヘア、ベレー帽、灰色の瞳、赤い眼鏡、黒のジャンパースカート、白いワイシャツとタイツ、ローファー、赤いリボンの9歳の少女『水原一埜』が大きく占めます。彼女は体を横向きに座り、ヒマワリを胸に、微笑んだ表情であなたを見つめています。時間帯は薄暮時かもしれません、黄色い満月が山のすぐそばに降りてきているので。少女の背景には何本かの木陰、連なる野山、広がる湖か川は月光を反射しており、その畔には灯篭が一つ輝いています。風が吹いているのか少女の髪は少し揺れ、月光の影になる部分には光の加減のためかピンク色の色調が加わっています。少女の足元には紫色の野花が咲いています。画像の全体的な色調は青を基調としており、涼しく静かな雰囲気を感じるのではないでしょうか。"
+            class="top-image" /><br />
+    </div>
+    <p style="text-align: center; color: #e3e8f1">★☆ since 2025/05/14 ☆★</p>
+    <script>
+        /* ============================================================
+           案A: バッジ内の小さな雨粒アニメーション
+        ============================================================ */
+        document.querySelectorAll('canvas[data-rain]').forEach(cv => {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = cv.parentElement.getBoundingClientRect();
+            cv.width = rect.width * dpr;
+            cv.height = rect.height * dpr;
+            const ctx = cv.getContext('2d');
+            ctx.scale(dpr, dpr);
+            const w = rect.width, h = rect.height;
+
+            const drops = Array.from({ length: 12 }, () => ({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                speed: 0.3 + Math.random() * 0.6,
+                len: 3 + Math.random() * 5,
+                opacity: 0.3 + Math.random() * 0.5
+            }));
+
+            function draw() {
+                ctx.clearRect(0, 0, w, h);
+                drops.forEach(d => {
+                    ctx.beginPath();
+                    ctx.moveTo(d.x, d.y);
+                    ctx.lineTo(d.x, d.y + d.len);
+                    ctx.strokeStyle = `rgba(255,255,238,${d.opacity})`;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    d.y += d.speed;
+                    if (d.y > h) { d.y = -d.len; d.x = Math.random() * w; }
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        });
+    </script>
+</body>
+
+</html>

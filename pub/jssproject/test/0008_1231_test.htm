@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<title>xen-calc (TE / POTE)</title>
+
+<!-- ml-matrix (UMD) -->
+<script src="https://cdn.jsdelivr.net/npm/ml-matrix@6.12.1/matrix.umd.js"></script>
+
+<style>
+  textarea {
+    width: 100%;
+    height: 6em;
+  }
+  .row {
+    display: flex;
+    gap: 12px;
+  }
+  .col {
+    flex: 1;
+  }
+  pre {
+    background: #111;
+    color: #eee;
+    padding: 12px;
+    white-space: pre-wrap;
+  }
+</style>
+
+<div class="row">
+  <div class="col">
+    <h3>Prime basis Q</h3>
+    <input id="primes" value="2 3 5 7" style="width: 100%" />
+    <h3>Mapping V (rows; cols)</h3>
+    <textarea id="V">[1 0 2 -1; 0 5 1 12]</textarea>
+
+    <button id="btnTE">TE tuning map</button>
+    <button id="btnPOTE">POTE tuning map</button>
+  </div>
+
+  <div class="col">
+    <h3>Output</h3>
+    <pre id="out"></pre>
+  </div>
+</div>
+
+<script>
+  const { Matrix, SingularValueDecomposition } = mlMatrix;
+
+  function parseVector(s) {
+    return s
+      .trim()
+      .replace(/[<>[\]]/g, "")
+      .split(/[\s,]+/)
+      .filter(Boolean)
+      .map(Number);
+  }
+
+  function parseMatrix(s) {
+    // formats: [1 2; 3 4] or 1 2\n3 4
+    const t = s.trim().replace(/^\[|\]$/g, "");
+    const rows = t.includes(";") ? t.split(";") : t.split(/\n+/);
+
+    const data = rows.map((r) =>
+      r
+        .trim()
+        .split(/[\s,]+/)
+        .filter(Boolean)
+        .map(Number)
+    );
+    const cols = data[0]?.length ?? 0;
+    if (!cols || data.some((r) => r.length !== cols))
+      throw new Error("Matrix parse error: ragged rows");
+    return new Matrix(data);
+  }
+
+  function log2(x) {
+    return Math.log(x) / Math.log(2);
+  }
+
+  // Moore–Penrose pseudoinverse via SVD (small matrices向けの堅実ルート)
+  function pinv(A, eps = 1e-12) {
+    const svd = new SingularValueDecomposition(A);
+    const U = svd.leftSingularVectors;
+    const V = svd.rightSingularVectors;
+    const s = svd.diagonal; // singular values
+    const thr = svd.threshold; // library's threshold hint :contentReference[oaicite:13]{index=13}
+
+    const m = A.rows,
+      n = A.columns;
+    const Sinv = Matrix.zeros(n, m);
+
+    const cutoff = Math.max(thr, eps);
+    for (let i = 0; i < s.length; i++) {
+      if (s[i] > cutoff) Sinv.set(i, i, 1 / s[i]);
+    }
+    // A^+ = V * Σ^+ * U^T
+    return V.mmul(Sinv).mmul(U.transpose());
+  }
+
+  function diag(arr) {
+    const n = arr.length;
+    const D = Matrix.zeros(n, n);
+    for (let i = 0; i < n; i++) D.set(i, i, arr[i]);
+    return D;
+  }
+
+  function fmtRowVector(row) {
+    return row
+      .map((x) => (Number.isFinite(x) ? x.toFixed(6) : String(x)))
+      .join(", ");
+  }
+
+  // TE tuning map (octavesベースで計算 → 最後にcents表示も可能)
+  function teTuningMapOctaves(V, primes) {
+    // W = diag(1/log2(Q)) :contentReference[oaicite:14]{index=14}
+    const w = primes.map((p) => 1 / log2(p));
+    const W = diag(w);
+
+    const VW = V.mmul(W);
+
+    // JW = <1 1 ... 1] (octavesでJ=log2(Q)なら、J*Wで全部1になる) :contentReference[oaicite:15]{index=15}
+    const JW = new Matrix([primes.map((_) => 1)]); // 1×n row vector
+
+    // G = JW * VW^+ :contentReference[oaicite:16]{index=16}
+    const G = JW.mmul(pinv(VW));
+
+    // T = G * V :contentReference[oaicite:17]{index=17}
+    const T = G.mmul(V); // 1×n : prime tuning map in octaves
+    return T;
+  }
+
+  function poteFromTe(T) {
+    const t1 = T.get(0, 0); // tuning of 2 :contentReference[oaicite:18]{index=18}
+    return T.mul(1 / t1);
+  }
+
+  function toCentsRow(T_oct) {
+    return T_oct.to1DArray().map((x) => x * 1200);
+  }
+
+  function show(obj) {
+    document.getElementById("out").textContent = obj;
+  }
+
+  document.getElementById("btnTE").onclick = () => {
+    try {
+      const primes = parseVector(document.getElementById("primes").value);
+      const V = parseMatrix(document.getElementById("V").value);
+      const T = teTuningMapOctaves(V, primes);
+      show(
+        "TE tuning map (octaves):\n" +
+          fmtRowVector(T.to1DArray()) +
+          "\n\nTE tuning map (cents):\n" +
+          fmtRowVector(toCentsRow(T))
+      );
+    } catch (e) {
+      show(String(e));
+    }
+  };
+
+  document.getElementById("btnPOTE").onclick = () => {
+    try {
+      const primes = parseVector(document.getElementById("primes").value);
+      const V = parseMatrix(document.getElementById("V").value);
+      const T = teTuningMapOctaves(V, primes);
+      const P = poteFromTe(T);
+      show(
+        "POTE tuning map (octaves):\n" +
+          fmtRowVector(P.to1DArray()) +
+          "\n\nPOTE tuning map (cents):\n" +
+          fmtRowVector(toCentsRow(P))
+      );
+    } catch (e) {
+      show(String(e));
+    }
+  };
+</script>
+</html>

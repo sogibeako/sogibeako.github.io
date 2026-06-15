@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IUTの形式化から不完全性定理へ * 湫埜と雨滴 *</title>
+    <style>
+        /* 色テーマ：p64『ゆうぐれ』より */
+        /* 薄暮 #b8a4c8 */
+        /* 黄昏 #6a5b7b */
+        /* 夕映 #e8c6a0 */
+        /* 宵闇 #3d3250 */
+        /* 暮靄 #9b8bb0 */
+
+        body {
+            font-size: 1rem;
+            background-color: #1a1525;
+            margin: 0;
+            padding: 0;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        h1 {
+            background-color: #6a5b7b;
+            color: #e8c6a0;
+            padding: 0.5em;
+        }
+
+        h2 {
+            background-color: #9b8bb0;
+            color: black;
+            padding: 0.2em;
+        }
+
+        h3 {
+            background-color: #e8c6a0;
+            color: black;
+            padding: 0.1em;
+        }
+
+        .wrapper {
+            max-width: 700px;
+            width: 80%;
+            margin: 50px auto;
+            padding: 20px;
+            border: 0px solid #111;
+            background-color: #d8cce6;
+            font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+        }
+
+        .inner_wrapper {
+            width: 600px;
+            margin: 10px auto;
+            padding: 20px;
+            border: 1px solid #111;
+            background-color: #ffffee;
+            font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", sans-serif;
+        }
+
+        .eqwrap {
+            overflow-x: auto;
+            margin: 0.5em 0;
+        }
+
+        hr {
+            border-width: 2px 0 0 0;
+            border-style: dashed;
+            border-color: #6a5b7b;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1em 0;
+        }
+
+        table th,
+        table td {
+            border: 1px solid #666;
+            padding: 0.4em 0.6em;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #b8a4c8;
+        }
+
+        ol {
+            font-weight: bold;
+        }
+
+        ol li {
+            font-weight: normal;
+        }
+
+        .p_left {
+            text-align: left;
+        }
+
+        details {
+            margin: 1em 0;
+            padding: 0.5em;
+            border: 1px solid #6a5b7b;
+            border-radius: 4px;
+            background-color: #eee8f4;
+        }
+
+        details summary {
+            cursor: pointer;
+            font-weight: bold;
+            color: #333;
+        }
+
+        pre.code {
+            background-color: #2d2540;
+            color: #c8bee0;
+            padding: 1em;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: "Consolas", "Courier New", monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        @media screen and (max-width: 600px) {
+            body {
+                font-size: 0.7rem;
+            }
+
+            h1,
+            h2 {
+                font-size: 1rem;
+            }
+
+            .wrapper,
+            .inner_wrapper {
+                width: 95%;
+                padding: 10px;
+                word-wrap: break-word;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="p_left">
+            現在位置 : <a href="../index.html">ホーム</a> ＞ Diary ＞
+            <a href="iut_formalization.htm"><b>IUTの形式化から不完全性定理へ</b></a>
+        </div>
+        <hr />
+
+        <h1>IUTの形式化から不完全性定理へ——構文と意味の狭間を旅する</h1>
+
+        望月新一氏によるIUT（宇宙際タイヒミュラー理論）のLean形式化の講演を出発点にして、
+        種と変異、統語的圏、ゲーデル数、不完全性定理、順序数解析、巨大基数……と、
+        「形式的体系は自分自身について何を語れるか」を巡る旅をしてみました。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 1. IUTの形式化 ===== -->
+        <h2>1. IUTの形式化：コミュニケーションとしてのLean</h2>
+
+        <h3>1.1 なぜ形式化するのか</h3>
+        望月氏は、Lean形式化の意義を単なる「論理的正しさの検証」ではなく、
+        IUTの論理構造を誤解の余地なく伝えるための<strong>コミュニケーションツール</strong>として位置づけています。<br /><br />
+
+        IUTをめぐっては、自然言語での説明が悪循環に陥ってきたと言います。
+        「論理は実は単純だ」と説明しても「そんな単純な論理からABC予想が出るはずがない」と返され、
+        「原論文を読んでほしい」と言えば「正しいという確信がないと読む気になれない」と返される——
+        この循環を断ち切れる最初の技術がLean形式化だ、という主張です。<br />
+        <br />
+
+        <h3>1.2 技術面の概要</h3>
+        IUT形式化を5段階に分けて計画しており、現在は第1段階（第3論文の定理3.11→3.12の部分）に集中。
+        約70行のスケルトン的Leanコードを書き上げた段階です。
+        この部分は最も議論を呼んだ箇所であり、
+        \( n \) 乗写像（テータリンク）の入出力に対する「同時比較」の論理を扱っています。<br />
+        <br />
+
+        <h3>1.3 数学的な骨格</h3>
+        整域 \( R \) に群 \( G \) が作用する設定で、\( n \) 乗写像は可換モノイドの同型を与えるが
+        環準同型ではない（加法と非互換）。
+        IUTの核心は、この非対称な \( n \) 乗写像を挟んで二つの環構造を「貼り合わせ」たとき、
+        純粋に群論的（コリック）なデータだけから環構造の一部を
+        <strong>遠アーベル幾何</strong>で復元し、
+        適度な不定性のもとで両側を同一の「容器」の中で比較できるようにすることです。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 2. 種と変異 ===== -->
+        <h2>2. 種と変異——モデルに依存しない数学</h2>
+
+        <h3>2.1 関手的アルゴリズムとは</h3>
+        IUTの根幹にある概念が<strong>関手的アルゴリズム</strong>で、
+        <strong>種（species）</strong>と<strong>変異（mutation）</strong>という枠組みで定式化されます。<br /><br />
+
+        通常の数学では、「群」「環」「スキーム」といった対象の「型」と、
+        ある型から別の型への構成手続きを扱います。
+        関手的アルゴリズムとは、この手続きが特定のZFCモデルに依存せず、
+        <strong>集合論的な論理式によって定義される</strong>という意味での「アルゴリズム」です。<br />
+        <br />
+
+        <h3>2.2 種と変異の定義</h3>
+        <table>
+            <tr>
+                <th>概念</th>
+                <th>意味</th>
+                <th>古典的対応物</th>
+            </tr>
+            <tr>
+                <td>種（species）</td>
+                <td>数学的対象の型を、ZFCモデルに依存しない論理式で定義したもの</td>
+                <td>圏</td>
+            </tr>
+            <tr>
+                <td>変異（mutation）</td>
+                <td>ある種から別の種への構成手続き（やはりモデル非依存）</td>
+                <td>関手</td>
+            </tr>
+        </table>
+
+        普通の数学では「群」と言えば、暗黙のうちにある特定のZFCモデルの中で定義しますよね。
+        しかしその定義自体はどのモデルでも同じ論理式で書ける。
+        望月氏の「種」は、その<strong>論理式そのものの段階</strong>に留まるわけです。<br /><br />
+
+        どのZFCモデルに入れてもそのモデルの中に「群の圏」が生まれるけど、
+        種はそのどれか特定のモデルに住んでいるわけではない。<br />
+        <br />
+
+        <h3>2.3 なぜIUTでこれが必要か</h3>
+        テータリンクで二つの「環論の世界」を貼り合わせるとき、
+        それぞれの側が異なるZFCモデルのようなものに対応しているため、
+        片方の宇宙の中だけで定義された圏や関手では
+        「両方の側にまたがる構成」を記述できない。
+        論理式のレベルまで抽象化しておけば、
+        「同じアルゴリズム（＝変異）を両側に適用する」ことが意味を持つ——という構造です。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 3. 統語的圏 ===== -->
+        <h2>3. 統語的圏——構文の世界で閉じた圏</h2>
+
+        <h3>3.1 統語的圏（syntactic category）とは</h3>
+        一階理論 \( T \)（ここではZFC）が与えられたとき、
+        その理論の「論理式」たちから圏を作る構成です：<br /><br />
+
+        <ul>
+            <li><strong>対象</strong>：\( T \) の言語で書ける論理式（\( T \)-証明可能な同値性で割ったもの）</li>
+            <li><strong>射</strong>：ある論理式 \( \varphi(x) \) から別の論理式 \( \psi(y) \) への、
+                \( T \) 内で定義可能な構成手続き</li>
+        </ul>
+
+        意味論（モデル、集合の世界）に一切降りずに、
+        純粋に<strong>構文の側</strong>だけで圏を構成するので「統語的」。<br />
+        <br />
+
+        <h3>3.2 群の理論での具体例</h3>
+        群の理論 \( T \) の統語的圏 \( \mathrm{Syn}(T) \) を考えてみます。<br /><br />
+
+        対象の例：
+        <ul>
+            <li>\( \varphi_1(x) = \) 「\( x = x \)」（恒真式＝任意の元）</li>
+            <li>\( \varphi_2(x) = \) 「\( x \cdot x = e \)」（位数1か2の元）</li>
+            <li>\( \varphi_3(x) = \) 「\( x = e \)」（単位元だけ）</li>
+        </ul>
+
+        射の例：
+        <ul>
+            <li>\( \varphi_3 \to \varphi_2 \)：\( T \) 内で「\( x = e \Rightarrow x \cdot x = e \)」が証明可能だから</li>
+            <li>\( \varphi_1 \to \varphi_1 \)：「\( x \mapsto x^{-1} \)」も射になる（\( T \) 内で一意存在が証明可能）</li>
+        </ul>
+
+        意味論側では、具体的な群 \( \mathbb{Z}/4\mathbb{Z} \) を持ってくると
+        \( \varphi_2 \) は \( \{0, 2\} \)、\( \varphi_3 \) は \( \{0\} \) に解釈される。
+        \( \mathbb{Z}/3\mathbb{Z} \) では両方とも \( \{0\} \) になる。
+        統語的圏はこういうモデル依存の偶然を捨象して、
+        <strong>構文的に証明可能な関係だけ</strong>を射として認めます。<br />
+        <br />
+
+        <h3>3.3 完全性定理との関係</h3>
+        個々のモデルへの解釈関手は一般に忠実とは限りません。
+        しかし<strong>全モデルを合わせて見れば忠実性が回復する</strong>——
+        これはゲーデルの完全性定理と本質的に同じ内容です：
+        <div class="eqwrap">
+            \[ T\text{-証明可能} \iff \text{すべてのモデルで成り立つ} \]
+        </div>
+        <br />
+
+        <h3>3.4 種・変異との対応</h3>
+        この枠組みで見ると：
+        <ul>
+            <li>望月氏の「種」＝ 統語的圏の対象（論理式 \( \varphi \)）</li>
+            <li>望月氏の「変異」＝ 統語的圏の射（理論 \( T \) 内で定義可能な構成手続き）</li>
+        </ul>
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 4. Leanと統語的圏 ===== -->
+        <h2>4. Leanの型システム——もう一つの統語的圏</h2>
+
+        <h3>4.1 論理式の構文木を帰納型として定義する</h3>
+        Lean上でZFCの統語的圏を実装するとき、
+        論理式をデータとして直接定義できます：
+
+        <pre class="code">-- ZFCの言語の「論理式」
+inductive Formula where
+  | mem : Term → Term → Formula        -- x ∈ y
+  | eq  : Term → Term → Formula        -- x = y
+  | not : Formula → Formula            -- ¬φ
+  | and : Formula → Formula → Formula  -- φ ∧ ψ
+  | forall_ : Nat → Formula → Formula  -- ∀xₙ. φ
+  -- ...</pre>
+
+        これが統語的圏の「対象の素材」。
+        たとえば \( \forall x_0.\, (x_0 \in x_1 \lor x_0 = x_0) \) は
+        構文木としてそのままデータになります。<br />
+        <br />
+
+        <h3>4.2 Leanの型がすでに「種」を体現している</h3>
+        しかしLeanで普通に数学をやるとき：
+
+        <pre class="code">structure Group where
+  carrier : Type
+  mul : carrier → carrier → carrier
+  e : carrier
+  assoc : ∀ a b c, mul (mul a b) c = mul a (mul b c)
+  -- ...</pre>
+
+        この <code>Group</code> という型定義自体が、
+        ZFCの統語的圏の対象と<strong>本質的に同じ役割</strong>を果たしています。
+        特定の群を指しているのではなく、「群という構造の仕様」を記述している。<br /><br />
+
+        だから望月氏は、IUTの段階1〜2については
+        ZFCの一階理論としての明示的な形式化なしに、
+        Leanの型システムで種と変異の論理を表現できると判断しました。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 5. ゲーデル数 ===== -->
+        <h2>5. ゲーデル数化——論理式を自然数に圧縮する</h2>
+
+        <h3>5.1 構文木と自然数の対応</h3>
+        Leanの帰納型が構文木を直接扱うのに対して、
+        ゲーデル数化は論理式を素数のべき乗の積として
+        一つの自然数にコードする方法です。<br /><br />
+
+        記号列 \( s_1 s_2 s_3 \) を
+        \( 2^{s_1} \times 3^{s_2} \times 5^{s_3} \) のようにコードする。
+        素因数分解の一意性があるので、自然数から元の記号列を一意に復元できます。<br /><br />
+
+        三つのアプローチが同じ情報の異なる実現です：
+
+        <table>
+            <tr>
+                <th>方式</th>
+                <th>データの形</th>
+                <th>操作</th>
+            </tr>
+            <tr>
+                <td>構文木（Lean帰納型）</td>
+                <td>木構造</td>
+                <td>パターンマッチング</td>
+            </tr>
+            <tr>
+                <td>ゲーデル数</td>
+                <td>自然数</td>
+                <td>素因数分解＋構文解析</td>
+            </tr>
+            <tr>
+                <td>統語的圏</td>
+                <td>同値類</td>
+                <td>証明可能性の判定</td>
+            </tr>
+        </table>
+
+        <h3>5.2 何が復元できて、何が復元できないか</h3>
+        ゲーデル数化で算術の内部に表現できるのは<strong>構文的な操作</strong>であって、
+        意味論的な真偽ではありません（後者はタルスキの定義不可能性定理により不可能）。<br /><br />
+
+        具体的に表現できるのはこういうことです：
+        <ul>
+            <li>「自然数 \( n \) は、ある論理式のゲーデル数である」</li>
+            <li>「自然数 \( p \) は、論理式 \( \varphi \) の証明のゲーデル数である」</li>
+            <li>つまり「\( \varphi \) の証明が存在する」は \( \exists p.\, \mathrm{Proof}(p, \lceil\varphi\rceil) \) と書ける</li>
+        </ul>
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 6. 不完全性定理 ===== -->
+        <h2>6. 不完全性定理——自己言及の帰結</h2>
+
+        <h3>6.1 自己言及文の構成</h3>
+        算術が扱えるということは、自分自身の論理式と証明をコードして
+        自分自身について語れるということ。
+        ゲーデルが構成したのは「<strong>この文自身は証明可能でない</strong>」と主張する文 \( G \) です。<br /><br />
+
+        もし \( G \) が証明可能なら矛盾。\( G \) の否定が証明可能でも矛盾。
+        だから \( G \) は証明も反証もできない。<br />
+        <br />
+
+        <h3>6.2 不完全性が生じる条件</h3>
+        この現象が生じる条件は
+        「<strong>無限に多くの対象</strong>」と「<strong>かけ算程度の表現力</strong>」の合わせ技です。<br /><br />
+
+        かけ算が本質的に効いています：
+        <table>
+            <tr>
+                <th>体系</th>
+                <th>演算</th>
+                <th>完全？</th>
+            </tr>
+            <tr>
+                <td>プレスバーガー算術</td>
+                <td>たし算だけ</td>
+                <td>完全（不完全性なし）</td>
+            </tr>
+            <tr>
+                <td>ロビンソン算術Q</td>
+                <td>たし算＋かけ算（帰納法なし）</td>
+                <td>不完全</td>
+            </tr>
+        </table>
+
+        かけ算があると、素数のべき乗の積によるコード化が可能になり、
+        一つの自然数の中に複数の独立な情報を埋め込める。
+        これは「ビットの独立性」とも言えて、
+        チューリングマシンのテープが各セルに独立な記号を持てるのと同じ構造です。<br /><br />
+
+        <strong>停止問題と不完全性定理は、本質的に同じ現象の二つの顔</strong>です。<br />
+        <br />
+
+        <hr /><br />
+
+        <!-- ===== 前半のまとめ ===== -->
+        <h2>ここまでの道のり</h2>
+
+        IUTの形式化という具体的な試みから出発して、
+        「形式的体系は自分自身について何を語れて、何を語れないか」という問いに至りました。<br /><br />
+
+        <div class="eqwrap">
+            \[ \boxed{\text{種と変異} \longleftrightarrow \text{統語的圏}
+            \longleftrightarrow \text{Leanの型}
+            \longleftrightarrow \text{ゲーデル数}
+            \longrightarrow \text{不完全性}} \]
+        </div>
+
+        後半では、この先にある世界——<strong>順序数解析</strong>（証明力の精密な測定）、
+        <strong>巨大基数</strong>（集合論的宇宙の高さ）、
+        <strong>強制法</strong>（モデルの多様性）——を辿り、
+        最終的にIUTの「異なるZFCモデルをまたぐ」という発想へと一周します。<br /><br />
+
+        <a href="iut_formalization_2.htm">→ 後半：順序数解析から巨大基数へ</a><br />
+        <br />
+
+        <hr />
+        <br />
+
+    </div>
+</body>
+
+</html>

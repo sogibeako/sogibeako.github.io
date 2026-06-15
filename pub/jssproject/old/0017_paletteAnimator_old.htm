@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palette Animator</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --accent-color: #bb86fc;
+            --border-color: #333;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            margin-top: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .canvas-panel {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        canvas {
+            image-rendering: pixelated;
+        }
+
+        .swatches {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 10px;
+        }
+
+        .swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .swatch:hover {
+            transform: scale(1.1);
+        }
+
+        .swatch.selected {
+            border-color: var(--accent-color);
+        }
+
+        .swatch-drag-over {
+            border-left: 4px solid var(--accent-color);
+        }
+
+        button {
+            background: #333;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #444;
+            border-color: #666;
+        }
+
+        button.primary {
+            background: var(--accent-color);
+            color: #000;
+            border-color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        button.primary:hover {
+            background: #9965f4;
+            border-color: #9965f4;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        select,
+        input[type="number"] {
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 6px;
+            border-radius: 4px;
+            width: 100%;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .controls-row>* {
+            flex: 1;
+            margin-top: 0;
+        }
+
+        .drop-zone {
+            width: 100%;
+            height: 150px;
+            border: 2px dashed #666;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .drop-zone:hover,
+        .drop-zone.dragover {
+            border-color: var(--accent-color);
+            background: rgba(187, 134, 252, 0.1);
+            color: var(--accent-color);
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: var(--border-color);
+            margin: 20px 0;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .ranges-list {
+            margin-top: 10px;
+        }
+
+        .range-item {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .range-item input[type="number"] {
+            width: 60px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Palette Animator</h1>
+    <div class="container">
+        <div class="panel">
+            <div class="drop-zone" id="drop-zone">
+                Click or Drag & Drop an image here
+            </div>
+            <input type="file" id="file-input" accept="image/png, image/jpeg, image/gif, image/webp">
+
+            <label>Color Quantization (Max Colors)</label>
+            <select id="max-colors">
+                <option value="8">8 Colors</option>
+                <option value="16">16 Colors</option>
+                <option value="32">32 Colors</option>
+                <option value="64">64 Colors</option>
+                <option value="128">128 Colors</option>
+                <option value="256" selected>256 Colors</option>
+            </select>
+
+            <label>Palette Ordering</label>
+            <select id="palette-order">
+                <option value="frequency">Usage Frequency</option>
+                <option value="appearance">Appearance Order</option>
+                <option value="luminance">Luminance (Bright to Dark)</option>
+                <option value="hue">Hue</option>
+            </select>
+
+            <label>Swatch Drag Mode</label>
+            <select id="drag-mode">
+                <option value="swap">Swap (入れ替え)</option>
+                <option value="insert">Insert (挿入)</option>
+            </select>
+
+            <div style="margin-top: 15px;">
+                <button id="btn-reprocess">Reprocess Image</button>
+                <button id="btn-undo" title="Ctrl+Z">Undo</button>
+                <button id="btn-merge-least" title="Merge the least used color into the nearest similar color to free up a slot" style="margin-left: 10px;">📉 Merge Least Used</button>
+                <button id="btn-add-color" title="Add a new color slot" style="margin-left: 5px;">➕ Add Color</button>
+            </div>
+
+            <hr>
+
+            <h3>Palette</h3>
+            <div class="swatches" id="palette-swatches"></div>
+
+            <hr>
+
+            <h3>Selected Color</h3>
+            <div id="selected-color-controls" style="display: none;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                    <div id="selected-swatch-preview" style="width: 32px; height: 32px; border: 1px solid #666; border-radius: 4px;"></div>
+                    <span>Index: <span id="selected-color-index">-</span></span>
+                </div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label style="margin-top:0;">Color (Hex)</label>
+                        <input type="color" id="sel-color-hex" style="width: 100%; height: 40px; cursor: pointer; background: transparent; padding: 0; border: none;">
+                    </div>
+                </div>
+                
+                <label>Red <span id="val-sel-r">0</span></label>
+                <input type="range" id="sel-r" min="0" max="255" value="0">
+                
+                <label>Green <span id="val-sel-g">0</span></label>
+                <input type="range" id="sel-g" min="0" max="255" value="0">
+                
+                <label>Blue <span id="val-sel-b">0</span></label>
+                <input type="range" id="sel-b" min="0" max="255" value="0">
+
+                <div style="margin-top: 15px;">
+                    <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; color: #e0e0e0; font-size: 14px;">
+                        <input type="checkbox" id="sel-transparent" style="width: auto;">
+                        Make Transparent
+                    </label>
+                </div>
+                <hr>
+            </div>
+            <div id="selected-color-none" style="font-size: 14px; color: #888;">
+                Click a color swatch above to edit it individually.
+                <hr>
+            </div>
+
+            <h3>Tone Adjustments (All Colors)</h3>
+            <label>Hue Shift <span id="val-hue">0</span>°</label>
+            <input type="range" id="adj-hue" min="-180" max="180" value="0">
+
+            <label>Saturation <span id="val-sat">1.0</span>x</label>
+            <input type="range" id="adj-sat" min="0" max="3" step="0.1" value="1.0">
+
+            <label>Lightness <span id="val-lit">0</span></label>
+            <input type="range" id="adj-lit" min="-1" max="1" step="0.05" value="0">
+
+            <div class="controls-row">
+                <button id="btn-unify-lit" title="Set all colors to average lightness">Unify Lightness</button>
+                <button id="btn-unify-sat" title="Set all colors to average saturation">Unify Saturation</button>
+            </div>
+
+        </div>
+
+        <div class="panel canvas-panel" style="overflow: hidden; max-height: 85vh;">
+            <div style="width: 100%; display: flex; gap: 15px; margin-bottom: 10px; align-items: center; background: #222; padding: 10px; border-radius: 4px; box-sizing: border-box; flex-wrap: wrap;">
+                <strong style="white-space: nowrap;">Canvas Tool:</strong>
+                <select id="canvas-tool" style="width: auto; margin: 0; flex: 1; max-width: 150px;">
+                    <option value="none">View Only</option>
+                    <option value="spoid">Eyedropper (Spoid)</option>
+                    <option value="pen">Pen / Erase</option>
+                    <option value="fill">Fill (Bucket)</option>
+                </select>
+                <div style="display: flex; align-items: center; gap: 5px; flex: 1; min-width: 120px;">
+                    <span style="font-size: 12px; white-space: nowrap;">Pen Size: <span id="val-pen-size">1</span>px</span>
+                    <input type="range" id="pen-size" min="1" max="100" value="1" style="margin: 0;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px; flex: 1; min-width: 120px;">
+                    <span style="font-size: 12px; white-space: nowrap;">Zoom: <span id="val-zoom">100</span>%</span>
+                    <input type="range" id="canvas-zoom" min="10" max="2000" value="100" style="margin: 0; flex: 1;">
+                    <button id="btn-zoom-reset" style="padding: 2px 6px; font-size: 11px; cursor: pointer; border-radius: 3px; background: #444; border: 1px solid #555; color: #ddd; white-space: nowrap;" title="Reset Zoom to 100%">100%</button>
+                </div>
+            </div>
+            <div id="canvas-container" style="flex: 1; width: 100%; overflow: auto; background: #1a1a1a; position: relative; border: 2px dashed #333; border-radius: 4px; text-align: center; padding: 20px; box-sizing: border-box; min-height: 200px;">
+                <canvas id="main-canvas" style="touch-action: none; display: inline-block; vertical-align: middle;"></canvas>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3>Animation Controller</h3>
+            <div class="controls-row">
+                <button id="btn-play" class="primary">Play</button>
+                <button id="btn-step">Step</button>
+            </div>
+
+            <label>Speed (ms per step)</label>
+            <input type="range" id="anim-speed" min="16" max="1000" value="100">
+
+            <hr>
+
+            <h3>Rotation Ranges</h3>
+            <p style="font-size: 12px; color: #888;">Define ranges of palette indices to rotate.</p>
+            <div id="ranges-container" class="ranges-list"></div>
+            <button id="btn-add-range" style="margin-top: 10px;">+ Add Range</button>
+
+            <hr>
+            <h3>Export</h3>
+            <div id="export-stats" style="font-size: 13px; margin-bottom: 10px; color: #bb86fc; font-weight: bold;"></div>
+            <button id="btn-export-gif" class="primary" style="margin-top: 5px; width: 100%;">Export GIF</button>
+            <div id="export-status" style="font-size: 12px; color: #aaa; margin-top: 5px;"></div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * omggif GifWriter embedded naturally
+         */
+        function GifWriter(buf, width, height, gopts) {
+            var p = 0;
+            var gopts = gopts === undefined ? {} : gopts;
+            var loop_count = gopts.loop === undefined ? null : gopts.loop;
+            var global_palette = gopts.palette === undefined ? null : gopts.palette;
+
+            if (width <= 0 || height <= 0 || width > 65535 || height > 65535) throw new Error("Width/Height invalid.");
+
+            function check_palette_and_num_colors(palette) {
+                var num_colors = palette.length;
+                if (num_colors < 2 || num_colors > 256 || num_colors & (num_colors - 1)) throw new Error("Invalid code/color length");
+                return num_colors;
+            }
+
+            buf[p++] = 0x47; buf[p++] = 0x49; buf[p++] = 0x46;
+            buf[p++] = 0x38; buf[p++] = 0x39; buf[p++] = 0x61;
+
+            var gp_num_colors_pow2 = 0;
+            var background = 0;
+            if (global_palette !== null) {
+                var gp_num_colors = check_palette_and_num_colors(global_palette);
+                while (gp_num_colors >>= 1) ++gp_num_colors_pow2;
+                gp_num_colors = 1 << gp_num_colors_pow2;
+                --gp_num_colors_pow2;
+                if (gopts.background !== undefined) {
+                    background = gopts.background;
+                    if (background >= gp_num_colors) throw new Error("Background index out of range.");
+                    if (background === 0) throw new Error("Background index explicitly passed as 0.");
+                }
+            }
+
+            buf[p++] = width & 0xff; buf[p++] = width >> 8 & 0xff;
+            buf[p++] = height & 0xff; buf[p++] = height >> 8 & 0xff;
+            buf[p++] = (global_palette !== null ? 0x80 : 0) | gp_num_colors_pow2;
+            buf[p++] = background;
+            buf[p++] = 0;
+
+            if (global_palette !== null) {
+                for (var i = 0, il = global_palette.length; i < il; ++i) {
+                    var rgb = global_palette[i];
+                    buf[p++] = rgb >> 16 & 0xff;
+                    buf[p++] = rgb >> 8 & 0xff;
+                    buf[p++] = rgb & 0xff;
+                }
+            }
+
+            if (loop_count !== null) {
+                if (loop_count < 0 || loop_count > 65535) throw new Error("Loop count invalid.")
+                buf[p++] = 0x21; buf[p++] = 0xff; buf[p++] = 0x0b;
+                buf[p++] = 0x4e; buf[p++] = 0x45; buf[p++] = 0x54; buf[p++] = 0x53;
+                buf[p++] = 0x43; buf[p++] = 0x41; buf[p++] = 0x50; buf[p++] = 0x45;
+                buf[p++] = 0x32; buf[p++] = 0x2e; buf[p++] = 0x30;
+                buf[p++] = 0x03; buf[p++] = 0x01;
+                buf[p++] = loop_count & 0xff; buf[p++] = loop_count >> 8 & 0xff;
+                buf[p++] = 0x00;
+            }
+
+            var ended = false;
+
+            this.addFrame = function (x, y, w, h, indexed_pixels, opts) {
+                if (ended === true) { --p; ended = false; }
+                opts = opts === undefined ? {} : opts;
+
+                if (x < 0 || y < 0 || x > 65535 || y > 65535) throw new Error("x/y invalid.")
+                if (w <= 0 || h <= 0 || w > 65535 || h > 65535) throw new Error("Width/Height invalid.")
+                if (indexed_pixels.length < w * h) throw new Error("Not enough pixels for the frame size.");
+
+                var using_local_palette = true;
+                var palette = opts.palette;
+                if (palette === undefined || palette === null) {
+                    using_local_palette = false;
+                    palette = global_palette;
+                }
+
+                if (palette === undefined || palette === null) throw new Error("Must supply either a local or global palette.");
+
+                var num_colors = check_palette_and_num_colors(palette);
+
+                var min_code_size = 0;
+                while (num_colors >>= 1) ++min_code_size;
+                num_colors = 1 << min_code_size;
+
+                var delay = opts.delay === undefined ? 0 : opts.delay;
+                var disposal = opts.disposal === undefined ? 0 : opts.disposal;
+                if (disposal < 0 || disposal > 3) throw new Error("Disposal out of range.");
+
+                var use_transparency = false;
+                var transparent_index = 0;
+                if (opts.transparent !== undefined && opts.transparent !== null) {
+                    use_transparency = true;
+                    transparent_index = opts.transparent;
+                    if (transparent_index < 0 || transparent_index >= num_colors) throw new Error("Transparent color index.");
+                }
+
+                if (disposal !== 0 || use_transparency || delay !== 0) {
+                    buf[p++] = 0x21; buf[p++] = 0xf9;
+                    buf[p++] = 4;
+                    buf[p++] = disposal << 2 | (use_transparency === true ? 1 : 0);
+                    buf[p++] = delay & 0xff; buf[p++] = delay >> 8 & 0xff;
+                    buf[p++] = transparent_index;
+                    buf[p++] = 0;
+                }
+
+                buf[p++] = 0x2c;
+                buf[p++] = x & 0xff; buf[p++] = x >> 8 & 0xff;
+                buf[p++] = y & 0xff; buf[p++] = y >> 8 & 0xff;
+                buf[p++] = w & 0xff; buf[p++] = w >> 8 & 0xff;
+                buf[p++] = h & 0xff; buf[p++] = h >> 8 & 0xff;
+                buf[p++] = using_local_palette === true ? (0x80 | (min_code_size - 1)) : 0;
+
+                if (using_local_palette === true) {
+                    for (var i = 0, il = palette.length; i < il; ++i) {
+                        var rgb = palette[i];
+                        buf[p++] = rgb >> 16 & 0xff;
+                        buf[p++] = rgb >> 8 & 0xff;
+                        buf[p++] = rgb & 0xff;
+                    }
+                }
+
+                p = GifWriterOutputLZWCodeStream(buf, p, min_code_size < 2 ? 2 : min_code_size, indexed_pixels);
+                return p;
+            };
+
+            this.end = function () {
+                if (ended === false) { buf[p++] = 0x3b; ended = true; }
+                return p;
+            };
+
+            this.getOutputBuffer = function () { return buf; };
+            this.setOutputBuffer = function (v) { buf = v; };
+            this.getOutputBufferPosition = function () { return p; };
+            this.setOutputBufferPosition = function (v) { p = v; };
+        }
+
+        function GifWriterOutputLZWCodeStream(buf, p, min_code_size, index_stream) {
+            buf[p++] = min_code_size;
+            var cur_subblock = p++;
+            var clear_code = 1 << min_code_size;
+            var code_mask = clear_code - 1;
+            var eoi_code = clear_code + 1;
+            var next_code = eoi_code + 1;
+            var cur_code_size = min_code_size + 1;
+            var cur_shift = 0;
+            var cur = 0;
+
+            function emit_bytes_to_buffer(bit_block_size) {
+                while (cur_shift >= bit_block_size) {
+                    buf[p++] = cur & 0xff;
+                    cur >>= 8; cur_shift -= 8;
+                    if (p === cur_subblock + 256) {
+                        buf[cur_subblock] = 255;
+                        cur_subblock = p++;
+                    }
+                }
+            }
+
+            function emit_code(c) {
+                cur |= c << cur_shift;
+                cur_shift += cur_code_size;
+                emit_bytes_to_buffer(8);
+            }
+
+            var ib_code = index_stream[0] & code_mask;
+            var code_table = {};
+            emit_code(clear_code);
+
+            for (var i = 1, il = index_stream.length; i < il; ++i) {
+                var k = index_stream[i] & code_mask;
+                var cur_key = ib_code << 8 | k;
+                var cur_code = code_table[cur_key];
+
+                if (cur_code === undefined) {
+                    cur |= ib_code << cur_shift;
+                    cur_shift += cur_code_size;
+                    while (cur_shift >= 8) {
+                        buf[p++] = cur & 0xff;
+                        cur >>= 8; cur_shift -= 8;
+                        if (p === cur_subblock + 256) {
+                            buf[cur_subblock] = 255;
+                            cur_subblock = p++;
+                        }
+                    }
+
+                    if (next_code === 4096) {
+                        emit_code(clear_code);
+                        next_code = eoi_code + 1;
+                        cur_code_size = min_code_size + 1;
+                        code_table = {};
+                    } else {
+                        if (next_code >= (1 << cur_code_size)) ++cur_code_size;
+                        code_table[cur_key] = next_code++;
+                    }
+                    ib_code = k;
+                } else {
+                    ib_code = cur_code;
+                }
+            }
+
+            emit_code(ib_code);
+            emit_code(eoi_code);
+            emit_bytes_to_buffer(1);
+
+            if (cur_subblock + 1 === p) {
+                buf[cur_subblock] = 0;
+            } else {
+                buf[cur_subblock] = p - cur_subblock - 1;
+                buf[p++] = 0;
+            }
+            return p;
+        }
+
+        /**
+         * Color Utilities
+         */
+        function rgbToHsl(r, g, b) {
+            r /= 255, g /= 255, b /= 255;
+            let max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+
+            if (max === min) {
+                h = s = 0;
+            } else {
+                let d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            return [h * 360, s, l];
+        }
+
+        function hslToRgb(h, s, l) {
+            let r, g, b;
+            h /= 360;
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                function hue2rgb(p, q, t) {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1 / 6) return p + (q - p) * 6 * t;
+                    if (t < 1 / 2) return q;
+                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                    return p;
+                }
+                let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                let p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1 / 3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1 / 3);
+            }
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+
+        function colorDistance(r1, g1, b1, r2, g2, b2) {
+            return (r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2;
+        }
+
+        /**
+         * Median Cut Quantization Algorithm
+         */
+        function medianCut(pixels, maxColors) {
+            if (pixels.length === 0) return [];
+
+            let boxes = [{ pixels: pixels }];
+
+            while (boxes.length < maxColors) {
+                // Find the box with the largest color range
+                let splitBoxIdx = -1;
+                let maxRange = -1;
+                let splitChannel = 0;
+
+                for (let i = 0; i < boxes.length; i++) {
+                    let box = boxes[i];
+                    if (box.pixels.length <= 1) continue;
+
+                    let minR = 255, maxR = 0, minG = 255, maxG = 0, minB = 255, maxB = 0;
+                    for (let p of box.pixels) {
+                        if (p[0] < minR) minR = p[0]; if (p[0] > maxR) maxR = p[0];
+                        if (p[1] < minG) minG = p[1]; if (p[1] > maxG) maxG = p[1];
+                        if (p[2] < minB) minB = p[2]; if (p[2] > maxB) maxB = p[2];
+                    }
+
+                    let rangeR = maxR - minR;
+                    let rangeG = maxG - minG;
+                    let rangeB = maxB - minB;
+                    let currentMaxRange = Math.max(rangeR, rangeG, rangeB);
+
+                    if (currentMaxRange > maxRange) {
+                        maxRange = currentMaxRange;
+                        splitBoxIdx = i;
+                        if (rangeR >= rangeG && rangeR >= rangeB) splitChannel = 0;
+                        else if (rangeG >= rangeR && rangeG >= rangeB) splitChannel = 1;
+                        else splitChannel = 2;
+                    }
+                }
+
+                if (splitBoxIdx === -1) break; // Cannot split further
+
+                let boxToSplit = boxes[splitBoxIdx];
+                boxToSplit.pixels.sort((a, b) => a[splitChannel] - b[splitChannel]);
+                let medianIdx = Math.floor(boxToSplit.pixels.length / 2);
+
+                let box1 = { pixels: boxToSplit.pixels.slice(0, medianIdx) };
+                let box2 = { pixels: boxToSplit.pixels.slice(medianIdx) };
+
+                boxes.splice(splitBoxIdx, 1, box1, box2);
+            }
+
+            // Calculate average color for each box
+            return boxes.map(box => {
+                let r = 0, g = 0, b = 0, count = 0;
+                for (let p of box.pixels) {
+                    r += p[0]; g += p[1]; b += p[2]; count += p[4];
+                }
+                return [Math.round(r / box.pixels.length), Math.round(g / box.pixels.length), Math.round(b / box.pixels.length)];
+            });
+        }
+
+        /**
+         * System State
+         */
+        const state = {
+            originalImage: null,
+            width: 0,
+            height: 0,
+            indices: null, // Uint16Array
+            basePalette: [], // Array of {r, g, b, a}
+            currentPalette: [], // Array of {r, g, b, a}
+            ranges: [], // Array of {start, end, dir}
+            isPlaying: false,
+            lastTick: 0,
+            history: [], // For Undo
+
+            // Adjustments
+            adjustments: {
+                hue: 0,
+                sat: 1.0,
+                lit: 0
+            }
+        };
+
+        /**
+         * History Manager
+         */
+        function saveState() {
+            state.history.push({
+                basePalette: JSON.parse(JSON.stringify(state.basePalette)),
+                currentPalette: JSON.parse(JSON.stringify(state.currentPalette)),
+                adjustments: JSON.parse(JSON.stringify(state.adjustments)),
+                ranges: JSON.parse(JSON.stringify(state.ranges)),
+                indices: state.indices ? new Uint16Array(state.indices) : null
+            });
+            if (state.history.length > 20) state.history.shift();
+        }
+
+        function undo() {
+            if (state.history.length === 0) return;
+            let s = state.history.pop();
+            state.basePalette = s.basePalette;
+            state.currentPalette = s.currentPalette;
+            state.adjustments = s.adjustments;
+            state.ranges = s.ranges;
+            if (s.indices) state.indices = s.indices;
+
+            syncControlsToState();
+            render();
+            renderSwatches();
+            renderRanges();
+            if (state.selectedColorIndex !== null) selectColor(state.selectedColorIndex);
+        }
+
+        /**
+         * Core Logic
+         */
+        function processImage(img) {
+            state.originalImage = img;
+            state.width = img.width;
+            state.height = img.height;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const imgData = ctx.getImageData(0, 0, img.width, img.height);
+            const data = imgData.data;
+
+            let colorMap = new Map();
+            let appearanceOrder = [];
+
+            for (let i = 0; i < data.length; i += 4) {
+                let r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+                if (a < 128) continue; // Skip highly transparent pixels for quantization
+
+                let key = `${r},${g},${b}`;
+                if (!colorMap.has(key)) {
+                    colorMap.set(key, { r, g, b, count: 0, firstAppeared: appearanceOrder.length });
+                    appearanceOrder.push(key);
+                }
+                colorMap.get(key).count++;
+            }
+
+            let uniqueColors = Array.from(colorMap.values());
+            // Reserve 1 slot for transparent color to guarantee total max is strictly <= 256
+            let maxColors = parseInt(document.getElementById('max-colors').value) - 1;
+
+            let palette = [];
+            if (uniqueColors.length <= maxColors) {
+                palette = uniqueColors.slice(0, maxColors);
+            } else {
+                // Quantize
+                let pixelsFormat = uniqueColors.map(c => [c.r, c.g, c.b, c.count]);
+                let medianColors = medianCut(pixelsFormat, maxColors);
+                palette = medianColors.map(c => ({ r: c[0], g: c[1], b: c[2], count: 0 }));
+
+                // Count frequencies again for the quantized palette
+                for (let c of uniqueColors) {
+                    let bestIdx = 0;
+                    let bestDist = Infinity;
+                    for (let i = 0; i < palette.length; i++) {
+                        let d = colorDistance(c.r, c.g, c.b, palette[i].r, palette[i].g, palette[i].b);
+                        if (d < bestDist) {
+                            bestDist = d;
+                            bestIdx = i;
+                        }
+                    }
+                    palette[bestIdx].count += c.count;
+                }
+            }
+
+            // Sort Palette
+            const order = document.getElementById('palette-order').value;
+            if (order === 'frequency') {
+                palette.sort((a, b) => b.count - a.count);
+            } else if (order === 'appearance') {
+                // Already implicitly somewhat ordered, skip or map to appearanceOrder
+            } else if (order === 'luminance') {
+                palette.sort((a, b) => {
+                    let hslA = rgbToHsl(a.r, a.g, a.b);
+                    let hslB = rgbToHsl(b.r, b.g, b.b);
+                    return hslB[2] - hslA[2];
+                });
+            } else if (order === 'hue') {
+                palette.sort((a, b) => {
+                    let hslA = rgbToHsl(a.r, a.g, a.b);
+                    let hslB = rgbToHsl(b.r, b.g, b.b);
+                    return hslA[0] - hslB[0];
+                });
+            }
+
+            // Add Alpha channel
+            palette.forEach(c => c.a = 255);
+            // Add transparent color at index 0
+            palette.unshift({ r: 0, g: 0, b: 0, a: 0 });
+
+            state.basePalette = palette;
+            state.currentPalette = JSON.parse(JSON.stringify(palette));
+            state.indices = new Uint16Array(state.width * state.height);
+
+            // Build Index Map
+            for (let i = 0, pIdx = 0; i < data.length; i += 4, pIdx++) {
+                let r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+                if (a < 128) {
+                    state.indices[pIdx] = 0; // Transparent
+                    continue;
+                }
+
+                let bestIdx = 1;
+                let bestDist = Infinity;
+                for (let j = 1; j < palette.length; j++) {
+                    let d = colorDistance(r, g, b, palette[j].r, palette[j].g, palette[j].b);
+                    if (d < bestDist) {
+                        bestDist = d;
+                        bestIdx = j;
+                    }
+                }
+                state.indices[pIdx] = bestIdx;
+            }
+
+            // Reset settings
+            state.adjustments = { hue: 0, sat: 1.0, lit: 0 };
+            state.ranges = [];
+            state.history = [];
+            
+            // Auto size zoom uniformly for visibility
+            let initialZoom = Math.min(100, Math.floor(400 / img.width * 100), Math.floor(400 / img.height * 100));
+            if (initialZoom < 100) initialZoom = 100;
+            if (state.width < 100 && state.height < 100) initialZoom = 400; // auto-loupe very small sprites
+
+            document.getElementById('canvas-zoom').value = initialZoom;
+            document.getElementById('val-zoom').textContent = initialZoom;
+            const mainCanvasEl = document.getElementById('main-canvas');
+            mainCanvasEl.style.width = (state.width * (initialZoom / 100)) + 'px';
+            mainCanvasEl.style.height = (state.height * (initialZoom / 100)) + 'px';
+
+            syncControlsToState();
+            updateAdjustedPalette();
+            renderSwatches();
+            renderRanges();
+            render();
+        }
+
+        function updateAdjustedPalette() {
+            let adj = state.adjustments;
+            for (let i = 1; i < state.basePalette.length; i++) {
+                let b = state.basePalette[i];
+                let [h, s, l] = rgbToHsl(b.r, b.g, b.b);
+
+                h = (h + adj.hue) % 360;
+                if (h < 0) h += 360;
+
+                s = Math.max(0, Math.min(1, s * adj.sat));
+                l = Math.max(0, Math.min(1, l + adj.lit));
+
+                let [nr, ng, nb] = hslToRgb(h, s, l);
+                state.currentPalette[i] = { r: nr, g: ng, b: nb, a: b.a };
+            }
+        }
+
+        function render() {
+            if (!state.indices) return;
+
+            const canvas = document.getElementById('main-canvas');
+            canvas.width = state.width;
+            canvas.height = state.height;
+            const ctx = canvas.getContext('2d');
+            const imgData = ctx.createImageData(state.width, state.height);
+            const data = imgData.data;
+
+            let idx = 0;
+            for (let i = 0; i < state.indices.length; i++) {
+                let c = state.currentPalette[state.indices[i]];
+                if (c) {
+                    data[idx++] = c.r;
+                    data[idx++] = c.g;
+                    data[idx++] = c.b;
+                    data[idx++] = c.a;
+                } else {
+                    idx += 4;
+                }
+            }
+
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+        function renderSwatches() {
+            const container = document.getElementById('palette-swatches');
+            container.innerHTML = '';
+
+            for (let i = 0; i < state.currentPalette.length; i++) {
+                let c = state.currentPalette[i];
+                let swatch = document.createElement('div');
+                swatch.className = 'swatch';
+                
+                if (i === 0 || c.a < 128) {
+                    swatch.style.backgroundColor = 'transparent';
+                    swatch.style.backgroundImage = 'linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc), linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc)';
+                    swatch.style.backgroundSize = '8px 8px';
+                    swatch.style.backgroundPosition = '0 0, 4px 4px';
+                } else {
+                    swatch.style.backgroundColor = `rgb(${c.r}, ${c.g}, ${c.b})`;
+                }
+                
+                swatch.title = `Index: ${i}\nRGB: ${c.r}, ${c.g}, ${c.b}`;
+                swatch.draggable = i !== 0;
+                swatch.dataset.index = i;
+
+                swatch.addEventListener('click', () => {
+                    selectColor(i);
+                });
+
+                swatch.addEventListener('dragstart', (e) => {
+                    if (i === 0) { e.preventDefault(); return; }
+                    e.dataTransfer.setData('text/plain', i);
+                });
+
+                swatch.addEventListener('dragover', (e) => {
+                    if (i === 0) return;
+                    e.preventDefault();
+                    swatch.classList.add('swatch-drag-over');
+                });
+
+                swatch.addEventListener('dragleave', () => {
+                    swatch.classList.remove('swatch-drag-over');
+                });
+
+                swatch.addEventListener('drop', (e) => {
+                    if (i === 0) return;
+                    e.preventDefault();
+                    swatch.classList.remove('swatch-drag-over');
+                    let fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+                    let toIdx = i;
+                    if (isNaN(fromIdx) || fromIdx === 0) return;
+                    
+                    let mode = document.getElementById('drag-mode').value;
+
+                    if (fromIdx !== toIdx) {
+                        saveState();
+
+                        if (mode === 'swap') {
+                            // Swap in base palette
+                            let tempBase = state.basePalette[fromIdx];
+                            state.basePalette[fromIdx] = state.basePalette[toIdx];
+                            state.basePalette[toIdx] = tempBase;
+
+                            // Swap in indices
+                            for (let j = 0; j < state.indices.length; j++) {
+                                if (state.indices[j] === fromIdx) state.indices[j] = toIdx;
+                                else if (state.indices[j] === toIdx) state.indices[j] = fromIdx;
+                            }
+                        } else if (mode === 'insert') {
+                            // Insert logic
+                            let newBase = [...state.basePalette];
+                            let moved = newBase.splice(fromIdx, 1)[0];
+                            newBase.splice(toIdx, 0, moved);
+
+                            let idxMap = new Array(state.basePalette.length);
+                            for (let k = 0; k < idxMap.length; k++) idxMap[k] = k;
+                            let movedIdx = idxMap.splice(fromIdx, 1)[0];
+                            idxMap.splice(toIdx, 0, movedIdx);
+
+                            let reverseMap = new Array(state.basePalette.length);
+                            for (let k = 0; k < idxMap.length; k++) {
+                                reverseMap[idxMap[k]] = k;
+                            }
+
+                            state.basePalette = newBase;
+                            for (let j = 0; j < state.indices.length; j++) {
+                                let oldVal = state.indices[j];
+                                // we ignore 0 (transparent) since it's unmovable for now
+                                if (oldVal !== 0 && oldVal < reverseMap.length) {
+                                    state.indices[j] = reverseMap[oldVal];
+                                }
+                            }
+                        }
+
+                        updateAdjustedPalette();
+                        renderSwatches();
+                        render();
+                    }
+                });
+
+                container.appendChild(swatch);
+            }
+        }
+
+        function renderRanges() {
+            const container = document.getElementById('ranges-container');
+            container.innerHTML = '';
+
+            state.ranges.forEach((r, idx) => {
+                let div = document.createElement('div');
+                div.className = 'range-item';
+                div.innerHTML = `
+            <span>#${idx + 1}</span>
+            <input type="number" value="${r.start}" min="1" max="${state.basePalette.length - 1}" onchange="updateRange(${idx}, 'start', this.value)">
+            <span>to</span>
+            <input type="number" value="${r.end}" min="1" max="${state.basePalette.length - 1}" onchange="updateRange(${idx}, 'end', this.value)">
+            <select style="width: 80px;" onchange="updateRange(${idx}, 'dir', this.value)">
+                <option value="1" ${r.dir === 1 ? 'selected' : ''}>Forward</option>
+                <option value="-1" ${r.dir === -1 ? 'selected' : ''}>Backward</option>
+            </select>
+            <button onclick="removeRange(${idx})" style="background: #aa3333;">X</button>
+        `;
+                container.appendChild(div);
+            });
+            calcGifSize();
+        }
+
+        function calcGifSize() {
+            if (!state.indices || state.ranges.length === 0) {
+                document.getElementById('export-stats').textContent = "";
+                return;
+            }
+            function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+            function lcm(a, b) { return (a * b) / gcd(a, b); }
+            let stepCount = state.ranges.map(r => r.end - r.start + 1).reduce((acc, val) => lcm(acc, val), 1);
+            if (stepCount <= 0) stepCount = 1;
+            
+            let rawBytes = state.width * state.height * stepCount;
+            let estMin = (rawBytes * 0.1 / 1024 / 1024).toFixed(3);
+            let estMax = (rawBytes * 0.35 / 1024 / 1024).toFixed(3);
+            if(rawBytes < 1000000) {
+                estMin = (rawBytes * 0.1 / 1024).toFixed(1) + " KB";
+                estMax = (rawBytes * 0.35 / 1024).toFixed(1) + " KB";
+            } else {
+                estMin += " MB"; estMax += " MB";
+            }
+            
+            document.getElementById('export-stats').innerHTML = 
+                `Frames: <strong>${stepCount}</strong> | Est. Size: <strong>${estMin} ~ ${estMax}</strong>`;
+        }
+
+        function addRange() {
+            saveState();
+            state.ranges.push({ start: 1, end: Math.min(8, state.basePalette.length - 1), dir: 1 });
+            renderRanges();
+        }
+
+        function removeRange(idx) {
+            saveState();
+            state.ranges.splice(idx, 1);
+            renderRanges();
+        }
+
+        function updateRange(idx, key, value) {
+            state.ranges[idx][key] = parseInt(value);
+            calcGifSize();
+        }
+
+        function rotatePalette(quiet = false) {
+            if (state.ranges.length === 0) return;
+
+            let newPalette = JSON.parse(JSON.stringify(state.currentPalette));
+
+            for (let r of state.ranges) {
+                let { start, end, dir } = r;
+                if (start >= end) continue;
+                if (start < 1) start = 1;
+                if (end >= state.currentPalette.length) end = state.currentPalette.length - 1;
+
+                let segment = state.currentPalette.slice(start, end + 1);
+                if (dir === 1) {
+                    let last = segment.pop();
+                    segment.unshift(last);
+                } else {
+                    let first = segment.shift();
+                    segment.push(first);
+                }
+
+                for (let i = 0; i < segment.length; i++) {
+                    newPalette[start + i] = segment[i];
+                }
+            }
+
+            state.currentPalette = newPalette;
+
+            let newBasePalette = JSON.parse(JSON.stringify(state.basePalette));
+            for (let r of state.ranges) {
+                let { start, end, dir } = r;
+                if (start >= end) continue;
+                let segment = state.basePalette.slice(start, end + 1);
+                if (dir === 1) { segment.unshift(segment.pop()); }
+                else { segment.push(segment.shift()); }
+                for (let i = 0; i < segment.length; i++) {
+                    newBasePalette[start + i] = segment[i];
+                }
+            }
+            state.basePalette = newBasePalette;
+
+            if (!quiet) {
+                render();
+                renderSwatches();
+                if (state.selectedColorIndex !== null) {
+                    selectColor(state.selectedColorIndex);
+                }
+            }
+        }
+
+        function selectColor(idx) {
+            state.selectedColorIndex = idx;
+            
+            // update swatches visual
+            document.querySelectorAll('.swatch').forEach(el => {
+                if(parseInt(el.dataset.index) === idx) el.classList.add('selected');
+                else el.classList.remove('selected');
+            });
+            
+            // update UI
+            if (idx !== null && idx < state.basePalette.length) {
+                document.getElementById('selected-color-none').style.display = 'none';
+                document.getElementById('selected-color-controls').style.display = 'block';
+                
+                let c = state.basePalette[idx];
+                document.getElementById('selected-color-index').textContent = idx;
+                
+                let isTrans = c.a < 128;
+                document.getElementById('sel-transparent').checked = isTrans;
+                
+                document.getElementById('sel-r').value = c.r;
+                document.getElementById('val-sel-r').textContent = c.r;
+                document.getElementById('sel-g').value = c.g;
+                document.getElementById('val-sel-g').textContent = c.g;
+                document.getElementById('sel-b').value = c.b;
+                document.getElementById('val-sel-b').textContent = c.b;
+                
+                let hex = "#" + (1 << 24 | c.r << 16 | c.g << 8 | c.b).toString(16).slice(1);
+                document.getElementById('sel-color-hex').value = hex;
+                
+                if (isTrans) {
+                    document.getElementById('selected-swatch-preview').style.backgroundColor = 'transparent';
+                    document.getElementById('selected-swatch-preview').style.backgroundImage = 'linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc), linear-gradient(45deg, #ccc 25%, transparent 25%, transparent 75%, #ccc 75%, #ccc)';
+                    document.getElementById('selected-swatch-preview').style.backgroundSize = '8px 8px';
+                    document.getElementById('selected-swatch-preview').style.backgroundPosition = '0 0, 4px 4px';
+                } else {
+                    document.getElementById('selected-swatch-preview').style.backgroundColor = hex;
+                    document.getElementById('selected-swatch-preview').style.backgroundImage = 'none';
+                }
+            } else {
+                document.getElementById('selected-color-none').style.display = 'block';
+                document.getElementById('selected-color-controls').style.display = 'none';
+            }
+        }
+
+        document.getElementById('btn-merge-least').addEventListener('click', () => {
+            if (!state.indices || state.basePalette.length <= 2) return;
+            saveState();
+            
+            let counts = new Array(state.basePalette.length).fill(0);
+            for(let i = 0; i < state.indices.length; i++) counts[state.indices[i]]++;
+            
+            let minCount = Infinity, leastIdx = 1;
+            for(let i = 1; i < state.basePalette.length; i++) {
+                if (counts[i] < minCount) { minCount = counts[i]; leastIdx = i; }
+            }
+            
+            let minD = Infinity, closest = 1;
+            let lc = state.basePalette[leastIdx];
+            for (let i = 1; i < state.basePalette.length; i++) {
+                if (i === leastIdx) continue;
+                let c2 = state.basePalette[i];
+                let d = colorDistance(lc.r, lc.g, lc.b, c2.r, c2.g, c2.b);
+                if (d < minD) { minD = d; closest = i; }
+            }
+            
+            let closestMapped = closest > leastIdx ? closest - 1 : closest;
+            for (let i = 0; i < state.indices.length; i++) {
+                if (state.indices[i] === leastIdx) {
+                    state.indices[i] = closestMapped;
+                } else if (state.indices[i] > leastIdx) {
+                    state.indices[i]--;
+                }
+            }
+            
+            state.basePalette.splice(leastIdx, 1);
+            state.currentPalette.splice(leastIdx, 1);
+            
+            state.ranges.forEach(r => {
+                if (r.start > leastIdx) r.start--;
+                if (r.end >= leastIdx) r.end--;
+                if (r.start > r.end) r.start = r.end;
+            });
+            
+            updateAdjustedPalette();
+            renderSwatches();
+            renderRanges();
+            render();
+            if (state.selectedColorIndex === leastIdx) selectColor(null);
+            else if (state.selectedColorIndex !== null && state.selectedColorIndex > leastIdx) selectColor(state.selectedColorIndex - 1);
+        });
+
+        document.getElementById('btn-add-color').addEventListener('click', () => {
+            if (!state.indices) return;
+            if (state.basePalette.length >= 257) {
+                alert("Palette is full (Max 256 colors + 1 transparent). Merge a color first!");
+                return;
+            }
+            saveState();
+            let newColor = {r: 128, g: 128, b: 128, a: 255};
+            state.basePalette.push(newColor);
+            state.currentPalette.push(JSON.parse(JSON.stringify(newColor)));
+            
+            renderSwatches();
+            renderRanges();
+            selectColor(state.basePalette.length - 1);
+        });
+
+        /**
+         * Animation Loop
+         */
+        function animationTick(timestamp) {
+            if (!state.isPlaying) return;
+
+            let speed = parseInt(document.getElementById('anim-speed').value);
+
+            if (timestamp - state.lastTick >= speed) {
+                rotatePalette();
+                state.lastTick = timestamp;
+            }
+
+            requestAnimationFrame(animationTick);
+        }
+
+        /**
+         * Event Listeners
+         */
+        window.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                e.preventDefault();
+                undo();
+            }
+        });
+
+        document.getElementById('btn-undo').addEventListener('click', undo);
+
+        // Canvas Painter Tools
+        const canvas = document.getElementById('main-canvas');
+        let isDrawing = false;
+        let lastPos = null;
+        
+        function getCanvasPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            return {
+                x: Math.floor((e.clientX - rect.left) * scaleX),
+                y: Math.floor((e.clientY - rect.top) * scaleY)
+            };
+        }
+
+        function drawPixel(x, y, size) {
+            if (state.selectedColorIndex === null || state.indices === null) return;
+            
+            let changed = false;
+            let radius = Math.floor(size / 2);
+            let isEven = size % 2 === 0;
+
+            let startX = x - radius;
+            let startY = y - radius;
+            let endX = isEven ? x + radius - 1 : x + radius;
+            let endY = isEven ? y + radius - 1 : y + radius;
+
+            for (let py = startY; py <= endY; py++) {
+                for (let px = startX; px <= endX; px++) {
+                    if (px < 0 || px >= state.width || py < 0 || py >= state.height) continue;
+                    
+                    let dx = px - x + (isEven ? 0.5 : 0);
+                    let dy = py - y + (isEven ? 0.5 : 0);
+                    if (dx*dx + dy*dy <= (size/2)*(size/2) || size === 1) {
+                        let pos = py * state.width + px;
+                        if (state.indices[pos] !== state.selectedColorIndex) {
+                            state.indices[pos] = state.selectedColorIndex;
+                            changed = true;
+                        }
+                    }
+                }
+            }
+            if (changed) render(); 
+        }
+
+        function drawLine(x0, y0, x1, y1) {
+            let size = parseInt(document.getElementById('pen-size').value);
+            let dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+            let dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+            let err = dx + dy, e2; 
+            while (true) {
+                drawPixel(x0, y0, size);
+                if (x0 === x1 && y0 === y1) break;
+                e2 = 2 * err;
+                if (e2 >= dy) { err += dy; x0 += sx; } 
+                if (e2 <= dx) { err += dx; y0 += sy; } 
+            }
+        }
+
+        function floodFill(startX, startY) {
+            if (state.selectedColorIndex === null || state.indices === null) return;
+            if (startX < 0 || startX >= state.width || startY < 0 || startY >= state.height) return;
+            
+            const targetColor = state.indices[startY * state.width + startX];
+            const replaceColor = state.selectedColorIndex;
+            
+            if (targetColor === replaceColor) return;
+            
+            let stack = [{x: startX, y: startY}];
+            let w = state.width;
+            let h = state.height;
+            
+            while (stack.length > 0) {
+                let {x, y} = stack.pop();
+                let x1 = x;
+                while (x1 >= 0 && state.indices[y * w + x1] === targetColor) x1--;
+                x1++;
+                
+                let x2 = x;
+                while (x2 < w && state.indices[y * w + x2] === targetColor) x2++;
+                x2--;
+                
+                let spanAbove = false, spanBelow = false;
+                for (let cx = x1; cx <= x2; cx++) {
+                    state.indices[y * w + cx] = replaceColor;
+                    if (y > 0) {
+                        if (!spanAbove && state.indices[(y - 1) * w + cx] === targetColor) {
+                            stack.push({x: cx, y: y - 1});
+                            spanAbove = true;
+                        } else if (spanAbove && state.indices[(y - 1) * w + cx] !== targetColor) {
+                            spanAbove = false;
+                        }
+                    }
+                    if (y < h - 1) {
+                        if (!spanBelow && state.indices[(y + 1) * w + cx] === targetColor) {
+                            stack.push({x: cx, y: y + 1});
+                            spanBelow = true;
+                        } else if (spanBelow && state.indices[(y + 1) * w + cx] !== targetColor) {
+                            spanBelow = false;
+                        }
+                    }
+                }
+            }
+            render();
+        }
+
+        canvas.addEventListener('pointerdown', e => {
+            const tool = document.getElementById('canvas-tool').value;
+            if (tool === 'none') return;
+            
+            const {x, y} = getCanvasPos(e);
+            
+            if (tool === 'spoid') {
+                if (state.indices && x >= 0 && x < state.width && y >= 0 && y < state.height) {
+                    let idx = state.indices[y * state.width + x];
+                    selectColor(idx);
+                }
+                isDrawing = false;
+                return;
+            }
+            
+            if (state.selectedColorIndex === null) return;
+            
+            saveState(); // Snapshot before edit
+            
+            if (tool === 'pen') {
+                isDrawing = true;
+                lastPos = {x, y};
+                drawPixel(x, y, parseInt(document.getElementById('pen-size').value));
+            } else if (tool === 'fill') {
+                floodFill(x, y);
+            }
+            e.preventDefault();
+        });
+
+        canvas.addEventListener('pointermove', e => {
+            const tool = document.getElementById('canvas-tool').value;
+            if (tool === 'spoid' && e.buttons === 1) {
+                // Live tracking for spoid drag
+                const {x, y} = getCanvasPos(e);
+                if (state.indices && x >= 0 && x < state.width && y >= 0 && y < state.height) {
+                    selectColor(state.indices[y * state.width + x]);
+                }
+                return;
+            }
+            if (!isDrawing) return;
+            const {x, y} = getCanvasPos(e);
+            if (lastPos && (lastPos.x !== x || lastPos.y !== y)) {
+                drawLine(lastPos.x, lastPos.y, x, y);
+                lastPos = {x, y};
+            }
+        });
+
+        window.addEventListener('pointerup', () => {
+            isDrawing = false;
+            lastPos = null;
+        });
+        
+        canvas.addEventListener('pointerleave', () => {
+            isDrawing = false;
+            lastPos = null;
+        });
+
+        document.getElementById('pen-size').addEventListener('input', e => {
+            document.getElementById('val-pen-size').textContent = e.target.value;
+        });
+
+        document.getElementById('canvas-zoom').addEventListener('input', e => {
+            const val = e.target.value;
+            document.getElementById('val-zoom').textContent = val;
+            const canvas = document.getElementById('main-canvas');
+            canvas.style.width = (state.width * (val / 100)) + 'px';
+            canvas.style.height = (state.height * (val / 100)) + 'px';
+        });
+
+        document.getElementById('btn-zoom-reset').addEventListener('click', () => {
+            if (!state.indices) return;
+            const val = 100;
+            document.getElementById('canvas-zoom').value = val;
+            document.getElementById('val-zoom').textContent = val;
+            const canvas = document.getElementById('main-canvas');
+            canvas.style.width = state.width + 'px';
+            canvas.style.height = state.height + 'px';
+        });
+
+        function handleFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = new Image();
+                img.onload = () => processImage(img);
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.getElementById('file-input').addEventListener('change', e => {
+            handleFile(e.target.files[0]);
+        });
+
+        const dropZone = document.getElementById('drop-zone');
+        dropZone.addEventListener('click', () => document.getElementById('file-input').click());
+        dropZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        document.getElementById('btn-reprocess').addEventListener('click', () => {
+            if (state.originalImage) processImage(state.originalImage);
+        });
+
+        // Adjustments
+        ['hue', 'sat', 'lit'].forEach(type => {
+            document.getElementById(`adj-${type}`).addEventListener('input', e => {
+                state.adjustments[type] = parseFloat(e.target.value);
+                document.getElementById(`val-${type}`).textContent = e.target.value;
+                updateAdjustedPalette();
+                renderSwatches();
+                render();
+            });
+
+            // Save state on change completion
+            document.getElementById(`adj-${type}`).addEventListener('change', () => {
+                // Simple hack: to avoid saving state on every little scroll,
+                // we might better save state before adjustment starts, but here we just save periodically or on mousedown
+            });
+        });
+
+        document.getElementById('adj-hue').addEventListener('mousedown', saveState);
+        document.getElementById('adj-sat').addEventListener('mousedown', saveState);
+        document.getElementById('adj-lit').addEventListener('mousedown', saveState);
+
+        // Unify Commands
+        document.getElementById('btn-unify-lit').addEventListener('click', () => {
+            saveState();
+            let totalL = 0;
+            for (let i = 1; i < state.basePalette.length; i++) {
+                totalL += rgbToHsl(state.basePalette[i].r, state.basePalette[i].g, state.basePalette[i].b)[2];
+            }
+            let avgL = totalL / (state.basePalette.length - 1);
+
+            for (let i = 1; i < state.basePalette.length; i++) {
+                let b = state.basePalette[i];
+                let hsl = rgbToHsl(b.r, b.g, b.b);
+                let rgb = hslToRgb(hsl[0], hsl[1], avgL);
+                state.basePalette[i] = { r: rgb[0], g: rgb[1], b: rgb[2], a: b.a };
+            }
+            updateAdjustedPalette();
+            renderSwatches();
+            render();
+            if (state.selectedColorIndex !== null) selectColor(state.selectedColorIndex);
+        });
+
+        document.getElementById('btn-unify-sat').addEventListener('click', () => {
+            saveState();
+            let totalS = 0;
+            for (let i = 1; i < state.basePalette.length; i++) {
+                totalS += rgbToHsl(state.basePalette[i].r, state.basePalette[i].g, state.basePalette[i].b)[1];
+            }
+            let avgS = totalS / (state.basePalette.length - 1);
+
+            for (let i = 1; i < state.basePalette.length; i++) {
+                let b = state.basePalette[i];
+                let hsl = rgbToHsl(b.r, b.g, b.b);
+                let rgb = hslToRgb(hsl[0], avgS, hsl[2]);
+                state.basePalette[i] = { r: rgb[0], g: rgb[1], b: rgb[2], a: b.a };
+            }
+            updateAdjustedPalette();
+            renderSwatches();
+            render();
+            if (state.selectedColorIndex !== null) selectColor(state.selectedColorIndex);
+        });
+
+        // Individual Color Selection Listeners
+        ['r', 'g', 'b'].forEach(chan => {
+            document.getElementById(`sel-${chan}`).addEventListener('input', e => {
+                let idx = state.selectedColorIndex;
+                if (idx === null) return;
+                
+                let val = parseInt(e.target.value);
+                document.getElementById(`val-sel-${chan}`).textContent = val;
+                
+                state.basePalette[idx][chan] = val;
+                updateAdjustedPalette();
+                renderSwatches();
+                render();
+                
+                let c = state.basePalette[idx];
+                let hex = "#" + (1 << 24 | c.r << 16 | c.g << 8 | c.b).toString(16).slice(1);
+                document.getElementById('sel-color-hex').value = hex;
+                if(c.a === 255) {
+                    document.getElementById('selected-swatch-preview').style.backgroundColor = hex;
+                }
+            });
+            // Snapshot on mousedown
+            document.getElementById(`sel-${chan}`).addEventListener('mousedown', saveState);
+        });
+
+        document.getElementById('sel-color-hex').addEventListener('change', e => {
+            let idx = state.selectedColorIndex;
+            if (idx === null) return;
+            
+            saveState();
+            let hex = e.target.value;
+            let r = parseInt(hex.substring(1,3), 16);
+            let g = parseInt(hex.substring(3,5), 16);
+            let b = parseInt(hex.substring(5,7), 16);
+            
+            state.basePalette[idx].r = r;
+            state.basePalette[idx].g = g;
+            state.basePalette[idx].b = b;
+            
+            document.getElementById('sel-r').value = r; document.getElementById('val-sel-r').textContent = r;
+            document.getElementById('sel-g').value = g; document.getElementById('val-sel-g').textContent = g;
+            document.getElementById('sel-b').value = b; document.getElementById('val-sel-b').textContent = b;
+            
+            updateAdjustedPalette();
+            renderSwatches();
+            render();
+            if(state.basePalette[idx].a === 255) {
+                document.getElementById('selected-swatch-preview').style.backgroundColor = hex;
+            }
+        });
+
+        document.getElementById('sel-transparent').addEventListener('change', e => {
+            let idx = state.selectedColorIndex;
+            if (idx === null) return;
+            saveState();
+            state.basePalette[idx].a = e.target.checked ? 0 : 255;
+            updateAdjustedPalette();
+            renderSwatches();
+            render();
+            selectColor(idx); // Complete refresh of the swatch UI
+        });
+
+        // Animation Controls
+        document.getElementById('btn-play').addEventListener('click', e => {
+            state.isPlaying = !state.isPlaying;
+            e.target.textContent = state.isPlaying ? 'Pause' : 'Play';
+            if (state.isPlaying) {
+                state.lastTick = performance.now();
+                requestAnimationFrame(animationTick);
+            }
+        });
+
+        document.getElementById('btn-step').addEventListener('click', () => {
+            rotatePalette();
+        });
+
+        document.getElementById('btn-add-range').addEventListener('click', addRange);
+
+        function syncControlsToState() {
+            document.getElementById('adj-hue').value = state.adjustments.hue;
+            document.getElementById('val-hue').textContent = state.adjustments.hue;
+
+            document.getElementById('adj-sat').value = state.adjustments.sat;
+            document.getElementById('val-sat').textContent = state.adjustments.sat;
+
+            document.getElementById('adj-lit').value = state.adjustments.lit;
+            document.getElementById('val-lit').textContent = state.adjustments.lit;
+        }
+
+        document.getElementById('btn-export-gif').addEventListener('click', async () => {
+            if (!state.indices || state.ranges.length === 0) return;
+
+            const status = document.getElementById('export-status');
+            status.textContent = "Loading GIF encoder...";
+
+            try {
+                // We now use the embedded GifWriter directly.
+
+                // Calculate LCM of range lengths for a full perfect loop
+                function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+                function lcm(a, b) { return (a * b) / gcd(a, b); }
+
+                let stepCount = state.ranges.map(r => r.end - r.start + 1).reduce((acc, val) => lcm(acc, val), 1);
+
+                if (stepCount > 100) {
+                    if (!confirm(`Cycle length is ${stepCount} frames. This might take a while. Proceed?`)) {
+                        status.textContent = "Canceled.";
+                        return;
+                    }
+                } else if (stepCount <= 0) {
+                    stepCount = 1;
+                }
+
+                status.textContent = `Rendering ${stepCount} frames...`;
+
+                // Wait a frame for UI to update
+                await new Promise(resolve => setTimeout(resolve, 50));
+
+                // Ensure buffer is large enough for the whole GIF
+                // Worse case logic: width * height bytes per frame + overhead
+                const maxBufferSize = state.width * state.height * stepCount + 1024 * stepCount + 1024;
+                const buffer = new Uint8Array(maxBufferSize);
+                const gifOpts = { loop: 0 }; // 0 = infinite loop
+                const gif = new GifWriter(buffer, state.width, state.height, gifOpts);
+
+                let originalPalette = JSON.parse(JSON.stringify(state.currentPalette));
+                let originalBase = JSON.parse(JSON.stringify(state.basePalette));
+                let speed = parseInt(document.getElementById('anim-speed').value);
+                let delayInHundredths = Math.max(2, Math.round(speed / 10)); // Convert ms to 10ms units
+
+                for (let f = 0; f < stepCount; f++) {
+                    // Ensure indices is flattened to 8-bit and bounded to 255
+                    // And map any transparency in currentPalette to physical index 0 dynamically per frame
+                    const indices8 = new Uint8Array(state.indices.length);
+                    for(let i=0; i<state.indices.length; i++) {
+                        let val = state.indices[i] > 255 ? 255 : state.indices[i];
+                        if (state.currentPalette[val] && state.currentPalette[val].a < 128) {
+                            val = 0; // map currently transparent pixels solidly to index 0 (which is the exact GIF transparent index)
+                        }
+                        indices8[i] = val;
+                    }
+
+                    let curPalLen = state.currentPalette.length;
+                    if (curPalLen > 256) curPalLen = 256;
+                    
+                    let omgPalette = [];
+                    for (let i = 0; i < curPalLen; i++) {
+                        let c = state.currentPalette[i];
+                        omgPalette.push((c.r << 16) | (c.g << 8) | c.b);
+                    }
+
+                    // omggif requires palette length to be a power of 2 (2, 4, 8, 16, 32, 64, 128, 256)
+                    let p2 = 2;
+                    while (p2 < omgPalette.length) p2 *= 2;
+                    while (omgPalette.length < p2) omgPalette.push(0);
+
+                    gif.addFrame(0, 0, state.width, state.height, indices8, {
+                        palette: omgPalette,
+                        delay: delayInHundredths,
+                        transparent: 0 // transparent index
+                    });
+
+                    rotatePalette(true); // quiet
+                }
+
+                state.currentPalette = originalPalette;
+                state.basePalette = originalBase;
+                render();
+                renderSwatches();
+
+                // Slice the buffer to the actual compiled length
+                const finalBuffer = buffer.slice(0, gif.end());
+                const blob = new Blob([finalBuffer], { type: 'image/gif' });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'animated_palette.gif';
+                a.click();
+
+                status.textContent = "Export complete!";
+                setTimeout(() => status.textContent = "", 3000);
+
+            } catch (e) {
+                console.error(e);
+                status.textContent = "Failed to load encoder. Are you offline or is the CDN blocked?";
+            }
+        });
+
+    </script>
+</body>
+
+</html>

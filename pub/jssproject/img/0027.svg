@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-label="Binary Glitch Laboratory thumbnail">
+  <rect width="960" height="540" fill="#111315"/>
+  <rect x="28" y="28" width="904" height="484" rx="18" fill="#191d20" stroke="#394147" stroke-width="3"/>
+  <text x="56" y="74" fill="#e7eceb" font-family="Consolas, monospace" font-size="30" font-weight="700">Binary Glitch Laboratory</text>
+  <text x="56" y="112" fill="#9aa6a5" font-family="Consolas, monospace" font-size="18">structure aware hex editor</text>
+  <rect x="56" y="148" width="250" height="330" rx="10" fill="#20262a" stroke="#394147"/>
+  <rect x="80" y="180" width="198" height="38" rx="8" fill="#14302f" stroke="#4fd1c5"/>
+  <rect x="80" y="238" width="198" height="42" rx="8" fill="#331d20" stroke="#ff6b6b"/>
+  <rect x="80" y="298" width="198" height="42" rx="8" fill="#183024" stroke="#7bd88f"/>
+  <rect x="80" y="358" width="90" height="42" rx="8" fill="#302719" stroke="#f2b84b"/>
+  <rect x="184" y="358" width="94" height="42" rx="8" fill="#12302e" stroke="#4fd1c5"/>
+  <text x="94" y="205" fill="#e7eceb" font-family="Consolas, monospace" font-size="18">PNG IHDR</text>
+  <text x="94" y="265" fill="#e7eceb" font-family="Consolas, monospace" font-size="18">header lock</text>
+  <text x="94" y="325" fill="#e7eceb" font-family="Consolas, monospace" font-size="18">IDAT data</text>
+  <text x="102" y="386" fill="#e7eceb" font-family="Consolas, monospace" font-size="16">shift</text>
+  <text x="202" y="386" fill="#e7eceb" font-family="Consolas, monospace" font-size="16">repeat</text>
+  <rect x="334" y="148" width="570" height="330" rx="10" fill="#0d1012" stroke="#394147"/>
+  <g font-family="Consolas, monospace" font-size="21">
+    <text x="360" y="188" fill="#77a8ff">00000000</text>
+    <text x="360" y="230" fill="#77a8ff">00000010</text>
+    <text x="360" y="272" fill="#77a8ff">00000020</text>
+    <text x="360" y="314" fill="#77a8ff">00000030</text>
+    <text x="360" y="356" fill="#77a8ff">00000040</text>
+    <text x="360" y="398" fill="#77a8ff">00000050</text>
+    <text x="360" y="440" fill="#77a8ff">00000060</text>
+    <text x="492" y="188" fill="#e7eceb">89 50 4E 47 0D 0A 1A 0A</text>
+    <text x="492" y="230" fill="#ffcf70">00 00 00 0D 49 48 44 52</text>
+    <text x="492" y="272" fill="#7bd88f">78 A4 1F 0B 9C 22 7E 40</text>
+    <text x="492" y="314" fill="#7bd88f">61 6D E2 9A 00 FF 13 C8</text>
+    <text x="492" y="356" fill="#4fd1c5">21 F9 04 00 08 00 00 00</text>
+    <text x="492" y="398" fill="#7bd88f">3A 3A 8C 91 42 44 19 D0</text>
+    <text x="492" y="440" fill="#e7eceb">49 45 4E 44 AE 42 60 82</text>
+  </g>
+  <rect x="486" y="253" width="286" height="32" rx="5" fill="#7bd88f" opacity=".18" stroke="#7bd88f"/>
+  <rect x="486" y="211" width="286" height="32" rx="5" fill="#ff6b6b" opacity=".18" stroke="#ff6b6b"/>
+</svg>

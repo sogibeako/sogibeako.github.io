@@ -1,0 +1,3 @@
+monsterId,priority,minLevel,maxLevel,selfHpBelow,selfHpAbove,targetHpBelow,requiredState,forbiddenState,addSkillSet,targetRule,note
+fire_slime,1,1,999,,,,,,basic_slime,normal_enemy,基本セット
+fire_slime,2,40,999,,,,,,fire_magic_1,weakpoint_enemy,Lv40以降で炎魔法追加

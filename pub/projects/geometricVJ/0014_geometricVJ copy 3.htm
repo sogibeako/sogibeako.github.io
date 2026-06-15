@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>* Mathematical Pattern Extended *</title>
+    <style>
+        :root {
+            --bg-color: #111822;
+            /* 青っぽい背景色 */
+            --header-bg: #609aa0;
+            /* 秋雨 */
+            --header-text: #000;
+            --text-color: #fff;
+            --panel-bg: #1c2633;
+            --border-color: #3b4d61;
+            --accent-color: #8ed6de;
+        }
+
+        body {
+            font-size: 1rem;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            font-family: sans-serif;
+            line-height: 1.6;
+        }
+
+        a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        h1,
+        h2 {
+            background-color: var(--header-bg);
+            color: var(--header-text);
+            padding: 0.5em;
+            margin-top: 0;
+        }
+
+        hr {
+            border-width: 2px 0 0 0;
+            border-style: dashed;
+            border-color: var(--header-bg);
+            margin: 20px 0;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .controls-panel {
+            flex: 1 1 350px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            max-width: 500px;
+        }
+
+        .canvas-panel {
+            flex: 0 0 auto;
+        }
+
+        canvas {
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: #000;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .control-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .control-group h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.1rem;
+            color: var(--accent-color);
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        label {
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            background: #0d121a;
+            color: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 1rem;
+        }
+
+        select,
+        button {
+            padding: 6px 10px;
+            background: #2a3a4d;
+            color: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        button {
+            background: var(--header-bg);
+            color: var(--header-text);
+            font-weight: bold;
+        }
+
+        button:hover {
+            filter: brightness(1.1);
+        }
+
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            border: 1px solid transparent;
+        }
+
+        .slider-container.active-lfo {
+            border-color: var(--accent-color);
+            background: rgba(142, 214, 222, 0.05);
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .slider-val {
+            font-family: monospace;
+            color: var(--accent-color);
+            min-width: 50px;
+            text-align: right;
+            display: inline-block;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin: 5px 0;
+        }
+
+        input[type="color"] {
+            width: 56px;
+            height: 36px;
+            padding: 2px;
+            box-sizing: border-box;
+            background: #0d121a;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .lfo-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-items: center;
+            margin-top: 5px;
+            font-size: 0.8rem;
+        }
+
+        .lfo-controls input[type="text"] {
+            flex: 1;
+            min-width: 120px;
+            padding: 4px;
+            font-size: 0.8rem;
+        }
+
+        .auto-cb-label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            color: #ccc;
+        }
+
+        .auto-cb-label input {
+            margin: 0;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media screen and (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .controls-panel {
+                max-width: 100%;
+            }
+
+            canvas {
+                width: 100%;
+                height: auto;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@12.4.2/lib/browser/math.js"></script>
+    <script src="../../jssproject/0019/js/omggif.js"></script>
+</head>
+
+<body>
+
+    <div>現在位置 : <a href="../index.html">ホーム</a> ＞ <a href="index.htm">JS Project</a> ＞ <a
+            href="0014_geometricVJ.htm"><b>#014</b></a></div>
+    <hr>
+
+    <div class="container">
+        <!-- Controls Panel -->
+        <div class="controls-panel">
+
+            <!-- Formula Section -->
+            <div class="control-group">
+                <h3>1. Formula & Execution</h3>
+
+                <div class="row">
+                    <label>Presets:
+                        <select id="selPreset">
+                            <option value="">-- Custom / Select Preset --</option>
+                            <option value="max(abs(sin(theta * a)), bitXor(floor(r * b), floor(theta * c))/16)">
+                                Interference Box (Default)</option>
+                            <option value="sin(theta * a) * cos(r * b)">Floral Petals</option>
+                            <option value="sin(nx * a + t) + cos(ny * b - t)">Wave Interference</option>
+                            <option value="sin(r * a - t * b + theta * c)">VJ Rotator</option>
+                            <option value="bitXor(floor(r * a), floor(abs(sin(theta * b)) * 16)) / 16">Bitwise Rings
+                            </option>
+                            <option value="sin(r * a) * cos(theta * b) + sin(t * c)">Pulsing Star</option>
+                            <option value="(bitXor(floor(nx * a), floor(ny * b))) / c">Retro 8-bit Glitch</option>
+                            <option value="sin(r * a + t) * cos(nx * b) + sin(ny * c + t)">Plasma Dream</option>
+                            <option value="sin(theta * a + sin(r * b - t * c))">Hypnotic Spiral</option>
+                            <option value="( floor(nx * a) + floor(ny * b) ) % c">Checkered Pattern</option>
+                        </select>
+                    </label>
+                </div>
+
+                <label for="formulaInput">Z = f(nx, ny, r, theta, a, b, c, d, t)</label>
+                <input type="text" id="formulaInput"
+                    value="max(abs(sin(theta * a)), bitXor(floor(r * b), floor(theta * c))/16)">
+
+                <div class="row" style="margin-top: 10px;">
+                    <button id="btnRedraw">🔄 描画 (Redraw)</button>
+                    <label style="margin-left:auto;">
+                        <input type="checkbox" id="cbAnimateFormula"> Animate Formula ( t )
+                    </label>
+                </div>
+                <div class="row">
+                    <label>Tile Count:
+                        <select id="selTile">
+                            <option value="1">1</option>
+                            <option value="2" selected>4 (2x2)</option>
+                            <option value="4">16 (4x4)</option>
+                            <option value="8">64 (8x8)</option>
+                        </select>
+                    </label>
+                    <label>Normalize:
+                        <select id="selNormalize">
+                            <option value="tanh" selected>tanh</option>
+                            <option value="linear1">Linear [-1,1]</option>
+                            <option value="linear4">Linear [-4,4]</option>
+                            <option value="raw">Raw</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Palette Section -->
+            <div class="control-group">
+                <h3>2. Color Palette</h3>
+                <div class="row">
+                    <label>Category:
+                        <select id="selPaletteCategory"></select>
+                    </label>
+                    <label>Palette:
+                        <select id="selPaletteName"></select>
+                    </label>
+                </div>
+                <div class="row">
+                    <label>Colors (Quantize):
+                        <select id="selQuantize">
+                            <option value="0" selected>Unlimited</option>
+                            <option value="256">256 Colors</option>
+                            <option value="16">16 Colors</option>
+                            <option value="8">8 Colors</option>
+                            <option value="4">4 Colors</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="row">
+                    <label>Color Mapping:
+                        <select id="selColorMode">
+                            <option value="paletteDefault" selected>Use Palette Default</option>
+                            <option value="custom3Smooth">Custom 3-Point Smooth</option>
+                        </select>
+                    </label>
+                    <button id="btnLoadPaletteToCustom" type="button">🎨 Load current palette</button>
+                </div>
+
+                <div id="customColorControls" class="hidden">
+                    <div class="row">
+                        <label>Start:
+                            <input type="color" id="inColorStart" value="#000000">
+                        </label>
+                        <label>Mid:
+                            <input type="color" id="inColorMid" value="#00ffff">
+                        </label>
+                        <label>End:
+                            <input type="color" id="inColorEnd" value="#ffffff">
+                        </label>
+                    </div>
+                    <div class="row">
+                        <label>Mid Position:
+                            <input type="range" id="slColorMidPos" min="0.05" max="0.95" step="0.01" value="0.5">
+                        </label>
+                        <span class="slider-val" id="valColorMidPos">0.50</span>
+                    </div>
+                </div>
+
+                <!-- Palette Shift -->
+                <div class="slider-container" id="container_paletteShift">
+                    <div class="slider-header">
+                        <label>Palette Shift</label>
+                        <span class="slider-val" id="val_paletteShift">0.00</span>
+                    </div>
+                    <input type="range" id="sl_paletteShift" min="0" max="1" step="0.01" value="0">
+
+                    <div class="row">
+                        <label class="auto-cb-label"><input type="checkbox" class="cb-auto" data-target="paletteShift">
+                            Auto(LFO)</label>
+                    </div>
+                    <div class="lfo-controls hidden" id="lfo_paletteShift">
+                        <select class="sel-lfo-type" data-target="paletteShift">
+                            <option value="linear">Linear Loop</option>
+                            <option value="sine">Sine</option>
+                            <option value="saw">Sawtooth</option>
+                            <option value="triangle">Triangle</option>
+                            <option value="custom">Custom(beat)</option>
+                        </select>
+                        <select class="sel-lfo-rate" data-target="paletteShift">
+                            <option value="4">4 Beats</option>
+                            <option value="2">2 Beats</option>
+                            <option value="1" selected>1 Beat</option>
+                            <option value="0.5">1/2 Beat</option>
+                            <option value="0.25">1/4 Beat</option>
+                        </select>
+                        <label>Depth:</label>
+                        <input type="number" class="in-lfo-depth" data-target="paletteShift" value="1" step="0.1"
+                            style="width:50px;">
+                        <input type="text" class="in-lfo-custom hidden" data-target="paletteShift" value="(beat % 1)"
+                            placeholder="e.g. sin(beat*PI)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Variables & LFO Section -->
+            <div class="control-group">
+                <h3>3. Variables & BPM Synchronization</h3>
+                <div class="row">
+                    <label>Global BPM: <input type="number" id="inBpm" value="120" style="width:60px;"></label>
+                </div>
+
+                <!-- Variable A -->
+                <div class="slider-container" id="container_a">
+                    <div class="slider-header">
+                        <label>Var [a]</label>
+                        <span class="slider-val" id="val_a">8.00</span>
+                    </div>
+                    <input type="range" id="sl_a" min="0" max="32" step="0.1" value="8">
+                    <div class="row">
+                        <label class="auto-cb-label"><input type="checkbox" class="cb-auto" data-target="a">
+                            Auto(LFO)</label>
+                    </div>
+                    <div class="lfo-controls hidden" id="lfo_a">
+                        <select class="sel-lfo-type" data-target="a">
+                            <option value="sine" selected>Sine</option>
+                            <option value="saw">Sawtooth</option>
+                            <option value="triangle">Triangle</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                        <select class="sel-lfo-rate" data-target="a">
+                            <option value="8">8 Beats</option>
+                            <option value="4" selected>4 Beats</option>
+                            <option value="2">2 Beats</option>
+                            <option value="1">1 Beat</option>
+                            <option value="0.5">1/2 Beat</option>
+                        </select>
+                        <label>Depth:</label>
+                        <input type="number" class="in-lfo-depth" data-target="a" value="8" step="1"
+                            style="width:50px;">
+                        <input type="text" class="in-lfo-custom hidden" data-target="a" value="sin(beat*PI/2)*8"
+                            placeholder="e.g. sin(beat*PI)">
+                    </div>
+                </div>
+
+                <!-- Variable B -->
+                <div class="slider-container" id="container_b">
+                    <div class="slider-header">
+                        <label>Var [b]</label>
+                        <span class="slider-val" id="val_b">3.00</span>
+                    </div>
+                    <input type="range" id="sl_b" min="0" max="32" step="0.1" value="3">
+                    <div class="row">
+                        <label class="auto-cb-label"><input type="checkbox" class="cb-auto" data-target="b">
+                            Auto(LFO)</label>
+                    </div>
+                    <div class="lfo-controls hidden" id="lfo_b">
+                        <select class="sel-lfo-type" data-target="b">
+                            <option value="sine">Sine</option>
+                            <option value="saw">Sawtooth</option>
+                            <option value="triangle" selected>Triangle</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                        <select class="sel-lfo-rate" data-target="b">
+                            <option value="4">4 Beats</option>
+                            <option value="2" selected>2 Beats</option>
+                            <option value="1">1 Beat</option>
+                        </select>
+                        <label>Depth:</label>
+                        <input type="number" class="in-lfo-depth" data-target="b" value="4" step="1"
+                            style="width:50px;">
+                        <input type="text" class="in-lfo-custom hidden" data-target="b" value="abs(sin(beat*PI))*4">
+                    </div>
+                </div>
+
+                <!-- Variable C -->
+                <div class="slider-container" id="container_c">
+                    <div class="slider-header">
+                        <label>Var [c]</label>
+                        <span class="slider-val" id="val_c">16.00</span>
+                    </div>
+                    <input type="range" id="sl_c" min="1" max="64" step="1" value="16">
+                    <div class="row">
+                        <label class="auto-cb-label"><input type="checkbox" class="cb-auto" data-target="c">
+                            Auto(LFO)</label>
+                    </div>
+                    <div class="lfo-controls hidden" id="lfo_c">
+                        <select class="sel-lfo-type" data-target="c">
+                            <option value="sine">Sine</option>
+                            <option value="saw" selected>Sawtooth</option>
+                            <option value="triangle">Triangle</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                        <select class="sel-lfo-rate" data-target="c">
+                            <option value="8">8 Beats</option>
+                            <option value="4" selected>4 Beats</option>
+                            <option value="1">1 Beat</option>
+                        </select>
+                        <label>Depth:</label>
+                        <input type="number" class="in-lfo-depth" data-target="c" value="16" step="1"
+                            style="width:50px;">
+                        <input type="text" class="in-lfo-custom hidden" data-target="c" value="(beat%4)*4">
+                    </div>
+                </div>
+
+                <!-- Variable D -->
+                <div class="slider-container" id="container_d">
+                    <div class="slider-header">
+                        <label>Var [d]</label>
+                        <span class="slider-val" id="val_d">0.00</span>
+                    </div>
+                    <input type="range" id="sl_d" min="-10" max="10" step="0.1" value="0">
+                    <div class="row">
+                        <label class="auto-cb-label"><input type="checkbox" class="cb-auto" data-target="d">
+                            Auto(LFO)</label>
+                    </div>
+                    <div class="lfo-controls hidden" id="lfo_d">
+                        <select class="sel-lfo-type" data-target="d">
+                            <option value="sine" selected>Sine</option>
+                            <option value="saw">Sawtooth</option>
+                            <option value="triangle">Triangle</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                        <select class="sel-lfo-rate" data-target="d">
+                            <option value="4">4 Beats</option>
+                            <option value="1">1 Beat</option>
+                        </select>
+                        <label>Depth:</label>
+                        <input type="number" class="in-lfo-depth" data-target="d" value="5" step="0.1"
+                            style="width:50px;">
+                        <input type="text" class="in-lfo-custom hidden" data-target="d" value="2*sin(beat*PI)">
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- GIF Export Section -->
+            <div class="control-group">
+                <h3>4. GIF Export</h3>
+                <div class="row">
+                    <label>Resolution:
+                        <select id="selGifRes">
+                            <option value="600">600x600 (High Q, Large)</option>
+                            <option value="300" selected>300x300 (Fast, Small)</option>
+                        </select>
+                    </label>
+                </div>
+                <div class="row">
+                    <button id="btnExportGif" style="background:#3b82f6;">🎬 Export 1 Cycle GIF</button>
+                </div>
+                <div id="exportStatus" style="font-size:0.9rem; color:#ffdd55; display:none; margin-top:5px;"></div>
+            </div>
+
+            <div class="control-group">
+                <h3>5. Distortion</h3>
+
+                <div class="slider-container">
+                    <div class="slider-header"><label>Scroll X</label><span class="slider-val"
+                            id="val_scrollX">0.00</span></div>
+                    <input type="range" id="sl_scrollX" min="-1" max="1" step="0.01" value="0">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-header"><label>Scroll Y</label><span class="slider-val"
+                            id="val_scrollY">0.00</span></div>
+                    <input type="range" id="sl_scrollY" min="-1" max="1" step="0.01" value="0">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-header"><label>Osc X Amp</label><span class="slider-val"
+                            id="val_ampX2">0.05</span></div>
+                    <input type="range" id="sl_ampX2" min="0" max="0.2" step="0.001" value="0.05">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-header"><label>Osc X Freq</label><span class="slider-val"
+                            id="val_freqX2">1.00</span></div>
+                    <input type="range" id="sl_freqX2" min="0" max="8" step="0.01" value="1">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-header"><label>Osc X Speed</label><span class="slider-val"
+                            id="val_speedX2">2.00</span></div>
+                    <input type="range" id="sl_speedX2" min="0" max="5" step="0.05" value="2">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-header"><label>Osc Y Amp</label><span class="slider-val"
+                            id="val_ampY2">0.00</span></div>
+                    <input type="range" id="sl_ampY2" min="0" max="0.2" step="0.001" value="0">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-header"><label>Osc Y Freq</label><span class="slider-val"
+                            id="val_freqY2">0.00</span></div>
+                    <input type="range" id="sl_freqY2" min="0" max="8" step="0.01" value="0">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-header"><label>Osc Y Speed</label><span class="slider-val"
+                            id="val_speedY2">0.00</span></div>
+                    <input type="range" id="sl_speedY2" min="0" max="5" step="0.05" value="0">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-header"><label>Interlace Even</label><span class="slider-val"
+                            id="val_ampEven">0.00</span></div>
+                    <input type="range" id="sl_ampEven" min="0" max="0.2" step="0.001" value="0">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-header"><label>Interlace Odd</label><span class="slider-val"
+                            id="val_ampOdd">0.00</span></div>
+                    <input type="range" id="sl_ampOdd" min="0" max="0.2" step="0.001" value="0">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-header"><label>Interlace Freq</label><span class="slider-val"
+                            id="val_freqInter">15.00</span></div>
+                    <input type="range" id="sl_freqInter" min="0" max="30" step="0.5" value="15">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-header"><label>Line Amp</label><span class="slider-val"
+                            id="val_lineAmp">0.05</span></div>
+                    <input type="range" id="sl_lineAmp" min="0" max="0.2" step="0.001" value="0.05">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-header"><label>Line Freq</label><span class="slider-val"
+                            id="val_lineFreq">4.00</span></div>
+                    <input type="range" id="sl_lineFreq" min="0" max="10" step="0.1" value="4">
+                </div>
+
+                <div class="slider-container">
+                    <div class="slider-header"><label>Line Speed</label><span class="slider-val"
+                            id="val_lineSpeed">1.50</span></div>
+                    <input type="range" id="sl_lineSpeed" min="0" max="5" step="0.05" value="1.5">
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Canvas Panel -->
+        <div class="canvas-panel">
+            <canvas id="patternCanvas" width="600" height="600"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // --- Core Definitions ---
+        const canvas = document.getElementById("patternCanvas");
+        const ctx = canvas.getContext("2d");
+        let width = canvas.width;
+        let height = canvas.height;
+        const range = 2; // -1 to 1
+
+        // Variables
+        let compiledFormulaAST = null;
+        let nativeEvalFunc = null;
+        let compiledCustomLFOs = {};
+        let t = 0;
+        let lastTimePos = 0;
+        let isAnimating = true;
+
+        let lastTileSignature = "";
+        let lastDistortSignature = "";
+
+        let lastDistortUpdateMs = -Infinity;
+        const DISTORT_FPS = 30;
+        const DISTORT_INTERVAL = 1000 / DISTORT_FPS;
+
+        const distortWorkCanvas = document.createElement("canvas");
+        const distortWorkCtx = distortWorkCanvas.getContext("2d");
+
+        // 補助関数（redrawFrame() 内で用いる）
+        function makeTileSignature(currentTime, lfoVars, renderProps, baseCellWidth, baseCellHeight) {
+            return [
+                document.getElementById("formulaInput").value,
+                document.getElementById("cbAnimateFormula").checked ? Math.floor((currentTime || 0) / 16) : 0,
+                lfoVars.a, lfoVars.b, lfoVars.c, lfoVars.d,
+                renderProps.paletteName || document.getElementById("selPaletteName").value,
+                renderProps.quantize,
+                renderProps.nomalizeMode,
+                renderProps.paletteShift,
+                baseCellWidth, baseCellHeight
+            ].join("|");
+        }
+
+        function makeDistortSignature(params, srcW, srcH) {
+            return [
+                Math.floor(params.time * 30), // 30fps相当で丸める
+                params.scrollX, params.scrollY,
+                params.ampX, params.freqX, params.speedX,
+                params.ampY, params.freqY, params.speedY,
+                params.ampEven, params.ampOdd, params.freqInter,
+                params.lineAmp, params.lineFreq, params.lineSpeed,
+                srcW, srcH
+            ].join("|");
+        }
+
+        // Define math.js custom functions for fallback
+        math.import({
+            bitOr: function (a, b) { return (a | b) | 0; },
+            bitAnd: function (a, b) { return (a & b) | 0; },
+            bitXor: function (a, b) { return (a ^ b) | 0; },
+            bitNot: function (a) { return (~a) | 0; }
+        }, { override: true });
+
+        // --- Math.js AST to Native JS Compiler ---
+        // Translates a math.js AST node into raw JavaScript code string
+        function compileAstToNativeJs(node) {
+            if (node.isSymbolNode) {
+                // Map common constants and variables to the scope
+                const name = node.name;
+                if (name === 'pi' || name === 'PI') return 'Math.PI';
+                if (name === 'e' || name === 'E') return 'Math.E';
+                // Authorized scope variables
+                if (['nx', 'ny', 'r', 'theta', 'a', 'b', 'c', 'd', 't'].includes(name)) {
+                    return `scope.${name}`;
+                }
+                throw new Error(`Unknown variable: ${name}`);
+            }
+            else if (node.isConstantNode) {
+                return node.value.toString();
+            }
+            else if (node.isOperatorNode) {
+                if (node.args.length === 1) {
+                    const arg = compileAstToNativeJs(node.args[0]);
+                    return `(${node.op}${arg})`;
+                } else if (node.args.length === 2) {
+                    let left = compileAstToNativeJs(node.args[0]);
+                    let right = compileAstToNativeJs(node.args[1]);
+
+                    // Special handling for bitwise since JS requires them to be integers
+                    const op = node.op;
+                    if (op === '^') {
+                        return `Math.pow(${left}, ${right})`;
+                    } else {
+                        return `(${left} ${op} ${right})`;
+                    }
+                }
+            }
+            else if (node.isFunctionNode) {
+                const fnName = node.fn.name;
+                const args = node.args.map(compileAstToNativeJs);
+                const argsStr = args.join(', ');
+
+                switch (fnName) {
+                    case 'sin': case 'cos': case 'tan':
+                    case 'asin': case 'acos': case 'atan':
+                    case 'abs': case 'sqrt': case 'cbrt':
+                    case 'exp': case 'log': case 'floor':
+                    case 'ceil': case 'round': case 'sign':
+                    case 'max': case 'min': case 'atan2':
+                        return `Math.${fnName}(${argsStr})`;
+
+                    case 'bitXor':
+                        if (args.length !== 2) throw new Error("bitXor takes 2 arguments");
+                        return `((${args[0]} ^ ${args[1]}) | 0)`;
+                    case 'bitAnd':
+                        if (args.length !== 2) throw new Error("bitAnd takes 2 arguments");
+                        return `((${args[0]} & ${args[1]}) | 0)`;
+                    case 'bitOr':
+                        if (args.length !== 2) throw new Error("bitOr takes 2 arguments");
+                        return `((${args[0]} | ${args[1]}) | 0)`;
+                    case 'bitNot':
+                        if (args.length !== 1) throw new Error("bitNot takes 1 argument");
+                        return `((~${args[0]}) | 0)`;
+
+                    default:
+                        throw new Error(`Unsupported function: ${fnName}`);
+                }
+            }
+            else if (node.isParenthesisNode) {
+                return `(${compileAstToNativeJs(node.content)})`;
+            }
+
+            throw new Error(`Unsupported syntax node: ${node.type}`);
+        }
+
+        // --- Palettes Definition ---
+        // Utility for continuous palettes
+        function hslContinuous(t, sat, light) {
+            return `hsl(${t * 360}, ${sat}%, ${light}%)`;
+        }
+        function interpolateColorRgb(color1, color2, t) {
+            const c1 = parseInt(color1.slice(1), 16);
+            const c2 = parseInt(color2.slice(1), 16);
+            const r1 = (c1 >> 16) & 0xFF, g1 = (c1 >> 8) & 0xFF, b1 = c1 & 0xFF;
+            const r2 = (c2 >> 16) & 0xFF, g2 = (c2 >> 8) & 0xFF, b2 = c2 & 0xFF;
+
+            const r = Math.round(r1 + (r2 - r1) * t);
+            const g = Math.round(g1 + (g2 - g1) * t);
+            const b = Math.round(b1 + (b2 - b1) * t);
+
+            return `rgb(${r}, ${g}, ${b})`;
+        }
+        function getGradientStopColor(stops, t) {
+            if (t <= stops[0].pos) return stops[0].color;
+            if (t >= stops[stops.length - 1].pos) return stops[stops.length - 1].color;
+            for (let i = 0; i < stops.length - 1; i++) {
+                const s1 = stops[i];
+                const s2 = stops[i + 1];
+                if (t >= s1.pos && t < s2.pos) {
+                    const localT = (t - s1.pos) / (s2.pos - s1.pos);
+                    return interpolateColorRgb(s1.color, s2.color, localT);
+                }
+            }
+            return "#000000";
+        }
+
+        function hexToRgbObj(hex) {
+            const c = parseInt(hex.slice(1), 16);
+            return {
+                r: (c >> 16) & 0xFF,
+                g: (c >> 8) & 0xFF,
+                b: c & 0xFF
+            };
+        }
+
+        function rgbObjToHex({ r, g, b }) {
+            const toHex = v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0");
+            return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        }
+
+        function lerp(a, b, t) {
+            return a + (b - a) * t;
+        }
+
+        function lerpRgbObj(c1, c2, t) {
+            return {
+                r: lerp(c1.r, c2.r, t),
+                g: lerp(c1.g, c2.g, t),
+                b: lerp(c1.b, c2.b, t)
+            };
+        }
+
+        function smoothstep01(x) {
+            x = Math.max(0, Math.min(1, x));
+            return x * x * (3 - 2 * x);
+        }
+
+        function getThreePointSmoothColor(t, startHex, midHex, endHex, midPos = 0.5) {
+            const pt = Math.max(0, Math.min(1, t));
+            const mp = Math.max(0.05, Math.min(0.95, midPos));
+
+            const s = hexToRgbObj(startHex);
+            const m = hexToRgbObj(midHex);
+            const e = hexToRgbObj(endHex);
+
+            if (pt <= mp) {
+                let lt = pt / mp;
+                lt = smoothstep01(lt);
+                return rgbObjToHex(lerpRgbObj(s, m, lt));
+            } else {
+                let lt = (pt - mp) / (1 - mp);
+                lt = smoothstep01(lt);
+                return rgbObjToHex(lerpRgbObj(m, e, lt));
+            }
+        }
+
+        const paletteDefinitions = {
+            // Gradient
+            monoBlue: { category: "gradient", type: "continuous", label: "Mono Blue", fn: t => interpolateColorRgb("#1a2a40", "#6bc2e8", t) },
+            sunsetBurst: {
+                category: "gradient", type: "continuous", label: "Sunset Burst", fn: t => {
+                    if (t < 0.5) return interpolateColorRgb("#4a0e4e", "#d94b28", t * 2);
+                    return interpolateColorRgb("#d94b28", "#f2d338", (t - 0.5) * 2);
+                }
+            },
+            violetMist: { category: "gradient", type: "continuous", label: "Violet Mist", fn: t => interpolateColorRgb("#1c0a2b", "#d0c4df", t) },
+            hueRainbow: { category: "gradient", type: "continuous", label: "Hue Rainbow", fn: t => hslContinuous(t, 90, 50) },
+            grayscale: { category: "gradient", type: "continuous", label: "Grayscale", fn: t => `rgb(${t * 255}, ${t * 255}, ${t * 255})` },
+            oceanBreeze: { category: "gradient", type: "continuous", label: "Ocean Breeze", fn: t => interpolateColorRgb("#003366", "#44ffee", t) },
+            forestCanopy: {
+                category: "gradient", type: "continuous", label: "Forest Canopy", fn: t => {
+                    if (t < 0.5) return interpolateColorRgb("#0f2910", "#3aa83c", t * 2);
+                    return interpolateColorRgb("#3aa83c", "#bdfa89", (t - 0.5) * 2);
+                }
+            },
+
+            // Retro / MSX
+            msxBasic: {
+                category: "retro", type: "indexed", label: "MSX Basic", colors: [
+                    "#000000", "#3EB849", "#74D07D", "#5955E0", "#8076F1", "#B95E51", "#65DBEF", "#DB6559",
+                    "#FF897D", "#CCC35E", "#DED087", "#3AA241", "#B766B5", "#CCCCCC", "#FFFFFF"
+                ]
+            },
+            gameboyLike: { category: "retro", type: "indexed", label: "Gameboy", colors: ["#0f380f", "#306230", "#8bac0f", "#9bbc0f"] },
+            cgaPalette: { category: "retro", type: "indexed", label: "CGA Palette 1", colors: ["#000000", "#55FFFF", "#FF55FF", "#FFFFFF"] },
+            amberCRT: {
+                category: "retro", type: "gradientStops", label: "Amber CRT", stops: [
+                    { pos: 0, color: "#221100" }, { pos: 0.5, color: "#cc7700" }, { pos: 1.0, color: "#ffaa00" }
+                ]
+            },
+
+            // VJ
+            vjLaser: {
+                category: "vj", type: "gradientStops", label: "VJ Laser", stops: [
+                    { pos: 0, color: "#000000" }, { pos: 0.3, color: "#00ff66" }, { pos: 0.7, color: "#ffee00" }, { pos: 1.0, color: "#ffffff" }
+                ]
+            },
+            vjNeonMagenta: {
+                category: "vj", type: "gradientStops", label: "VJ Neon Magenta", stops: [
+                    { pos: 0, color: "#000000" }, { pos: 0.4, color: "#8800ff" }, { pos: 0.8, color: "#ff00dd" }, { pos: 1.0, color: "#ffffff" }
+                ]
+            },
+            vjAcid: {
+                category: "vj", type: "gradientStops", label: "VJ Acid", stops: [
+                    { pos: 0, color: "#001144" }, { pos: 0.5, color: "#00ffff" }, { pos: 0.9, color: "#ff00ff" }, { pos: 1.0, color: "#ffffff" }
+                ]
+            },
+            synthwave: {
+                category: "vj", type: "gradientStops", label: "Synthwave", stops: [
+                    { pos: 0, color: "#0f082e" }, { pos: 0.3, color: "#4f117a" }, { pos: 0.6, color: "#b91d73" }, { pos: 0.8, color: "#f953c6" }, { pos: 1.0, color: "#ff9a9e" }
+                ]
+            },
+            cyberpunk: {
+                category: "vj", type: "gradientStops", label: "Cyberpunk", stops: [
+                    { pos: 0, color: "#000b18" }, { pos: 0.3, color: "#00ff9f" }, { pos: 0.6, color: "#00b8ff" }, { pos: 0.8, color: "#d600ff" }, { pos: 1.0, color: "#fcee0a" }
+                ]
+            },
+
+            // Indexed
+            flat16: {
+                category: "indexed", type: "indexed", label: "Flat 16-Color Rainbow", colors: [
+                    "#ff0000", "#ff8000", "#ffff00", "#80ff00", "#00ff00", "#00ff80", "#00ffff", "#0080ff",
+                    "#0000ff", "#8000ff", "#ff00ff", "#ff0080", "#ffffff", "#aaaaaa", "#555555", "#000000"
+                ]
+            },
+            poster8: {
+                category: "indexed", type: "indexed", label: "Poster 8", colors: [
+                    "#000", "#f00", "#0f0", "#00f", "#ff0", "#f0f", "#0ff", "#fff"
+                ]
+            }
+        };
+
+        const categories = {
+            gradient: "Gradient",
+            retro: "Retro / MSX",
+            vj: "VJ",
+            indexed: "Indexed"
+        };
+
+        // --- Initialization & UI Binding ---
+        function initUI() {
+            // Populate Categories
+            const selCat = document.getElementById("selPaletteCategory");
+            for (const [val, label] of Object.entries(categories)) {
+                selCat.add(new Option(label, val));
+            }
+            selCat.value = "vj"; // Default
+
+            // Logic to switch palette options based on category
+            function updatePaletteSelect() {
+                const selPal = document.getElementById("selPaletteName");
+                selPal.innerHTML = "";
+                const cat = selCat.value;
+                for (const [key, def] of Object.entries(paletteDefinitions)) {
+                    if (def.category === cat) {
+                        selPal.add(new Option(def.label, key));
+                    }
+                }
+            }
+            selCat.addEventListener("change", updatePaletteSelect);
+            updatePaletteSelect();
+            document.getElementById("selPaletteName").value = "vjLaser"; // default
+
+            // Slider text updating
+            function bindSliderVal(targetId, valId) {
+                const el = document.getElementById(targetId);
+                const valEl = document.getElementById(valId);
+                el.addEventListener("input", () => {
+                    valEl.textContent = parseFloat(el.value).toFixed(2);
+                });
+            }
+            bindSliderVal("sl_paletteShift", "val_paletteShift");
+            bindSliderVal("sl_a", "val_a");
+            bindSliderVal("sl_b", "val_b");
+            bindSliderVal("sl_c", "val_c");
+            bindSliderVal("sl_d", "val_d");
+
+            bindSliderVal("sl_scrollX", "val_scrollX");
+            bindSliderVal("sl_scrollY", "val_scrollY");
+            bindSliderVal("sl_ampX2", "val_ampX2");
+            bindSliderVal("sl_freqX2", "val_freqX2");
+            bindSliderVal("sl_speedX2", "val_speedX2");
+            bindSliderVal("sl_ampY2", "val_ampY2");
+            bindSliderVal("sl_freqY2", "val_freqY2");
+            bindSliderVal("sl_speedY2", "val_speedY2");
+            bindSliderVal("sl_ampEven", "val_ampEven");
+            bindSliderVal("sl_ampOdd", "val_ampOdd");
+            bindSliderVal("sl_freqInter", "val_freqInter");
+            bindSliderVal("sl_lineAmp", "val_lineAmp");
+            bindSliderVal("sl_lineFreq", "val_lineFreq");
+            bindSliderVal("sl_lineSpeed", "val_lineSpeed");
+
+            // LFO UI Toggling
+            document.querySelectorAll(".cb-auto").forEach(cb => {
+                cb.addEventListener("change", (e) => {
+                    const target = e.target.dataset.target;
+                    const lfoDiv = document.getElementById("lfo_" + target);
+                    const container = document.getElementById("container_" + target);
+                    if (e.target.checked) {
+                        lfoDiv.classList.remove("hidden");
+                        container.classList.add("active-lfo");
+                    } else {
+                        lfoDiv.classList.add("hidden");
+                        container.classList.remove("active-lfo");
+                    }
+                });
+            });
+
+            // Custom LFO input toggling
+            document.querySelectorAll(".sel-lfo-type").forEach(sel => {
+                sel.addEventListener("change", (e) => {
+                    const target = e.target.dataset.target;
+                    const customInput = document.querySelector(`.in-lfo-custom[data-target='${target}']`);
+                    if (e.target.value === "custom") {
+                        customInput.classList.remove("hidden");
+                    } else {
+                        customInput.classList.add("hidden");
+                    }
+                });
+            });
+            // Preset Selection Logic
+            document.getElementById("selPreset").addEventListener("change", (e) => {
+                if (e.target.value) {
+                    document.getElementById("formulaInput").value = e.target.value;
+                    // Force redraw since formula changed
+                    const shouldAnimate = document.getElementById("cbAnimateFormula").checked || Array.from(document.querySelectorAll(".cb-auto")).some(el => el.checked);
+                    if (!shouldAnimate) {
+                        compileMainFormula();
+                        redrawFrame(performance.now());
+                    }
+                }
+            });
+
+            // --- Custom 3-Point Color UI ---
+            const selColorMode = document.getElementById("selColorMode");
+            const customColorControls = document.getElementById("customColorControls");
+            const slColorMidPos = document.getElementById("slColorMidPos");
+            const valColorMidPos = document.getElementById("valColorMidPos");
+            const btnLoadPaletteToCustom = document.getElementById("btnLoadPaletteToCustom");
+
+            function updateCustomColorUiVisibility() {
+                if (selColorMode.value === "custom3Smooth") {
+                    customColorControls.classList.remove("hidden");
+                } else {
+                    customColorControls.classList.add("hidden");
+                }
+            }
+
+            function updateMidPosLabel() {
+                valColorMidPos.textContent = parseFloat(slColorMidPos.value).toFixed(2);
+            }
+
+            function parseCssColorToHex(cssColor) {
+                const tmp = document.createElement("canvas");
+                tmp.width = 1;
+                tmp.height = 1;
+                const tmpCtx = tmp.getContext("2d");
+                tmpCtx.fillStyle = cssColor;
+                const normalized = tmpCtx.fillStyle;
+
+                if (normalized.startsWith("#")) {
+                    if (normalized.length === 4) {
+                        return "#" + normalized[1] + normalized[1] + normalized[2] + normalized[2] + normalized[3] + normalized[3];
+                    }
+                    return normalized;
+                }
+
+                const m = normalized.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+                if (!m) return "#000000";
+
+                const r = parseInt(m[1], 10);
+                const g = parseInt(m[2], 10);
+                const b = parseInt(m[3], 10);
+                return rgbObjToHex({ r, g, b });
+            }
+
+            function loadCurrentPaletteToCustom() {
+                const paletteKey = document.getElementById("selPaletteName").value;
+                const paletteDef = paletteDefinitions[paletteKey];
+
+                document.getElementById("inColorStart").value = parseCssColorToHex(getColorFromPalette(paletteDef, 0.0));
+                document.getElementById("inColorMid").value = parseCssColorToHex(getColorFromPalette(paletteDef, 0.5));
+                document.getElementById("inColorEnd").value = parseCssColorToHex(getColorFromPalette(paletteDef, 1.0));
+            }
+
+            selColorMode.addEventListener("change", () => {
+                updateCustomColorUiVisibility();
+                const shouldAnimate = document.getElementById("cbAnimateFormula").checked ||
+                    Array.from(document.querySelectorAll(".cb-auto")).some(el => el.checked);
+                if (!shouldAnimate) redrawFrame(performance.now());
+            });
+
+            slColorMidPos.addEventListener("input", () => {
+                updateMidPosLabel();
+                const shouldAnimate = document.getElementById("cbAnimateFormula").checked ||
+                    Array.from(document.querySelectorAll(".cb-auto")).some(el => el.checked);
+                if (!shouldAnimate) redrawFrame(performance.now());
+            });
+
+            ["inColorStart", "inColorMid", "inColorEnd"].forEach(id => {
+                document.getElementById(id).addEventListener("input", () => {
+                    const shouldAnimate = document.getElementById("cbAnimateFormula").checked ||
+                        Array.from(document.querySelectorAll(".cb-auto")).some(el => el.checked);
+                    if (!shouldAnimate) redrawFrame(performance.now());
+                });
+            });
+
+            btnLoadPaletteToCustom.addEventListener("click", () => {
+                loadCurrentPaletteToCustom();
+                if (selColorMode.value !== "custom3Smooth") {
+                    selColorMode.value = "custom3Smooth";
+                    updateCustomColorUiVisibility();
+                }
+                redrawFrame(performance.now());
+            });
+
+            document.getElementById("selPaletteName").addEventListener("change", () => {
+                const shouldAnimate = document.getElementById("cbAnimateFormula").checked ||
+                    Array.from(document.querySelectorAll(".cb-auto")).some(el => el.checked);
+                if (!shouldAnimate) redrawFrame(performance.now());
+            });
+
+            document.getElementById("selPaletteCategory").addEventListener("change", () => {
+                const shouldAnimate = document.getElementById("cbAnimateFormula").checked ||
+                    Array.from(document.querySelectorAll(".cb-auto")).some(el => el.checked);
+                if (!shouldAnimate) redrawFrame(performance.now());
+            });
+
+            document.getElementById("selQuantize").addEventListener("change", () => {
+                const shouldAnimate = document.getElementById("cbAnimateFormula").checked ||
+                    Array.from(document.querySelectorAll(".cb-auto")).some(el => el.checked);
+                if (!shouldAnimate) redrawFrame(performance.now());
+            });
+
+            updateCustomColorUiVisibility();
+            updateMidPosLabel();
+
+        }
+        initUI();
+
+        // --- Processing Functions ---
+        function compileCustomLFOs() {
+            // Compile formulas for custom LFO strings if they changed (simple approach: always recompile per frame if animating custom)
+            // For optimization, we only recompile at evaluate time if needed.
+        }
+
+        function evaluateLFO(target, beat) {
+            const type = document.querySelector(`.sel-lfo-type[data-target='${target}']`).value;
+            const rateStr = document.querySelector(`.sel-lfo-rate[data-target='${target}']`).value;
+            const depth = parseFloat(document.querySelector(`.in-lfo-depth[data-target='${target}']`).value);
+
+            // Evaluate Custom
+            if (type === "custom") {
+                const formulaStr = document.querySelector(`.in-lfo-custom[data-target='${target}']`).value;
+                try {
+                    if (!compiledCustomLFOs[formulaStr]) compiledCustomLFOs[formulaStr] = math.compile(formulaStr);
+                    return compiledCustomLFOs[formulaStr].evaluate({ beat });
+                } catch (e) {
+                    return 0;
+                }
+            }
+
+            // Standard wave forms
+            const rate = parseFloat(rateStr);
+            const phaseC = (beat % rate) / rate; // 0.0 to 1.0
+
+            if (type === "linear") {
+                return phaseC * depth;
+            } else if (type === "sine") {
+                return Math.sin(phaseC * Math.PI * 2) * depth;
+            } else if (type === "saw") {
+                return ((phaseC * 2) - 1) * depth; // -1 to 1
+            } else if (type === "triangle") {
+                return (Math.abs((phaseC * 4) - 2) - 1) * depth; // -1 to 1
+            }
+            return 0;
+        }
+
+        function compileMainFormula() {
+            try {
+                const formulaStr = document.getElementById("formulaInput").value;
+                compiledFormulaAST = math.parse(formulaStr);
+
+                // Try compiling to native JS for maximum speed
+                try {
+                    const jsCode = compileAstToNativeJs(compiledFormulaAST);
+                    // Create a function taking 'scope'
+                    nativeEvalFunc = new Function('scope', `return ${jsCode};`);
+                    console.log("Dynamically compiled Native Formula:", jsCode);
+                } catch (nativeErr) {
+                    console.warn("Could not compile to native JS, falling back to math.js evaluator.", nativeErr);
+                    // Fallback to math.js compilation
+                    nativeEvalFunc = null;
+                    compiledFormulaAST = math.compile(formulaStr);
+                }
+                return true;
+            } catch (e) {
+                console.error("Formula invalid:", e);
+                return false;
+            }
+        }
+
+        // Normalize Z
+        function normalizeZ(z, mode) {
+            if (mode === "tanh") {
+                return (Math.tanh(z) + 1) / 2;
+            } else if (mode === "linear1") {
+                return (Math.max(-1, Math.min(1, z)) + 1) / 2;
+            } else if (mode === "linear4") {
+                return (Math.max(-4, Math.min(4, z)) + 4) / 8;
+            } else { // raw
+                return z;
+            }
+        }
+
+        // Palette Rotator
+        function applyPaletteShift(pt, shift) {
+            let shifted = (pt + shift) % 1;
+            if (shifted < 0) shifted += 1;
+            return shifted;
+        }
+
+        // Quantizer
+        function quantize01(zn, steps) {
+            if (steps <= 0) return zn; // unbounded
+            const clamped = Math.max(0, Math.min(1, zn));
+            const idx = Math.round(clamped * (steps - 1));
+            return idx / (steps - 1);
+        }
+
+        // Get final color
+        function getColorFromPalette(paletteDef, t) {
+            // ensure t is within 0-1
+            let pt = Math.max(0, Math.min(1, t));
+
+            if (paletteDef.type === "continuous") {
+                return paletteDef.fn(pt);
+            } else if (paletteDef.type === "indexed") {
+                const idx = Math.floor(pt * paletteDef.colors.length);
+                return paletteDef.colors[Math.min(idx, paletteDef.colors.length - 1)];
+            } else if (paletteDef.type === "gradientStops") {
+                return getGradientStopColor(paletteDef.stops, pt);
+            }
+            return "#000000";
+        }
+
+        function getFinalColor(paletteDef, t) {
+            const mode = document.getElementById("selColorMode")?.value || "paletteDefault";
+            const pt = Math.max(0, Math.min(1, t));
+
+            if (mode === "custom3Smooth") {
+                const startHex = document.getElementById("inColorStart").value;
+                const midHex = document.getElementById("inColorMid").value;
+                const endHex = document.getElementById("inColorEnd").value;
+                const midPos = parseFloat(document.getElementById("slColorMidPos").value);
+                return getThreePointSmoothColor(pt, startHex, midHex, endHex, midPos);
+            }
+
+            return getColorFromPalette(paletteDef, pt);
+        }
+
+        // Check auto-lfo state, update sliders visually
+        function updateLFOParameters(currentTime) {
+            const bpm = parseFloat(document.getElementById("inBpm").value) || 120;
+            const beat = (currentTime / 1000) * (bpm / 60);
+
+            const vars = ['a', 'b', 'c', 'd', 'paletteShift'];
+            const pValues = {};
+
+            vars.forEach(v => {
+                const cb = document.querySelector(`.cb-auto[data-target='${v}']`);
+                let val = parseFloat(document.getElementById("sl_" + v).value);
+
+                if (cb.checked) {
+                    const offset = evaluateLFO(v, beat);
+
+                    // For parameter, we can define LFO as additive or absolute.
+                    // Absolute wave makes more sense for VJing "Auto":
+                    // However, typical LFO wiggles *around* or *sets* the value. Let's make it additive for variables, and additive for shift for more expression.
+                    // Wait, for slider visual update, it's cool if the slider actually moves or we just use slider as base.
+                    // Let's use slider as base value.
+                    val = val + offset;
+
+                    // Optionally update the UI text (not the slider handle so user can still grab base)
+                    document.getElementById("val_" + v).textContent = val.toFixed(2);
+                }
+                pValues[v] = val;
+            });
+
+            return pValues;
+        }
+
+        // Drawing core
+        let evaluationErrorShown = false;
+
+        // Precalculated base LUT cache
+        let baseLUTDef = null;
+        let baseLUT = new Uint32Array(1024);
+
+        let baseLUTKey = "";
+
+        function getBaseLUT(renderProps) {
+            const mode = document.getElementById("selColorMode")?.value || "paletteDefault";
+            const keyParts = [
+                renderProps.paletteName,
+                mode,
+                document.getElementById("inColorStart")?.value || "",
+                document.getElementById("inColorMid")?.value || "",
+                document.getElementById("inColorEnd")?.value || "",
+                document.getElementById("slColorMidPos")?.value || ""
+            ];
+            const newKey = keyParts.join("|");
+
+            if (baseLUTKey === newKey) return baseLUT;
+            baseLUTKey = newKey;
+
+            const tmpCanvas = document.createElement("canvas");
+            tmpCanvas.width = 1024;
+            tmpCanvas.height = 1;
+            const tmpCtx = tmpCanvas.getContext("2d", { willReadFrequently: true });
+
+            for (let i = 0; i < 1024; i++) {
+                tmpCtx.fillStyle = getFinalColor(renderProps.paletteDef, i / 1023);
+                tmpCtx.fillRect(i, 0, 1, 1);
+            }
+
+            baseLUT = new Uint32Array(tmpCtx.getImageData(0, 0, 1024, 1).data.buffer);
+            return baseLUT;
+        }
+
+        function buildPaletteLUT(renderProps) {
+            const base = getBaseLUT(renderProps);
+            const finalLUT = new Uint32Array(1024);
+            for (let i = 0; i < 1024; i++) {
+                let pt = i / 1023;
+                pt = applyPaletteShift(pt, renderProps.paletteShift);
+                if (renderProps.quantize > 0) pt = quantize01(pt, renderProps.quantize);
+
+                let idx = Math.floor(pt * 1023);
+                idx = Math.max(0, Math.min(1023, idx));
+                finalLUT[i] = base[idx];
+            }
+            return finalLUT;
+        }
+
+        // Global scope object to prevent allocation on every pixel
+        const mathScope = { nx: 0, ny: 0, r: 0, theta: 0, a: 0, b: 0, c: 0, d: 0, t: 0 };
+        const tileCanvas = document.createElement("canvas");
+        const tileCtx = tileCanvas.getContext("2d");
+        const distortCanvas = document.createElement("canvas");
+        const distortCtx = distortCanvas.getContext("2d", { willReadFrequently: true });
+
+        function getDistortionParams(currentTime) {
+            const time = (currentTime || 0) / 1000;
+            return {
+                time,
+                scrollX: parseFloat(document.getElementById("sl_scrollX").value),
+                scrollY: parseFloat(document.getElementById("sl_scrollY").value),
+                ampX: parseFloat(document.getElementById("sl_ampX2").value),
+                freqX: parseFloat(document.getElementById("sl_freqX2").value),
+                speedX: parseFloat(document.getElementById("sl_speedX2").value),
+                ampY: parseFloat(document.getElementById("sl_ampY2").value),
+                freqY: parseFloat(document.getElementById("sl_freqY2").value),
+                speedY: parseFloat(document.getElementById("sl_speedY2").value),
+                ampEven: parseFloat(document.getElementById("sl_ampEven").value),
+                ampOdd: parseFloat(document.getElementById("sl_ampOdd").value),
+                freqInter: parseFloat(document.getElementById("sl_freqInter").value),
+                lineAmp: parseFloat(document.getElementById("sl_lineAmp").value),
+                lineFreq: parseFloat(document.getElementById("sl_lineFreq").value),
+                lineSpeed: parseFloat(document.getElementById("sl_lineSpeed").value)
+            };
+        }
+
+        function applyBestDistortion(srcCanvas, dstCanvas, params) {
+            applyEarthboundDistortionFast(srcCanvas, dstCanvas, params);
+        }
+
+        function applyEarthboundDistortionFast(srcCanvas, dstCanvas, params) {
+            const w = srcCanvas.width;
+            const h = srcCanvas.height;
+
+            if (dstCanvas.width !== w || dstCanvas.height !== h) {
+                dstCanvas.width = w;
+                dstCanvas.height = h;
+            }
+
+            const TWO_PI = Math.PI * 2;
+            const time = params.time;
+
+            const dctx = dstCanvas.getContext("2d");
+            dctx.clearRect(0, 0, w, h);
+
+            for (let y = 0; y < h; y++) {
+                const v = y / h;
+
+                let shiftX = params.scrollX * time * w;
+                shiftX += params.ampX * Math.sin(TWO_PI * params.freqX * v + params.speedX * time) * w;
+
+                const ampInter = (y % 2 === 0) ? params.ampEven : params.ampOdd;
+                shiftX += ampInter * Math.sin(TWO_PI * params.freqInter * v + params.speedX * time) * w;
+
+                const shiftXi = Math.round(shiftX);
+
+                // 横wrapしながら1ライン描画
+                dctx.drawImage(srcCanvas, 0, y, w, 1, shiftXi, y, w, 1);
+
+                if (shiftXi > 0) {
+                    dctx.drawImage(srcCanvas, w - shiftXi, y, shiftXi, 1, 0, y, shiftXi, 1);
+                } else if (shiftXi < 0) {
+                    dctx.drawImage(srcCanvas, 0, y, -shiftXi, 1, w + shiftXi, y, -shiftXi, 1);
+                }
+            }
+        }
+
+        function redrawFrame(currentTime) {
+
+            if (!compiledFormulaAST && !compileMainFormula()) return;
+
+            // Get LFO-modified variables
+            const lfoVars = updateLFOParameters(currentTime);
+
+            // Update global reusable math scope
+            mathScope.a = lfoVars.a;
+            mathScope.b = lfoVars.b;
+            mathScope.c = lfoVars.c;
+            mathScope.d = lfoVars.d;
+            mathScope.t = document.getElementById("cbAnimateFormula").checked ? (currentTime / 1000) : 0;
+
+            // Render configuration
+            const currentPaletteName = document.getElementById("selPaletteName").value;
+
+            const renderProps = {
+                paletteName: currentPaletteName,
+                paletteDef: paletteDefinitions[currentPaletteName],
+                quantize: parseInt(document.getElementById("selQuantize").value),
+                nomalizeMode: document.getElementById("selNormalize").value,
+                paletteShift: lfoVars.paletteShift
+            };
+
+            const tileCount = parseInt(document.getElementById("selTile").value);
+
+            // Always use 600 as the base rendering dimension so tiling density is identical in fullscreen
+            const baseCellWidth = Math.floor(600 / tileCount);
+            const baseCellHeight = Math.floor(600 / tileCount);
+
+            // Calculate how many tiles we need to draw across the canvas (width/height handles fullscreen)
+            const cols = Math.ceil(width / baseCellWidth);
+            const rows = Math.ceil(height / baseCellHeight);
+
+            if (tileCanvas.width !== baseCellWidth || tileCanvas.height !== baseCellHeight) {
+                tileCanvas.width = baseCellWidth;
+                tileCanvas.height = baseCellHeight;
+            }
+
+            const lut = buildPaletteLUT(renderProps);
+            const imgData = tileCtx.createImageData(baseCellWidth, baseCellHeight);
+            const buf32 = new Uint32Array(imgData.data.buffer);
+
+            let pixelIdx = 0;
+
+            try {
+                for (let y = 0; y < baseCellHeight; y++) {
+                    const ny = ((y - baseCellHeight / 2) / baseCellHeight) * range;
+                    mathScope.ny = ny;
+                    for (let x = 0; x < baseCellWidth; x++) {
+                        const nx = ((x - baseCellWidth / 2) / baseCellWidth) * range;
+                        mathScope.nx = nx;
+                        mathScope.r = Math.sqrt(nx * nx + ny * ny);
+                        mathScope.theta = Math.atan2(ny, nx);
+
+                        // Use native func if available, else fallback to math.js AST evaluator
+                        const z = nativeEvalFunc ? nativeEvalFunc(mathScope) : compiledFormulaAST.evaluate(mathScope);
+
+                        let pt = normalizeZ(z, renderProps.nomalizeMode);
+                        pt = Math.max(0, Math.min(1, pt));
+                        buf32[pixelIdx++] = lut[(pt * 1023) | 0];
+                    }
+                }
+            } catch (e) {
+                if (!evaluationErrorShown) {
+                    alert("Evaluation error.\n\n" + e.message);
+                    evaluationErrorShown = true;
+                }
+                return;
+            }
+
+            // Write computed pixel data to tile canvas
+            tileCtx.putImageData(imgData, 0, 0);
+
+
+            // Distortion pass
+            const distortionParams = getDistortionParams(currentTime);
+            const distortNeedsUpdate =
+                currentTime - lastDistortUpdateMs >= DISTORT_INTERVAL;
+
+            if (distortNeedsUpdate) {
+                applyBestDistortion(tileCanvas, distortCanvas, distortionParams);
+                lastDistortUpdateMs = currentTime;
+            }
+            // Default clear
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw the distorted tile across the main canvas
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const flipX = j % 2 === 1;
+                    const flipY = i % 2 === 1;
+                    ctx.save();
+                    ctx.translate(j * baseCellWidth + (flipX ? baseCellWidth : 0), i * baseCellHeight + (flipY ? baseCellHeight : 0));
+                    ctx.scale(flipX ? -1 : 1, flipY ? -1 : 1);
+                    ctx.drawImage(distortCanvas, 0, 0);
+                    ctx.restore();
+                }
+            }
+        }
+
+        // Anim loop
+        function loop(ms) {
+            const shouldAnimate = document.getElementById("cbAnimateFormula").checked ||
+                Array.from(document.querySelectorAll(".cb-auto")).some(el => el.checked);
+
+            // Always render on first frame or if animating
+            if (shouldAnimate || !lastTimePos) {
+                redrawFrame(ms);
+            }
+
+            lastTimePos = ms;
+            requestAnimationFrame(loop);
+        }
+
+        // Initial binding for non-animating redraws
+        [
+            'selTile', 'selNormalize', 'selPaletteName', 'selQuantize',
+            'sl_paletteShift', 'sl_a', 'sl_b', 'sl_c', 'sl_d',
+            'sl_scrollX', 'sl_scrollY',
+            'sl_ampX2', 'sl_freqX2', 'sl_speedX2',
+            'sl_ampY2', 'sl_freqY2', 'sl_speedY2',
+            'sl_ampEven', 'sl_ampOdd', 'sl_freqInter',
+            'sl_lineAmp', 'sl_lineFreq', 'sl_lineSpeed',
+            'btnRedraw'
+        ]
+            .forEach(id => {
+                document.getElementById(id).addEventListener("input", () => {
+                    // Force redraw if we are not actively animating
+                    const shouldAnimate = document.getElementById("cbAnimateFormula").checked ||
+                        Array.from(document.querySelectorAll(".cb-auto")).some(el => el.checked);
+                    if (!shouldAnimate) {
+                        compileMainFormula();
+                        redrawFrame(performance.now());
+                    }
+                });
+            });
+
+        document.getElementById("btnRedraw").addEventListener("click", () => {
+            compileMainFormula();
+            evaluationErrorShown = false;
+            redrawFrame(performance.now());
+        });
+
+        // Fullscreen capability with tiling handling
+        function handleResize() {
+            if (document.fullscreenElement) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            } else {
+                canvas.width = 600;
+                canvas.height = 600;
+            }
+            width = canvas.width;
+            height = canvas.height;
+            // Force redraw on resize immediately if not animating
+            const shouldAnimate = document.getElementById("cbAnimateFormula").checked ||
+                Array.from(document.querySelectorAll(".cb-auto")).some(el => el.checked);
+            if (!shouldAnimate) redrawFrame(performance.now());
+        }
+
+        document.addEventListener('fullscreenchange', handleResize);
+        window.addEventListener('resize', () => {
+            if (document.fullscreenElement) handleResize();
+        });
+
+        canvas.addEventListener("click", () => {
+            if (!document.fullscreenElement) {
+                canvas.requestFullscreen().catch(err => {
+                    console.error(`Error attempting to enable fullscreen mode: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // --- GIF Export Encoding Functions (from GIF Merger logic) ---
+        function colorDist(r1, g1, b1, r2, g2, b2) {
+            return (r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2;
+        }
+
+        function generatePalette(imageDataArray, maxColors) {
+            const colorCounts = new Map();
+            for (let img of imageDataArray) {
+                const data = img.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    if (data[i + 3] < 128) continue;
+                    const rgb = (data[i] << 16) | (data[i + 1] << 8) | data[i + 2];
+                    colorCounts.set(rgb, (colorCounts.get(rgb) || 0) + 1);
+                }
+            }
+            const sorted = Array.from(colorCounts.entries()).sort((a, b) => b[1] - a[1]);
+            const paletteCount = Math.min(maxColors - 1, sorted.length);
+            const palette = [[0, 0, 0, 0]];
+            for (let i = 0; i < paletteCount; i++) {
+                const c = sorted[i][0];
+                palette.push([(c >> 16) & 255, (c >> 8) & 255, c & 255, 255]);
+            }
+            return palette;
+        }
+
+        function mapToPalette(imgData, palette) {
+            const data = imgData.data;
+            const w = imgData.width, h = imgData.height;
+            const indexed = new Uint8Array(w * h);
+
+            // Nearest neighbor
+            for (let i = 0; i < w * h; i++) {
+                const px = i * 4;
+                if (data[px + 3] < 128) {
+                    indexed[i] = 0;
+                    continue;
+                }
+                let minDist = Infinity, bestIdx = 1;
+                const r = data[px], g = data[px + 1], b = data[px + 2];
+                for (let j = 1; j < palette.length; j++) {
+                    const d = colorDist(r, g, b, palette[j][0], palette[j][1], palette[j][2]);
+                    if (d < minDist) { minDist = d; bestIdx = j; }
+                }
+                indexed[i] = bestIdx;
+            }
+            return indexed;
+        }
+
+        async function exportGif() {
+            const btn = document.getElementById("btnExportGif");
+            const status = document.getElementById("exportStatus");
+            btn.disabled = true;
+            status.style.display = "block";
+            status.textContent = "Calculating properties.";
+
+            await new Promise(r => setTimeout(r, 50));
+
+            try {
+                const sz = parseInt(document.getElementById("selGifRes").value);
+                const bpm = parseFloat(document.getElementById("inBpm").value) || 120;
+                const msPerBeat = 60000 / bpm;
+
+                let maxBeats = 1;
+                document.querySelectorAll(".cb-auto").forEach(cb => {
+                    if (cb.checked) {
+                        const trg = cb.dataset.target;
+                        const rateStr = document.querySelector(`.sel-lfo-rate[data-target='${trg}']`).value;
+                        maxBeats = Math.max(maxBeats, parseFloat(rateStr));
+                    }
+                });
+
+                const cycleMs = maxBeats * msPerBeat;
+                const fps = 30;
+                const stepMs = 1000 / fps;
+                const numFrames = Math.floor(cycleMs / stepMs);
+
+                if (numFrames <= 0) throw new Error("Invalid framerate or duration calculation.");
+
+                // 元の状態を退避
+                const origW = canvas.width;
+                const origH = canvas.height;
+                const origWidthVar = width;
+                const origHeightVar = height;
+
+                // 600x600でフル構図を描くための固定
+                canvas.width = 600;
+                canvas.height = 600;
+                width = 600;
+                height = 600;
+
+                // 縮小用オフスクリーン
+                const exportCanvas = document.createElement("canvas");
+                exportCanvas.width = sz;
+                exportCanvas.height = sz;
+                const exportCtx = exportCanvas.getContext("2d", { willReadFrequently: true });
+                exportCtx.imageSmoothingEnabled = false; // 必要に応じて true でもOK
+
+                status.textContent = `Gathering ${numFrames} frames.`;
+
+                const framesData = [];
+                for (let i = 0; i < numFrames; i++) {
+                    if (i % 10 === 0) {
+                        status.textContent = `Gathering frame ${i}/${numFrames}.`;
+                        await new Promise(r => setTimeout(r, 0));
+                    }
+
+                    // 毎フレーム 600x600 の全体を描画
+                    redrawFrame(i * stepMs);
+
+                    // 600全体 → sz に縮小コピー
+                    exportCtx.clearRect(0, 0, sz, sz);
+                    exportCtx.drawImage(canvas, 0, 0, 600, 600, 0, 0, sz, sz);
+
+                    // 縮小後の画像を保存
+                    framesData.push(exportCtx.getImageData(0, 0, sz, sz));
+                }
+
+                // 元に戻す
+                canvas.width = origW;
+                canvas.height = origH;
+                width = origWidthVar;
+                height = origHeightVar;
+                redrawFrame(lastTimePos);
+
+                status.textContent = "Generating optimized palette. (may take a few seconds)";
+                await new Promise(r => setTimeout(r, 50));
+
+                const paletteArray = generatePalette(framesData, 256);
+                let pow2 = 2;
+                while (pow2 < paletteArray.length) pow2 *= 2;
+                if (pow2 > 256) pow2 = 256;
+
+                const outputPalette = new Array(pow2).fill(0);
+                for (let i = 0; i < paletteArray.length; i++) {
+                    const p = paletteArray[i];
+                    outputPalette[i] = (p[0] << 16) | (p[1] << 8) | p[2];
+                }
+
+                status.textContent = "Encoding GIF frames.";
+                await new Promise(r => setTimeout(r, 50));
+
+                const bufLimit = sz * sz * numFrames + 2048;
+                const buf = new Uint8Array(bufLimit);
+                const writer = new GifWriter(buf, sz, sz, { loop: 0, palette: outputPalette });
+
+                for (let i = 0; i < framesData.length; i++) {
+                    if (i % 10 === 0) {
+                        status.textContent = `Encoding frame ${i}/${numFrames}.`;
+                        await new Promise(r => setTimeout(r, 0));
+                    }
+
+                    const indexed = mapToPalette(framesData[i], paletteArray);
+                    writer.addFrame(0, 0, sz, sz, indexed, {
+                        delay: Math.round(stepMs / 10),
+                        transparent: 0,
+                        disposal: 1
+                    });
+                }
+
+                const outBuf = buf.slice(0, writer.end());
+                const blob = new Blob([outBuf], { type: 'image/gif' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `geometricVJ_${sz}x${sz}_bpm${bpm}.gif`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                const sizeMb = (blob.size / (1024 * 1024)).toFixed(2);
+                status.textContent = `✅ Successfully created GIF! (${sizeMb} MB)`;
+                setTimeout(() => {
+                    if (status.style.display === "block") status.style.display = "none";
+                }, 5000);
+
+            } catch (e) {
+                console.error(e);
+                status.textContent = `❌ Error: ${e.message}`;
+            } finally {
+                btn.disabled = false;
+                width = canvas.width;
+                height = canvas.height;
+            }
+        }
+        document.getElementById("btnExportGif").addEventListener("click", exportGif);
+
+        // Start
+        compileMainFormula();
+        requestAnimationFrame(loop);
+    </script>
+
+    <br><br>
+    <hr><br>
+    <details>
+        <summary><strong>■ 数式チュートリアル（math.js）</strong></summary>
+        <div
+            style="padding: 0.5em 1em; background: rgba(0,0,0,0.3); border-radius: 4px; border: 1px solid var(--border-color); margin-top: 10px;">
+            <h3>使える変数</h3>
+            <ul>
+                <li><code>nx</code>, <code>ny</code>：正規化座標（−1〜+1）</li>
+                <li><code>r</code>：中心からの距離 <code>sqrt(nx^2 + ny^2)</code></li>
+                <li><code>theta</code>：偏角（角度） <code>atan2(ny, nx)</code></li>
+                <li><code>a</code>, <code>b</code>, <code>c</code>, <code>d</code>：UIスライダーおよびLFOから動的に渡されるユーザー変数</li>
+                <li><code>t</code>：時間（Animate Formula チェック時のみ進行）</li>
+            </ul>
+
+            <h3>基本演算</h3>
+            <p>
+                <code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>mod</code>, <code>^</code><br>
+                <code>sin()</code>, <code>cos()</code>, <code>tan()</code>, <code>sqrt()</code>, <code>abs()</code><br>
+                <code>max(f,g)</code>, <code>min(f,g)</code>, <code>floor()</code>, <code>ceil()</code>,
+                <code>round()</code>
+            </p>
+
+            <h3>ビット演算（レトロ模様に最適）</h3>
+            <p><code>bitAnd(x, y)</code>, <code>bitOr(x, y)</code>, <code>bitXor(x, y)</code></p>
+            <p style="font-size: 0.9em; color: #ccc;">※ <code>floor(r * a)</code> などで整数に変換してからの使用を推奨します。値が 0〜1 などを超える場合は
+                <code>/ 16</code> などで最後に正規化範囲に収めるとパレットがきれいに当たります。
+            </p>
+
+            <h3>LFO カスタム数式の書き方</h3>
+            <p>LFOのモードを「Custom」にした場合、<code>beat</code>（現在のBPMにおける拍数）を変数として曲線を書けます。<br>
+                例: <code>sin(beat * PI) * 5</code> （2拍で1周する波）<br>
+                例: <code>(beat % 4) * 2</code> （4拍かけて0から8まで上がり、また0に戻るノコギリ波）</p>
+        </div>
+    </details>
+
+</body>
+
+</html>

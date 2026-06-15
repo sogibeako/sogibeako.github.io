@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>a_n のゼータ正則化（安全式パーサ版）</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; margin: 24px; line-height: 1.55; }
+    textarea { width: 100%; min-height: 70px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; }
+    input, select, button { font-size: 14px; }
+    input[type="number"] { width: 120px; }
+    button { padding: 10px 14px; cursor: pointer; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 14px; margin-top: 14px; }
+    .hint { color: #555; font-size: 13px; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .err { color: #b00020; }
+    .ok  { color: #0b6; }
+    code { background: #f6f6f6; padding: 2px 6px; border-radius: 6px; }
+    ul { margin: 8px 0 0 18px; }
+    details { margin-top: 10px; }
+    summary { cursor: pointer; }
+  </style>
+
+  <!-- mathjs: parse( ) を使うだけ。評価は自前で安全に行う -->
+  <script src="https://cdn.jsdelivr.net/npm/mathjs@11.11.0/lib/browser/math.min.js"></script>
+</head>
+<body>
+  <h1>aₙ のゼータ正則化（Dirichlet型, s→0）安全式入力版</h1>
+
+  <div class="card">
+    <div class="hint">
+      textboxには <b>数式</b> を入れてください（JSではありません）。<br>
+      使える識別子: <code>n</code>, <code>sr</code>, <code>pi</code>, <code>e</code><br>
+      使える関数: <code>sin cos tan asin acos atan exp log pow sqrt abs sign floor ceil round min max tanh</code><br>
+      ビット関数: <code>i32 u32 band bor bxor bnot shl shr ushr rol ror</code>（非有限値は0扱い）
+    </div>
+
+    <p style="margin-top:10px;margin-bottom:6px;"><b>aₙ の式（nは1始まり）</b></p>
+    <textarea id="expr">sqrt(n)</textarea>
+
+    <div class="row">
+      <label>sr <input id="sr" type="number" step="any" value="1"></label>
+
+      <label>解析モード
+        <select id="mode">
+          <option value="auto" selected>Auto（準多項式→べきモデルフォールバック）</option>
+          <option value="force">Manual（mと次数を固定）</option>
+        </select>
+      </label>
+
+      <label>最大周期 m ≤ <input id="maxPeriod" type="number" min="1" value="32"></label>
+      <label>最大次数 d ≤ <input id="maxDeg" type="number" min="0" value="8"></label>
+      <label>検証に使う項数 <input id="testLen" type="number" min="40" value="240"></label>
+      <label>許容 ε <input id="eps" type="number" step="any" value="1e-10"></label>
+      <button id="run">計算</button>
+    </div>
+
+    <details>
+      <summary class="hint">このページが「分かる」形</summary>
+      <div class="hint">
+        まず「周期mごとに、nについて次数d以下の多項式（係数は剰余で変わってOK）」を検出できれば、
+        Hurwitzゼータの ζ(-p,q) を使って F(0) を計算します。<br>
+        それがダメなら「aₙ ≈ C·n^α」をログ回帰で検出し、F(0)=C·ζ(-α) を数値で評価します（べき関数フォールバック）。
+      </div>
+    </details>
+  </div>
+
+  <div id="out" class="card" style="display:none;"></div>
+
+<script>
+/* =========================
+   0) 小物：表示と分数近似
+   ========================= */
+function formatNum(x) {
+  if (!Number.isFinite(x)) return String(x);
+  const ax = Math.abs(x);
+  if (ax !== 0 && (ax < 1e-6 || ax >= 1e6)) return x.toExponential(15);
+  return x.toPrecision(16).replace(/\.?0+$/,"");
+}
+function gcdInt(a, b) {
+  a = Math.abs(a); b = Math.abs(b);
+  while (b !== 0) { const t = a % b; a = b; b = t; }
+  return a;
+}
+function rationalApprox(x, maxDen = 1000000, tol = 1e-10) {
+  if (!Number.isFinite(x)) return null;
+  if (Math.abs(x) < tol) return { p: 0, q: 1 };
+  const sign = x < 0 ? -1 : 1; x = Math.abs(x);
+
+  let a0 = Math.floor(x);
+  let p0 = 1, q0 = 0;
+  let p1 = a0, q1 = 1;
+
+  let frac = x - a0;
+  if (frac < tol) return { p: sign * a0, q: 1 };
+
+  for (let iter = 0; iter < 200 && q1 <= maxDen; iter++) {
+    const approx = p1 / q1;
+    if (Math.abs(approx - x) <= tol) break;
+    if (frac === 0) break;
+
+    const inv = 1 / frac;
+    const a = Math.floor(inv);
+    frac = inv - a;
+
+    const p2 = a * p1 + p0;
+    const q2 = a * q1 + q0;
+    if (q2 > maxDen) break;
+
+    p0 = p1; q0 = q1;
+    p1 = p2; q1 = q2;
+  }
+  let p = sign * p1, q = q1;
+  const g = gcdInt(p, q); p /= g; q /= g;
+  return { p, q };
+}
+function formatFraction(fr) {
+  if (!fr) return "";
+  if (fr.q === 1) return String(fr.p);
+  return `${fr.p}/${fr.q}`;
+}
+
+/* =========================
+   1) 安全な式パーサ + 評価
+   ========================= */
+
+// 許可する識別子
+function makeAllowedSymbols() {
+  return new Set([
+    "n", "sr", "pi", "e",
+    ...Object.keys(ALLOWED_FUNCS),
+  ]);
+}
+
+// 非有限→0（ビット関数用）
+function nz(x) { x = Number(x); return Number.isFinite(x) ? x : 0; }
+function toI32(x) { return (nz(x) | 0); }
+function toU32(x) { return (nz(x) >>> 0); }
+function rol32(x, s) {
+  const v = toU32(x);
+  const r = (toI32(s) & 31);
+  return ((v << r) | (v >>> (32 - r))) >>> 0;
+}
+function ror32(x, s) {
+  const v = toU32(x);
+  const r = (toI32(s) & 31);
+  return ((v >>> r) | (v << (32 - r))) >>> 0;
+}
+
+// 許可関数
+const ALLOWED_FUNCS = Object.create(null);
+Object.assign(ALLOWED_FUNCS, {
+  sin: Math.sin, cos: Math.cos, tan: Math.tan,
+  asin: Math.asin, acos: Math.acos, atan: Math.atan,
+  exp: Math.exp, log: Math.log,
+  pow: (a,b) => Math.pow(a,b),
+  sqrt: Math.sqrt,
+  abs: Math.abs,
+  sign: Math.sign,
+  floor: Math.floor, ceil: Math.ceil, round: Math.round,
+  min: Math.min, max: Math.max,
+  tanh: Math.tanh ? Math.tanh : (x)=>{ const e1=Math.exp(x), e2=Math.exp(-x); return (e1-e2)/(e1+e2); },
+
+  // ビット系（非有限→0）
+  i32: (a)=> toI32(a),
+  u32: (a)=> toU32(a),
+  band: (a,b)=> (toI32(a) & toI32(b)) | 0,
+  bor:  (a,b)=> (toI32(a) | toI32(b)) | 0,
+  bxor: (a,b)=> (toI32(a) ^ toI32(b)) | 0,
+  bnot: (a)=> (~toI32(a)) | 0,
+  shl:  (a,b)=> (toI32(a) << (toI32(b) & 31)) | 0,
+  shr:  (a,b)=> (toI32(a) >> (toI32(b) & 31)) | 0,
+  ushr: (a,b)=> (toU32(a) >>> (toI32(b) & 31)) >>> 0,
+  rol:  (a,b)=> rol32(a,b),
+  ror:  (a,b)=> ror32(a,b),
+});
+
+// ノードのホワイトリスト検査
+function validateAst(node, allowedSymbols) {
+  if (!node || typeof node.type !== "string") throw new Error("Invalid AST node");
+
+  const t = node.type;
+
+  // 許可ノード
+  const ok = new Set([
+    "ConstantNode", "SymbolNode", "ParenthesisNode",
+    "OperatorNode", "FunctionNode",
+    "ConditionalNode", "RelationalNode",
+  ]);
+  if (!ok.has(t)) throw new Error(`Not allowed node type: ${t}`);
+
+  if (t === "SymbolNode") {
+    if (!allowedSymbols.has(node.name)) throw new Error(`Unknown symbol: ${node.name}`);
+    return;
+  }
+
+  if (t === "ConstantNode") return;
+
+  if (t === "ParenthesisNode") {
+    validateAst(node.content, allowedSymbols);
+    return;
+  }
+
+  if (t === "FunctionNode") {
+    const fnName = node.fn && node.fn.name;
+    if (!fnName || !(fnName in ALLOWED_FUNCS)) throw new Error(`Not allowed function: ${fnName}`);
+    for (const a of node.args || []) validateAst(a, allowedSymbols);
+    return;
+  }
+
+  if (t === "ConditionalNode") {
+    validateAst(node.condition, allowedSymbols);
+    validateAst(node.trueExpr, allowedSymbols);
+    validateAst(node.falseExpr, allowedSymbols);
+    return;
+  }
+
+  if (t === "RelationalNode") {
+    // mathjsの a < b < c を conditionals/params に持つ形
+    const conds = node.conditionals || [];
+    const params = node.params || [];
+    for (const p of params) validateAst(p, allowedSymbols);
+
+    // 許可比較演算子
+    const relOk = new Set(["<", "<=", ">", ">=", "==", "!="]);
+    for (const op of conds) if (!relOk.has(op)) throw new Error(`Not allowed rel op: ${op}`);
+    return;
+  }
+
+  if (t === "OperatorNode") {
+    // unaryPlus/unaryMinus は node.fn に来る
+    const fn = node.fn;
+    const op = node.op;
+
+    // 許可演算子（必要な分だけ）
+    const opOk = new Set(["+", "-", "*", "/", "%", "^", "and", "or", "not", "<", "<=", ">", ">=", "==", "!="]);
+    if (fn === "unaryMinus" || fn === "unaryPlus") {
+      validateAst(node.args[0], allowedSymbols);
+      return;
+    }
+
+    if (!opOk.has(op)) throw new Error(`Not allowed operator: ${op}`);
+
+    for (const a of node.args || []) validateAst(a, allowedSymbols);
+    return;
+  }
+}
+
+// bool→0/1
+function toBool(x) { return !!x; }
+
+// 自前評価（安全）
+function evalAst(node, scope) {
+  if (!node || typeof node.type !== "string") return NaN;
+  const t = node.type;
+
+  if (t === "ConstantNode") return Number(node.value);
+  if (t === "SymbolNode") return scope[node.name];
+  if (t === "ParenthesisNode") return evalAst(node.content, scope);
+
+  if (t === "RelationalNode") {
+    const conds = node.conditionals || [];
+    const params = node.params || [];
+    let ok = true;
+    for (let i = 0; i < conds.length; i++) {
+      const op = conds[i];
+      const a = evalAst(params[i], scope);
+      const b = evalAst(params[i + 1], scope);
+      let r = false;
+      switch (op) {
+        case "<":  r = a < b; break;
+        case "<=": r = a <= b; break;
+        case ">":  r = a > b; break;
+        case ">=": r = a >= b; break;
+        case "==": r = a == b; break;
+        case "!=": r = a != b; break;
+        default: r = false;
+      }
+      ok = ok && r;
+      if (!ok) break;
+    }
+    return ok ? 1 : 0;
+  }
+
+  if (t === "OperatorNode") {
+    if (node.fn === "unaryMinus") return -evalAst(node.args[0], scope);
+    if (node.fn === "unaryPlus")  return +evalAst(node.args[0], scope);
+
+    const op = node.op;
+
+    if (op === "not") return toBool(evalAst(node.args[0], scope)) ? 0 : 1;
+    if (op === "and") {
+      const a = toBool(evalAst(node.args[0], scope));
+      return a ? (toBool(evalAst(node.args[1], scope)) ? 1 : 0) : 0;
+    }
+    if (op === "or") {
+      const a = toBool(evalAst(node.args[0], scope));
+      return a ? 1 : (toBool(evalAst(node.args[1], scope)) ? 1 : 0);
+    }
+
+    const a = evalAst(node.args[0], scope);
+    const b = evalAst(node.args[1], scope);
+
+    switch (op) {
+      case "+": return a + b;
+      case "-": return a - b;
+      case "*": return a * b;
+      case "/": return a / b;
+      case "%": return a % b;
+      case "^": return Math.pow(a, b);
+      case "<": return (a < b) ? 1 : 0;
+      case "<=": return (a <= b) ? 1 : 0;
+      case ">": return (a > b) ? 1 : 0;
+      case ">=": return (a >= b) ? 1 : 0;
+      case "==": return (a == b) ? 1 : 0;
+      case "!=": return (a != b) ? 1 : 0;
+      default: return NaN;
+    }
+  }
+
+  if (t === "FunctionNode") {
+    const fnName = node.fn.name;
+    const fn = ALLOWED_FUNCS[fnName];
+    const args = (node.args || []).map(a => evalAst(a, scope));
+    const v = fn(...args);
+    return Number(v);
+  }
+
+  if (t === "ConditionalNode") {
+    const c = evalAst(node.condition, scope);
+    return c ? evalAst(node.trueExpr, scope) : evalAst(node.falseExpr, scope);
+  }
+
+  return NaN;
+}
+
+// 式文字列を安全評価（JS evalなし）
+function evalNumberExpr(exprStr, extraScope) {
+  if (!window.math) throw new Error("mathjs がロードされていません");
+
+  // 仕様: '**' を '^' に寄せる（累乗扱い）
+  // これにより 'n**5' も 'n^5' も累乗になる（XORは使わない設計）
+  const normalized = exprStr.replace(/\*\*/g, "^");
+
+  const ast = math.parse(normalized);
+  const allowedSymbols = makeAllowedSymbols();
+  validateAst(ast, allowedSymbols);
+
+  const scope = Object.create(null);
+  scope.n  = extraScope.n;
+  scope.sr = extraScope.sr;
+  scope.pi = Math.PI;
+  scope.e  = Math.E;
+
+  // validateAst用ダミー（関数名をSymbolとして拒否しないため）
+  for (const fn of Object.keys(ALLOWED_FUNCS)) scope[fn] = fn;
+
+  let v = evalAst(ast, scope);
+  v = Number(v);
+  return Number.isFinite(v) ? v : NaN;
+}
+
+/* =========================
+   2) 準多項式検出 + Hurwitz
+   ========================= */
+
+function nearlyEqual(a, b, eps) {
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
+  const scale = Math.max(1, Math.abs(a), Math.abs(b));
+  return Math.abs(a - b) <= eps * scale;
+}
+
+// Gaussian elimination
+function solveLinear(A, b) {
+  const n = A.length;
+  const M = A.map((row,i) => row.slice().concat([b[i]]));
+
+  for (let col = 0; col < n; col++) {
+    let pivot = col;
+    let best = Math.abs(M[col][col]);
+    for (let r = col + 1; r < n; r++) {
+      const v = Math.abs(M[r][col]);
+      if (v > best) { best = v; pivot = r; }
+    }
+    if (best === 0 || !Number.isFinite(best)) return null;
+    if (pivot !== col) { const tmp = M[col]; M[col] = M[pivot]; M[pivot] = tmp; }
+
+    const div = M[col][col];
+    for (let c = col; c <= n; c++) M[col][c] /= div;
+
+    for (let r = 0; r < n; r++) {
+      if (r === col) continue;
+      const factor = M[r][col];
+      if (factor === 0) continue;
+      for (let c = col; c <= n; c++) M[r][c] -= factor * M[col][c];
+    }
+  }
+  return M.map(row => row[n]);
+}
+
+function fitPolyInX(xs, ys, deg) {
+  const m = deg + 1;
+  if (xs.length < m) return null;
+  const A = [];
+  const b = [];
+  for (let i = 0; i < m; i++) {
+    const x = xs[i];
+    const row = [];
+    let pow = 1;
+    for (let p = 0; p <= deg; p++) { row.push(pow); pow *= x; }
+    A.push(row);
+    b.push(ys[i]);
+  }
+  return solveLinear(A, b);
+}
+
+function evalPoly(coeffs, x) {
+  let s = 0;
+  let pow = 1;
+  for (let p = 0; p < coeffs.length; p++) { s += coeffs[p] * pow; pow *= x; }
+  return s;
+}
+
+// Bernoulli numbers
+function bernoulliNumbers(N) {
+  const A = new Array(N+1).fill(0);
+  const B = new Array(N+1).fill(0);
+  for (let m = 0; m <= N; m++) {
+    A[m] = 1 / (m + 1);
+    for (let j = m; j >= 1; j--) A[j-1] = j * (A[j-1] - A[j]);
+    B[m] = A[0];
+  }
+  if (N >= 1) B[1] = -0.5;
+  return B;
+}
+function binom(n,k) {
+  if (k < 0 || k > n) return 0;
+  if (k === 0 || k === n) return 1;
+  k = Math.min(k, n-k);
+  let num = 1, den = 1;
+  for (let i=1;i<=k;i++) { num *= (n - (k - i)); den *= i; }
+  return num/den;
+}
+function bernoulliPoly(n, x, B) {
+  let s = 0;
+  for (let k = 0; k <= n; k++) s += binom(n,k) * B[k] * Math.pow(x, n-k);
+  return s;
+}
+function hurwitzZetaMinusInt(p, q, B) {
+  const n = p + 1;
+  return -bernoulliPoly(n, q, B) / n;
+}
+
+function tryModel(terms, m, deg, eps) {
+  const coeffsByR = [];
+  for (let r = 1; r <= m; r++) {
+    const xs = [];
+    const ys = [];
+    for (let n = r; n <= terms.length; n += m) {
+      xs.push(n);
+      ys.push(terms[n-1]);
+    }
+    const coeffs = fitPolyInX(xs, ys, deg);
+    if (!coeffs) return null;
+    coeffsByR.push(coeffs);
+  }
+  for (let n = 1; n <= terms.length; n++) {
+    const r = ((n-1) % m) + 1;
+    const pred = evalPoly(coeffsByR[r-1], n);
+    if (!nearlyEqual(pred, terms[n-1], eps)) return null;
+  }
+  return coeffsByR;
+}
+
+function detectModel(terms, maxPeriod, maxDeg, eps) {
+  for (let m = 1; m <= maxPeriod; m++) {
+    for (let deg = 0; deg <= maxDeg; deg++) {
+      const model = tryModel(terms, m, deg, eps);
+      if (model) return { m, deg, model };
+    }
+  }
+  return null;
+}
+
+function computeF0(m, deg, coeffsByR) {
+  const B = bernoulliNumbers(deg + 2);
+  let sum = 0;
+  for (let r = 1; r <= m; r++) {
+    const q = r / m;
+    const coeffs = coeffsByR[r-1];
+    for (let p = 0; p <= deg; p++) {
+      const z = hurwitzZetaMinusInt(p, q, B);
+      sum += coeffs[p] * Math.pow(m, p) * z;
+    }
+  }
+  return sum;
+}
+
+/* =========================
+   3) ζ(s) と べきモデル
+   ========================= */
+
+// ζ(s) via Hasse series (real s, s!=1)
+function zeta(s, K = 80) {
+  if (s === 1) return NaN;
+  let outer = 0;
+  for (let k = 0; k <= K; k++) {
+    let inner = 0;
+    let bin = 1;
+    for (let j = 0; j <= k; j++) {
+      const sign = (j % 2 === 0) ? 1 : -1;
+      inner += sign * bin * Math.pow(j + 1, -s);
+      if (j < k) bin = bin * (k - j) / (j + 1);
+    }
+    outer += inner / Math.pow(2, k + 1);
+  }
+  const denom = 1 - Math.pow(2, 1 - s);
+  return outer / denom;
+}
+
+function fitPowerLaw(terms, opts = {}) {
+  const { nMin = 30, nMax = terms.length, maxRelErr = 1e-10 } = opts;
+  const xs = [], ys = [];
+  for (let n = Math.max(1, nMin); n <= nMax; n++) {
+    const a = terms[n-1];
+    if (!Number.isFinite(a) || a <= 0) continue;
+    xs.push(Math.log(n));
+    ys.push(Math.log(a));
+  }
+  if (xs.length < 8) return null;
+
+  let sx=0, sy=0, sxx=0, sxy=0;
+  for (let i=0;i<xs.length;i++) {
+    const x=xs[i], y=ys[i];
+    sx+=x; sy+=y; sxx+=x*x; sxy+=x*y;
+  }
+  const N = xs.length;
+  const denom = (N*sxx - sx*sx);
+  if (denom === 0) return null;
+
+  const alpha = (N*sxy - sx*sy) / denom;
+  const logC  = (sy - alpha*sx) / N;
+  const C = Math.exp(logC);
+
+  let worst = 0;
+  for (let n = Math.max(1, nMin); n <= nMax; n++) {
+    const a = terms[n-1];
+    if (!Number.isFinite(a) || a <= 0) continue;
+    const pred = C * Math.pow(n, alpha);
+    const rel = Math.abs(pred - a) / Math.max(1e-30, Math.abs(a));
+    if (rel > worst) worst = rel;
+  }
+  if (worst > maxRelErr) return null;
+  return { alpha, C, worstRelErr: worst };
+}
+
+/* =========================
+   4) UI
+   ========================= */
+
+document.getElementById("run").addEventListener("click", () => {
+  const out = document.getElementById("out");
+  out.style.display = "block";
+  out.innerHTML = "";
+
+  try {
+    const exprText = document.getElementById("expr").value.trim();
+    const sr = Number(document.getElementById("sr").value) || 1;
+    const mode = document.getElementById("mode").value;
+
+    const maxPeriod = Math.max(1, parseInt(document.getElementById("maxPeriod").value, 10) || 32);
+    const maxDeg = Math.max(0, parseInt(document.getElementById("maxDeg").value, 10) || 8);
+    const testLen = Math.max(40, parseInt(document.getElementById("testLen").value, 10) || 240);
+    const eps = Number(document.getElementById("eps").value) || 1e-10;
+
+    // terms生成（安全式評価）
+    const terms = [];
+    for (let n = 1; n <= testLen; n++) {
+      const v = evalNumberExpr(exprText, { n, sr });
+      terms.push(v);
+    }
+
+    // NaN/Infチェック
+    for (let i = 0; i < terms.length; i++) {
+      if (!Number.isFinite(terms[i])) {
+        out.innerHTML = `<div class="err"><b>n=${i+1} で数値になりませんでした</b><br>値: ${String(terms[i])}</div>`;
+        return;
+      }
+    }
+
+    let res;
+    if (mode === "auto") {
+      res = detectModel(terms, maxPeriod, maxDeg, eps);
+
+      if (!res) {
+        const pw = fitPowerLaw(terms, { nMin: 30, maxRelErr: 1e-10 });
+        if (pw) {
+          const F0_pow = pw.C * zeta(-pw.alpha, 80);
+
+          const fr = rationalApprox(F0_pow, 1000000, 1e-10);
+          const frText = fr ? formatFraction(fr) : "";
+          const fracHtml = frText
+            ? `<span class="hint">（≒ <span class="mono">${frText}</span>）</span>`
+            : "";
+
+          out.innerHTML = `
+            <div class="ok"><b>べき関数モデルを検出</b> ✅</div>
+            <ul>
+              <li>推定: aₙ ≈ C·n^α</li>
+              <li>α ≈ <span class="mono">${formatNum(pw.alpha)}</span></li>
+              <li>C ≈ <span class="mono">${formatNum(pw.C)}</span></li>
+              <li>最大相対誤差（検証範囲） ≈ <span class="mono">${formatNum(pw.worstRelErr)}</span></li>
+              <li>正則化値（Dirichlet型, s→0）:
+                <b class="mono">${formatNum(F0_pow)}</b> ${fracHtml}
+              </li>
+            </ul>
+            <div class="hint">この場合 F(0)=C·ζ(-α) を数値計算で評価しています。</div>
+          `;
+          return;
+        }
+
+        const preview = terms.slice(0, 24).map(formatNum).join(", ");
+        out.innerHTML = `
+          <div class="err"><b>モデルを検出できませんでした</b></div>
+          <div class="hint">
+            準多項式（周期×多項式）にも、べき関数（C·n^α）にも見えませんでした。
+            例：指数・対数・乱数・符号が揺れる等の可能性があります。
+          </div>
+          <div style="margin-top:10px;"><b>先頭の項（プレビュー）</b><br>
+            <span class="mono">${preview}${terms.length>24?", …":""}</span>
+          </div>
+        `;
+        return;
+      }
+    } else {
+      const m = maxPeriod;
+      const deg = maxDeg;
+      const model = tryModel(terms, m, deg, eps);
+      if (!model) {
+        out.innerHTML = `
+          <div class="err"><b>指定した m=${m}, d=${deg} では当てはまりませんでした</b></div>
+          <div class="hint">Autoに戻すか、m/d を変えてみてください。</div>
+        `;
+        return;
+      }
+      res = { m, deg, model };
+    }
+
+    const { m, deg, model } = res;
+    const F0 = computeF0(m, deg, model);
+
+    const fr = rationalApprox(F0, 1000000, 1e-10);
+    const frText = fr ? formatFraction(fr) : "";
+    const fracHtml = frText
+      ? `<span class="hint">（≒ <span class="mono">${frText}</span>）</span>`
+      : "";
+
+    const preview = terms.slice(0, 24).map(formatNum).join(", ");
+    const patternLines = [];
+    for (let r = 1; r <= m; r++) {
+      const cs = model[r - 1].map((c, i) => `c${i}=${formatNum(c)}`).join(", ");
+      patternLines.push(`r=${r}: ${cs}`);
+    }
+
+    out.innerHTML = `
+      <div class="ok"><b>モデル検出成功</b> ✅</div>
+      <ul>
+        <li>周期 m = <span class="mono">${m}</span></li>
+        <li>次数 d = <span class="mono">${deg}</span></li>
+        <li>正則化値（Dirichlet型, s→0）:
+          <b class="mono">${formatNum(F0)}</b> ${fracHtml}
+        </li>
+      </ul>
+
+      <details>
+        <summary>各剰余クラスごとの多項式係数（aₙ = Σ c_{r,p} n^p）</summary>
+        <div class="mono" style="white-space:pre-wrap; margin-top:8px;">${patternLines.join("\n")}</div>
+      </details>
+
+      <div style="margin-top:10px;">
+        <b>先頭の項（プレビュー）</b><br>
+        <span class="mono">${preview}${terms.length > 24 ? ", …" : ""}</span>
+      </div>
+
+      <div class="hint" style="margin-top:10px;">
+        準多項式の場合は Hurwitzゼータの ζ(-p,q) を使って F(0) を計算しています。
+      </div>
+    `;
+
+  } catch (e) {
+    out.innerHTML = `<div class="err"><b>エラー</b><br>${String(e.message || e)}</div>`;
+  }
+});
+</script>
+
+  <div class="card">
+    <b>すぐ試せる式例</b>
+    <ul>
+      <li><code>1</code> → <span class="mono">-1/2</span></li>
+      <li><code>(n mod 2 == 1) ? 1 : 0</code>（1,0,1,0,…）→ <span class="mono">0</span></li>
+      <li><code>(n mod 2 == 1) ? n : 0</code> → <span class="mono">1/12</span></li>
+      <li><code>n^5</code> または <code>n**5</code> → <span class="mono">ζ(-5) = -1/252</span></li>
+      <li><code>sqrt(n)</code> → <span class="mono">ζ(-1/2)</span>（べきモデル側で出ます）</li>
+      <li>ビット遊び: <code>bxor(i32(n), 5)</code></li>
+    </ul>
+    <div class="hint">
+      注意: このページの <code>^</code> は累乗扱いです（XORは <code>bxor</code> を使います）。
+      <code>mod</code> や <code>==</code> などは mathjs の文法です。
+    </div>
+  </div>
+</body>
+</html>

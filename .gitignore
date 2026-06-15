@@ -1,0 +1,8 @@
+pub/img_gallery/nsfw/
+.aibooru_config.php
+.e621_config.php
+.gelbooru_config.php
+pub/nazo/booru_thumb_cache/
+pub/nazo/booru_cache.json
+pub/nazo/booru_test.php
+pub/nazo/rss_test.php

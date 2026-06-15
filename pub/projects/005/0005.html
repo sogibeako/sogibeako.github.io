@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Hex Tessellation with Image</title>
+    <style>
+        body,
+        p {
+            font-size: 1rem;
+            color: #ffffff;
+            background-color: #111822;
+            /* 青っぽい背景色 */
+            margin-left: 20px;
+            margin-top: 20px;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        canvas {
+            background-color: white;
+        }
+
+        a {
+            color: #ffffff;
+        }
+
+        h1 {
+            background-color: #609aa0;
+            /* 秋雨 */
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.5em;
+            /* 内側の余白で見た目よく */
+        }
+
+        h2 {
+            background-color: #609aa0;
+            /* 秋雨 */
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.5em;
+            /* 内側の余白で見た目よく */
+        }
+
+        hr {
+            border-width: 2px 0 0 0;
+            /* 線の太さ */
+            border-style: dashed;
+            /* 線の種類 */
+            border-color: #609aa0
+                /* 線の色 */
+        }
+
+        .br-sp {
+            display: none;
+        }
+
+        pre,
+        pre code {
+            background-color: #bbbbbb;
+            color: #000;
+            padding: 0.5em;
+            display: block;
+            overflow-x: auto;
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+        }
+
+        code {
+            background-color: #bbbbbb;
+            color: #000;
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+            font-family: "Courier New", Courier, monospace;
+            display: inline-block;
+            line-height: 1.2;
+        }
+
+        @media screen and (max-width: 600px) {
+            body {
+                font-size: 0.7rem;
+            }
+
+            .grid-table,
+            .grid-table2 {
+                grid-template-columns: 1fr;
+            }
+
+            .br-sp {
+                display: inline;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="p_left">現在位置 : <a href="../index.html">ホーム</a>　＞　JSS Project　＞　<a
+            href="0005_hexTiling.htm"><b>#005</b></a></div>
+    <br>
+    <hr><br>
+
+    <h2>六角形テッセレーションに画像を回転貼り付け</h2>
+    画像を下のキャンバスにドラッグ＆ドロップしてください。
+    <canvas id="hexCanvas" width="800" height="800"></canvas>
+
+    <div class="controls">
+        <div>
+            <button id="pickImageBtn" type="button">画像を選ぶ（カメラロール）</button>
+            <input id="filePicker" type="file" accept="image/*" hidden>
+        </div>
+        <div>
+            <label for="sizeSlider">サイズ:</label>
+            <input type="range" id="sizeSlider" min="20" max="120" step="2" value="50">
+        </div>
+        <div>
+            <label for="zoomSlider">ズーム:</label>
+            <input type="range" id="zoomSlider" min="0.5" max="3" step="0.1" value="1">
+        </div>
+        <div>
+            <label for="xOffsetSlider">Xオフセット:</label>
+            <input type="range" id="xOffsetSlider" min="-300" max="300" step="1" value="0">
+        </div>
+        <div>
+            <label for="yOffsetSlider">Yオフセット:</label>
+            <input type="range" id="yOffsetSlider" min="-300" max="300" step="1" value="0">
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('hexCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let hexRadius = 50;
+        const hexHeight = Math.sqrt(3) * hexRadius;
+        let zoom = 1;
+        let offsetX = 0;
+        let offsetY = 0;
+        let img = null;
+
+        // スライダーのイベント
+        document.getElementById('sizeSlider').oninput = e => {
+            hexRadius = parseInt(e.target.value, 10);
+            draw();
+        };
+        document.getElementById('zoomSlider').oninput = e => {
+            zoom = parseFloat(e.target.value);
+            draw();
+        };
+        document.getElementById('xOffsetSlider').oninput = e => {
+            offsetX = parseInt(e.target.value);
+            draw();
+        };
+        document.getElementById('yOffsetSlider').oninput = e => {
+            offsetY = parseInt(e.target.value);
+            draw();
+        };
+
+        // ドラッグ＆ドロップ処理
+        canvas.addEventListener('dragover', e => e.preventDefault());
+        canvas.addEventListener('drop', e => {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (!file.type.startsWith('image/')) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                img = new Image();
+                img.onload = draw;
+                img.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // ファイル選択読み込み
+        const pickBtn = document.getElementById('pickImageBtn');
+        const filePicker = document.getElementById('filePicker');
+
+        pickBtn.addEventListener('click', () => {
+            filePicker.click();
+        });
+
+        filePicker.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) return;
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                img = new Image();
+                img.onload = draw;
+                img.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+
+            // 同じ画像を連続で選んでもchangeが発火するようにクリア
+            e.target.value = '';
+        });
+
+        // 描画処理
+        function draw() {
+            // 背景を白で塗りつぶす
+            ctx.fillStyle = '#ffffff'; // ← 白
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            if (!img) return;                     // 画像がまだ無ければ終了
+
+            const R = hexRadius;                 // 外接円半径（中心→頂点）
+            const W = Math.sqrt(3) * R;          // 六角形の幅（左右の平行辺の距離）
+            const H = 2 * R;                     // 六角形の高さ（頂点→反対頂点）
+            const dx = W;                         // 水平方向の中心間隔
+            const dy = 0.75 * H;                  // 垂直方向の中心間隔 (= 1.5 * R)
+
+            // 必要な行数・列数を多めに見積もる
+            const cols = Math.ceil(canvas.width / dx) + 2;
+            const rows = Math.ceil(canvas.height / dy) + 2;
+
+            for (let row = 0; row < rows; row++) {
+                const y = row * dy;                 // 行の中心Y
+                const xOffset = (row & 1) ? dx / 2 : 0;  // 奇数行だけ半マス右へ
+                for (let col = 0; col < cols; col++) {
+                    const x = col * dx + xOffset;     // 列の中心X
+                    drawHexImage(x, y);               // 既存の画像貼り付け処理
+                }
+            }
+        }
+
+        // 六角形内の三角形ごとに画像を貼る
+        function drawHexImage(cx, cy) {
+            for (let i = 0; i < 6; i++) {
+                const angle = i * Math.PI / 3;
+
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(angle);
+
+                // 三角形クリップパス
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(hexRadius * Math.cos(Math.PI / 6), -hexRadius * Math.sin(Math.PI / 6));
+                ctx.lineTo(hexRadius * Math.cos(Math.PI / 6), hexRadius * Math.sin(Math.PI / 6));
+                ctx.closePath();
+                ctx.clip();
+
+                // 画像を描画（切り出し）
+                const sSize = 100 / zoom;
+                const sx = img.width / 2 + offsetX;
+                const sy = img.height / 2 + offsetY;
+                ctx.drawImage(img, sx, sy, sSize, sSize, -hexRadius, -hexRadius, hexRadius * 2, hexRadius * 2);
+
+                ctx.restore();
+            }
+        }
+    </script>
+
+</body>
+
+</html>

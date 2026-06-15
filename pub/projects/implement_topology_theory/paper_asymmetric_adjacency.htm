@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>非対称隣接空間と主体依存位相：rotによる空間の分裂</title>
+    <style>
+        body {
+            font-size: 1rem;
+            background-color: #111822;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        h1 {
+            background-color: #609aa0;
+            color: black;
+            padding: 0.5em;
+        }
+
+        h2 {
+            background-color: #609aa0;
+            color: black;
+            padding: 0.5em;
+            margin-top: 2em;
+        }
+
+        h3 {
+            border-bottom: 2px dashed #609aa0;
+            padding-bottom: 0.2em;
+            margin-top: 1.5em;
+        }
+
+        .p_left {
+            text-align: left;
+        }
+
+        .wrapper {
+            max-width: 800px;
+            width: 80%;
+            margin: 50px auto;
+            padding: 20px;
+            border: 0px solid #111;
+            background-color: #afd3e6;
+            font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+            color: #111;
+        }
+
+        .inner_wrapper {
+            width: 90%;
+            margin: 10px auto;
+            padding: 20px;
+            border: 1px solid #111;
+            background-color: #ffffee;
+            font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", sans-serif;
+        }
+
+        .grid-table {
+            display: grid;
+            grid-template-columns: auto auto auto;
+            gap: 2px;
+            margin-bottom: 1em;
+        }
+
+        .grid-table-2 {
+            display: grid;
+            grid-template-columns: auto auto;
+            gap: 2px;
+            margin-bottom: 1em;
+        }
+
+        .grid-table-4 {
+            display: grid;
+            grid-template-columns: auto auto auto auto;
+            gap: 2px;
+            margin-bottom: 1em;
+        }
+
+        .cell, .cell-header {
+            border: 0px solid #cccccc;
+            padding: 4px 8px;
+            background-color: #eeeeee;
+            line-break: strict;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .cell-header {
+            font-weight: bold;
+            background-color: #dddddd;
+            text-align: center;
+        }
+
+        .cell-blue {
+            border: 0px solid #aaaaff;
+            padding: 4px 8px;
+            background-color: #ddddff;
+            line-break: strict;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        blockquote {
+            background-color: #f9f9f9;
+            border-left: 5px solid #609aa0;
+            margin: 1.5em 10px;
+            padding: 0.5em 10px;
+        }
+
+        hr {
+            border-width: 2px 0 0 0;
+            border-style: dashed;
+            border-color: #609aa0;
+        }
+
+        .br-sp {
+            display: none;
+        }
+
+        pre,
+        pre code {
+            background-color: #1e2030;
+            color: #cdd6f4;
+            padding: 0.8em;
+            display: block;
+            overflow-x: auto;
+            border-radius: 4px;
+            font-family: "Courier New", Courier, monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        code {
+            background-color: #bbbbbb;
+            color: #000;
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+            font-family: "Courier New", Courier, monospace;
+            display: inline-block;
+            line-height: 1.2;
+        }
+
+        /* コードブロック内のキーワードハイライト用 */
+        .kw { color: #cba6f7; }
+        .fn { color: #89b4fa; }
+        .st { color: #a6e3a1; }
+        .cm { color: #6c7086; font-style: italic; }
+        .nu { color: #fab387; }
+
+        @media screen and (max-width: 600px) {
+            body { font-size: 0.85rem; }
+            h1, h2 { font-size: 1.2rem; }
+            h3 { font-size: 1.1rem; }
+            .wrapper, .inner_wrapper {
+                width: 95%;
+                padding: 10px;
+                word-wrap: break-word;
+                box-sizing: border-box;
+            }
+            .grid-table { grid-template-columns: repeat(3, 1fr); }
+            .grid-table-2 { grid-template-columns: repeat(2, 1fr); }
+            .grid-table-4 { grid-template-columns: repeat(4, 1fr); }
+            .br-sp { display: inline; }
+        }
+    </style>
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="p_left">現在位置 : <a href="nazo.html"><b>ホーム</b></a>
+            ＞ <a href="20250804.htm">実装位相論について</a></div>
+        <h1>非対称隣接空間と主体依存位相<br>——rotによる空間の分裂</h1>
+        <div class="p_left">
+            <p><strong>Asymmetric Adjacency Spaces and Agent-Dependent Topology: Spatial Splitting Induced by Rotation State</strong></p>
+            <p style="text-align: right;">水原（Mizuhara）</p>
+            <p style="text-align: right;">実装位相論ノート 第2稿</p>
+
+            <hr>
+
+            <!-- ==================== 概要 ==================== -->
+            <h2>概要</h2>
+
+            <p>ファミコンRPGの2Dタイルマップは、一見すると単純な有限格子に見える。しかし実装の観点から見ると、重要なのは「点がどこにあるか」そのものではなく、<strong>各マスからどこへ移動できるか</strong>、<strong>画面端でどのようにラップするか</strong>、<strong>向きや反転・回転状態がどう保存・変換されるか</strong>といった遷移規則の方である。</p>
+
+            <p>前稿（「実装位相論：計算機上の空間構造に関する数学的基礎」）では、この立場を離散ファイバーバンドルとホロノミーの言葉で定式化した。本稿では、その枠組みの中で特に<strong>回転状態 rot</strong> がもたらす現象——<strong>隣接関係の非対称性</strong>、<strong>主体ごとに異なる位相空間</strong>、<strong>接触空間と描画空間の分裂</strong>——を分析する。</p>
+
+            <p>具体的には、位相ローグライク <code>topologue_v05.htm</code> の実装を読解し、そこで起きている数学的構造を明らかにする。</p>
+
+            <p><strong>キーワード</strong>：非対称隣接、主体依存位相、rot、ホロノミー変数、接触空間・描画空間の分裂、離散曲率</p>
+
+            <hr>
+
+            <!-- ==================== 第1章 ==================== -->
+            <h2>1. 空間ではなく遷移系として見る</h2>
+
+            <h3>1.1 真の状態空間</h3>
+            <p>通常、2Dマップは座標集合 $X$ の上で考えられる。しかしゲーム内部では、座標だけでは状態を記述しきれない。プレイヤーの向き、左右反転・上下反転の有無、回転状態、季節や位相モード、乗り物状態、世界の表裏——これらのすべてが移動結果に影響する。</p>
+
+            <p>そのため、真の状態空間は</p>
+            <p>$$ \mathcal{S} = X \times F \times Q $$</p>
+            <p>となる。ここで：</p>
+            <ul>
+                <li>$X$：マップ座標（ノードID）</li>
+                <li>$F$：向き・反転・回転などの内部位相状態（前稿の topoState）</li>
+                <li>$Q$：季節、世界位相モード、ボス生存フラグなどの大域状態</li>
+            </ul>
+            <p>各移動方向 $d \in \{\uparrow, \downarrow, \leftarrow, \rightarrow\}$ に対して遷移写像</p>
+            <p>$$ T_d : \mathcal{S} \to \mathcal{S} $$</p>
+            <p>を定義することで、世界全体をひとつの離散力学系として扱える。</p>
+
+            <h3>1.2 大域整合性の条件</h3>
+            <p>このモデルが数学的に整合するためには、以下の条件が必要である。</p>
+            <ol>
+                <li><strong>一歩移動が well-defined</strong>：どの状態からどの方向へ進んでも、遷移先が一意に定まる。</li>
+                <li><strong>経路合成が well-defined</strong>：2歩、3歩、1周と移動を合成した結果が、写像の合成として定まる。</li>
+                <li><strong>世界全体が統一的に読める</strong>：局所的な接続変更やイベント変化があっても、それらが全体としてひとつの規則系に収まる。</li>
+            </ol>
+            <p>前稿で示した離散ファイバーバンドルの枠組みは、この3条件を自然に満たすモデルであった。</p>
+
+            <hr>
+
+            <!-- ==================== 第2章 ==================== -->
+            <h2>2. 位相の動的変化：空間が呼吸する世界</h2>
+
+            <p>前稿では、接続規則（ラップ命令）は静的に与えられていた。しかし実際のゲームでは、接続規則が時間やイベントに応じて変化することがある。ここでは、動的な位相変化の類型を整理する。</p>
+
+            <h3>2.1 季節・状態で変わる境界接続</h3>
+
+            <p>通常時は東端から西端へそのまま出るが、冬だけ南北反転して出る：</p>
+            <ul>
+                <li>通常：$(W-1, y) \mapsto (0, y)$</li>
+                <li>冬：$(W-1, y) \mapsto (0, H-1-y)$</li>
+            </ul>
+
+            <p>見た目は同じマップでも、冬だけメビウス的なねじれが生じる。前稿の言葉では、大域状態 $Q$ に「季節」を含め、季節によって接続の遷移写像 $g_e$ が切り替わるモデルである。</p>
+
+            <h3>2.2 ボス生存時のみ非可換な世界</h3>
+
+            <p>東端通過で回転、北端通過で反転を導入すると、「先に東へ行くか、先に北へ行くか」で結果が変わる。</p>
+            <p>$$ g_E \circ g_N \ne g_N \circ g_E $$</p>
+            <p>この非可換性は、ボスを倒すと $g_E$ が恒等写像に戻って可換になる——という形で、「呪われた世界」の解呪として実装できる。</p>
+
+            <h3>2.3 周回で変わるダンジョン</h3>
+
+            <p>塔や迷宮が周回ごとに接続規則を変える：</p>
+
+            <div class="inner_wrapper">
+                <div class="grid-table">
+                    <div class="cell-header">周回</div>
+                    <div class="cell-header">位相</div>
+                    <div class="cell-header">体験</div>
+
+                    <div class="cell">1周目</div>
+                    <div class="cell">円筒</div>
+                    <div class="cell">普通に一周できる</div>
+
+                    <div class="cell">3周目</div>
+                    <div class="cell">メビウス</div>
+                    <div class="cell">一周すると上下が逆</div>
+
+                    <div class="cell">5周目</div>
+                    <div class="cell">クラインの壺</div>
+                    <div class="cell">どちらの軸で周回しても反転</div>
+                </div>
+            </div>
+
+            <p>ダンジョンそのものが、位相を状態とする有限状態機械として振る舞う。これは前稿§6の位相遷移力学系の具体例でもある。</p>
+
+            <h3>2.4 時間でラップ先がずれる世界</h3>
+
+            <p>東端通過先が時間 $t$ に応じて</p>
+            <p>$$ (W-1, y) \mapsto (0,\ y + k(t) \bmod H) $$</p>
+            <p>のように変化する。$k(t) = \lfloor t / 100 \rfloor \bmod H$ とすれば、100ターンごとにラップ先が1マスずつずれていく。「空間が呼吸する」「世界そのものに潮汐がある」ようなモデルである。</p>
+
+            <hr>
+
+            <!-- ==================== 第3章 ==================== -->
+            <h2>3. ラップ命令への干渉</h2>
+
+            <h3>3.1 特殊タイルが局所接続演算子になる</h3>
+
+            <p>神殿の床や虹の橋など、特定地点だけ別の接続規則を持たせることができる：</p>
+            <ul>
+                <li>北へ出ると180度回転して南から出る</li>
+                <li>通過時に世界層（表/裏）が反転する</li>
+                <li>橋を渡ると表世界から裏世界へ切り替わる</li>
+            </ul>
+
+            <p>これはタイルが単なる床ではなく、<strong>局所接続演算子</strong>になっている例である。前稿§4の「局所接続」の具体的実装に相当する。</p>
+
+            <h3>3.2 アイテムによるラップ規則の改変</h3>
+
+            <p>「裏返しの杖」「空間ねじれの宝玉」などを使うと、境界ラップ規則に変換が加わる。flipYを付加する、rotを加算する、ラップ先オフセットを反転する——いずれも前稿の定理4.13（局所変換によるホロノミー変化）の直接的な実装になる。</p>
+
+            <h3>3.3 範囲外参照からの干渉</h3>
+
+            <p>マップ外へ出た結果、意図しないメモリ領域を踏み、そこに置かれていた「境界接続テーブル」が書き換わる。プレイヤー体験としては「外海の果てで禁断の敵を倒したら、帰還後に世界の継ぎ目がおかしくなった」という神話的現象になるが、実装的にはテーブル破壊——前稿§5のフラグマイニングそのものである。</p>
+
+            <h3>3.4 マップ切り替えを貼り合わせとして見る</h3>
+
+            <p>町、フィールド、塔内部がそれぞれ別の位相を持ち、出入口はその間の貼り合わせ写像になっている。「マップ切り替え」は単なる場面転換ではなく、<strong>局所チャートの貼り合わせ</strong>として読める。これは多様体論の座標変換（チャートの遷移関数）の離散版である。</p>
+
+            <h3>3.5 主体ごとに異なる空間</h3>
+
+            <p>プレイヤー、NPC、亡霊、船などで使う接続規則を変えることもできる。「プレイヤーには行けない道を亡霊が歩く」「老賢者だけ別位相の道を見ている」「船だけ海上トーラスを移動できる」。これは<strong>主体依存空間</strong>であり、本稿後半の主題に直接つながる。</p>
+
+            <hr>
+
+            <!-- ==================== 第4章 ==================== -->
+            <h2>4. rot の正体：ホロノミー変数としての回転状態</h2>
+
+            <p>本章から、<code>topologue_v05.htm</code> の具体的な実装を読解し、<code>rot</code> の数学的意味を明らかにする。</p>
+
+            <h3>4.1 rot は向きではなく、境界通過履歴の蓄積である</h3>
+
+            <p><code>QuarterTurnTopology</code> は、端を抜けるたびに接続先の辺を90度回転させる位相である。その <code>resolveStep</code> の核心部分を見る：</p>
+
+<pre><code><span class="cm">// QuarterTurnTopology.resolveStep() より抜粋</span>
+<span class="kw">const</span> toEdge = <span class="kw">this</span>.turn === <span class="st">"clockwise"</span>
+  ? <span class="fn">rotateDir</span>(fromEdge, <span class="nu">1</span>)
+  : <span class="fn">rotateDir</span>(fromEdge, <span class="nu">-1</span>);
+
+({ x: nx, y: ny } = <span class="kw">this</span>.<span class="fn">placeOnEdge</span>(toEdge, t, width, height));
+
+nextTopoState.rot =
+  <span class="kw">this</span>.turn === <span class="st">"clockwise"</span>
+    ? (nextTopoState.rot + <span class="nu">3</span>) % <span class="nu">4</span>
+    : (nextTopoState.rot + <span class="nu">1</span>) % <span class="nu">4</span>;</code></pre>
+
+            <p>境界を抜けるごとに <code>rot</code> が変化する。<code>rot</code> は「今どちらを向いているか」ではなく、<strong>どんな境界の貼り合わせを経て今ここに来たか</strong>を記録している。したがって <code>rot</code> は、前稿の定式化における<strong>ホロノミー変数</strong>そのものである。</p>
+
+            <h3>4.2 入力と描画は逆向き変換を使う</h3>
+
+            <p>Topologue では、プレイヤー入力と局所描画がきれいな対を成している：</p>
+
+            <div class="inner_wrapper">
+                <div class="grid-table">
+                    <div class="cell-header">処理</div>
+                    <div class="cell-header">関数</div>
+                    <div class="cell-header">rot の使い方</div>
+
+                    <div class="cell">入力変換</div>
+                    <div class="cell"><code>mapInputDirToGraphDir()</code></div>
+                    <div class="cell">$\text{rot}$ で<strong>順方向</strong>に回転：主観→世界</div>
+
+                    <div class="cell">描画変換</div>
+                    <div class="cell"><code>projectDirToLocalOffset()</code></div>
+                    <div class="cell">$-\text{rot}$ で<strong>逆方向</strong>に回転：世界→主観</div>
+                </div>
+            </div>
+
+            <p>入力変換は「プレイヤーが『上へ行こう』と思った方向を、現在の <code>rot</code> に応じて世界グラフ上の方向に変換する」処理である：</p>
+
+<pre><code><span class="kw">function</span> <span class="fn">mapInputDirToGraphDir</span>(inputDir, topoState) {
+  <span class="kw">let</span> dir = inputDir;
+  <span class="kw">if</span> (topoState?.flipY) {
+    <span class="kw">if</span> (dir === <span class="st">"N"</span>) dir = <span class="st">"S"</span>;
+    <span class="kw">else if</span> (dir === <span class="st">"S"</span>) dir = <span class="st">"N"</span>;
+  }
+  <span class="kw">if</span> (topoState?.flipX) {
+    <span class="kw">if</span> (dir === <span class="st">"E"</span>) dir = <span class="st">"W"</span>;
+    <span class="kw">else if</span> (dir === <span class="st">"W"</span>) dir = <span class="st">"E"</span>;
+  }
+  dir = <span class="fn">rotateDir</span>(dir, topoState?.rot ?? <span class="nu">0</span>);
+  <span class="kw">return</span> dir;
+}</code></pre>
+
+            <p>一方、描画変換はその<strong>逆操作</strong>——世界方向を主観座標系へ引き戻す：</p>
+
+<pre><code><span class="kw">function</span> <span class="fn">projectDirToLocalOffset</span>(dir, topoState) {
+  <span class="kw">let</span> localDir = <span class="fn">rotateDir</span>(dir, -(topoState?.rot ?? <span class="nu">0</span>));
+  <span class="cm">// flipX, flipY の逆適用...</span>
+  <span class="kw">switch</span> (localDir) {
+    <span class="kw">case</span> <span class="st">"N"</span>: <span class="kw">return</span> { dx: <span class="nu">0</span>, dy: <span class="nu">-1</span> };
+    <span class="kw">case</span> <span class="st">"E"</span>: <span class="kw">return</span> { dx: <span class="nu">1</span>, dy: <span class="nu">0</span> };
+    <span class="cm">// ...</span>
+  }
+}</code></pre>
+
+            <p>この対称性は、ファイバーバンドルにおける<strong>フレームの持ち上げ</strong>（入力）と<strong>射影</strong>（描画）の関係に対応する。</p>
+
+            <hr>
+
+            <!-- ==================== 第5章 ==================== -->
+            <h2>5. 真世界と主観空間の二層構造</h2>
+
+            <h3>5.1 buildWorldGraph() は静的な客観世界を作る</h3>
+
+            <p>世界グラフは <code>buildWorldGraph()</code> で構築される。ここで決定的なのは、隣接を構築するときに常に <code>topology.initialState()</code>——つまり <code>rot = 0</code>——を使っていることである：</p>
+
+<pre><code><span class="kw">for</span> (<span class="kw">const</span> dir <span class="kw">of</span> DIRS) {
+  <span class="kw">const</span> result = topology.<span class="fn">resolveStep</span>(
+    node.x, node.y, dir,
+    topology.<span class="fn">initialState</span>(),  <span class="cm">// 常に初期状態</span>
+    baseMap.width, baseMap.height
+  );
+  node.neighbors[dir] = { to: toNodeId, transform: result.transform };
+}</code></pre>
+
+            <p>したがって <code>worldGraph</code> は、<strong>動的な rot を持たない初期位相を基準とした客観世界</strong>である。</p>
+
+            <h3>5.2 movePlayer() は動的 topoState を持つ主観空間を歩く</h3>
+
+            <p>一方、プレイヤーの移動は現在の <code>topoState</code> を引数に渡す：</p>
+
+<pre><code><span class="kw">const</span> result = topology.<span class="fn">resolveStep</span>(
+  currentNode.x, currentNode.y, dir,
+  playerState.topoState,  <span class="cm">// 動的な位相状態</span>
+  graph.baseMap.width, graph.baseMap.height
+);
+playerState.topoState = result.topoState;  <span class="cm">// 更新</span></code></pre>
+
+            <p>プレイヤーは、同じ <code>nodeId</code> の世界を土台にしつつ、現在の <code>rot</code> によって接続の読み方が変わる<strong>主観位相付き空間</strong>を歩いている。</p>
+
+            <h3>5.3 buildLocalChart() は主観的被覆空間の断面を描く</h3>
+
+            <p>局所チャートは BFS で生成されるが、各ノードは <code>nodeId</code>・<code>localX</code>・<code>localY</code>・<code>topoState</code> の4つ組として展開される。同じ <code>nodeId</code> であっても、別の <code>topoState</code>・別の局所座標で再登場しうる。</p>
+
+            <blockquote>
+                <p>この意味で局所チャートは、nodeId の単なる近傍図ではなく、<strong>主観位相付き被覆空間の一断面</strong>に近い。前稿§3の離散ファイバーバンドルにおける「局所自明化」の具体的実装である。</p>
+            </blockquote>
+
+            <hr>
+
+            <!-- ==================== 第6章 ==================== -->
+            <h2>6. NPCはプレイヤーと同じ空間を歩いていない</h2>
+
+            <h3>6.1 NPCは静的 worldGraph を使って移動する</h3>
+            <p>犬の追跡 <code>updateDog()</code> や猫の徘徊 <code>updateCat()</code> は、いずれも静的な <code>game.worldGraph</code> 上で距離計算・経路探索を行う：</p>
+
+<pre><code><span class="cm">// 犬の追跡</span>
+<span class="kw">const</span> playerDist = <span class="fn">findDistance</span>(
+  game.worldGraph, dog.nodeId,
+  game.playerState.nodeId, <span class="kw">new</span> Set(), <span class="nu">3</span>
+);
+<span class="kw">const</span> nextNodeId = <span class="fn">findNextStepToward</span>(
+  game.worldGraph, dog.nodeId, targetNodeId, blocked
+);
+
+<span class="cm">// 猫の徘徊</span>
+<span class="kw">const</span> neighbors = <span class="fn">getValidNeighborNodeIds</span>(game.worldGraph, cat.nodeId)
+  .<span class="fn">filter</span>(id => id !== game.playerState.nodeId);</code></pre>
+
+            <p>ここで重要なのは、NPCが使うのは<strong>静的に構築された worldGraph</strong> であり、<strong>プレイヤーの現在 rot を共有していない</strong>ことである。</p>
+
+            <h3>6.2 二つの空間のずれ</h3>
+
+            <div class="inner_wrapper">
+                <div class="grid-table">
+                    <div class="cell-header">主体</div>
+                    <div class="cell-header">使用する空間</div>
+                    <div class="cell-header">topoState</div>
+
+                    <div class="cell">プレイヤー</div>
+                    <div class="cell">動的 topoState 付きで <code>resolveStep()</code></div>
+                    <div class="cell">境界通過で蓄積・変化</div>
+
+                    <div class="cell">犬・猫</div>
+                    <div class="cell">静的 <code>worldGraph</code></div>
+                    <div class="cell">常に初期状態（rot=0）</div>
+                </div>
+            </div>
+
+            <blockquote>
+                <p>プレイヤーは動的位相空間を歩き、犬や猫は静的世界骨格で行動する——<strong>同じ座標にいても、同じ空間にいるとは限らない</strong>。</p>
+            </blockquote>
+
+            <hr>
+
+            <!-- ==================== 第7章 ==================== -->
+            <h2>7. 空間の三重分裂：移動・接触・描画</h2>
+
+            <p>ここが本稿の核心である。通常のゲームでは、「隣接している」という概念は暗黙に複数の意味を共有している。</p>
+
+            <h3>7.1 三つの隣接グラフ</h3>
+
+            <div class="inner_wrapper">
+                <div class="grid-table">
+                    <div class="cell-header">グラフ</div>
+                    <div class="cell-header">意味</div>
+                    <div class="cell-header">実装上の根拠</div>
+
+                    <div class="cell">移動グラフ $G_{\text{move}}$</div>
+                    <div class="cell">1歩で到達できる</div>
+                    <div class="cell"><code>resolveStep()</code> + 動的 topoState</div>
+
+                    <div class="cell">接触グラフ $G_{\text{touch}}$</div>
+                    <div class="cell">当たり判定が成立する</div>
+                    <div class="cell"><code>nodeId</code> 一致判定</div>
+
+                    <div class="cell">描画グラフ $G_{\text{draw}}$</div>
+                    <div class="cell">画面上で近くに見える</div>
+                    <div class="cell"><code>buildLocalChart()</code> + <code>projectDirToLocalOffset()</code></div>
+                </div>
+            </div>
+
+            <p>普通の空間ではこの3つはほぼ一致する。しかし <code>rot</code> が入ると、<strong>それぞれが別のグラフに従ってしまう</strong>。</p>
+
+            <h3>7.2 接触判定は nodeId ベースである</h3>
+            <p>Topologue の接触判定は、移動先の <code>nodeId</code> が NPC の <code>nodeId</code> と一致するかで決まる：</p>
+
+<pre><code><span class="cm">// プレイヤーが犬に触れる</span>
+<span class="kw">if</span> (game.actors.dog && nextNodeId === game.actors.dog.nodeId) {
+  <span class="fn">petActor</span>(game, <span class="st">"dog"</span>);
+}
+
+<span class="cm">// 犬がプレイヤーに触れる</span>
+<span class="kw">if</span> (nextNodeId === game.playerState.nodeId) {
+  <span class="fn">actorTouchesPlayer</span>(game, <span class="st">"dog"</span>);
+}</code></pre>
+
+            <p>一方、描画はプレイヤーの <code>topoState</code> 付き局所チャートを通して行われる。よって同じ <code>nodeId</code> に犬がいても：</p>
+
+            <ul>
+                <li>接触空間では「いる」 → 判定成立</li>
+                <li>描画空間では「見えない」 → 局所チャートに現れない</li>
+            </ul>
+
+            <p>ということが起こりうる。</p>
+
+            <hr>
+
+            <!-- ==================== 第8章 ==================== -->
+            <h2>8. 非対称隣接空間：一方通行の隣接</h2>
+
+            <h3>8.1 一方通行隣接の発生</h3>
+
+            <p><code>rot</code> をプレイヤーだけが持ち、NPCが共有しないとき、以下の事態が生じる：</p>
+            <ul>
+                <li>犬から見ると（worldGraph 上で）プレイヤーは隣接ノードにいる</li>
+                <li>プレイヤーから見ると（動的 topoState に基づく接続で）犬はまったく別の方向にいる</li>
+            </ul>
+
+            <p>通常の隣接は対称関係 $A \sim B \Rightarrow B \sim A$ である。しかしここでは：</p>
+            <p>$$ A \to B \quad \text{かつ} \quad B \not\to A $$</p>
+            <p>が起こる。<strong>隣接関係が無向グラフではなく有向グラフになっている</strong>。</p>
+
+            <h3>8.2 見えないが触れられる存在</h3>
+
+            <p>この構造の結果として：</p>
+            <ul>
+                <li>犬は worldGraph 上でプレイヤーに接近・到達できる</li>
+                <li>プレイヤーの描画空間（局所チャート）には犬の姿が現れない</li>
+                <li>しかし nodeId 一致による接触判定は成立する</li>
+            </ul>
+
+            <p>「<strong>見えないが触れられる敵</strong>」が、実装上の自然な帰結として発生する。</p>
+
+            <h3>8.3 蜃気楼としての自己像</h3>
+
+            <p>局所チャートは同じ <code>nodeId</code> が異なる <code>topoState</code>・異なる局所座標で再出現しうる構造を持つ。そのため、位相状態の違いが描画層へ漏れると：</p>
+            <ul>
+                <li>遠方に自分の別像が見える</li>
+                <li>自分が別の存在に接触されているような像が現れる</li>
+                <li>実際にはそこに自分はいない</li>
+            </ul>
+
+            <p>これは「バグった残像」というより、<strong>異なる位相層をかすかに覗き見ている</strong>現象——被覆空間の別のシートに射影された自分の「リフト」を観測していると理解できる。</p>
+
+            <hr>
+
+            <!-- ==================== 第9章 ==================== -->
+            <h2>9. 非可換性と離散曲率</h2>
+
+            <h3>9.1 交換子としての離散曲率</h3>
+
+            <p>東端通過作用 $g_E$ と北端通過作用 $g_N$ が可換でないとき：</p>
+            <p>$$ g_E \circ g_N \ne g_N \circ g_E $$</p>
+            <p>矩形ループに沿う交換子</p>
+            <p>$$ [g_E, g_N] = g_E \circ g_N \circ g_E^{-1} \circ g_N^{-1} $$</p>
+            <p>が恒等でなければ、そこに<strong>離散的な曲率</strong>が存在する。前稿§7で予想した離散ガウス・ボネの文脈でいえば、この交換子は「面の局所ホロノミー」に他ならない。</p>
+
+            <h3>9.2 主体ごとの経路差が一方通行隣接を生む</h3>
+
+            <p>非可換な接続のもとでは、<strong>経路が結果を決める</strong>。プレイヤーと犬が異なる経路でたどったとき、たとえ同じ座標に到達しても内部状態が一致しない：</p>
+
+            <ul>
+                <li>プレイヤー系：犬は位相層の彼方にいる → 不可視</li>
+                <li>犬の系：プレイヤーは接触可能位置にいる → 接近する</li>
+            </ul>
+
+            <p>この食い違いは「ランダムなバグ」ではなく、<strong>非可換ホロノミーが主体ごとの状態差として現れたもの</strong>である。</p>
+
+            <blockquote>
+                <p>犬には追われているのに犬は見えない。自分の蜃気楼だけが別の層に見える。——この怪異は、大変まっとうな数学的帰結である。</p>
+            </blockquote>
+
+            <hr>
+
+            <!-- ==================== 第10章 ==================== -->
+            <h2>10. セーブ/ロードによる位相差</h2>
+
+            <p>補足として、セーブ/ロードの実装上の問題にも触れておく。</p>
+
+            <p>地形・座標は保存されるが、ラップ規則や位相モードだけが保存漏れするケースがある。すると、ロード後に：</p>
+            <ul>
+                <li>見た目は同じ</li>
+                <li>現在地も同じ</li>
+                <li>しかし世界の貼り合わせだけが変わっている</li>
+            </ul>
+            <p>「宇宙の微妙なズレ」が発生する。これは前稿の接続（ファイバーバンドルの接続）のみが失われ、底空間とファイバーの直積に退化したことに相当する。</p>
+
+            <hr>
+
+            <!-- ==================== 第11章 ==================== -->
+            <h2>11. まとめ</h2>
+
+            <h3>11.1 本稿で明らかにしたこと</h3>
+
+            <ol>
+                <li><strong>rot はホロノミー変数である</strong>。見た目の回転ではなく、境界通過履歴の蓄積として機能する。</li>
+                <li><strong>真世界と主観空間は分離している</strong>。<code>buildWorldGraph()</code>（客観）と <code>buildLocalChart()</code>（主観）が別の空間を構成する。</li>
+                <li><strong>NPCとプレイヤーは同一位相を共有していない</strong>。NPCは静的 worldGraph、プレイヤーは動的 topoState 付き空間を歩く。</li>
+                <li><strong>移動・接触・描画の空間が分裂しうる</strong>。rot により三つの隣接グラフが一致しなくなる。</li>
+                <li><strong>非対称隣接が自然に発生する</strong>。犬には追われているが犬は見えない——という怪異は、非可換ホロノミーの帰結である。</li>
+            </ol>
+
+            <h3>11.2 実装位相論的に読み取れること</h3>
+
+            <p>Topologue の実装から読み取れる重要なことを整理する：</p>
+
+            <div class="inner_wrapper">
+                <div class="grid-table-2">
+                    <div class="cell-header">観察</div>
+                    <div class="cell-header">数学的意味</div>
+
+                    <div class="cell">空間はタイル配列ではなく遷移則である</div>
+                    <div class="cell">空間＝離散力学系による構成</div>
+
+                    <div class="cell">rot は見た目の回転ではない</div>
+                    <div class="cell">ファイバーバンドルのホロノミー変数</div>
+
+                    <div class="cell">世界には客観と主観の二層がある</div>
+                    <div class="cell">底空間と局所自明化の分離</div>
+
+                    <div class="cell">NPCとプレイヤーは同一位相にいない</div>
+                    <div class="cell">主体依存接続、異なるファイバー上の行動</div>
+
+                    <div class="cell">接触・描画・移動が一致しない</div>
+                    <div class="cell">複数のグラフ構造の同時存在</div>
+
+                    <div class="cell">非対称隣接、蜃気楼</div>
+                    <div class="cell">非可換ホロノミー＋主体依存射影</div>
+                </div>
+            </div>
+
+            <h3>11.3 結語</h3>
+
+            <p>ファミコンRPGの2Dマップは、表面的には素朴な格子である。しかしその内部では——端の貼り合わせ、状態付き遷移、主体依存の隣接、非可換な境界作用、離散曲率、異なる位相層の重なり——驚くほど豊かな構造が発生しうる。</p>
+
+            <p>古典的な2Dマップは単なる古い実装ではなく、<strong>離散的で、状態依存で、時に怪異を含んだ宇宙論の実験場</strong>である。</p>
+
+            <p>実装位相論とは、その継ぎ目を眺める学問である。</p>
+
+            <hr>
+
+            <!-- ==================== 付録 ==================== -->
+            <h2>付録：実装位相論的に重要な関数一覧</h2>
+
+            <div class="inner_wrapper">
+                <div class="grid-table-2">
+                    <div class="cell-header">関数</div>
+                    <div class="cell-header">役割</div>
+
+                    <div class="cell"><code>QuarterTurnTopology.resolveStep()</code></div>
+                    <div class="cell">境界貼り合わせと rot 更新の中心</div>
+
+                    <div class="cell"><code>mapInputDirToGraphDir()</code></div>
+                    <div class="cell">主観入力 → 世界方向への変換</div>
+
+                    <div class="cell"><code>projectDirToLocalOffset()</code></div>
+                    <div class="cell">世界方向 → 局所描画方向への変換</div>
+
+                    <div class="cell"><code>buildWorldGraph()</code></div>
+                    <div class="cell">初期位相基準の客観世界グラフ構築</div>
+
+                    <div class="cell"><code>movePlayer()</code></div>
+                    <div class="cell">動的 topoState 持ちの主観移動</div>
+
+                    <div class="cell"><code>buildLocalChart()</code></div>
+                    <div class="cell">現在位相の主観被覆空間の断面生成</div>
+
+                    <div class="cell"><code>getValidNeighborNodeIds()</code></div>
+                    <div class="cell">NPCが使う静的接続空間</div>
+
+                    <div class="cell"><code>findDistance()</code></div>
+                    <div class="cell">静的 worldGraph 上の BFS 距離計算</div>
+
+                    <div class="cell"><code>renderTrueWorld()</code></div>
+                    <div class="cell">客観的真世界の表示</div>
+
+                    <div class="cell"><code>renderChart()</code></div>
+                    <div class="cell">主観局所世界の表示</div>
+                </div>
+            </div>
+
+            <hr>
+
+            <h2>参考資料</h2>
+            <ol>
+                <li>水原 — 「実装位相論：計算機上の空間構造に関する数学的基礎」（前稿）</li>
+                <li><code>topologue_v05.htm</code> — 位相ローグライク最小試作（本プロジェクト実装）</li>
+                <li><code>opportunity.md</code> — 実装位相論の研究テーマ集</li>
+                <li><code>memo.md</code> — SFCシレンにおけるフラグマイニングと任意コード実行の解説</li>
+                <li><code>optozorax.md</code> — Ilya (optozorax) によるポータルの幾何学的分析</li>
+            </ol>
+
+        </div>
+    </div>
+</body>
+
+</html>

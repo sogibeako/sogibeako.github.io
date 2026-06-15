@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>High Dimensional Homology Calculator</title>
+<meta name="description" content="任意次元の有限単体複体について境界行列、Betti数、ホモロジー群を計算する観察用ツール">
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg:#0b1020;--panel:#121a2e;--panel2:#172036;--line:#2b3a59;--text:#edf2ff;--sub:#a8b3cf;
+  --muted:#71809f;--accent:#2dd4bf;--accent2:#f59e0b;--bad:#fb7185;--good:#34d399;--r:8px;
+}
+body{margin:0;min-height:100vh;background:linear-gradient(180deg,#0b1020,#0e1425 45%,#0b1020);color:var(--text);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0}
+.wrap{max-width:1180px;margin:0 auto;padding:22px;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px}
+header{grid-column:1/-1;display:flex;justify-content:space-between;gap:16px;align-items:end;border-bottom:1px solid var(--line);padding-bottom:16px}
+h1{font-size:1.55rem;margin:0;font-weight:750}
+.lead{color:var(--sub);font-size:.88rem;margin:6px 0 0}
+.panel{background:rgba(18,26,46,.92);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.stack{display:flex;flex-direction:column;gap:16px}
+.title{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:0 0 12px;color:var(--accent);
+  font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+textarea,select,input{width:100%;border:1px solid #334463;border-radius:var(--r);background:#0d1425;color:var(--text);padding:10px 12px;
+  font:500 .86rem ui-monospace,SFMono-Regular,Consolas,monospace;outline:none}
+textarea{min-height:310px;resize:vertical;line-height:1.45}
+textarea:focus,select:focus,input:focus{border-color:var(--accent)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.field{display:flex;flex-direction:column;gap:5px;min-width:120px;flex:1}
+label{font-size:.74rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.seg{display:flex;border:1px solid #334463;border-radius:var(--r);overflow:hidden;background:#0d1425}
+.seg label{color:var(--sub);text-transform:none;letter-spacing:0;font-size:.82rem;padding:8px 10px;cursor:pointer;border-right:1px solid #334463}
+.seg label:last-child{border-right:0}
+.seg input{display:none}
+.seg label:has(input:checked){background:var(--accent);color:#06211d}
+button{border:1px solid #375070;background:#16233c;color:var(--text);border-radius:var(--r);padding:9px 12px;font-weight:700;cursor:pointer}
+button:hover{border-color:var(--accent);background:#1a2b49}
+.primary{background:var(--accent);color:#05201d;border-color:var(--accent)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.preset{font-size:.78rem;color:var(--sub);background:#0d1425}
+.result{display:flex;flex-direction:column;gap:10px}
+.block{background:#0d1425;border:1px solid #263650;border-radius:var(--r);padding:13px;overflow:auto}
+.block h3{font-size:.88rem;margin:0 0 8px;color:#d9fff8}
+.mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;font-size:.84rem;line-height:1.45}
+.small{font-size:.8rem;color:var(--sub)}
+.status{border-radius:var(--r);padding:11px 12px;font-size:.86rem}
+.ok{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.32);color:#bfffe5}
+.err{background:rgba(251,113,133,.1);border:1px solid rgba(251,113,133,.32);color:#ffd0d7}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.stat{background:#0d1425;border:1px solid #263650;border-radius:var(--r);padding:10px}
+.stat b{display:block;font-size:1.15rem;color:var(--accent2)}
+canvas{width:100%;aspect-ratio:1;background:#0d1425;border:1px solid #263650;border-radius:var(--r);display:block}
+table{border-collapse:collapse;width:100%;font-size:.8rem}
+th,td{border:1px solid #2a3a56;padding:6px;text-align:left;vertical-align:top}
+th{color:var(--accent);background:#101a2d}
+@media(max-width:900px){.wrap{grid-template-columns:1fr;padding:14px}header{display:block}.stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>High Dimensional Homology Calculator</h1>
+      <p class="lead">有限単体複体の高次元ホモロジーを、境界行列から直接計算します。</p>
+    </div>
+    <div class="seg" aria-label="係数">
+      <label><input type="radio" name="field" value="GF2" checked>GF(2)</label>
+      <label><input type="radio" name="field" value="Q">Q</label>
+      <label><input type="radio" name="field" value="Z">Z</label>
+    </div>
+  </header>
+
+  <main class="stack">
+    <section class="panel">
+      <h2 class="title">Complex Data</h2>
+      <textarea id="complex-input" spellcheck="false"></textarea>
+      <div class="row" style="margin-top:10px">
+        <button class="primary" onclick="runAll()">計算</button>
+        <button onclick="showBoundary()">境界写像</button>
+        <button onclick="showMatrices()">境界行列</button>
+        <button onclick="checkComplex()">検査</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 class="title">Result</h2>
+      <div id="result" class="result">
+        <div class="status ok">プリセットを選ぶか、単体を入力して計算してください。</div>
+      </div>
+    </section>
+  </main>
+
+  <aside class="stack">
+    <section class="panel">
+      <h2 class="title">Presets</h2>
+      <div class="grid2">
+        <button class="preset" onclick="loadPreset('circle')">円 S^1</button>
+        <button class="preset" onclick="loadPreset('sphere2')">球面 S^2</button>
+        <button class="preset" onclick="loadPreset('tetraBall')">3次元単体</button>
+        <button class="preset" onclick="loadPreset('sphere3')">3球面 S^3</button>
+        <button class="preset" onclick="loadPreset('wedge')">S^1 ∨ S^2</button>
+        <button class="preset" onclick="loadPreset('torus')">トーラス</button>
+        <button class="preset" onclick="loadPreset('rp2')">射影平面 RP^2</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 class="title">Summary</h2>
+      <div id="summary" class="stats"></div>
+    </section>
+
+    <section class="panel">
+      <h2 class="title">Visualization</h2>
+      <canvas id="viz" width="520" height="520"></canvas>
+      <p class="small">表示は 2 次元への投影です。高次単体は薄い面とラベルで示します。</p>
+    </section>
+
+    <section class="panel">
+      <h2 class="title">Input Format</h2>
+      <div class="small">
+        `Simplices:` の下に `[0,1,2,3]` のように単体を書きます。最大単体だけを書いても、そのすべての面を自動で追加します。
+      </div>
+    </section>
+  </aside>
+</div>
+
+<script>
+const PRESETS = {
+  circle: `Simplices:
+[0,1]
+[1,2]
+[2,0]`,
+  sphere2: `Simplices:
+[0,1,2]
+[0,1,3]
+[0,2,3]
+[1,2,3]`,
+  tetraBall: `Simplices:
+[0,1,2,3]`,
+  sphere3: `Simplices:
+[0,1,2,3]
+[0,1,2,4]
+[0,1,3,4]
+[0,2,3,4]
+[1,2,3,4]`,
+  wedge: `Simplices:
+[0,1]
+[1,2]
+[2,0]
+[0,3,4]
+[0,3,5]
+[0,4,5]
+[3,4,5]`,
+  torus: `Simplices:
+[0,1,4],[0,3,4],[1,2,5],[1,4,5],[2,0,3],[2,3,5]
+[3,4,7],[3,6,7],[4,5,8],[4,7,8],[5,3,6],[5,6,8]
+[6,7,1],[6,0,1],[7,8,2],[7,1,2],[8,6,0],[8,0,2]`,
+  rp2: `Simplices:
+[0,1,2]
+[0,2,3]
+[0,3,4]
+[0,4,5]
+[0,5,1]
+[1,2,4]
+[2,3,5]
+[3,4,1]
+[4,5,2]
+[5,1,3]`
+};
+
+let current = null;
+
+const gcd = (a,b) => { a=Math.abs(a); b=Math.abs(b); while(b){ const t=a%b; a=b; b=t; } return a || 1; };
+const choose = (arr, k) => {
+  const out = [];
+  const rec = (start, picked) => {
+    if (picked.length === k) { out.push(picked.slice()); return; }
+    for (let i=start; i<=arr.length-(k-picked.length); i++) rec(i+1, picked.concat(arr[i]));
+  };
+  rec(0, []);
+  return out;
+};
+const cmpVertex = (a,b) => {
+  const na = Number(a), nb = Number(b);
+  if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+  return String(a).localeCompare(String(b));
+};
+const keyOf = s => s.slice().sort(cmpVertex).join(",");
+const fmt = s => `[${s.join(",")}]`;
+
+class Frac {
+  constructor(n, d=1) {
+    if (d === 0) throw new Error("division by zero");
+    if (d < 0) { n = -n; d = -d; }
+    const g = gcd(n, d);
+    this.n = n / g; this.d = d / g;
+  }
+  add(o){ return new Frac(this.n*o.d + o.n*this.d, this.d*o.d); }
+  sub(o){ return new Frac(this.n*o.d - o.n*this.d, this.d*o.d); }
+  mul(o){ return new Frac(this.n*o.n, this.d*o.d); }
+  div(o){ return new Frac(this.n*o.d, this.d*o.n); }
+  isZero(){ return this.n === 0; }
+}
+
+function rankOverField(M, field) {
+  const R = M.length, C = R ? M[0].length : 0;
+  if (!R || !C) return 0;
+  if (field === "GF2") {
+    const A = M.map(r => r.map(v => ((v % 2) + 2) % 2));
+    let rank = 0;
+    for (let c=0; c<C && rank<R; c++) {
+      let p = rank;
+      while (p<R && A[p][c] === 0) p++;
+      if (p === R) continue;
+      [A[rank], A[p]] = [A[p], A[rank]];
+      for (let r=0; r<R; r++) if (r !== rank && A[r][c]) {
+        for (let k=c; k<C; k++) A[r][k] ^= A[rank][k];
+      }
+      rank++;
+    }
+    return rank;
+  }
+  const A = M.map(r => r.map(v => new Frac(v)));
+  let rank = 0;
+  for (let c=0; c<C && rank<R; c++) {
+    let p = rank;
+    while (p<R && A[p][c].isZero()) p++;
+    if (p === R) continue;
+    [A[rank], A[p]] = [A[p], A[rank]];
+    const pv = A[rank][c];
+    for (let r=0; r<R; r++) if (r !== rank && !A[r][c].isZero()) {
+      const f = A[r][c].div(pv);
+      for (let k=c; k<C; k++) A[r][k] = A[r][k].sub(f.mul(A[rank][k]));
+    }
+    rank++;
+  }
+  return rank;
+}
+
+function identityMatrix(n) {
+  return Array.from({length:n}, (_,i) => Array.from({length:n}, (_,j) => i === j ? 1 : 0));
+}
+
+function matVec(M, v) {
+  return M.map(row => row.reduce((sum, x, i) => sum + x * v[i], 0));
+}
+
+function matrixColCount(M, fallback=0) {
+  return M.length ? M[0].length : fallback;
+}
+
+function snfWithColumnTransform(M, fallbackCols=0) {
+  const A = M.map(r => r.slice());
+  const R = A.length, C = matrixColCount(A, fallbackCols);
+  const V = identityMatrix(C);
+  const Vinv = identityMatrix(C);
+
+  const swapRows = (r1, r2) => {
+    if (r1 === r2) return;
+    [A[r1], A[r2]] = [A[r2], A[r1]];
+  };
+  const swapCols = (c1, c2) => {
+    if (c1 === c2) return;
+    for (let i=0;i<R;i++) [A[i][c1], A[i][c2]] = [A[i][c2], A[i][c1]];
+    for (let i=0;i<C;i++) [V[i][c1], V[i][c2]] = [V[i][c2], V[i][c1]];
+    [Vinv[c1], Vinv[c2]] = [Vinv[c2], Vinv[c1]];
+  };
+  const addRow = (target, source, q) => {
+    if (q === 0) return;
+    for (let j=0;j<C;j++) A[target][j] += q * A[source][j];
+  };
+  const addCol = (target, source, q) => {
+    if (q === 0) return;
+    for (let i=0;i<R;i++) A[i][target] += q * A[i][source];
+    for (let i=0;i<C;i++) V[i][target] += q * V[i][source];
+    for (let j=0;j<C;j++) Vinv[source][j] -= q * Vinv[target][j];
+  };
+
+  let k = 0;
+  while (k < R && k < C) {
+    let pr = -1, pc = -1, best = Infinity;
+    for (let i=k;i<R;i++) for (let j=k;j<C;j++) {
+      const v = Math.abs(A[i][j]);
+      if (v && v < best) { best = v; pr = i; pc = j; }
+    }
+    if (pr < 0) break;
+    swapRows(k, pr);
+    swapCols(k, pc);
+
+    let stable = false, guard = 0;
+    while (!stable && guard++ < 12000) {
+      stable = true;
+      for (let i=0;i<R;i++) if (i !== k && A[i][k] !== 0) {
+        const q = Math.trunc(A[i][k] / A[k][k]);
+        addRow(i, k, -q);
+        if (Math.abs(A[i][k]) < Math.abs(A[k][k]) && A[i][k] !== 0) swapRows(k, i);
+        stable = false;
+      }
+      for (let j=0;j<C;j++) if (j !== k && A[k][j] !== 0) {
+        const q = Math.trunc(A[k][j] / A[k][k]);
+        addCol(j, k, -q);
+        if (Math.abs(A[k][j]) < Math.abs(A[k][k]) && A[k][j] !== 0) swapCols(k, j);
+        stable = false;
+      }
+      let bad = null;
+      for (let i=k+1;i<R;i++) for (let j=k+1;j<C;j++) {
+        if (A[i][j] % A[k][k] !== 0) bad = [i,j];
+      }
+      if (stable && bad) {
+        const [i] = bad;
+        addRow(k, i, 1);
+        stable = false;
+      }
+    }
+    if (A[k][k] < 0) for (let j=0;j<C;j++) A[k][j] *= -1;
+    k++;
+  }
+
+  const d = [];
+  for (let i=0;i<Math.min(R,C);i++) if (A[i][i] !== 0) d.push(Math.abs(A[i][i]));
+  d.sort((a,b)=>a-b);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (let i=0;i<d.length-1;i++) if (d[i+1] % d[i] !== 0) {
+      const g = gcd(d[i], d[i+1]);
+      d[i+1] = Math.abs(d[i] * d[i+1]) / g;
+      d[i] = g;
+      d.sort((a,b)=>a-b);
+      changed = true;
+      break;
+    }
+  }
+  const diag = d.filter(x => x !== 0);
+  return { diag, rank: diag.length, V, Vinv, normal: A };
+}
+
+function snfDiag(M, fallbackCols=0) {
+  return snfWithColumnTransform(M, fallbackCols).diag;
+}
+
+function integerHomologyGroups(cx, mats) {
+  const groups = [];
+  for (let n=0;n<=cx.maxDim;n++) {
+    const cn = (cx.byDim[n] || []).length;
+    const dn = n === 0 ? [] : (mats[n] || []);
+    const dnext = mats[n+1] || Array.from({length: cn}, () => []);
+    const snfDn = snfWithColumnTransform(dn, cn);
+    const kernelRank = cn - snfDn.rank;
+    const coords = Array.from({length: kernelRank}, () => Array((dnext[0] || []).length).fill(0));
+
+    for (let col=0; col<(dnext[0] || []).length; col++) {
+      const b = dnext.map(row => row[col]);
+      const y = matVec(snfDn.Vinv, b);
+      for (let i=0;i<kernelRank;i++) coords[i][col] = y[snfDn.rank + i] || 0;
+    }
+
+    const relDiag = snfDiag(coords, (dnext[0] || []).length);
+    const relRank = relDiag.length;
+    const torsion = relDiag.filter(d => d > 1);
+    groups[n] = {
+      beta: kernelRank - relRank,
+      torsion,
+      cn,
+      zn: kernelRank,
+      bn: relRank
+    };
+  }
+  return groups;
+}
+
+function parseComplex(text) {
+  const simplexMap = new Map();
+  const add = simplex => {
+    const clean = simplex.map(x => String(x).trim()).filter(Boolean).sort(cmpVertex);
+    if (!clean.length) return;
+    for (let k=1;k<=clean.length;k++) choose(clean, k).forEach(face => simplexMap.set(keyOf(face), face));
+  };
+  const matches = text.match(/\[[^\]]+\]|\([^\)]+\)|\{[^\}]+\}/g) || [];
+  for (const m of matches) add(m.slice(1,-1).split(","));
+  const vertexOnly = text.split(/\n/).some(l => /^vertices\s*:/i.test(l));
+  if (vertexOnly) {
+    let inV = false;
+    for (const raw of text.split(/\n/)) {
+      const line = raw.trim();
+      if (/^[a-z]+\s*:/i.test(line)) inV = /^vertices\s*:/i.test(line);
+      else if (inV && line && !/[\[\(\{]/.test(line)) line.split(",").forEach(v => add([v]));
+    }
+  }
+  const byDim = [];
+  for (const s of simplexMap.values()) {
+    const d = s.length - 1;
+    if (!byDim[d]) byDim[d] = [];
+    byDim[d].push(s);
+  }
+  byDim.forEach(list => list.sort((a,b)=>keyOf(a).localeCompare(keyOf(b), undefined, {numeric:true})));
+  if (!byDim.length || !byDim[0]) throw new Error("単体が見つかりませんでした。例: Simplices: [0,1,2]");
+  return { byDim, maxDim: byDim.length - 1 };
+}
+
+function boundaryMatrix(cx, n) {
+  const dom = cx.byDim[n] || [], cod = cx.byDim[n-1] || [];
+  const row = new Map(cod.map((s,i)=>[keyOf(s), i]));
+  const M = Array.from({length: cod.length}, () => Array(dom.length).fill(0));
+  if (n <= 0) return Array.from({length:0}, () => Array(dom.length).fill(0));
+  dom.forEach((s, j) => {
+    for (let i=0; i<s.length; i++) {
+      const face = s.filter((_,idx)=>idx!==i);
+      const r = row.get(keyOf(face));
+      if (r !== undefined) M[r][j] += (i % 2 === 0 ? 1 : -1);
+    }
+  });
+  return M;
+}
+
+function analyze(cx, field) {
+  const mats = [];
+  for (let n=1;n<=cx.maxDim;n++) mats[n] = boundaryMatrix(cx,n);
+  if (field === "Z") {
+    const groups = integerHomologyGroups(cx, mats);
+    const ranks = Array(cx.maxDim + 2).fill(0);
+    for (let n=0;n<=cx.maxDim;n++) {
+      ranks[n] = (cx.byDim[n] || []).length - groups[n].zn;
+      ranks[n+1] = groups[n].bn;
+    }
+    return { mats, ranks, groups };
+  }
+  const ranks = Array(cx.maxDim + 2).fill(0);
+  for (let n=1;n<=cx.maxDim;n++) ranks[n] = rankOverField(mats[n], field === "GF2" ? "GF2" : "Q");
+  const groups = [];
+  for (let n=0;n<=cx.maxDim;n++) {
+    const cn = (cx.byDim[n] || []).length;
+    const beta = cn - ranks[n] - ranks[n+1];
+    let torsion = [];
+    groups[n] = { beta, torsion, cn, zn: cn - ranks[n], bn: ranks[n+1] };
+  }
+  return { mats, ranks, groups };
+}
+
+function groupText(g, field) {
+  if (field === "Z") {
+    const parts = [];
+    if (g.beta === 1) parts.push("Z");
+    else if (g.beta > 1) parts.push(`Z^${g.beta}`);
+    g.torsion.forEach(t => parts.push(`Z/${t}Z`));
+    return parts.join(" ⊕ ") || "0";
+  }
+  const F = field === "Q" ? "Q" : "F2";
+  if (g.beta === 0) return "0";
+  return g.beta === 1 ? F : `${F}^${g.beta}`;
+}
+
+function render(html) {
+  document.getElementById("result").innerHTML = html;
+  draw();
+}
+
+function parseCurrent() {
+  current = parseComplex(document.getElementById("complex-input").value);
+  renderSummary(current);
+  return current;
+}
+
+function selectedField() {
+  return document.querySelector("input[name=field]:checked").value;
+}
+
+function runAll() {
+  try {
+    const cx = parseCurrent();
+    const field = selectedField();
+    const a = analyze(cx, field);
+    let html = `<div class="status ok">最大次元 ${cx.maxDim}、単体総数 ${cx.byDim.reduce((s,x)=>s+(x?x.length:0),0)} の複体として計算しました。</div>`;
+    html += `<div class="block"><h3>ホモロジー群</h3><table><tr><th>n</th><th>C_n</th><th>dim Ker ∂n</th><th>dim Im ∂n+1</th><th>H_n</th><th>Betti</th></tr>`;
+    for (let n=0;n<=cx.maxDim;n++) {
+      const g = a.groups[n];
+      html += `<tr><td>${n}</td><td>${g.cn}</td><td>${g.zn}</td><td>${g.bn}</td><td>${groupText(g, field)}</td><td>${g.beta}</td></tr>`;
+    }
+    html += `</table></div>`;
+    if (field === "Z") html += `<div class="status ok">Z 係数では Smith 標準形を使って自由部分とねじれ成分を表示しています。</div>`;
+    render(html);
+  } catch (e) {
+    render(`<div class="status err">${escapeHtml(e.message)}</div>`);
+  }
+}
+
+function checkComplex() {
+  try {
+    const cx = parseCurrent();
+    const missing = [];
+    for (let n=1;n<=cx.maxDim;n++) for (const s of cx.byDim[n] || []) {
+      for (let i=0;i<s.length;i++) {
+        const face = s.filter((_,idx)=>idx!==i);
+        if (!(cx.byDim[n-1] || []).some(x => keyOf(x) === keyOf(face))) missing.push(`${fmt(s)} needs ${fmt(face)}`);
+      }
+    }
+    render(missing.length ? `<div class="status err">${missing.slice(0,12).join("<br>")}</div>` : `<div class="status ok">すべての単体の面が含まれています。最大単体から自動補完済みです。</div>`);
+  } catch(e) { render(`<div class="status err">${escapeHtml(e.message)}</div>`); }
+}
+
+function showBoundary() {
+  try {
+    const cx = parseCurrent();
+    let html = `<div class="block"><h3>境界写像</h3><div class="mono">`;
+    for (let n=1;n<=cx.maxDim;n++) {
+      html += `∂${n}: C_${n} -> C_${n-1}\n`;
+      for (const s of cx.byDim[n] || []) {
+        const terms = s.map((_,i) => `${i%2 ? "-" : "+"}${fmt(s.filter((_,idx)=>idx!==i))}`);
+        html += `  ∂${n}${fmt(s)} = ${terms.join(" ").replace(/^\+/,"")}\n`;
+      }
+      html += `\n`;
+    }
+    html += `</div></div>`;
+    render(html);
+  } catch(e) { render(`<div class="status err">${escapeHtml(e.message)}</div>`); }
+}
+
+function showMatrices() {
+  try {
+    const cx = parseCurrent();
+    let html = "";
+    for (let n=1;n<=cx.maxDim;n++) {
+      const M = boundaryMatrix(cx,n);
+      html += `<div class="block"><h3>∂${n} 行列 (${M.length} x ${(M[0]||[]).length})</h3><div class="mono">${matrixText(M)}</div></div>`;
+    }
+    render(html || `<div class="status ok">境界行列は空です。</div>`);
+  } catch(e) { render(`<div class="status err">${escapeHtml(e.message)}</div>`); }
+}
+
+function matrixText(M) {
+  if (!M.length || !M[0].length) return "(empty)";
+  return M.map(r => r.map(v => String(v).padStart(2," ")).join(" ")).join("\n");
+}
+
+function renderSummary(cx) {
+  const el = document.getElementById("summary");
+  el.innerHTML = "";
+  for (let n=0;n<=cx.maxDim;n++) {
+    const d = document.createElement("div");
+    d.className = "stat";
+    d.innerHTML = `<b>${(cx.byDim[n] || []).length}</b><span>${n}-simplices</span>`;
+    el.appendChild(d);
+  }
+}
+
+function draw() {
+  const canvas = document.getElementById("viz");
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+  if (!current) return;
+  const V = current.byDim[0] || [];
+  const R = W * .36, Cx = W / 2, Cy = H / 2;
+  const pos = new Map();
+  V.forEach((v,i) => {
+    const a = -Math.PI/2 + 2*Math.PI*i/Math.max(V.length,1);
+    pos.set(keyOf(v), {x:Cx+R*Math.cos(a), y:Cy+R*Math.sin(a), label:v[0]});
+  });
+  ctx.lineWidth = 1.5;
+  for (let n=Math.min(current.maxDim,2); n>=2; n--) {
+    ctx.fillStyle = "rgba(45,212,191,.16)";
+    for (const s of current.byDim[n] || []) {
+      const pts = s.map(v => pos.get(keyOf([v]))).filter(Boolean);
+      if (pts.length >= 3) {
+        ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+        pts.slice(1).forEach(p => ctx.lineTo(p.x,p.y));
+        ctx.closePath(); ctx.fill();
+      }
+    }
+  }
+  ctx.strokeStyle = "rgba(237,242,255,.45)";
+  for (const e of current.byDim[1] || []) {
+    const a = pos.get(keyOf([e[0]])), b = pos.get(keyOf([e[1]]));
+    if (!a || !b) continue;
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+  }
+  for (let n=3;n<=current.maxDim;n++) {
+    ctx.fillStyle = "#f59e0b";
+    for (const s of current.byDim[n] || []) {
+      const pts = s.map(v => pos.get(keyOf([v]))).filter(Boolean);
+      if (!pts.length) continue;
+      const x = pts.reduce((a,p)=>a+p.x,0)/pts.length;
+      const y = pts.reduce((a,p)=>a+p.y,0)/pts.length;
+      ctx.fillText(`${n}D`, x, y);
+    }
+  }
+  V.forEach(v => {
+    const p = pos.get(keyOf(v));
+    ctx.beginPath(); ctx.arc(p.x,p.y,10,0,Math.PI*2); ctx.fillStyle = "#2dd4bf"; ctx.fill();
+    ctx.strokeStyle = "#09211f"; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = "#061817"; ctx.font = "700 11px system-ui"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(p.label, p.x, p.y);
+  });
+}
+
+function loadPreset(name) {
+  document.getElementById("complex-input").value = PRESETS[name];
+  runAll();
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.querySelectorAll("input[name=field]").forEach(x => x.addEventListener("change", runAll));
+window.addEventListener("load", () => loadPreset("sphere3"));
+</script>
+</body>
+</html>

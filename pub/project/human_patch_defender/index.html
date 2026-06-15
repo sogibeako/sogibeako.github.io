@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Human Patch Defender</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="terminal-shell" aria-label="Human Patch Defender CLI">
+    <section class="screen" id="screen">
+      <div class="topbar">
+        <div>
+          <h1>Human Patch Defender</h1>
+          <p>自分というサーバーを守れ</p>
+        </div>
+        <div class="session-badge" id="sessionBadge">idle</div>
+      </div>
+
+      <div class="meter-grid" aria-label="server status">
+        <div class="meter"><span>integrity</span><strong id="statIntegrity">100</strong></div>
+        <div class="meter"><span>core</span><strong id="statCore">0</strong></div>
+        <div class="meter"><span>accounts</span><strong id="statAccounts">0</strong></div>
+        <div class="meter"><span>trust</span><strong id="statTrust">100</strong></div>
+        <div class="meter"><span>panic</span><strong id="statPanic">10</strong></div>
+        <div class="meter"><span>focus</span><strong id="statFocus">10/10</strong></div>
+      </div>
+
+      <div class="console-layout">
+        <section class="panel alerts-panel">
+          <div class="panel-title">ACTIVE ALERTS</div>
+          <div id="alertsView" class="panel-body"></div>
+        </section>
+
+        <section class="panel log-panel">
+          <div class="panel-title">RECENT LOG</div>
+          <div id="logView" class="panel-body log-lines"></div>
+        </section>
+      </div>
+
+      <section class="panel output-panel">
+        <div class="panel-title">CONSOLE</div>
+        <div id="output" class="output" aria-live="polite"></div>
+        <form id="commandForm" class="command-line" autocomplete="off">
+          <span class="prompt">&gt;</span>
+          <input id="commandInput" type="text" spellcheck="false" aria-label="command input" autofocus>
+        </form>
+      </section>
+    </section>
+  </main>
+
+  <script src="./game.js"></script>
+</body>
+</html>

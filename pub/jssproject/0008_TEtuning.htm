@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>xen-calc (TE / POTE / TE measures)</title>
+    <!-- ml-matrix (UMD) -->
+    <script src="https://cdn.jsdelivr.net/npm/ml-matrix@6.12.1/matrix.umd.js"></script>
+
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 16px;
+      }
+      textarea {
+        width: 100%;
+        height: 6em;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      input {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .col {
+        flex: 1;
+        min-width: 320px;
+      }
+      button {
+        margin: 6px 6px 0 0;
+        padding: 8px 10px;
+      }
+      pre {
+        background: #111;
+        color: #eee;
+        padding: 12px;
+        white-space: pre-wrap;
+        border-radius: 10px;
+      }
+      .hint {
+        font-size: 12px;
+        opacity: 0.75;
+        margin-top: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="p_left">
+      現在位置 : <a href="../index.html">ホーム</a>　＞　JSS Project　＞　<a
+        href="0008_TEtuning.htm"
+        ><b>#008</b></a
+      >
+    </div>
+    <h1>TE / POTE Tuning 計算機</h1>
+    <div class="row">
+      <div class="col">
+        <h3>Prime basis Q</h3>
+        <input id="primes" value="2 3 5 7" style="width: 100%" />
+        <div class="hint">
+          例: <code>2 3 5 7 11</code>（スペース/カンマ区切りOK）
+        </div>
+
+        <h3>Mode</h3>
+        <label>
+          <input type="radio" name="mode" id="modePrime" checked />
+          Prime（従来: 2 3 5 7 ...）
+        </label>
+        <br />
+        <label>
+          <input type="radio" name="mode" id="modeRatio" />
+          Ratio-basis（比を許す: 2 3 7 5/3 など）
+        </label>
+
+        <h3>POTE normalize by (period element)</h3>
+        <input id="period" value="2" style="width: 100%" />
+        <div class="hint">
+          POTEの正規化に使う基底要素。通常は <code>2</code>。比基底なら
+          <code>3/2</code> なども可（Basis内に存在する必要あり）。
+        </div>
+
+        <h3>Mapping V (rows; cols)</h3>
+        <textarea id="V">[1 0 2 -1; 0 5 1 12]</textarea>
+        <div class="hint">
+          例: <code>[1 0 2 -1; 0 5 1 12]</code> または改行区切り
+        </div>
+
+        <h3>Actions</h3>
+        <button id="btnTE">TE tuning map</button>
+        <button id="btnPOTE">POTE tuning map</button>
+        <button id="btnMeasures">TE measures (error/complexity/badness)</button>
+        <button id="btnAll">All</button>
+      </div>
+
+      <div class="col">
+        <h3>Output</h3>
+        <pre id="out"></pre>
+      </div>
+    </div>
+
+    <script>
+      const { Matrix, SingularValueDecomposition, determinant } = mlMatrix;
+
+      function isRatioMode() {
+        return !!document.getElementById("modeRatio")?.checked;
+      }
+
+      function getBasisFromUI() {
+        const s = document.getElementById("primes").value;
+        const isRatio = document.getElementById("modeRatio").checked;
+        if (!isRatio && /[\/:]/.test(s)) {
+          throw new Error(
+            "Primeモードでは 5/3 や 3:2 のような比は入力できません。Ratio-basisに切り替えてください。"
+          );
+        }
+        return parseBasisTokens(s);
+      }
+
+      function parseBasisTokens(s) {
+        const tokens = s
+          .trim()
+          .replace(/[<>[\]]/g, "")
+          .split(/[\s,]+/)
+          .filter(Boolean);
+
+        const basis = tokens.map((raw) => {
+          const t = raw.trim();
+          let value;
+
+          // 5/3 や 81/64 形式
+          if (t.includes("/")) {
+            const [a, b] = t.split("/");
+            const num = Number(a);
+            const den = Number(b);
+            if (!Number.isFinite(num) || !Number.isFinite(den) || den === 0) {
+              throw new Error(`Invalid ratio token: ${t}`);
+            }
+            value = num / den;
+          } else if (t.includes(":")) {
+            // 3:2 も許す（お好み）
+            const [a, b] = t.split(":");
+            const num = Number(a);
+            const den = Number(b);
+            if (!Number.isFinite(num) || !Number.isFinite(den) || den === 0) {
+              throw new Error(`Invalid ratio token: ${t}`);
+            }
+            value = num / den;
+          } else {
+            value = Number(t);
+            if (!Number.isFinite(value)) throw new Error(`Invalid token: ${t}`);
+          }
+
+          if (!(value > 0)) throw new Error(`Basis element must be > 0: ${t}`);
+          if (value === 1)
+            throw new Error(`Basis element must not be 1 (log2(1)=0): ${t}`);
+
+          const l2 = log2(value);
+          if (!Number.isFinite(l2) || l2 === 0) {
+            throw new Error(
+              `Invalid basis element (log2 undefined/zero): ${t}`
+            );
+          }
+
+          return {
+            raw: t,
+            value,
+            log2: l2,
+          };
+        });
+
+        return basis;
+      }
+
+      function parseMatrix(s) {
+        // formats: [1 2; 3 4] or 1 2\n3 4
+        const t = s.trim().replace(/^\[|\]$/g, "");
+        const rows = t.includes(";") ? t.split(";") : t.split(/\n+/);
+        const data = rows.map((r) =>
+          r
+            .trim()
+            .split(/[\s,]+/)
+            .filter(Boolean)
+            .map(Number)
+        );
+        const cols = data[0]?.length ?? 0;
+        if (!cols || data.some((r) => r.length !== cols))
+          throw new Error("Matrix parse error: ragged rows");
+        return new Matrix(data);
+      }
+
+      function log2(x) {
+        return Math.log(x) / Math.log(2);
+      }
+
+      function diag(arr) {
+        const n = arr.length;
+        const D = Matrix.zeros(n, n);
+        for (let i = 0; i < n; i++) D.set(i, i, arr[i]);
+        return D;
+      }
+
+      // Moore–Penrose pseudoinverse via SVD (small matrices向けの堅実ルート)
+      function pinv(A, eps = 1e-12) {
+        const svd = new SingularValueDecomposition(A);
+        const U = svd.leftSingularVectors;
+        const V = svd.rightSingularVectors;
+        const s = svd.diagonal; // singular values
+        const thr = svd.threshold; // library threshold hint :contentReference[oaicite:5]{index=5}
+
+        const m = A.rows,
+          n = A.columns;
+        const Sinv = Matrix.zeros(n, m);
+
+        const cutoff = Math.max(thr, eps);
+        for (let i = 0; i < s.length; i++) {
+          if (s[i] > cutoff) Sinv.set(i, i, 1 / s[i]);
+        }
+        return V.mmul(Sinv).mmul(U.transpose()); // A^+ = V Σ^+ U^T
+      }
+
+      function svdDiagnostics(A, eps = 1e-12) {
+        const svd = new SingularValueDecomposition(A);
+        const s = svd.diagonal.slice(); // singular values (descending)
+        const thr = svd.threshold; // ml-matrix が持つ推奨閾値
+
+        const cutoff = Math.max(thr, eps);
+        const nonzero = s.filter((x) => x > cutoff);
+
+        const rank = nonzero.length;
+        const smax = s.length ? s[0] : 0;
+        const smin = nonzero.length ? nonzero[nonzero.length - 1] : 0;
+
+        const cond = smin > 0 ? smax / smin : Infinity;
+
+        return {
+          singularValues: s,
+          threshold: cutoff,
+          rank,
+          conditionNumber: cond,
+          smax,
+          smin,
+        };
+      }
+
+      function fmtArray(arr, digits = 9) {
+        return arr
+          .map((x) => (Number.isFinite(x) ? x.toFixed(digits) : String(x)))
+          .join(", ");
+      }
+
+      function fmtRowVector(row) {
+        return row
+          .map((x) => (Number.isFinite(x) ? x.toFixed(9) : String(x)))
+          .join(", ");
+      }
+
+      function norm2Row(rowArr) {
+        let sum = 0;
+        for (const x of rowArr) sum += x * x;
+        return Math.sqrt(sum);
+      }
+
+      function show(obj) {
+        document.getElementById("out").textContent = obj;
+      }
+
+      /* -----------------------------
+   TE / POTE
+----------------------------- */
+
+      // W = diag(1/log2(Q)) :contentReference[oaicite:6]{index=6}
+      function tenneyWeightDiag(basis) {
+        const w = basis.map((b) => 1 / b.log2);
+        return diag(w);
+      }
+
+      // TE tuning map (octaves)
+      function teTuningMapOctaves(V, basis) {
+        const W = tenneyWeightDiag(basis);
+        const VW = V.mmul(W);
+
+        // J_W = ⟨1 1 … 1] （basisでも同じ。log2(b)*1/log2(b)=1）
+        const JW = new Matrix([basis.map(() => 1)]);
+
+        const G = JW.mmul(pinv(VW));
+        return G.mmul(V); // 1×n
+      }
+
+      function parseSingleBasisToken(token) {
+        return parseBasisTokens(String(token))[0];
+      }
+
+      function findBasisIndex(basis, token) {
+        const q = String(token).trim();
+
+        // まず raw 完全一致
+        const exact = basis.findIndex((b) => b.raw === q);
+        if (exact >= 0) return exact;
+
+        // 次に値で近似一致
+        const qb = parseSingleBasisToken(q);
+        const target = qb.value;
+
+        let best = -1;
+        let bestErr = Infinity;
+        for (let i = 0; i < basis.length; i++) {
+          const err = Math.abs(basis[i].value - target);
+          if (err < bestErr) {
+            bestErr = err;
+            best = i;
+          }
+        }
+        // 相対誤差っぽい許容（浮動小数用）
+        const tol = 1e-12 * Math.max(1, Math.abs(target));
+        if (best >= 0 && bestErr <= tol) return best;
+
+        return -1;
+      }
+
+      function isRatioMode() {
+        return !!document.getElementById("modeRatio")?.checked;
+      }
+
+      function normalizeToken(s) {
+        return String(s).trim().replace(/\s+/g, "");
+      }
+
+      // POTE/period-normalize with mode guard
+      function poteFromTe(T, basis, periodToken = "2") {
+        const ratioMode = isRatioMode();
+        const periodNorm = normalizeToken(periodToken);
+
+        // ★Primeモードでは 2 のみ許可
+        if (!ratioMode && periodNorm !== "2") {
+          throw new Error(
+            `Primeモードでは POTE normalize は "2" のみ対応です（入力: "${periodToken}"）。Ratio-basisモードに切り替えるか、period を 2 にしてください。`
+          );
+        }
+
+        const idx = findBasisIndex(basis, periodToken);
+        if (idx < 0) {
+          throw new Error(
+            `POTE: period element "${periodToken}" is not found in Basis`
+          );
+        }
+
+        const current = T.get(0, idx);
+        if (!Number.isFinite(current) || current === 0) {
+          throw new Error(
+            `POTE: period tuning is invalid/zero at index ${idx}`
+          );
+        }
+
+        // Primeモード: 1 octave に固定
+        // Ratioモード: periodそのものが純正になるように（log2(period)）
+        const target = ratioMode ? basis[idx].log2 : 1;
+
+        return T.clone().mul(target / current);
+      }
+
+      function toCentsRow(T_oct) {
+        return T_oct.to1DArray().map((x) => x * 1200);
+      }
+
+      /* -----------------------------
+   TE measures (L2 version)
+   - complexity = sqrt(det(V_W V_W^T)) :contentReference[oaicite:10]{index=10}
+   - error E = ||T_W - J_W||_2 :contentReference[oaicite:11]{index=11}
+   - simple badness = complexity * error :contentReference[oaicite:12]{index=12}
+----------------------------- */
+
+      function teComplexityL2(V, basis) {
+        const W = tenneyWeightDiag(basis);
+        const VW = V.mmul(W);
+
+        const G = VW.mmul(VW.transpose());
+        const detG = determinant(G);
+        return Math.sqrt(Math.abs(detG));
+      }
+
+      function teErrorL2(V, basis) {
+        const W = tenneyWeightDiag(basis);
+        const T = teTuningMapOctaves(V, basis);
+
+        const TW = T.mmul(W);
+        const JW = new Matrix([basis.map(() => 1)]);
+
+        const diff = TW.sub(JW).to1DArray();
+        return norm2Row(diff);
+      }
+
+      function teSimpleBadnessL2(V, basis) {
+        const C = teComplexityL2(V, basis);
+        const E = teErrorL2(V, basis);
+        return { C, E, B: C * E };
+      }
+
+      /* -----------------------------
+   Buttons
+----------------------------- */
+
+      document.getElementById("btnTE").onclick = () => {
+        try {
+          const basis = getBasisFromUI();
+          const V = parseMatrix(document.getElementById("V").value);
+
+          if (V.columns !== basis.length) {
+            throw new Error(
+              `Dimension mismatch: V has ${V.columns} columns, but Basis has ${basis.length} elements.`
+            );
+          }
+
+          const T = teTuningMapOctaves(V, basis);
+
+          show(
+            "TE tuning map (octaves):\n" +
+              fmtRowVector(T.to1DArray()) +
+              "\n\nTE tuning map (cents):\n" +
+              fmtRowVector(toCentsRow(T))
+          );
+        } catch (e) {
+          show(String(e));
+        }
+      };
+
+      document.getElementById("btnPOTE").onclick = () => {
+        try {
+          const basis = getBasisFromUI();
+          const V = parseMatrix(document.getElementById("V").value);
+          const period = document.getElementById("period").value;
+
+          if (V.columns !== basis.length) {
+            throw new Error(
+              `Dimension mismatch: V has ${V.columns} columns, but Basis has ${basis.length} elements.`
+            );
+          }
+
+          const T = teTuningMapOctaves(V, basis);
+          const P = poteFromTe(T, basis, period);
+
+          show(
+            "POTE tuning map (octaves):\n" +
+              fmtRowVector(P.to1DArray()) +
+              "\n\nPOTE tuning map (cents):\n" +
+              fmtRowVector(toCentsRow(P))
+          );
+        } catch (e) {
+          show(String(e));
+        }
+      };
+
+      document.getElementById("btnMeasures").onclick = () => {
+        try {
+          const basis = getBasisFromUI();
+          const V = parseMatrix(document.getElementById("V").value);
+
+          if (V.columns !== basis.length) {
+            throw new Error(
+              `Dimension mismatch: V has ${V.columns} columns, but Basis has ${basis.length} elements.`
+            );
+          }
+
+          const { C, E, B } = teSimpleBadnessL2(V, basis);
+          const E_cents = E * 1200;
+
+          // Vw 診断
+          const W = tenneyWeightDiag(basis);
+          const VW = V.mmul(W);
+          const diag = svdDiagnostics(VW);
+
+          show(
+            "TE measures (L2 version, Tenney weights)\n" +
+              "--------------------------------------\n" +
+              `TE complexity     C = ${C.toFixed(12)}\n` +
+              `TE error          E = ${E.toFixed(
+                12
+              )} octaves  (= ${E_cents.toFixed(6)} cents)\n` +
+              `TE simple badness B = C * E = ${B.toFixed(12)}\n\n` +
+              "Diagnostics (SVD of V_W)\n" +
+              "-------------------------\n" +
+              `shape(V_W) = ${VW.rows}×${VW.columns}\n` +
+              `threshold  = ${diag.threshold}\n` +
+              `rank       = ${diag.rank}\n` +
+              `cond(V_W)  = ${
+                Number.isFinite(diag.conditionNumber)
+                  ? diag.conditionNumber.toExponential(3)
+                  : "Infinity"
+              }\n` +
+              `singular values = [${fmtArray(diag.singularValues, 12)}]\n`
+          );
+        } catch (e) {
+          show(String(e));
+        }
+      };
+
+      document.getElementById("btnAll").onclick = () => {
+        try {
+          const basis = getBasisFromUI();
+          const V = parseMatrix(document.getElementById("V").value);
+          const period = document.getElementById("period").value;
+
+          if (V.columns !== basis.length) {
+            throw new Error(
+              `Dimension mismatch: V has ${V.columns} columns, but Basis has ${basis.length} elements.`
+            );
+          }
+
+          const T = teTuningMapOctaves(V, basis);
+          const P = poteFromTe(T, basis, period);
+
+          const { C, E, B } = teSimpleBadnessL2(V, basis);
+          const E_cents = E * 1200;
+
+          const W = tenneyWeightDiag(basis);
+          const VW = V.mmul(W);
+          const diag = svdDiagnostics(VW);
+
+          show(
+            "TE tuning map (octaves):\n" +
+              fmtRowVector(T.to1DArray()) +
+              "\nTE tuning map (cents):\n" +
+              fmtRowVector(toCentsRow(T)) +
+              "\n\nPOTE tuning map (octaves):\n" +
+              fmtRowVector(P.to1DArray()) +
+              "\nPOTE tuning map (cents):\n" +
+              fmtRowVector(toCentsRow(P)) +
+              "\n\nTE measures (L2):\n" +
+              `Complexity = ${C.toFixed(12)}\n` +
+              `Error      = ${E.toFixed(12)} octaves (= ${E_cents.toFixed(
+                6
+              )} cents)\n` +
+              `Badness    = ${B.toFixed(12)}\n\n` +
+              "Diagnostics (SVD of V_W)\n" +
+              "-------------------------\n" +
+              `shape(V_W) = ${VW.rows}×${VW.columns}\n` +
+              `threshold  = ${diag.threshold}\n` +
+              `rank       = ${diag.rank}\n` +
+              `cond(V_W)  = ${
+                Number.isFinite(diag.conditionNumber)
+                  ? diag.conditionNumber.toExponential(3)
+                  : "Infinity"
+              }\n` +
+              `singular values = [${fmtArray(diag.singularValues, 12)}]\n`
+          );
+        } catch (e) {
+          show(String(e));
+        }
+      };
+    </script>
+    <hr />
+
+    <details>
+      <summary><b>Help / 使い方（TE / POTE / TE measures）</b></summary>
+      <h3>1) 入力のしかた</h3>
+      <ul>
+        <li>
+          <b>Prime basis Q</b>：
+          <code>2 3 5 7</code> のように素数を並べます（スペース or
+          カンマ区切り）。<br />
+          これは「どの素数までを調律対象にするか」を指定します。<br />
+          Ratio-basisモードにすると、<code>2 5/3 7</code
+          >のように有理数を入力できます。<br />
+          が、Basis要素が1に近いと、重みが巨大になって不安定になりやすく、<br />
+          また<code>2, 3, 5, 5/3</code
+          >のようにBasis間に依存関係があるとrank/condが悪化しやすいです。
+        </li>
+        <li>
+          <b>Mapping V</b>： 行列を <code>[...]</code> で書き、行は
+          <code>;</code>、列はスペース/カンマで区切れます。<br />
+          例：<code>[1 0 2 -1; 0 5 1 12]</code><br />
+          改行で行区切りにしてもOKです。
+        </li>
+      </ul>
+
+      <h3>2) ボタンの意味</h3>
+      <ul>
+        <li>
+          <b>TE tuning map</b>：TE（Tenney–Euclidean）で得られる prime tuning
+          map を出します。<br />
+          出力は <b>octaves</b>（1=1オクターブ）と<b>cents</b>
+          を両方表示します。<br />
+          与えられたMapping Vに基づき、<br />
+          Prime basis Qによって与えられたPrimeを最小二乗法的に表現します。<br />
+          オクターブが1200centsにならないことに注意してください。
+        </li>
+        <li>
+          <b>POTE tuning map</b>：Pure Octave Tenney-Euclideanの略で、<br />
+          TE tuning map
+          を、「2（オクターブ）が純正になるよう正規化」したものです。<br />
+          TE tuning map の最初の成分（素数2の値）で全体を割ります。<br />
+          オクターブを優先し、他のPrimeに我慢してもらう形式なので、オクターブ以外は自然と悪くなります。<br />
+          Ratio-basisモードでは、TE tuning mapを「純正値log_{2}(period
+          element)に正規化」します。<br />
+          例えば、POTE normalize by(period
+          element)に3が入っていれば、3の列が1901.955centsになるようになります。<br />
+          （つまりPure OctaveというよりはPure Tritaveになります）。
+        </li>
+        <li>
+          <b>TE measures</b>：次の3つを表示します（いずれも L² 版）。
+          <ul>
+            <li>
+              <b>TE complexity C</b
+              >：temperamentの“複雑さ”の指標。大きいほど構造が複雑（になりがち）。
+            </li>
+            <li>
+              <b>TE error E</b>：TE tuning
+              で最小化された“調律誤差”。小さいほど純正に近い。
+            </li>
+            <li>
+              <b>TE simple badness B</b>：<code>B = C × E</code
+              >。複雑なのに誤差も大きいと悪化します。
+            </li>
+          </ul>
+        </li>
+        <li><b>All</b>：TE / POTE / measures をまとめて表示します。</li>
+      </ul>
+
+      <h3>3) 出力の読み方（単位）</h3>
+      <ul>
+        <li>
+          <b>octaves</b>：比を <code>log2</code> で測った単位です。<code
+            >1.0</code
+          >
+          は 2/1（1オクターブ）。
+        </li>
+        <li>
+          <b>cents</b>：<code>1 octave = 1200 cents</code> で換算した値です。
+        </li>
+        <li>
+          <b>TE error E</b> は octaves 表示のほか、参考として cents
+          相当も併記します。
+        </li>
+      </ul>
+
+      <h3>4) Diagnostics（SVD診断）の読み方</h3>
+      <ul>
+        <li>
+          <b>shape(V_W)</b>：重み付き行列 <code>V_W</code> のサイズ（行×列）。
+        </li>
+        <li>
+          <b>singular values</b
+          >：SVDの特異値列（大きい→小さい）。小さい値が多いほど“ほぼ特異”です。
+        </li>
+        <li>
+          <b>threshold</b
+          >：小さすぎる特異値を「0扱い」するためのカットラインです（擬似逆で使う基準）。
+        </li>
+        <li>
+          <b>rank</b>：threshold以上の特異値の個数（推定ランク）。
+          <ul>
+            <li>
+              rankが期待より小さいと、制約が独立でない（またはほぼ依存）可能性があります。
+            </li>
+          </ul>
+        </li>
+        <li>
+          <b>cond(V_W)</b>：条件数（だいたい
+          <code>maxSingular/minNonzeroSingular</code>）。
+          <ul>
+            <li>
+              大きい（例：<code>1e8</code>
+              以上）と、入力の微小な違いで結果が揺れやすいです。
+            </li>
+          </ul>
+        </li>
+      </ul>
+
+      <h3>5) よくある症状と対処</h3>
+      <ul>
+        <li>
+          <b>TEとPOTEがほとんど同じに見える</b>： <br />
+          もともとTE tuning mapの「2の値」が 1
+          に近い（オクターブがほぼ純正）場合、そうなります。<br />
+          異常ではありません。
+        </li>
+        <li>
+          <b>結果が極端な値になる / 変動する</b>：
+          <code>cond(V_W)</code> が大きい、または rank
+          が落ちている可能性が高いです。<br />
+          その場合は mapping の行が冗長になっていないか、prime basis
+          を変えるとどうなるかを確認すると原因が掴めます。
+        </li>
+      </ul>
+    </details>
+  </body>
+</html>

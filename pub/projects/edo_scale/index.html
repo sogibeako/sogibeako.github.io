@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EDO Scale Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-color: #0b0f19;
+    --text-color: #e2e8f0;
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --accent: #3b82f6;
+    --accent-hover: #60a5fa;
+    --error: #ef4444;
+    --warning: #f59e0b;
+    --success: #10b981;
+    --table-header: rgba(255, 255, 255, 0.05);
+    --table-border: rgba(255, 255, 255, 0.1);
+  }
+  
+  * { box-sizing: border-box; }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-image: 
+      radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%),
+      radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%);
+    background-attachment: fixed;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 1400px;
+    padding: 2rem;
+  }
+
+  h1, h2, h3 { margin-top: 0; }
+  h1 { text-align: center; font-weight: 700; font-size: 2.2rem; margin-bottom: 2rem; letter-spacing: -0.05em; background: linear-gradient(90deg, #60a5fa, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  
+  .panel {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-row {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .form-col {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #94a3b8;
+  }
+
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--glass-border);
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text-color);
+    font-family: monospace;
+    font-size: 1rem;
+    transition: all 0.2s;
+  }
+  input[type="text"]:focus, input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  }
+
+  .radio-group {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  .radio-group label {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+
+  button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  button:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-family: monospace;
+  }
+  
+  th, td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--table-border);
+  }
+  
+  th {
+    background: var(--table-header);
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .msg {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    white-space: pre-wrap;
+    display: none;
+  }
+  .msg.error {
+    display: block;
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+  }
+  .msg.warning {
+    display: block;
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+  }
+  .msg.success {
+    display: block;
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+  }
+
+  .result-section {
+    margin-top: 2rem;
+    display: none;
+  }
+  .result-section.visible {
+    display: block;
+  }
+  
+  .diff-word {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--accent-hover);
+    margin-top: 0.5rem;
+    font-family: monospace;
+  }
+
+  .tag {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    font-size: 0.8rem;
+    margin-right: 0.5rem;
+  }
+
+  /* 回転とグラフ用 */
+  .canvas-container {
+    display: flex;
+    justify-content: center;
+    position: relative;
+  }
+  .result-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-top: 1.5rem;
+  }
+  @media (min-width: 900px) {
+    .result-layout {
+      grid-template-columns: 400px 1fr;
+      align-items: start;
+    }
+    .canvas-container {
+      justify-content: flex-start;
+      margin: 0;
+    }
+  }
+  .table-container {
+    overflow-x: auto;
+  }
+  /* 入力欄連携ボタン */
+  .input-with-btn {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+  .input-with-btn input {
+    flex: 1;
+    margin-bottom: 0 !important;
+  }
+  .btn-icon {
+    padding: 0.5rem 0.6rem;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--accent);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .btn-icon:hover {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: var(--accent);
+    transform: scale(1.05);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>EDO Scale Calculator</h1>
+  
+  <!-- 単一音階計算 -->
+  <div class="panel">
+    <h2>単一音階計算 (Single Scale)</h2>
+    
+    <div class="form-row">
+      <div class="form-col">
+        <label for="sing_edo">分割数 (自動算出)</label>
+        <input type="number" id="sing_edo" placeholder="自動" readonly style="background:var(--bg); color:var(--accent-hover); cursor:not-allowed;">
+      </div>
+      <div class="form-col">
+        <label for="sing_period" style="color:#a78bfa;">一周のサイズ (Cents)</label>
+        <input type="number" step="0.001" id="sing_period" value="1200" title="1200=Octave, 1901.955=Tritave">
+      </div>
+      <div class="form-col">
+        <label for="sing_word">語列 (Word String)</label>
+        <div class="input-with-btn">
+          <button class="btn-icon" onclick="rotateInputWord('sing_word', -1)" title="左に回転 (Rotate Left)">◀</button>
+          <input type="text" id="sing_word" placeholder="例: LLsLLLs" value="LLsLLLs">
+          <button class="btn-icon" onclick="rotateInputWord('sing_word', 1)" title="右に回転 (Rotate Right)">▶</button>
+        </div>
+      </div>
+      <div class="form-col">
+        <label for="sing_ratio">比率 (Ratio)</label>
+        <input type="text" id="sing_ratio" placeholder="例: L:s=2:1" value="L:s=2:1">
+      </div>
+    </div>
+    
+    <button onclick="calcSingle()">計算する</button>
+    
+    <div id="sing_msg" class="msg"></div>
+    
+    <div id="sing_result" class="result-section">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+        <h3 style="margin:0;">計算結果: <span id="sing_res_edo" style="color:var(--accent-hover)"></span> 分割 (ED...) <span id="sing_auto_badge" class="tag" style="display:none; margin-left:1rem;">分割数自動算出</span></h3>
+        <div>
+          <button id="sing_play_btn" onclick="playScale('sing')" style="padding:0.4rem 0.8rem; font-size:0.85rem; background:rgba(16, 185, 129, 0.2); border:1px solid rgba(16, 185, 129, 0.4); color:#34d399; margin-right: 0.5rem; cursor:pointer;" title="矩形波で再生">▶ 再生</button>
+          <button id="sing_copy_btn" onclick="copyCents('sing')" style="padding:0.4rem 0.8rem; font-size:0.85rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); cursor:pointer;">セント列をコピー</button>
+        </div>
+      </div>
+      
+      <div class="result-layout">
+        <div class="canvas-container">
+          <canvas id="sing_canvas" width="400" height="400"></canvas>
+        </div>
+
+        <div class="table-container">
+          <table id="sing_table" style="margin-top: 0;">
+            <thead>
+              <tr>
+                <th>語頭部分列</th>
+                <th>累積ステップ</th>
+                <th>分数表記</th>
+                <th>Cents</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 音階足し算 -->
+  <div class="panel">
+    <h2>音階足し算 (Scale Addition)</h2>
+    <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem;">二つの音階を degree ごとに加算し、新しい音階を生成します。</p>
+    
+    <div class="form-row" style="margin-bottom: 1rem; background: rgba(0,0,0,0.1); padding: 1rem; border-radius: 8px;">
+      <div class="form-col" style="min-width: 100%; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; margin-bottom: 1rem;">
+        <label for="add_period" style="color:#a78bfa;">共通周期 (Cents)</label>
+        <input type="number" step="0.001" id="add_period" value="1200" style="max-width:300px;">
+      </div>
+      <div class="form-col">
+        <label>音階 A</label>
+        <input type="number" id="add_edoA" placeholder="自動算出" readonly style="margin-bottom:0.5rem; background:var(--bg); color:var(--accent-hover); cursor:not-allowed;" value="12">
+        <div class="input-with-btn" style="margin-bottom:0.5rem">
+          <button class="btn-icon" onclick="rotateInputWord('add_wordA', -1)" title="左に回転">◀</button>
+          <input type="text" id="add_wordA" placeholder="語列" value="LLsLLLs">
+          <button class="btn-icon" onclick="rotateInputWord('add_wordA', 1)" title="右に回転">▶</button>
+        </div>
+        <input type="text" id="add_ratioA" placeholder="比率" value="L:s=2:1">
+      </div>
+      <div class="form-col">
+        <label>音階 B</label>
+        <input type="number" id="add_edoB" placeholder="自動算出" readonly style="margin-bottom:0.5rem; background:var(--bg); color:var(--accent-hover); cursor:not-allowed;" value="13">
+        <div class="input-with-btn" style="margin-bottom:0.5rem">
+          <button class="btn-icon" onclick="rotateInputWord('add_wordB', -1)" title="左に回転">◀</button>
+          <input type="text" id="add_wordB" placeholder="語列" value="LLLLLLs">
+          <button class="btn-icon" onclick="rotateInputWord('add_wordB', 1)" title="右に回転">▶</button>
+        </div>
+        <input type="text" id="add_ratioB" placeholder="比率" value="L:s=2:1">
+      </div>
+    </div>
+
+    <button onclick="calcAddition()" style="background: #8b5cf6;">加算する</button>
+    
+    <div id="add_msg" class="msg"></div>
+    
+    <div id="add_result" class="result-section">
+      <div class="result-layout">
+        <div class="add-left">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.5rem;">
+            <h3 style="margin:0;">新しい音階</h3>
+            <div>
+              <button id="add_play_btn" onclick="playScale('add')" style="padding:0.4rem 0.8rem; font-size:0.85rem; background:rgba(16, 185, 129, 0.2); border:1px solid rgba(16, 185, 129, 0.4); color:#34d399; margin-right: 0.5rem; cursor:pointer;" title="矩形波で再生">▶ 再生</button>
+              <button id="add_copy_btn" onclick="copyCents('add')" style="padding:0.4rem 0.8rem; font-size:0.85rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); cursor:pointer;">セント列をコピー</button>
+            </div>
+          </div>
+
+          <div class="canvas-container">
+            <canvas id="add_canvas" width="400" height="400"></canvas>
+          </div>
+
+          <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border: 1px solid var(--glass-border);">
+            <p style="margin: 0 0 0.8rem 0; font-size: 0.85rem; color: #94a3b8;">合成結果<button onclick="recalcAddedScale()" style="display:inline-block; padding:0.2rem 0.5rem; font-size:0.8rem; margin:0 0 0 0.5rem; cursor:pointer; background:rgba(59, 130, 246, 0.2); border:1px solid var(--accent); border-radius:4px; color:var(--accent-hover);">編集して再計算</button></p>
+            
+            <div class="input-with-btn" style="margin-bottom:0.5rem">
+              <span style="font-size:0.85rem; color:#a78bfa; width:45px;">分割数</span>
+              <input type="number" id="add_res_edo" readonly style="padding:0.4rem; background:var(--bg); cursor:not-allowed; color:var(--accent-hover);">
+            </div>
+            
+            <div class="input-with-btn" style="margin-bottom:0.5rem">
+              <button class="btn-icon" onclick="rotateInputWord('add_res_word', -1)" title="左に回転">◀</button>
+              <input type="text" id="add_res_word" style="padding:0.4rem; color:var(--accent-hover); font-weight:bold;">
+              <button class="btn-icon" onclick="rotateInputWord('add_res_word', 1)" title="右に回転">▶</button>
+            </div>
+            
+            <div class="input-with-btn" style="margin-bottom:0.5rem">
+              <span style="font-size:0.85rem; color:#a78bfa; width:45px;">比率</span>
+              <input type="text" id="add_res_ratio" style="padding:0.4rem; font-family:monospace;">
+            </div>
+            
+            <div class="input-with-btn">
+              <span style="font-size:0.85rem; color:#a78bfa; width:45px;">周期</span>
+              <input type="number" step="0.001" id="add_res_period" style="padding:0.4rem;">
+            </div>
+          </div>
+        </div>
+        
+        <div class="table-container">
+          <table id="add_table" style="margin-top: 0;">
+            <thead>
+              <tr>
+                <th>語頭部分列</th>
+                <th>累積ステップ</th>
+                <th>差分</th>
+                <th>分数表記</th>
+                <th>Cents</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Core Logic ---
+    function parseRatio(text) {
+      if(!text) throw { type: "E002", msg: "比率が未入力です。" };
+      const parts = text.split("=");
+      if(parts.length !== 2) throw { type: "E002", msg: "比率の構文エラー: '=' が1つ必要です。" };
+      
+      const leftText = parts[0].trim();
+      const rightText = parts[1].trim();
+      const symbols = leftText.split(":").map(s => s.trim());
+      const valStrs = rightText.split(":").map(s => s.trim());
+      
+      if(symbols.length !== valStrs.length) {
+        throw { type: "E002", msg: "左辺の記号数と右辺の比率数が一致しません。" };
+      }
+      if(new Set(symbols).size !== symbols.length) {
+        throw { type: "E002", msg: "比率の語が重複しています。" };
+      }
+      
+      const values = {};
+      const valuesArr = [];
+      for(let i=0; i<symbols.length; i++) {
+        const v = Number(valStrs[i]);
+        if(!Number.isInteger(v) || v <= 0) {
+          throw { type: "E004", msg: `比率値エラー: '${valStrs[i]}' は正の整数ではありません。` };
+        }
+        values[symbols[i]] = v;
+        valuesArr.push(v);
+      }
+      
+      const warnings = [];
+      if(new Set(valuesArr).size !== valuesArr.length) {
+        warnings.push("比率に同値が含まれています。");
+      }
+      if(symbols.length === 1) {
+        warnings.push("語が1種類しかありません。");
+      }
+      
+      let isReversed = false;
+      for(let i=0; i<valuesArr.length-1; i++) {
+         if(valuesArr[i] < valuesArr[i+1]) { 
+            isReversed = true;
+         }
+      }
+      if(isReversed) {
+        warnings.push("語順警告: 左の記号に対して右の値が順当に小さくなっていません。");
+      }
+      
+      return { symbols, values, warnings };
+    }
+
+    function analyzeScale(edoInput, wordInput, ratioInput, modeStr, periodCents = 1200) {
+       const ratioRes = parseRatio(ratioInput);
+       const wordTokens = wordInput.split("").filter(c => c.trim() !== "");
+       if(wordTokens.length === 0) throw { type: "E002", msg: "語列が空です。" };
+       
+       let totalSteps = 0;
+       for(let sym of wordTokens) {
+          if(!(sym in ratioRes.values)) {
+             throw { type: "E003", msg: `未定義記号: '${sym}' が比率に定義されていません。` };
+          }
+          totalSteps += ratioRes.values[sym];
+       }
+       
+       let finalEdo = 0;
+       let isAutoCalc = false;
+       const edoVal = parseInt(edoInput, 10);
+       
+       if(modeStr === "edo-priority") {
+          if(isNaN(edoVal) || edoVal <= 0) throw { type: "E001", msg: "分割数優先モードでは有効な分割数の入力が必須です。" };
+          if(edoVal !== totalSteps) {
+             throw { type: "E001", msg: `分割数不一致: 入力された分割数 = ${edoVal} ですが、語列と比率の総和は ${totalSteps} です。` };
+          }
+          finalEdo = edoVal;
+       } else {
+          // 語・比率優先なら、入力されたEDO値が何であろうと強制的に総和で上書きする
+          finalEdo = totalSteps;
+          if(isNaN(edoVal) || edoVal !== totalSteps) {
+             isAutoCalc = true;
+          }
+       }
+       
+       const steps = wordTokens.map(sym => ratioRes.values[sym]);
+       const prefixes = ["-"];
+       const cumulative = [0];
+       const cents = [0];
+       
+       let currentPrefix = "";
+       let currentCum = 0;
+       
+       for(let i=0; i<wordTokens.length; i++) {
+          currentPrefix += wordTokens[i];
+          currentCum += steps[i];
+          prefixes.push(currentPrefix);
+          cumulative.push(currentCum);
+          cents.push(periodCents * currentCum / finalEdo);
+       }
+       
+       return {
+          edo: finalEdo,
+          wordTokens,
+          steps,
+          prefixes,
+          cumulative,
+          cents,
+          warnings: ratioRes.warnings,
+          ratioParsed: ratioRes,
+          isAutoCalc
+       };
+    }
+
+    function addScales(scaleA, scaleB, periodCents = 1200) {
+       if(scaleA.cumulative.length !== scaleB.cumulative.length) {
+          throw { type: "Err", msg: `degree数が一致しません (A:${scaleA.cumulative.length-1}音, B:${scaleB.cumulative.length-1}音)。現在同音数の加算のみ対応しています。` };
+       }
+       
+       const edoC = scaleA.edo + scaleB.edo;
+       const cumulativeC = [];
+       for(let i=0; i<scaleA.cumulative.length; i++) {
+          cumulativeC.push(scaleA.cumulative[i] + scaleB.cumulative[i]);
+       }
+       
+       const diffs = [];
+       for(let i=1; i<cumulativeC.length; i++) {
+          diffs.push(cumulativeC[i] - cumulativeC[i-1]);
+       }
+       
+       const uniqueDiffs = [...new Set(diffs)].sort((a,b) => b-a);
+       
+       let newSymbols = [];
+       if(uniqueDiffs.length === 1) {
+          newSymbols = ["L"];
+       } else {
+          // ["L", "M", "N", "O", ...] + "s" as requested
+          const alphabets = ["L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
+          newSymbols = alphabets.slice(0, uniqueDiffs.length - 1);
+          newSymbols.push("s");
+       }
+       
+       const valuesMap = {};
+       for(let i=0; i<uniqueDiffs.length; i++) {
+          valuesMap[newSymbols[i]] = uniqueDiffs[i];
+       }
+       
+       let wordC = "";
+       for(let d of diffs) {
+          for(let sym in valuesMap) {
+              if(valuesMap[sym] === d) {
+                  wordC += sym;
+                  break;
+              }
+          }
+       }
+       
+       const prefixesC = ["-"];
+       const centsC = [0];
+       let currentWord = "";
+       for(let i=0; i<wordC.length; i++) {
+          currentWord += wordC[i];
+          prefixesC.push(currentWord);
+          centsC.push(periodCents * cumulativeC[i+1] / edoC);
+       }
+       
+       return {
+          edo: edoC,
+          cumulative: cumulativeC,
+          diffs: diffs,
+          prefixes: prefixesC,
+          cents: centsC,
+          compressed: {
+             symbols: newSymbols,
+             values: valuesMap,
+             word: wordC
+          }
+       };
+    }
+
+    // --- UI Logic ---
+    function formatCents(val) {
+       return Number.isInteger(val) ? val.toString() : val.toFixed(3);
+    }
+
+    function showMessage(id, html, type) {
+       const el = document.getElementById(id);
+       el.innerHTML = html;
+       el.className = 'msg ' + type;
+    }
+
+    function hideMessage(id) {
+       const el = document.getElementById(id);
+       el.className = 'msg';
+       el.innerHTML = '';
+    }
+
+    function renderTable(selector, data, isAdded = false) {
+       const tbody = document.querySelector(selector);
+       tbody.innerHTML = '';
+       
+       for(let i=0; i<data.cumulative.length; i++) {
+          const tr = document.createElement('tr');
+          const tdPrefix = document.createElement('td');
+          tdPrefix.textContent = data.prefixes[i];
+          
+          const tdCum = document.createElement('td');
+          tdCum.textContent = data.cumulative[i];
+          
+          let tdDiff = null;
+          if(isAdded) {
+             tdDiff = document.createElement('td');
+             tdDiff.textContent = i === 0 ? "-" : data.diffs[i-1];
+             tdDiff.style.color = "#a78bfa";
+          }
+          
+          const tdFrac = document.createElement('td');
+          tdFrac.textContent = `${data.cumulative[i]}\\${data.edo}`;
+          
+          const tdCents = document.createElement('td');
+          tdCents.textContent = formatCents(data.cents[i]);
+          
+          tr.appendChild(tdPrefix);
+          tr.appendChild(tdCum);
+          if(isAdded) tr.appendChild(tdDiff);
+          tr.appendChild(tdFrac);
+          tr.appendChild(tdCents);
+          tbody.appendChild(tr);
+       }
+    }
+
+    function drawScale(canvasId, result, colorStr = '#60a5fa') {
+       const canvas = document.getElementById(canvasId);
+       if (!canvas) return;
+       const ctx = canvas.getContext('2d');
+       ctx.clearRect(0, 0, canvas.width, canvas.height);
+       
+       const cx = canvas.width / 2;
+       const cy = canvas.height / 2;
+       const r = Math.min(cx, cy) - 30;
+       
+       // 円の枠（EDO全体）
+       ctx.beginPath();
+       ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+       ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+       ctx.lineWidth = 2;
+       ctx.stroke();
+       
+       // EDOの目盛り (細かくなり過ぎない場合のみ)
+       if (result.edo <= 120) {
+           ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+           ctx.lineWidth = 1;
+           for(let i=0; i<result.edo; i++) {
+               let angle = (i / result.edo) * 2 * Math.PI - Math.PI / 2;
+               let x1 = cx + (r - 8) * Math.cos(angle);
+               let y1 = cy + (r - 8) * Math.sin(angle);
+               let x2 = cx + (r + 8) * Math.cos(angle);
+               let y2 = cy + (r + 8) * Math.sin(angle);
+               ctx.beginPath();
+               ctx.moveTo(x1, y1);
+               ctx.lineTo(x2, y2);
+               ctx.stroke();
+           }
+       }
+       
+       // 音階の多角形
+       ctx.beginPath();
+       for(let i=0; i<result.cumulative.length-1; i++) {
+           let step = result.cumulative[i];
+           let angle = (step / result.edo) * 2 * Math.PI - Math.PI / 2;
+           let x = cx + r * Math.cos(angle);
+           let y = cy + r * Math.sin(angle);
+           if(i===0) ctx.moveTo(x,y);
+           else ctx.lineTo(x,y);
+       }
+       ctx.closePath();
+       ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+       ctx.fill();
+       ctx.strokeStyle = colorStr;
+       ctx.lineWidth = 1.5;
+       ctx.stroke();
+
+       // 各Degreeごとの点とラベル
+       for(let i=0; i<result.cumulative.length-1; i++) {
+           let step = result.cumulative[i];
+           let angle = (step / result.edo) * 2 * Math.PI - Math.PI / 2;
+           let x = cx + r * Math.cos(angle);
+           let y = cy + r * Math.sin(angle);
+           
+           // 中心からのライン
+           ctx.beginPath();
+           ctx.moveTo(cx, cy);
+           ctx.lineTo(x, y);
+           ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+           ctx.lineWidth = 1;
+           ctx.stroke();
+           
+           // プロット点
+           ctx.beginPath();
+           ctx.arc(x, y, 5, 0, 2 * Math.PI);
+           ctx.fillStyle = colorStr;
+           ctx.fill();
+           
+           // ステップ数ラベル
+           ctx.fillStyle = '#e2e8f0';
+           ctx.font = '12px monospace';
+           let lx = cx + (r + 20) * Math.cos(angle);
+           let ly = cy + (r + 20) * Math.sin(angle);
+           ctx.textAlign = 'center';
+           ctx.textBaseline = 'middle';
+           ctx.fillText(step, lx, ly);
+       }
+    }
+
+    function rotateInputWord(inputId, direction) {
+       const el = document.getElementById(inputId);
+       if (!el || !el.value) return;
+       const tokens = el.value.split("").filter(c => c.trim() !== "");
+       if (tokens.length <= 1) return;
+       
+       if (direction === -1) {
+           let first = tokens.shift();
+           tokens.push(first);
+       } else {
+           let last = tokens.pop();
+           tokens.unshift(last);
+       }
+       el.value = tokens.join("");
+
+       if (inputId === 'sing_word') {
+           if (document.getElementById('sing_result').classList.contains('visible')) {
+               calcSingle();
+           }
+       } else if (inputId === 'add_wordA' || inputId === 'add_wordB') {
+           if (document.getElementById('add_result').classList.contains('visible')) {
+               calcAddition();
+           }
+       } else if (inputId === 'add_res_word') {
+           if (document.getElementById('add_result').classList.contains('visible')) {
+               recalcAddedScale();
+           }
+       }
+    }
+
+    let latestSingResult = null;
+    let latestAddResult = null;
+
+    function copyCents(type) {
+       const res = type === 'sing' ? latestSingResult : latestAddResult;
+       if(!res) return;
+       
+       let lines = [];
+       for(let i=1; i<res.cents.length; i++) {
+           let c = res.cents[i];
+           let fixed = parseFloat(c.toFixed(5));
+           let str = Number.isInteger(fixed) ? fixed.toString() + "." : fixed.toString();
+           lines.push(str);
+       }
+       const text = lines.join('\n');
+       
+       navigator.clipboard.writeText(text).then(() => {
+           const btn = document.getElementById(type + '_copy_btn');
+           const oldText = btn.textContent;
+           btn.textContent = 'コピー完了！';
+           btn.style.background = 'rgba(16, 185, 129, 0.2)';
+           setTimeout(() => {
+               btn.textContent = oldText;
+               btn.style.background = 'rgba(255,255,255,0.1)';
+           }, 2000);
+       }).catch(err => {
+           alert("コピーに失敗しました: " + err);
+       });
+    }
+
+    // --- Audio Playback Logic ---
+    let audioCtx = null;
+    let isPlaying = false;
+
+    function playScale(type) {
+       const res = type === 'sing' ? latestSingResult : latestAddResult;
+       if(!res) return;
+       
+       if (!audioCtx) {
+           audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+       }
+       if (audioCtx.state === 'suspended') {
+           audioCtx.resume();
+       }
+
+       // 連続再生を防止したい場合（任意）
+       // if(isPlaying) return;
+       
+       const btnId = type + '_play_btn';
+       const btn = document.getElementById(btnId);
+       const oldText = btn.textContent;
+       btn.textContent = '■ 再生中';
+       btn.style.color = '#10b981';
+       
+       // 上がって下がるセント配列を生成
+       const seq = [];
+       for (let i = 0; i < res.cents.length; i++) {
+           seq.push(res.cents[i]);
+       }
+       for (let i = res.cents.length - 2; i >= 0; i--) {
+           seq.push(res.cents[i]);
+       }
+
+       const noteDuration = 0.22; // 1音あたりの長さ(秒)
+       let startTime = audioCtx.currentTime + 0.05;
+       
+       for (let i = 0; i < seq.length; i++) {
+           let osc = audioCtx.createOscillator();
+           let gainNode = audioCtx.createGain();
+
+           // A=440Hz基準。セント値から周波数を計算
+           let freq = 440 * Math.pow(2, seq[i] / 1200);
+           
+           osc.type = 'square'; // レトロゲーム風(PSG矩形波)
+           osc.frequency.value = freq;
+
+           // プツプツ音を消すエンベロープ + 音量を控えめに
+           gainNode.gain.setValueAtTime(0, startTime);
+           gainNode.gain.linearRampToValueAtTime(0.06, startTime + 0.015);
+           gainNode.gain.setValueAtTime(0.06, startTime + noteDuration - 0.03);
+           gainNode.gain.linearRampToValueAtTime(0, startTime + noteDuration - 0.005);
+
+           osc.connect(gainNode);
+           gainNode.connect(audioCtx.destination);
+
+           osc.start(startTime);
+           osc.stop(startTime + noteDuration);
+
+           startTime += noteDuration;
+       }
+
+       // 全音が終わるタイミングでボタンを戻す
+       const totalTimeMs = (startTime - audioCtx.currentTime) * 1000;
+       setTimeout(() => {
+           if(btn) {
+               btn.textContent = oldText;
+               btn.style.color = '#34d399';
+           }
+       }, totalTimeMs);
+    }
+
+    function calcSingle() {
+       hideMessage('sing_msg');
+       document.getElementById('sing_result').classList.remove('visible');
+       document.getElementById('sing_auto_badge').style.display = 'none';
+       
+       const word = document.getElementById('sing_word').value;
+       const ratio = document.getElementById('sing_ratio').value;
+       const period = parseFloat(document.getElementById('sing_period').value) || 1200;
+       
+       try {
+          const res = analyzeScale("", word, ratio, "word-priority", period);
+          latestSingResult = res;
+          document.getElementById('sing_edo').value = res.edo;
+          document.getElementById('sing_res_edo').textContent = res.edo;
+          renderTable('#sing_table tbody', res);
+          drawScale('sing_canvas', res, '#3b82f6');
+          
+          if(res.isAutoCalc) {
+             document.getElementById('sing_auto_badge').style.display = 'inline-block';
+          }
+          if(res.warnings && res.warnings.length > 0) {
+             showMessage('sing_msg', res.warnings.join('<br>'), 'warning');
+          }
+          document.getElementById('sing_result').classList.add('visible');
+       } catch(e) {
+          let errStr = e.msg || e.toString();
+          showMessage('sing_msg', `<strong>エラー:</strong> ${errStr}`, 'error');
+       }
+    }
+
+    function recalcAddedScale() {
+       hideMessage('add_msg');
+       const word = document.getElementById('add_res_word').value;
+       const ratio = document.getElementById('add_res_ratio').value;
+       const period = parseFloat(document.getElementById('add_res_period').value) || 1200;
+       
+       try {
+          const res = analyzeScale("", word, ratio, "word-priority", period);
+          
+          // isAdded=true の renderTable を通すため、steps を diffs としてマッピングする
+          res.diffs = res.steps;
+          
+          latestAddResult = res;
+          document.getElementById('add_res_edo').value = res.edo;
+          renderTable('#add_table tbody', res, true);
+          drawScale('add_canvas', res, '#a78bfa');
+       } catch(e) {
+          let errStr = e.msg || e.toString();
+          showMessage('add_msg', `<strong>新しい音階の再計算エラー:</strong> ${errStr}`, 'error');
+       }
+    }
+
+    function calcAddition() {
+       hideMessage('add_msg');
+       document.getElementById('add_result').classList.remove('visible');
+       
+       const period = parseFloat(document.getElementById('add_period').value) || 1200;
+       
+       const wordA = document.getElementById('add_wordA').value;
+       const ratioA = document.getElementById('add_ratioA').value;
+       
+       const wordB = document.getElementById('add_wordB').value;
+       const ratioB = document.getElementById('add_ratioB').value;
+       
+       try {
+          const resA = analyzeScale("", wordA, ratioA, "word-priority", period);
+          const resB = analyzeScale("", wordB, ratioB, "word-priority", period);
+          
+          const resC = addScales(resA, resB, period);
+          latestAddResult = resC;
+          
+          document.getElementById('add_edoA').value = resA.edo;
+          document.getElementById('add_edoB').value = resB.edo;
+          document.getElementById('add_res_edo').value = resC.edo;
+          document.getElementById('add_res_word').value = resC.compressed.word;
+          
+          let ratioText = resC.compressed.symbols.join(":") + "=";
+          let valuesText = resC.compressed.symbols.map(s => resC.compressed.values[s]).join(":");
+          document.getElementById('add_res_ratio').value = ratioText + valuesText;
+          document.getElementById('add_res_period').value = period;
+          
+          renderTable('#add_table tbody', resC, true);
+          drawScale('add_canvas', resC, '#a78bfa');
+          
+          document.getElementById('add_result').classList.add('visible');
+          
+       } catch(e) {
+          let errStr = e.msg || e.toString();
+          if(!errStr.includes('degree数')) {
+             errStr = "(入力音階のエラー) " + errStr;
+          }
+          showMessage('add_msg', `<strong>エラー:</strong> ${errStr}`, 'error');
+       }
+    }
+  </script>
+</div>
+</body>
+</html>

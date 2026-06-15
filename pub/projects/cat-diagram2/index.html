@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>CatDiagram2 Demo</title>
+  <link rel="stylesheet" href="./style.css">
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["\\(", "\\)"], ["$", "$"]]
+      },
+      svg: {
+        fontCache: "global"
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <script src="./cat-diagram.js"></script>
+
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .demo-section { margin-bottom: 40px; }
+    .diagram-box { width: 640px; height: 360px; border: 1px solid #ccc; position: relative; margin-bottom: 10px; }
+    .controls { margin-bottom: 10px; }
+    textarea { width: 640px; height: 150px; font-family: monospace; }
+  </style>
+</head>
+
+<body>
+  <h1>CatDiagram2.js 描画テスト</h1>
+  
+  <p><a href="./builder.html">👉 ビルダー（エディタ）を開く</a></p>
+
+  <div class="demo-section">
+    <h2>1. テンプレート: 可換四角形</h2>
+    <div id="diagram-square" class="diagram-box"></div>
+    <div class="controls">
+      <button onclick="copyAscii(squareInstance)">ASCIIコピー</button>
+    </div>
+  </div>
+
+  <div class="demo-section">
+    <h2>2. テンプレート: 随伴図式 (曲線矢印テスト)</h2>
+    <div id="diagram-adj" class="diagram-box"></div>
+  </div>
+
+  <div class="demo-section">
+    <h2>3. テンプレート: 左Kan拡張 (点線矢印テスト)</h2>
+    <div id="diagram-kan" class="diagram-box"></div>
+  </div>
+
+  <div class="demo-section">
+    <h2>4. JSONから描画 (ビルダー出力などのテスト)</h2>
+    <p>ビルダーでコピーしたJSONをここに貼り付けて「描画」を押してください。</p>
+    <textarea id="json-input"></textarea><br>
+    <button onclick="renderCustomJson()">描画</button>
+    <div id="diagram-custom" class="diagram-box" style="margin-top:10px;"></div>
+  </div>
+
+  <script>
+    let squareInstance;
+
+    async function init() {
+      // Square
+      const dataSq = CatTemplates.square({
+        A: "A", B: "B", C: "C", D: "D",
+        top: "f", left: "g", right: "h", bottom: "k"
+      });
+      squareInstance = await CatDiagram.render("#diagram-square", dataSq);
+
+      // Adjunction
+      const dataAdj = CatTemplates.adjunction({});
+      await CatDiagram.render("#diagram-adj", dataAdj);
+
+      // Left Kan Extension
+      const dataKan = CatTemplates.leftKanExtension({});
+      await CatDiagram.render("#diagram-kan", dataKan);
+    }
+
+    async function copyAscii(instance) {
+      if (!instance) return;
+      const ascii = instance.exportAscii();
+      await navigator.clipboard.writeText(ascii);
+      alert("ASCII図式をコピーしました:\n\n" + ascii);
+    }
+
+    async function renderCustomJson() {
+      const text = document.getElementById("json-input").value;
+      try {
+        const data = JSON.parse(text);
+        await CatDiagram.render("#diagram-custom", data);
+      } catch (e) {
+        alert("JSONエラー: " + e.message);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

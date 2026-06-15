@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>置換タイル共通エンジン試作</title>
+  <style>
+    :root {
+      --bg: #111822;
+      --panel: #1a2431;
+      --panel-2: #223244;
+      --text: #f5f7fb;
+      --muted: #b3c1d1;
+      --accent: #78a8c0;
+      --danger: #ff8e8e;
+      --ok: #8ee0a1;
+      --border: #3b5368;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      order: 2;
+      background: linear-gradient(180deg, #16202b 0%, #121a24 100%);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px 16px;
+      overflow-y: auto;
+    }
+
+    .main {
+      order: 1;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.15);
+    }
+
+    .stage {
+      padding: 10px 16px 12px;
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: minmax(340px, 56vh) auto auto;
+      gap: 12px;
+    }
+
+    .footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.92rem;
+      background: rgba(0, 0, 0, 0.12);
+    }
+
+    h1, h2, h3 { margin: 0 0 8px; }
+    h1 { font-size: 1.15rem; }
+    h2 {
+      margin-top: 18px;
+      font-size: 1rem;
+      padding: 6px 10px;
+      background: var(--accent);
+      color: #111;
+      border-radius: 8px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin: 8px 0;
+    }
+
+    .row.compact {
+      grid-template-columns: 1fr;
+    }
+
+    label {
+      display: block;
+      font-size: 0.92rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    input[type="range"], select, input[type="text"], textarea, button {
+      width: 100%;
+    }
+
+    select, input[type="text"], textarea, button {
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 10px 12px;
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      transition: transform 0.08s ease, opacity 0.18s ease;
+    }
+
+    button:hover { opacity: 0.95; }
+    button:active { transform: translateY(1px); }
+
+    .btn-inline {
+      width: auto;
+      padding: 10px 14px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, #78a8c0, #5d8ca5);
+      color: #0f1820;
+      font-weight: 700;
+    }
+
+    .btn-secondary {
+      background: #243648;
+    }
+
+    .btn-danger {
+      background: #5b2f36;
+      border-color: #8a4651;
+    }
+
+    input[type="range"] {
+      accent-color: #8eb7cf;
+    }
+
+    .value {
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+      min-width: 58px;
+      text-align: right;
+      font-size: 0.92rem;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .canvas-wrap {
+      height: 100%;
+      min-height: 520px;
+      background: #0c1219;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+    }
+
+    .canvas-wrap.dragging {
+      cursor: grabbing;
+    }
+
+    canvas {
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 100%;
+      display: block;
+      background: #ffffff;
+    }
+
+    .drop-note {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(12, 18, 25, 0.74);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 0.84rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      pointer-events: none;
+    }
+
+    @media (max-width: 980px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+      .canvas-wrap {
+        min-height: 420px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <main class="main">
+      <div class="toolbar">
+        <button id="redrawBtn" class="btn-inline btn-primary">再描画</button>
+        <button id="resetViewBtn" class="btn-inline btn-secondary">表示を初期化</button>
+        <span class="pill" id="templateBadge">template: penrose-fill</span>
+        <span class="pill" id="tileCountBadge">tiles: 0</span>
+        <span class="pill" id="modeBadge">mode: fill</span>
+        <button id="zoomModeBtn" class="btn-inline btn-secondary">zoom: draw</button>
+      </div>
+      <div class="stage">
+        <div class="canvas-wrap">
+          <canvas id="stageCanvas" width="1200" height="900"></canvas>
+          <div class="drop-note">画像をこの上へドロップできます</div>
+        </div>
+
+        <div class="panel">
+          <div class="mini-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start;">
+            <div>
+              <label>テンプレート・描画設定</label>
+              <div class="mini-grid" style="grid-template-columns: 1fr; gap: 10px;">
+                <div>
+                  <label for="templateSelect">テンプレート</label>
+                  <select id="templateSelect"></select>
+                </div>
+                <div>
+                  <label for="generationSlider">分割回数 <span class="value" id="generationValue">5</span></label>
+                  <input type="range" id="generationSlider" min="0" max="9" step="1" value="5" />
+                </div>
+                <div>
+                  <label for="paddingSlider">余白 <span class="value" id="paddingValue">0.08</span></label>
+                  <input type="range" id="paddingSlider" min="0.02" max="0.2" step="0.01" value="0.08" />
+                </div>
+                <div>
+                  <label for="backgroundInput">背景色</label>
+                  <input type="text" id="backgroundInput" value="#ffffff" />
+                </div>
+                <div class="mini-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+                  <button id="toggleStrokeBtn" class="btn-secondary">輪郭線: ON</button>
+                  <button id="toggleLabelsBtn" class="btn-secondary">ラベル: OFF</button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label>画像・位置調整</label>
+              <div class="mini-grid" style="grid-template-columns: 1fr; gap: 10px;">
+                <div class="mini-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+                  <button id="pickImageBtn" class="btn-primary">画像を選ぶ</button>
+                  <button id="clearImageBtn" class="btn-secondary">画像を外す</button>
+                </div>
+                <input id="filePicker" type="file" accept="image/*" hidden />
+                <div>
+                  <label for="textureSizeSlider">サイズ <span class="value" id="textureSizeValue">1.00</span></label>
+                  <input type="range" id="textureSizeSlider" min="0.4" max="2.2" step="0.05" value="1" />
+                </div>
+                <div>
+                  <label for="textureZoomSlider">ズーム <span class="value" id="textureZoomValue">1.00</span></label>
+                  <input type="range" id="textureZoomSlider" min="0.4" max="4" step="0.05" value="1" />
+                </div>
+                <div>
+                  <label for="textureOffsetXSlider">Xオフセット <span class="value" id="textureOffsetXValue">0</span></label>
+                  <input type="range" id="textureOffsetXSlider" min="-1200" max="1200" step="1" value="0" />
+                </div>
+                <div>
+                  <label for="textureOffsetYSlider">Yオフセット <span class="value" id="textureOffsetYValue">0</span></label>
+                  <input type="range" id="textureOffsetYSlider" min="-1200" max="1200" step="1" value="0" />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label>数式入力（試作）</label>
+              <div class="hint">generic-subdivision 系テンプレート向け。seed 三角形の 3 頂点を数式で上書きできます。</div>
+              <div class="mini-grid" style="margin-top:8px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+                <div><label for="formulaAx">A.x</label><input id="formulaAx" type="text" value="-1" /></div>
+                <div><label for="formulaAy">A.y</label><input id="formulaAy" type="text" value="-0.9" /></div>
+                <div><label for="formulaBx">B.x</label><input id="formulaBx" type="text" value="1.1" /></div>
+                <div><label for="formulaBy">B.y</label><input id="formulaBy" type="text" value="-0.9" /></div>
+                <div><label for="formulaCx">C.x</label><input id="formulaCx" type="text" value="-0.1" /></div>
+                <div><label for="formulaCy">C.y</label><input id="formulaCy" type="text" value="1.1" /></div>
+              </div>
+              <div class="mini-grid" style="margin-top: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+                <button id="applyFormulaBtn" class="btn-primary">数式を適用</button>
+                <button id="resetFormulaBtn" class="btn-secondary">数式欄をテンプレート初期値へ戻す</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="mini-grid" style="grid-template-columns: 1fr 1fr; gap: 12px; align-items: start;">
+            <div>
+              <label>原型・UV・texture</label>
+              <div class="hint">generic-subdivision 系で原型三角形、UV三角形、貼り方の基本パラメータを直接触れます。</div>
+
+              <div class="mini-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;">
+                <div>
+                  <label>Prototile A</label>
+                  <div class="mini-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px;">
+                    <div><label for="protoA0x">A0.x</label><input id="protoA0x" type="text" value="0" /></div>
+                    <div><label for="protoA0y">A0.y</label><input id="protoA0y" type="text" value="0" /></div>
+                    <div><label for="protoA1x">A1.x</label><input id="protoA1x" type="text" value="1" /></div>
+                    <div><label for="protoA1y">A1.y</label><input id="protoA1y" type="text" value="0" /></div>
+                    <div><label for="protoA2x">A2.x</label><input id="protoA2x" type="text" value="0.5" /></div>
+                    <div><label for="protoA2y">A2.y</label><input id="protoA2y" type="text" value="1" /></div>
+                  </div>
+                </div>
+                <div>
+                  <label>Prototile B</label>
+                  <div class="mini-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px;">
+                    <div><label for="protoB0x">B0.x</label><input id="protoB0x" type="text" value="0" /></div>
+                    <div><label for="protoB0y">B0.y</label><input id="protoB0y" type="text" value="0" /></div>
+                    <div><label for="protoB1x">B1.x</label><input id="protoB1x" type="text" value="1" /></div>
+                    <div><label for="protoB1y">B1.y</label><input id="protoB1y" type="text" value="0" /></div>
+                    <div><label for="protoB2x">B2.x</label><input id="protoB2x" type="text" value="0.5" /></div>
+                    <div><label for="protoB2y">B2.y</label><input id="protoB2y" type="text" value="1" /></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mini-grid" style="grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                <div>
+                  <label>UV triangle</label>
+                  <div class="mini-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px;">
+                    <div><label for="uv0x">U0</label><input id="uv0x" type="text" value="0" /></div>
+                    <div><label for="uv0y">V0</label><input id="uv0y" type="text" value="0" /></div>
+                    <div><label for="uv1x">U1</label><input id="uv1x" type="text" value="1" /></div>
+                    <div><label for="uv1y">V1</label><input id="uv1y" type="text" value="0" /></div>
+                    <div><label for="uv2x">U2</label><input id="uv2x" type="text" value="0.5" /></div>
+                    <div><label for="uv2y">V2</label><input id="uv2y" type="text" value="1" /></div>
+                  </div>
+                </div>
+                <div>
+                  <label>texture options</label>
+                  <div class="mini-grid" style="grid-template-columns: 1fr; gap: 8px;">
+                    <div>
+                      <label for="uvFitSelect">uvFit</label>
+                      <select id="uvFitSelect">
+                        <option value="coverCenter">coverCenter</option>
+                        <option value="fullImage">fullImage</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label for="uvOrderSelect">uvOrder</label>
+                      <select id="uvOrderSelect">
+                        <option value="preserve">preserve</option>
+                        <option value="canonical">canonical</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label for="rotationPolicySelect">rotationPolicy</label>
+                      <select id="rotationPolicySelect">
+                        <option value="fixed">fixed</option>
+                        <option value="radialFromViewportCenter">radialFromViewportCenter</option>
+                        <option value="extraRotation">extraRotation</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label for="placementOriginSelect">placementOrigin</label>
+                      <select id="placementOriginSelect">
+                        <option value="centroid">centroid</option>
+                        <option value="bboxCenter">bboxCenter</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mini-grid" style="margin-top: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+                <button id="applyStructureBtn" class="btn-primary">原型・UVを適用</button>
+                <button id="resetStructureBtn" class="btn-secondary">原型・UV欄を現在値へ戻す</button>
+              </div>
+            </div>
+            <div>
+              <label>保存・読込</label>
+              <div class="mini-grid" style="grid-template-columns: 1fr; gap: 8px;">
+                <button id="saveProjectBtn" class="btn-primary">JSON保存</button>
+                <button id="loadProjectBtn" class="btn-secondary">JSON読込</button>
+                <button id="copyJsonBtn" class="btn-secondary">現在定義をJSON欄へ反映</button>
+              </div>
+              <input id="projectFileInput" type="file" accept="application/json,.json" hidden />
+
+              <div style="margin-top: 12px;">
+                <label>検証結果</label>
+                <div id="validationList" class="error-list"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 10px;">
+            <label for="jsonEditor">JSON</label>
+            <textarea id="jsonEditor" class="json-area" spellcheck="false"></textarea>
+            <div class="mini-grid" style="margin-top: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+              <button id="applyJsonBtn" class="btn-primary">JSON適用</button>
+              <button id="formatJsonBtn" class="btn-secondary">JSON整形</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer" id="statusLine">準備完了。テンプレートを選んで描画できます。</div>
+    </main>
+
+    <aside class="sidebar">
+      <h1>置換タイル共通エンジン試作</h1>
+      <div class="hint">まずは、三角形ベースの共通エンジンとして動く芯を組みました。テンプレート読込、世代展開、fill、画像コラージュ、保存/読込の入口つきです。</div>
+
+      <h2>おすすめ</h2>
+      <div id="templateList" class="template-list"></div>
+    </aside>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('stageCanvas');
+    const ctx = canvas.getContext('2d');
+    const sceneCanvas = document.createElement('canvas');
+    sceneCanvas.width = canvas.width;
+    sceneCanvas.height = canvas.height;
+    const sceneCtx = sceneCanvas.getContext('2d');
+
+    const PHI = (1 + Math.sqrt(5)) / 2;
+
+    const state = {
+      templateId: 'penrose-fill',
+      definition: null,
+      generations: 5,
+      viewportPadding: 0.08,
+      showStroke: true,
+      showLabels: false,
+      backgroundColor: '#ffffff',
+      textureGlobal: {
+        enabled: true,
+        size: 1,
+        zoom: 1,
+        offsetX: 0,
+        offsetY: 0,
+      },
+      uploadedImage: null,
+      validation: [],
+      lastTiles: [],
+      camera: {
+        zoom: 1,
+        offsetX: 0,
+        offsetY: 0,
+        isDragging: false,
+        lastX: 0,
+        lastY: 0,
+      },
+      viewMode: 'fill',
+      zoomMode: 'draw',
+    };
+
+    const templates = {
+      'penrose-fill': {
+        metadata: {
+          id: 'penrose-fill',
+          name: 'Penrose basic fill',
+          description: '赤青のペンローズ三角形を fill で描く基本テンプレート。',
+          difficulty: '初級',
+        },
+        geometry: {
+          generator: 'penrose-wheel',
+          prototiles: {
+            red: { kind: 'triangle' },
+            blue: { kind: 'triangle' },
+          },
+        },
+        styles: {
+          presets: {
+            redFill: {
+              mode: 'fill',
+              fillColor: '#e06666',
+              strokeColor: '#222222',
+              strokeWidth: 1,
+            },
+            blueFill: {
+              mode: 'fill',
+              fillColor: '#6fa8dc',
+              strokeColor: '#222222',
+              strokeWidth: 1,
+            },
+          },
+          tileStyleMap: {
+            red: 'redFill',
+            blue: 'blueFill',
+          },
+        },
+        images: {
+          userImage: { src: null, smoothing: true },
+        },
+        render: {
+          backgroundColor: '#ffffff',
+          viewport: { fitMode: 'contain', padding: 0.08 },
+          textureGlobal: { enabled: true, size: 1, zoom: 1, offsetX: 0, offsetY: 0 },
+        },
+      },
+
+      'penrose-collage': {
+        metadata: {
+          id: 'penrose-collage',
+          name: 'Penrose collage',
+          description: '参考ソースの雰囲気を共通エンジン寄りに寄せたコラージュ描画。',
+          difficulty: '初級〜中級',
+        },
+        geometry: {
+          generator: 'penrose-wheel',
+          prototiles: {
+            red: { kind: 'triangle', points: [[0, 0], [1, 0], [0, 1]] },
+            blue: { kind: 'triangle', points: [[0, 0], [1, 0], [0, 1]] },
+          },
+        },
+        styles: {
+          presets: {
+            redCollage: {
+              mode: 'collageTexture',
+              imageId: 'userImage',
+              placementOrigin: 'centroid',
+              rotationPolicy: 'radialFromViewportCenter',
+              zoom: 1,
+              offsetX: 0,
+              offsetY: 0,
+              fillFallback: '#f0c674',
+              strokeColor: '#1f1f1f',
+              strokeWidth: 1,
+            },
+            blueCollage: {
+              mode: 'collageTexture',
+              imageId: 'userImage',
+              placementOrigin: 'centroid',
+              rotationPolicy: 'radialFromViewportCenter',
+              zoom: 1,
+              offsetX: 0,
+              offsetY: 0,
+              fillFallback: '#7ab8e8',
+              strokeColor: '#1f1f1f',
+              strokeWidth: 1,
+            },
+          },
+          tileStyleMap: {
+            red: 'redCollage',
+            blue: 'blueCollage',
+          },
+        },
+        images: {
+          userImage: { src: null, smoothing: true },
+        },
+        render: {
+          backgroundColor: '#ffffff',
+          viewport: { fitMode: 'contain', padding: 0.08 },
+          textureGlobal: { enabled: true, size: 1, zoom: 1, offsetX: 0, offsetY: 0 },
+        },
+      },
+
+      'triangle-uv-demo': {
+        metadata: {
+          id: 'triangle-uv-demo',
+          name: 'Triangle UV demo',
+          description: '厳密UV貼りのデモ。画像があると、各三角形へ同じUV三角形を正確に写像する。',
+          difficulty: '中級',
+        },
+        geometry: {
+          generator: 'generic-subdivision',
+          prototiles: {
+            A: { kind: 'triangle', points: [[0, 0], [1, 0], [0.5, 1]] },
+            B: { kind: 'triangle', points: [[0, 0], [1, 0], [0.5, 1]] },
+          },
+          subdivisionRules: {
+            A: [
+              { childType: 'A', points: [[0, 0], [0.5, 0], [0.25, 0.5]] },
+              { childType: 'B', points: [[0.5, 0], [1, 0], [0.75, 0.5]] },
+              { childType: 'A', points: [[0.25, 0.5], [0.75, 0.5], [0.5, 1]] },
+              { childType: 'B', points: [[0.5, 0], [0.75, 0.5], [0.25, 0.5]] },
+            ],
+            B: [
+              { childType: 'B', points: [[0, 0], [0.5, 0], [0.25, 0.5]] },
+              { childType: 'A', points: [[0.5, 0], [1, 0], [0.75, 0.5]] },
+              { childType: 'B', points: [[0.25, 0.5], [0.75, 0.5], [0.5, 1]] },
+              { childType: 'A', points: [[0.5, 0], [0.75, 0.5], [0.25, 0.5]] },
+            ],
+          },
+          seed: [
+            { tileType: 'A', points: [[-1, -0.9], [1.1, -0.9], [-0.1, 1.1]] },
+          ],
+        },
+        styles: {
+          presets: {
+            uvA: {
+              mode: 'sharedTexture',
+              imageId: 'userImage',
+              uvMap: 'fullTri',
+              uvFit: 'coverCenter',
+              uvOrder: 'preserve',
+              fillFallback: '#9fc5e8',
+              strokeColor: '#213322',
+              strokeWidth: 1,
+            },
+            uvB: {
+              mode: 'sharedTexture',
+              imageId: 'userImage',
+              uvMap: 'fullTri',
+              uvFit: 'coverCenter',
+              uvOrder: 'preserve',
+              fillFallback: '#f6b26b',
+              strokeColor: '#3d2d19',
+              strokeWidth: 1,
+            },
+          },
+          tileStyleMap: { A: 'uvA', B: 'uvB' },
+        },
+        uvMaps: {
+          fullTri: {
+            kind: 'triangle',
+            points: [[0, 0], [1, 0], [0.5, 1]],
+          },
+        },
+        images: {
+          userImage: { src: null, smoothing: true },
+        },
+        render: {
+          backgroundColor: '#ffffff',
+          viewport: { fitMode: 'contain', padding: 0.08 },
+          textureGlobal: { enabled: true, size: 1, zoom: 1, offsetX: 0, offsetY: 0 },
+        },
+      },
+
+      'triangle-collage-demo': {
+        metadata: {
+          id: 'triangle-collage-demo',
+          name: 'Triangle collage demo',
+          description: '4分割の generic-subdivision を collageTexture で楽しむテンプレート。',
+          difficulty: '初級〜中級',
+        },
+        geometry: {
+          generator: 'generic-subdivision',
+          prototiles: {
+            A: { kind: 'triangle', points: [[0, 0], [1, 0], [0.5, 1]] },
+            B: { kind: 'triangle', points: [[0, 0], [1, 0], [0.5, 1]] },
+          },
+          subdivisionRules: {
+            A: [
+              { childType: 'A', points: [[0, 0], [0.5, 0], [0.25, 0.5]] },
+              { childType: 'B', points: [[0.5, 0], [1, 0], [0.75, 0.5]] },
+              { childType: 'A', points: [[0.25, 0.5], [0.75, 0.5], [0.5, 1]] },
+              { childType: 'B', points: [[0.5, 0], [0.75, 0.5], [0.25, 0.5]] },
+            ],
+            B: [
+              { childType: 'B', points: [[0, 0], [0.5, 0], [0.25, 0.5]] },
+              { childType: 'A', points: [[0.5, 0], [1, 0], [0.75, 0.5]] },
+              { childType: 'B', points: [[0.25, 0.5], [0.75, 0.5], [0.5, 1]] },
+              { childType: 'A', points: [[0.5, 0], [0.75, 0.5], [0.25, 0.5]] },
+            ],
+          },
+          seed: [
+            { tileType: 'A', points: [[-1, -0.9], [1.1, -0.9], [-0.1, 1.1]] },
+          ],
+        },
+        styles: {
+          presets: {
+            colA: {
+              mode: 'collageTexture',
+              imageId: 'userImage',
+              placementOrigin: 'centroid',
+              rotationPolicy: 'fixed',
+              zoom: 1,
+              offsetX: 0,
+              offsetY: 0,
+              fillFallback: '#b4d7a8',
+              strokeColor: '#213322',
+              strokeWidth: 1,
+            },
+            colB: {
+              mode: 'collageTexture',
+              imageId: 'userImage',
+              placementOrigin: 'centroid',
+              rotationPolicy: 'fixed',
+              zoom: 1,
+              offsetX: 0,
+              offsetY: 0,
+              fillFallback: '#f6b26b',
+              strokeColor: '#3d2d19',
+              strokeWidth: 1,
+            },
+          },
+          tileStyleMap: { A: 'colA', B: 'colB' },
+        },
+        images: {
+          userImage: { src: null, smoothing: true },
+        },
+        render: {
+          backgroundColor: '#ffffff',
+          viewport: { fitMode: 'contain', padding: 0.08 },
+          textureGlobal: { enabled: true, size: 1, zoom: 1, offsetX: 0, offsetY: 0 },
+        },
+      },
+
+      'penrose-uv-demo': {
+        metadata: {
+          id: 'penrose-uv-demo',
+          name: 'Penrose UV demo',
+          description: 'ペンローズの赤青三角形に、同じUV三角形を厳密に貼るデモ。',
+          difficulty: '中級',
+        },
+        geometry: {
+          generator: 'penrose-wheel',
+          prototiles: {
+            red: { kind: 'triangle', points: [[0, 0], [1, 0], [0.5, 1]] },
+            blue: { kind: 'triangle', points: [[0, 0], [1, 0], [0.5, 1]] },
+          },
+        },
+        styles: {
+          presets: {
+            redUv: {
+              mode: 'sharedTexture',
+              imageId: 'userImage',
+              uvMap: 'fullTri',
+              uvFit: 'coverCenter',
+              uvOrder: 'preserve',
+              fillFallback: '#e06666',
+              strokeColor: '#1f1f1f',
+              strokeWidth: 1,
+            },
+            blueUv: {
+              mode: 'sharedTexture',
+              imageId: 'userImage',
+              uvMap: 'fullTri',
+              uvFit: 'coverCenter',
+              uvOrder: 'preserve',
+              fillFallback: '#6fa8dc',
+              strokeColor: '#1f1f1f',
+              strokeWidth: 1,
+            },
+          },
+          tileStyleMap: {
+            red: 'redUv',
+            blue: 'blueUv',
+          },
+        },
+        uvMaps: {
+          fullTri: {
+            kind: 'triangle',
+            points: [[0, 0], [1, 0], [0.5, 1]],
+          },
+        },
+        images: {
+          userImage: { src: null, smoothing: true },
+        },
+        render: {
+          backgroundColor: '#ffffff',
+          viewport: { fitMode: 'contain', padding: 0.08 },
+          textureGlobal: { enabled: true, size: 1, zoom: 1, offsetX: 0, offsetY: 0 },
+        },
+      },
+
+      'triangle-demo': {
+        metadata: {
+          id: 'triangle-demo',
+          name: 'Triangle subdivision demo',
+          description: '親三角形を完全に埋める4分割デモ。画像があるとコラージュ貼り、ないと色でフォールバック。',
+          difficulty: '初級',
+        },
+        geometry: {
+          generator: 'generic-subdivision',
+          prototiles: {
+            A: { kind: 'triangle', points: [[0, 0], [1, 0], [0.5, 1]] },
+            B: { kind: 'triangle', points: [[0, 0], [1, 0], [0.5, 1]] },
+          },
+          subdivisionRules: {
+            A: [
+              { childType: 'A', points: [[0, 0], [0.5, 0], [0.25, 0.5]] },
+              { childType: 'B', points: [[0.5, 0], [1, 0], [0.75, 0.5]] },
+              { childType: 'A', points: [[0.25, 0.5], [0.75, 0.5], [0.5, 1]] },
+              { childType: 'B', points: [[0.5, 0], [0.75, 0.5], [0.25, 0.5]] },
+            ],
+            B: [
+              { childType: 'B', points: [[0, 0], [0.5, 0], [0.25, 0.5]] },
+              { childType: 'A', points: [[0.5, 0], [1, 0], [0.75, 0.5]] },
+              { childType: 'B', points: [[0.25, 0.5], [0.75, 0.5], [0.5, 1]] },
+              { childType: 'A', points: [[0.5, 0], [0.75, 0.5], [0.25, 0.5]] },
+            ],
+          },
+          seed: [
+            { tileType: 'A', points: [[-1, -0.9], [1.1, -0.9], [-0.1, 1.1]] },
+          ],
+        },
+        styles: {
+          presets: {
+            fillA: {
+              mode: 'collageTexture',
+              imageId: 'userImage',
+              placementOrigin: 'centroid',
+              rotationPolicy: 'fixed',
+              zoom: 1,
+              offsetX: 0,
+              offsetY: 0,
+              fillFallback: '#b4d7a8',
+              strokeColor: '#213322',
+              strokeWidth: 1,
+            },
+            fillB: {
+              mode: 'collageTexture',
+              imageId: 'userImage',
+              placementOrigin: 'centroid',
+              rotationPolicy: 'fixed',
+              zoom: 1,
+              offsetX: 0,
+              offsetY: 0,
+              fillFallback: '#f6b26b',
+              strokeColor: '#3d2d19',
+              strokeWidth: 1,
+            },
+          },
+          tileStyleMap: { A: 'fillA', B: 'fillB' },
+        },
+        images: {},
+        render: {
+          backgroundColor: '#ffffff',
+          viewport: { fitMode: 'contain', padding: 0.08 },
+          textureGlobal: { enabled: true, size: 1, zoom: 1, offsetX: 0, offsetY: 0 },
+        },
+      },
+    };
+
+    function deepClone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function vec(x, y) { return { x, y }; }
+    function add(a, b) { return { x: a.x + b.x, y: a.y + b.y }; }
+    function sub(a, b) { return { x: a.x - b.x, y: a.y - b.y }; }
+    function mul(a, s) { return { x: a.x * s, y: a.y * s }; }
+    function lerp(a, b, t) { return add(a, mul(sub(b, a), t)); }
+    function centroid(tri) {
+      return {
+        x: (tri.points[0].x + tri.points[1].x + tri.points[2].x) / 3,
+        y: (tri.points[0].y + tri.points[1].y + tri.points[2].y) / 3,
+      };
+    }
+    function triangleArea(tri) {
+      const [A, B, C] = tri.points;
+      return 0.5 * ((B.x - A.x) * (C.y - A.y) - (B.y - A.y) * (C.x - A.x));
+    }
+
+    function computeBBox(tris) {
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      tris.forEach(tri => {
+        tri.points.forEach(p => {
+          minX = Math.min(minX, p.x);
+          minY = Math.min(minY, p.y);
+          maxX = Math.max(maxX, p.x);
+          maxY = Math.max(maxY, p.y);
+        });
+      });
+      return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
+    }
+
+    function resolveStyle(definition, tileType) {
+      const presetId = definition.styles?.tileStyleMap?.[tileType];
+      return definition.styles?.presets?.[presetId] || {
+        mode: 'fill',
+        fillColor: '#cccccc',
+        strokeColor: '#222222',
+        strokeWidth: 1,
+      };
+    }
+
+    function getCurrentViewMode(definition) {
+      const map = definition.styles?.tileStyleMap || {};
+      const presets = definition.styles?.presets || {};
+      const presetIds = Object.values(map);
+      for (const presetId of presetIds) {
+        const mode = presets[presetId]?.mode;
+        if (mode === 'collageTexture' || mode === 'sharedTexture' || mode === 'texture') {
+          return 'image';
+        }
+      }
+      return 'fill';
+    }
+
+    function resetViewState() {
+      state.viewportPadding = state.definition?.render?.viewport?.padding ?? 0.08;
+      state.textureGlobal = deepClone(state.definition?.render?.textureGlobal || { enabled: true, size: 1, zoom: 1, offsetX: 0, offsetY: 0 });
+      state.backgroundColor = state.definition?.render?.backgroundColor || '#ffffff';
+      state.camera.zoom = 1;
+      state.camera.offsetX = 0;
+      state.camera.offsetY = 0;
+      syncControlsFromState();
+    }
+
+    function isFormulaTemplate(definition) {
+      return definition?.geometry?.generator === 'generic-subdivision' && Array.isArray(definition?.geometry?.seed) && definition.geometry.seed.length > 0;
+    }
+
+    function evaluateFormula(expr) {
+      const source = String(expr ?? '').trim();
+      if (!source) throw new Error('空の数式です。');
+      if (!/^[0-9+\-*/^()., _a-zA-Z]+$/.test(source)) {
+        throw new Error(`使えない文字があります: ${source}`);
+      }
+      const transformed = source.replace(/\^/g, '**');
+      const scope = {
+        pi: Math.PI,
+        e: Math.E,
+        phi: (1 + Math.sqrt(5)) / 2,
+        sin: Math.sin,
+        cos: Math.cos,
+        tan: Math.tan,
+        asin: Math.asin,
+        acos: Math.acos,
+        atan: Math.atan,
+        sqrt: Math.sqrt,
+        abs: Math.abs,
+        min: Math.min,
+        max: Math.max,
+      };
+      const argNames = Object.keys(scope);
+      const argValues = Object.values(scope);
+      const fn = Function(...argNames, `return (${transformed});`);
+      const value = fn(...argValues);
+      if (!Number.isFinite(value)) {
+        throw new Error(`有限な値になりません: ${source}`);
+      }
+      return value;
+    }
+
+    function fillFormulaInputsFromDefinition(definition) {
+      const defaults = definition?.geometry?.seed?.[0]?.points || [[-1, -0.9], [1.1, -0.9], [-0.1, 1.1]];
+      document.getElementById('formulaAx').value = String(defaults[0][0]);
+      document.getElementById('formulaAy').value = String(defaults[0][1]);
+      document.getElementById('formulaBx').value = String(defaults[1][0]);
+      document.getElementById('formulaBy').value = String(defaults[1][1]);
+      document.getElementById('formulaCx').value = String(defaults[2][0]);
+      document.getElementById('formulaCy').value = String(defaults[2][1]);
+    }
+
+    function fillStructureInputsFromDefinition(definition) {
+      const protoA = definition?.geometry?.prototiles?.A?.points || [[0, 0], [1, 0], [0.5, 1]];
+      const protoB = definition?.geometry?.prototiles?.B?.points || [[0, 0], [1, 0], [0.5, 1]];
+      const uv = definition?.uvMaps?.fullTri?.points || [[0, 0], [1, 0], [0.5, 1]];
+      const firstPresetId = Object.values(definition?.styles?.tileStyleMap || {})[0];
+      const firstPreset = firstPresetId ? definition?.styles?.presets?.[firstPresetId] : null;
+
+      [['protoA', protoA], ['protoB', protoB]].forEach(([prefix, pts]) => {
+        document.getElementById(`${prefix}0x`).value = String(pts[0][0]);
+        document.getElementById(`${prefix}0y`).value = String(pts[0][1]);
+        document.getElementById(`${prefix}1x`).value = String(pts[1][0]);
+        document.getElementById(`${prefix}1y`).value = String(pts[1][1]);
+        document.getElementById(`${prefix}2x`).value = String(pts[2][0]);
+        document.getElementById(`${prefix}2y`).value = String(pts[2][1]);
+      });
+
+      document.getElementById('uv0x').value = String(uv[0][0]);
+      document.getElementById('uv0y').value = String(uv[0][1]);
+      document.getElementById('uv1x').value = String(uv[1][0]);
+      document.getElementById('uv1y').value = String(uv[1][1]);
+      document.getElementById('uv2x').value = String(uv[2][0]);
+      document.getElementById('uv2y').value = String(uv[2][1]);
+
+      document.getElementById('uvFitSelect').value = firstPreset?.uvFit || 'coverCenter';
+      document.getElementById('uvOrderSelect').value = firstPreset?.uvOrder || 'preserve';
+      document.getElementById('rotationPolicySelect').value = firstPreset?.rotationPolicy || 'fixed';
+      document.getElementById('placementOriginSelect').value = firstPreset?.placementOrigin || 'centroid';
+    }
+
+    function applyStructureInputsToDefinition() {
+      try {
+        const protoA = [
+          [evaluateFormula(document.getElementById('protoA0x').value), evaluateFormula(document.getElementById('protoA0y').value)],
+          [evaluateFormula(document.getElementById('protoA1x').value), evaluateFormula(document.getElementById('protoA1y').value)],
+          [evaluateFormula(document.getElementById('protoA2x').value), evaluateFormula(document.getElementById('protoA2y').value)],
+        ];
+        const protoB = [
+          [evaluateFormula(document.getElementById('protoB0x').value), evaluateFormula(document.getElementById('protoB0y').value)],
+          [evaluateFormula(document.getElementById('protoB1x').value), evaluateFormula(document.getElementById('protoB1y').value)],
+          [evaluateFormula(document.getElementById('protoB2x').value), evaluateFormula(document.getElementById('protoB2y').value)],
+        ];
+        const uv = [
+          [evaluateFormula(document.getElementById('uv0x').value), evaluateFormula(document.getElementById('uv0y').value)],
+          [evaluateFormula(document.getElementById('uv1x').value), evaluateFormula(document.getElementById('uv1y').value)],
+          [evaluateFormula(document.getElementById('uv2x').value), evaluateFormula(document.getElementById('uv2y').value)],
+        ];
+
+        if (state.definition?.geometry?.prototiles?.A) state.definition.geometry.prototiles.A.points = protoA;
+        if (state.definition?.geometry?.prototiles?.B) state.definition.geometry.prototiles.B.points = protoB;
+        if (state.definition?.uvMaps?.fullTri) state.definition.uvMaps.fullTri.points = uv;
+
+        const tileStyleMap = state.definition?.styles?.tileStyleMap || {};
+        Object.values(tileStyleMap).forEach((presetId) => {
+          const preset = state.definition?.styles?.presets?.[presetId];
+          if (!preset) return;
+          if (preset.mode === 'sharedTexture' || preset.mode === 'texture') {
+            preset.uvFit = document.getElementById('uvFitSelect').value;
+            preset.uvOrder = document.getElementById('uvOrderSelect').value;
+          }
+          if (preset.mode === 'collageTexture') {
+            preset.rotationPolicy = document.getElementById('rotationPolicySelect').value;
+            preset.placementOrigin = document.getElementById('placementOriginSelect').value;
+          }
+        });
+
+        document.getElementById('jsonEditor').value = JSON.stringify(exportCurrentDefinition(), null, 2);
+        render();
+        setStatus('原型三角形・UV・texture 設定を適用しました。');
+      } catch (error) {
+        state.validation = [{ type: 'error', text: `構造適用エラー: ${error.message}` }];
+        renderValidation();
+        setStatus('原型・UV の適用に失敗しました。');
+      }
+    }
+
+    function applyFormulaSeedToDefinition() {
+      if (!isFormulaTemplate(state.definition)) {
+        setStatus('このテンプレートでは、今の数式入力UIはまだ seed 三角形の上書きだけに対応しています。');
+        return;
+      }
+      try {
+        const pts = [
+          [evaluateFormula(document.getElementById('formulaAx').value), evaluateFormula(document.getElementById('formulaAy').value)],
+          [evaluateFormula(document.getElementById('formulaBx').value), evaluateFormula(document.getElementById('formulaBy').value)],
+          [evaluateFormula(document.getElementById('formulaCx').value), evaluateFormula(document.getElementById('formulaCy').value)],
+        ];
+        state.definition.geometry.seed[0].points = pts;
+        document.getElementById('jsonEditor').value = JSON.stringify(exportCurrentDefinition(), null, 2);
+        render();
+        setStatus('数式を seed 三角形へ適用しました。');
+      } catch (error) {
+        state.validation = [{ type: 'error', text: `数式適用エラー: ${error.message}` }];
+        renderValidation();
+        setStatus('数式の適用に失敗しました。');
+      }
+    }
+
+    function applyDrawZoom(factor, mx, my) {
+      const oldZoom = state.camera.zoom;
+      const newZoom = Math.max(0.2, Math.min(20, oldZoom * factor));
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      state.camera.offsetX = mx - centerX - (mx - centerX - state.camera.offsetX) * (newZoom / oldZoom);
+      state.camera.offsetY = my - centerY - (my - centerY - state.camera.offsetY) * (newZoom / oldZoom);
+      state.camera.zoom = newZoom;
+    }
+
+    function applyDisplayZoom(factor, mx, my) {
+      const oldZoom = state.camera.zoom;
+      const newZoom = Math.max(0.2, Math.min(20, oldZoom * factor));
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const relX = mx - centerX - state.camera.offsetX;
+      const relY = my - centerY - state.camera.offsetY;
+      const ratio = newZoom / oldZoom;
+      state.camera.offsetX = mx - centerX - relX * ratio;
+      state.camera.offsetY = my - centerY - relY * ratio;
+      state.camera.zoom = newZoom;
+    }
+
+    function getViewportTransform(tris) {
+      const bbox = computeBBox(tris);
+      const paddingFactor = Math.max(0.01, Math.min(0.4, state.viewportPadding));
+      const safeWidth = Math.max(1e-6, bbox.width);
+      const safeHeight = Math.max(1e-6, bbox.height);
+      const baseScale = (1 - paddingFactor * 2) * Math.min(sceneCanvas.width / safeWidth, sceneCanvas.height / safeHeight);
+      const scale = state.zoomMode === 'draw' ? baseScale * state.camera.zoom : baseScale;
+      const centerX = (bbox.minX + bbox.maxX) / 2;
+      const centerY = (bbox.minY + bbox.maxY) / 2;
+
+      return {
+        bbox,
+        scale,
+        mapPoint(p) {
+          return {
+            x: (p.x - centerX) * scale + sceneCanvas.width / 2 + (state.zoomMode === 'draw' ? state.camera.offsetX : 0),
+            y: (p.y - centerY) * scale + sceneCanvas.height / 2 + (state.zoomMode === 'draw' ? state.camera.offsetY : 0),
+          };
+        },
+      };
+    }
+
+    function drawFill(style, screenTri) {
+      sceneCtx.beginPath();
+      sceneCtx.moveTo(screenTri[0].x, screenTri[0].y);
+      sceneCtx.lineTo(screenTri[1].x, screenTri[1].y);
+      sceneCtx.lineTo(screenTri[2].x, screenTri[2].y);
+      sceneCtx.closePath();
+      sceneCtx.fillStyle = style.fillColor || '#cccccc';
+      sceneCtx.fill();
+      if (state.showStroke) {
+        sceneCtx.strokeStyle = style.strokeColor || '#222';
+        sceneCtx.lineWidth = style.strokeWidth || 1;
+        sceneCtx.stroke();
+      }
+    }
+
+    function getPlacementPoint(style, screenTri) {
+      if (style.placementOrigin === 'bboxCenter') {
+        const xs = screenTri.map(p => p.x);
+        const ys = screenTri.map(p => p.y);
+        return { x: (Math.min(...xs) + Math.max(...xs)) / 2, y: (Math.min(...ys) + Math.max(...ys)) / 2 };
+      }
+      return {
+        x: (screenTri[0].x + screenTri[1].x + screenTri[2].x) / 3,
+        y: (screenTri[0].y + screenTri[1].y + screenTri[2].y) / 3,
+      };
+    }
+
+    function getRotation(style, anchor) {
+      const policy = style.rotationPolicy || 'fixed';
+      if (policy === 'radialFromViewportCenter') {
+        return Math.atan2(anchor.y - canvas.height / 2, anchor.x - canvas.width / 2);
+      }
+      if (policy === 'extraRotation') {
+        return ((style.extraRotationDegrees || 0) * Math.PI) / 180;
+      }
+      return 0;
+    }
+
+    function resolveImage(style) {
+      if (style.imageId === 'userImage') return state.uploadedImage;
+      return null;
+    }
+
+    function drawCollage(style, screenTri) {
+      const image = resolveImage(style);
+      if (!image) {
+        drawFill({
+          fillColor: style.fillFallback || '#ddd',
+          strokeColor: style.strokeColor || '#222',
+          strokeWidth: style.strokeWidth || 1,
+        }, screenTri);
+        return;
+      }
+
+      sceneCtx.save();
+      sceneCtx.beginPath();
+      sceneCtx.moveTo(screenTri[0].x, screenTri[0].y);
+      sceneCtx.lineTo(screenTri[1].x, screenTri[1].y);
+      sceneCtx.lineTo(screenTri[2].x, screenTri[2].y);
+      sceneCtx.closePath();
+      sceneCtx.clip();
+
+      const anchor = getPlacementPoint(style, screenTri);
+      const totalZoom = state.textureGlobal.zoom * (style.zoom || 1);
+      const totalSize = state.textureGlobal.size;
+      const totalOffsetX = state.textureGlobal.offsetX + (style.offsetX || 0);
+      const totalOffsetY = state.textureGlobal.offsetY + (style.offsetY || 0);
+      const rotation = getRotation(style, anchor);
+
+      sceneCtx.translate(anchor.x, anchor.y);
+      sceneCtx.rotate(rotation);
+
+      const srcW = image.width / Math.max(0.05, totalZoom);
+      const srcH = image.height / Math.max(0.05, totalZoom);
+      const sx = image.width / 2 - srcW / 2 + totalOffsetX;
+      const sy = image.height / 2 - srcH / 2 + totalOffsetY;
+      const dstSide = Math.max(sceneCanvas.width, sceneCanvas.height) * totalSize;
+      sceneCtx.drawImage(image, sx, sy, srcW, srcH, -dstSide / 2, -dstSide / 2, dstSide, dstSide);
+      sceneCtx.restore();
+
+      if (state.showStroke) {
+        sceneCtx.beginPath();
+        sceneCtx.moveTo(screenTri[0].x, screenTri[0].y);
+        sceneCtx.lineTo(screenTri[1].x, screenTri[1].y);
+        sceneCtx.lineTo(screenTri[2].x, screenTri[2].y);
+        sceneCtx.closePath();
+        sceneCtx.strokeStyle = style.strokeColor || '#222';
+        sceneCtx.lineWidth = style.strokeWidth || 1;
+        sceneCtx.stroke();
+      }
+    }
+
+    function getUvTriangle(style, definition, image) {
+      const uvId = style.uvMap;
+      const uv = definition.uvMaps?.[uvId];
+      if (!uv || !Array.isArray(uv.points) || uv.points.length !== 3) return null;
+
+      const totalZoom = state.textureGlobal.zoom * (style.zoom || 1);
+      const totalOffsetX = state.textureGlobal.offsetX + (style.offsetX || 0);
+      const totalOffsetY = state.textureGlobal.offsetY + (style.offsetY || 0);
+      const fit = style.uvFit || 'fullImage';
+
+      let baseX = 0;
+      let baseY = 0;
+      let srcW = image.width;
+      let srcH = image.height;
+
+      if (fit === 'coverCenter') {
+        const side = Math.min(image.width, image.height) / Math.max(0.05, totalZoom);
+        srcW = side;
+        srcH = side;
+        baseX = image.width / 2 - side / 2 + totalOffsetX;
+        baseY = image.height / 2 - side / 2 + totalOffsetY;
+      } else {
+        srcW = image.width / Math.max(0.05, totalZoom);
+        srcH = image.height / Math.max(0.05, totalZoom);
+        baseX = image.width / 2 - srcW / 2 + totalOffsetX;
+        baseY = image.height / 2 - srcH / 2 + totalOffsetY;
+      }
+
+      return uv.points.map(([u, v]) => ({
+        x: baseX + u * srcW,
+        y: baseY + v * srcH,
+      }));
+    }
+
+    function applyUvTransform(srcTri, dstTri) {
+      const [S0, S1, S2] = srcTri;
+      const [T0, T1, T2] = dstTri;
+      const denom = S0.x * (S1.y - S2.y) + S1.x * (S2.y - S0.y) + S2.x * (S0.y - S1.y);
+      if (Math.abs(denom) < 1e-12) return false;
+
+      const a = (T0.x * (S1.y - S2.y) + T1.x * (S2.y - S0.y) + T2.x * (S0.y - S1.y)) / denom;
+      const b = (T0.y * (S1.y - S2.y) + T1.y * (S2.y - S0.y) + T2.y * (S0.y - S1.y)) / denom;
+      const c = (T0.x * (S2.x - S1.x) + T1.x * (S0.x - S2.x) + T2.x * (S1.x - S0.x)) / denom;
+      const d = (T0.y * (S2.x - S1.x) + T1.y * (S0.x - S2.x) + T2.y * (S1.x - S0.x)) / denom;
+      const e = (T0.x * (S1.x * S2.y - S2.x * S1.y) + T1.x * (S2.x * S0.y - S0.x * S2.y) + T2.x * (S0.x * S1.y - S1.x * S0.y)) / denom;
+      const f = (T0.y * (S1.x * S2.y - S2.x * S1.y) + T1.y * (S2.x * S0.y - S0.x * S2.y) + T2.y * (S0.x * S1.y - S1.x * S0.y)) / denom;
+
+      sceneCtx.setTransform(a, b, c, d, e, f);
+      return true;
+    }
+
+    function canonicalizeTriangleOrder(worldTri, screenTri) {
+      const edgeLengths = [
+        { pair: [0, 1], len: Math.hypot(worldTri[1].x - worldTri[0].x, worldTri[1].y - worldTri[0].y) },
+        { pair: [1, 2], len: Math.hypot(worldTri[2].x - worldTri[1].x, worldTri[2].y - worldTri[1].y) },
+        { pair: [2, 0], len: Math.hypot(worldTri[0].x - worldTri[2].x, worldTri[0].y - worldTri[2].y) },
+      ].sort((a, b) => b.len - a.len);
+
+      let [i, j] = edgeLengths[0].pair;
+      const k = [0, 1, 2].find(idx => idx !== i && idx !== j);
+      const area = (worldTri[j].x - worldTri[i].x) * (worldTri[k].y - worldTri[i].y)
+        - (worldTri[j].y - worldTri[i].y) * (worldTri[k].x - worldTri[i].x);
+      if (area < 0) [i, j] = [j, i];
+      return [screenTri[i], screenTri[j], screenTri[k]];
+    }
+
+    function drawUvMapped(style, worldTri, screenTri, definition) {
+      const image = resolveImage(style);
+      if (!image) {
+        drawFill({
+          fillColor: style.fillFallback || '#ddd',
+          strokeColor: style.strokeColor || '#222',
+          strokeWidth: style.strokeWidth || 1,
+        }, screenTri);
+        return;
+      }
+      const srcTri = getUvTriangle(style, definition, image);
+      if (!srcTri) {
+        drawFill({
+          fillColor: style.fillFallback || '#ddd',
+          strokeColor: style.strokeColor || '#222',
+          strokeWidth: style.strokeWidth || 1,
+        }, screenTri);
+        return;
+      }
+
+      const orderedDstTri = style.uvOrder === 'canonical'
+        ? canonicalizeTriangleOrder(worldTri, screenTri)
+        : screenTri;
+
+      sceneCtx.save();
+      sceneCtx.beginPath();
+      sceneCtx.moveTo(screenTri[0].x, screenTri[0].y);
+      sceneCtx.lineTo(screenTri[1].x, screenTri[1].y);
+      sceneCtx.lineTo(screenTri[2].x, screenTri[2].y);
+      sceneCtx.closePath();
+      sceneCtx.clip();
+
+      if (applyUvTransform(srcTri, orderedDstTri)) {
+        sceneCtx.drawImage(image, 0, 0);
+      }
+      sceneCtx.restore();
+
+      if (state.showStroke) {
+        sceneCtx.beginPath();
+        sceneCtx.moveTo(screenTri[0].x, screenTri[0].y);
+        sceneCtx.lineTo(screenTri[1].x, screenTri[1].y);
+        sceneCtx.lineTo(screenTri[2].x, screenTri[2].y);
+        sceneCtx.closePath();
+        sceneCtx.strokeStyle = style.strokeColor || '#222';
+        sceneCtx.lineWidth = style.strokeWidth || 1;
+        sceneCtx.stroke();
+      }
+    }
+
+    function drawLabels(tile, screenTri) {
+      if (!state.showLabels) return;
+      const c = {
+        x: (screenTri[0].x + screenTri[1].x + screenTri[2].x) / 3,
+        y: (screenTri[0].y + screenTri[1].y + screenTri[2].y) / 3,
+      };
+      sceneCtx.save();
+      sceneCtx.setTransform(1, 0, 0, 1, 0, 0);
+      sceneCtx.fillStyle = 'rgba(20, 20, 20, 0.8)';
+      sceneCtx.font = '12px sans-serif';
+      sceneCtx.fillText(tile.tileType, c.x + 4, c.y - 4);
+      sceneCtx.restore();
+    }
+
+    function render() {
+      state.validation = validateDefinition(state.definition);
+      renderValidation();
+      const hadFatal = state.validation.some(m => m.type === 'error');
+      if (hadFatal) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#f7f7f7';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        setStatus('定義にエラーがあるため描画を停止しました。');
+        return;
+      }
+
+      const nextViewMode = getCurrentViewMode(state.definition);
+      if (nextViewMode !== state.viewMode) {
+        state.viewMode = nextViewMode;
+        resetViewState();
+      }
+
+      state.lastTiles = buildTiles(state.definition, state.generations);
+      const tiles = state.lastTiles;
+      const viewport = getViewportTransform(tiles);
+
+      sceneCtx.setTransform(1, 0, 0, 1, 0, 0);
+      sceneCtx.clearRect(0, 0, sceneCanvas.width, sceneCanvas.height);
+      sceneCtx.fillStyle = state.backgroundColor;
+      sceneCtx.fillRect(0, 0, sceneCanvas.width, sceneCanvas.height);
+
+      tiles.forEach(tile => {
+        const style = resolveStyle(state.definition, tile.tileType);
+        const screenTri = tile.points.map(viewport.mapPoint);
+        if (style.mode === 'fill') {
+          drawFill(style, screenTri);
+        } else if (style.mode === 'collageTexture') {
+          drawCollage(style, screenTri);
+        } else if (style.mode === 'sharedTexture' || style.mode === 'texture') {
+          drawUvMapped(style, tile.points, screenTri, state.definition);
+        } else {
+          drawFill({
+            fillColor: style.fillFallback || '#d9d9d9',
+            strokeColor: style.strokeColor || '#222',
+            strokeWidth: style.strokeWidth || 1,
+          }, screenTri);
+        }
+        drawLabels(tile, screenTri);
+      });
+
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = state.backgroundColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      if (state.zoomMode === 'display') {
+        const zoom = state.camera.zoom;
+        const dw = sceneCanvas.width * zoom;
+        const dh = sceneCanvas.height * zoom;
+        const dx = (canvas.width - dw) / 2 + state.camera.offsetX;
+        const dy = (canvas.height - dh) / 2 + state.camera.offsetY;
+        ctx.drawImage(sceneCanvas, 0, 0, sceneCanvas.width, sceneCanvas.height, dx, dy, dw, dh);
+      } else {
+        ctx.drawImage(sceneCanvas, 0, 0, canvas.width, canvas.height);
+      }
+
+      document.getElementById('tileCountBadge').textContent = `tiles: ${tiles.length}`;
+      const firstMode = tiles.length ? (resolveStyle(state.definition, tiles[0].tileType).mode || 'fill') : 'fill';
+      document.getElementById('modeBadge').textContent = `mode: ${firstMode}`;
+      setStatus(`${state.definition.metadata?.name || 'template'} を描画しました。タイル数 ${tiles.length}。`);
+    }
+
+    function setStatus(text) {
+      document.getElementById('statusLine').textContent = text;
+    }
+
+    function validateDefinition(definition) {
+      const messages = [];
+      if (!definition || typeof definition !== 'object') {
+        messages.push({ type: 'error', text: '定義がありません。' });
+        return messages;
+      }
+      if (!definition.geometry) messages.push({ type: 'error', text: 'geometry がありません。' });
+      if (!definition.styles) messages.push({ type: 'error', text: 'styles がありません。' });
+
+      if (definition.geometry?.generator === 'generic-subdivision') {
+        const prototiles = definition.geometry.prototiles || {};
+        Object.entries(prototiles).forEach(([key, value]) => {
+          if (!Array.isArray(value.points) || value.points.length !== 3) {
+            messages.push({ type: 'error', text: `prototile ${key} は三角形3点を持つ必要があります。` });
+          }
+        });
+        const rules = definition.geometry.subdivisionRules || {};
+        Object.entries(rules).forEach(([parent, children]) => {
+          if (!Array.isArray(children)) {
+            messages.push({ type: 'error', text: `subdivisionRules.${parent} は配列である必要があります。` });
+            return;
+          }
+          children.forEach((child, i) => {
+            if (!child.childType) messages.push({ type: 'error', text: `subdivisionRules.${parent}[${i}] の childType がありません。` });
+            if (!Array.isArray(child.points) || child.points.length !== 3) {
+              messages.push({ type: 'error', text: `subdivisionRules.${parent}[${i}] は三角形3点を持つ必要があります。` });
+            }
+          });
+        });
+      }
+
+      if (messages.length === 0) {
+        messages.push({ type: 'ok', text: '基本検証を通過しました。' });
+      }
+      return messages;
+    }
+
+    function genericSeedTiles(definition) {
+      return (definition.geometry.seed || []).map((tile, index) => ({
+        id: `seed-${index}`,
+        tileType: tile.tileType,
+        points: tile.points.map(([x, y]) => ({ x, y })),
+        depth: 0,
+      }));
+    }
+
+    function affineFromReference(sourcePoints, targetPoints) {
+      const [S0, S1, S2] = sourcePoints;
+      const [T0, T1, T2] = targetPoints;
+
+      const a = S1.x - S0.x;
+      const b = S2.x - S0.x;
+      const c = S1.y - S0.y;
+      const d = S2.y - S0.y;
+      const det = a * d - b * c;
+
+      if (Math.abs(det) < 1e-12) {
+        throw new Error('原型三角形の面積が 0 に近いため、アフィン変換を作れません。');
+      }
+
+      const inv00 = d / det;
+      const inv01 = -b / det;
+      const inv10 = -c / det;
+      const inv11 = a / det;
+
+      const ux = T1.x - T0.x;
+      const uy = T1.y - T0.y;
+      const vx = T2.x - T0.x;
+      const vy = T2.y - T0.y;
+
+      return (p) => {
+        const px = p[0] - S0.x;
+        const py = p[1] - S0.y;
+        const alpha = inv00 * px + inv01 * py;
+        const beta = inv10 * px + inv11 * py;
+        return {
+          x: T0.x + ux * alpha + vx * beta,
+          y: T0.y + uy * alpha + vy * beta,
+        };
+      };
+    }
+
+    function subdivideGeneric(definition, tiles) {
+      const next = [];
+      const rules = definition.geometry.subdivisionRules || {};
+      const prototiles = definition.geometry.prototiles || {};
+      tiles.forEach((tile) => {
+        const children = rules[tile.tileType];
+        if (!children || children.length === 0) {
+          next.push(tile);
+          return;
+        }
+
+        const parentPrototype = prototiles[tile.tileType];
+        if (!parentPrototype || !Array.isArray(parentPrototype.points) || parentPrototype.points.length !== 3) {
+          throw new Error(`prototile ${tile.tileType} の points が不正です。`);
+        }
+
+        const sourceRef = parentPrototype.points.map(([x, y]) => ({ x, y }));
+        const mapPoint = affineFromReference(sourceRef, tile.points);
+
+        children.forEach((child, childIndex) => {
+          next.push({
+            id: `${tile.id}/${childIndex}`,
+            tileType: child.childType,
+            points: child.points.map(mapPoint),
+            depth: tile.depth + 1,
+          });
+        });
+      });
+      return next;
+    }
+
+    function buildGenericTiles(definition, generations) {
+      let tiles = genericSeedTiles(definition);
+      for (let i = 0; i < generations; i += 1) {
+        tiles = subdivideGeneric(definition, tiles);
+      }
+      return tiles;
+    }
+
+    function buildPenroseTiles(generations) {
+      const tris = [];
+      for (let i = 0; i < 10; i += 1) {
+        const a1 = (2 * i - 1) * Math.PI / 10;
+        const a2 = (2 * i + 1) * Math.PI / 10;
+        let B = vec(Math.cos(a1), Math.sin(a1));
+        let C = vec(Math.cos(a2), Math.sin(a2));
+        if (i % 2 === 0) [B, C] = [C, B];
+        tris.push({ id: `seed-${i}`, tileType: 'red', points: [vec(0, 0), B, C], depth: 0 });
+      }
+      let current = tris;
+      for (let g = 0; g < generations; g += 1) {
+        const next = [];
+        current.forEach((tri) => {
+          const [A, B, C] = tri.points;
+          if (tri.tileType === 'red') {
+            const P = lerp(A, B, 1 / PHI);
+            next.push({ id: `${tri.id}/0`, tileType: 'red', points: [C, P, B], depth: tri.depth + 1 });
+            next.push({ id: `${tri.id}/1`, tileType: 'blue', points: [P, C, A], depth: tri.depth + 1 });
+          } else {
+            const Q = lerp(B, A, 1 / PHI);
+            const R = lerp(B, C, 1 / PHI);
+            next.push({ id: `${tri.id}/0`, tileType: 'blue', points: [R, C, A], depth: tri.depth + 1 });
+            next.push({ id: `${tri.id}/1`, tileType: 'blue', points: [Q, R, B], depth: tri.depth + 1 });
+            next.push({ id: `${tri.id}/2`, tileType: 'red', points: [R, Q, A], depth: tri.depth + 1 });
+          }
+        });
+        current = next;
+      }
+      return current;
+    }
+
+    function buildTiles(definition, generations) {
+      switch (definition.geometry?.generator) {
+        case 'penrose-wheel':
+          return buildPenroseTiles(generations);
+        case 'generic-subdivision':
+          return buildGenericTiles(definition, generations);
+        default:
+          return [];
+      }
+    }
+
+    function renderValidation() {
+      const list = document.getElementById('validationList');
+      list.innerHTML = '';
+      state.validation.forEach(message => {
+        const div = document.createElement('div');
+        div.className = message.type === 'ok' ? 'ok-item' : 'error-item';
+        div.textContent = message.text;
+        list.appendChild(div);
+      });
+    }
+
+    function loadTemplate(templateId) {
+      const template = templates[templateId];
+      state.templateId = templateId;
+      state.definition = deepClone(template);
+      state.viewMode = getCurrentViewMode(state.definition);
+      document.getElementById('templateSelect').value = templateId;
+      document.getElementById('templateBadge').textContent = `template: ${templateId}`;
+      document.getElementById('generationSlider').value = String(state.generations);
+      fillFormulaInputsFromDefinition(state.definition);
+      fillStructureInputsFromDefinition(state.definition);
+      resetViewState();tsFromDefinition(state.definition);
+      resetViewState();
+      render();
+    }
+
+    function syncControlsFromState() {
+      setRangeValue('generationValue', state.generations);
+      setRangeValue('paddingValue', state.viewportPadding.toFixed(2));
+      setRangeValue('textureSizeValue', state.textureGlobal.size.toFixed(2));
+      setRangeValue('textureZoomValue', state.textureGlobal.zoom.toFixed(2));
+      setRangeValue('textureOffsetXValue', state.textureGlobal.offsetX);
+      setRangeValue('textureOffsetYValue', state.textureGlobal.offsetY);
+      document.getElementById('generationSlider').value = String(state.generations);
+      document.getElementById('paddingSlider').value = String(state.viewportPadding);
+      document.getElementById('textureSizeSlider').value = String(state.textureGlobal.size);
+      document.getElementById('textureZoomSlider').value = String(state.textureGlobal.zoom);
+      document.getElementById('textureOffsetXSlider').value = String(state.textureGlobal.offsetX);
+      document.getElementById('textureOffsetYSlider').value = String(state.textureGlobal.offsetY);
+      document.getElementById('backgroundInput').value = state.backgroundColor;
+      document.getElementById('toggleStrokeBtn').textContent = `輪郭線: ${state.showStroke ? 'ON' : 'OFF'}`;
+      document.getElementById('toggleLabelsBtn').textContent = `ラベル: ${state.showLabels ? 'ON' : 'OFF'}`;
+      document.getElementById('zoomModeBtn').textContent = `zoom: ${state.zoomMode}`;
+    }
+
+    function setRangeValue(id, value) {
+      document.getElementById(id).textContent = String(value);
+    }
+
+    function setupTemplateCards() {
+      const list = document.getElementById('templateList');
+      const select = document.getElementById('templateSelect');
+      list.innerHTML = '';
+      select.innerHTML = '';
+      Object.entries(templates).forEach(([id, def]) => {
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = def.metadata.name;
+        select.appendChild(option);
+
+        const card = document.createElement('div');
+        card.className = 'template-card';
+        card.innerHTML = `
+          <div>
+            <h3>${def.metadata.name}</h3>
+            <p>${def.metadata.description}</p>
+          </div>
+          <div>
+            <span class="pill">${def.metadata.difficulty}</span>
+            <span class="pill">${def.geometry.generator}</span>
+          </div>
+        `;
+        const btn = document.createElement('button');
+        btn.className = 'btn-primary';
+        btn.textContent = '読み込む';
+        btn.addEventListener('click', () => loadTemplate(id));
+        card.appendChild(btn);
+        list.appendChild(card);
+      });
+    }
+
+    function exportCurrentDefinition() {
+      const def = deepClone(state.definition);
+      def.render = def.render || {};
+      def.render.backgroundColor = state.backgroundColor;
+      def.render.viewport = def.render.viewport || {};
+      def.render.viewport.padding = state.viewportPadding;
+      def.render.textureGlobal = deepClone(state.textureGlobal);
+      return def;
+    }
+
+    function downloadJsonFile(filename, text) {
+      const blob = new Blob([text], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function applyJsonText(text) {
+      const parsed = JSON.parse(text);
+      state.definition = parsed;
+      state.templateId = parsed.metadata?.id || 'custom';
+      state.viewMode = getCurrentViewMode(state.definition);
+      document.getElementById('templateBadge').textContent = `template: ${state.templateId}`;
+      fillFormulaInputsFromDefinition(state.definition);
+      fillStructureInputsFromDefinition(state.definition);
+      resetViewState();
+      render();
+    }
+
+    function readImageFile(file) {
+      if (!file || !file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const image = new Image();
+        image.onload = () => {
+          state.uploadedImage = image;
+          render();
+          setStatus(`画像 ${file.name} を読み込みました。`);
+        };
+        image.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    document.getElementById('templateSelect').addEventListener('change', (e) => loadTemplate(e.target.value));
+    document.getElementById('generationSlider').addEventListener('input', (e) => {
+      state.generations = Number(e.target.value);
+      setRangeValue('generationValue', state.generations);
+      render();
+    });
+    document.getElementById('paddingSlider').addEventListener('input', (e) => {
+      state.viewportPadding = Number(e.target.value);
+      setRangeValue('paddingValue', state.viewportPadding.toFixed(2));
+      render();
+    });
+    document.getElementById('backgroundInput').addEventListener('change', (e) => {
+      state.backgroundColor = e.target.value || '#ffffff';
+      render();
+    });
+
+    document.getElementById('toggleStrokeBtn').addEventListener('click', () => {
+      state.showStroke = !state.showStroke;
+      syncControlsFromState();
+      render();
+    });
+    document.getElementById('toggleLabelsBtn').addEventListener('click', () => {
+      state.showLabels = !state.showLabels;
+      syncControlsFromState();
+      render();
+    });
+
+    document.getElementById('zoomModeBtn').addEventListener('click', () => {
+      state.zoomMode = state.zoomMode === 'draw' ? 'display' : 'draw';
+      resetViewState();
+      render();
+    });
+
+    document.getElementById('textureSizeSlider').addEventListener('input', (e) => {
+      state.textureGlobal.size = Number(e.target.value);
+      setRangeValue('textureSizeValue', state.textureGlobal.size.toFixed(2));
+      render();
+    });
+    document.getElementById('textureZoomSlider').addEventListener('input', (e) => {
+      state.textureGlobal.zoom = Number(e.target.value);
+      setRangeValue('textureZoomValue', state.textureGlobal.zoom.toFixed(2));
+      render();
+    });
+    document.getElementById('textureOffsetXSlider').addEventListener('input', (e) => {
+      state.textureGlobal.offsetX = Number(e.target.value);
+      setRangeValue('textureOffsetXValue', state.textureGlobal.offsetX);
+      render();
+    });
+    document.getElementById('textureOffsetYSlider').addEventListener('input', (e) => {
+      state.textureGlobal.offsetY = Number(e.target.value);
+      setRangeValue('textureOffsetYValue', state.textureGlobal.offsetY);
+      render();
+    });
+
+    document.getElementById('pickImageBtn').addEventListener('click', () => document.getElementById('filePicker').click());
+    document.getElementById('filePicker').addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      readImageFile(file);
+      e.target.value = '';
+    });
+    document.getElementById('clearImageBtn').addEventListener('click', () => {
+      state.uploadedImage = null;
+      render();
+      setStatus('画像を外しました。');
+    });
+
+    canvas.addEventListener('dragover', (e) => e.preventDefault());
+    canvas.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const file = e.dataTransfer.files?.[0];
+      readImageFile(file);
+    });
+
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const mx = ((e.clientX - rect.left) * canvas.width) / rect.width;
+      const my = ((e.clientY - rect.top) * canvas.height) / rect.height;
+      const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
+
+      if (state.zoomMode === 'display') {
+        applyDisplayZoom(factor, mx, my);
+      } else {
+        applyDrawZoom(factor, mx, my);
+      }
+      syncControlsFromState();
+      render();
+    }, { passive: false });
+
+    canvas.addEventListener('mousedown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      state.camera.isDragging = true;
+      state.camera.lastX = ((e.clientX - rect.left) * canvas.width) / rect.width;
+      state.camera.lastY = ((e.clientY - rect.top) * canvas.height) / rect.height;
+      document.querySelector('.canvas-wrap')?.classList.add('dragging');
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!state.camera.isDragging) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) * canvas.width) / rect.width;
+      const y = ((e.clientY - rect.top) * canvas.height) / rect.height;
+      const dx = x - state.camera.lastX;
+      const dy = y - state.camera.lastY;
+      if (state.zoomMode === 'display') {
+        state.camera.offsetX += dx;
+        state.camera.offsetY += dy;
+      }
+      state.camera.lastX = x;
+      state.camera.lastY = y;
+      render();
+    });
+
+    window.addEventListener('mouseup', () => {
+      state.camera.isDragging = false;
+      document.querySelector('.canvas-wrap')?.classList.remove('dragging');
+    });
+
+    document.getElementById('redrawBtn').addEventListener('click', () => render());
+    document.getElementById('resetViewBtn').addEventListener('click', () => {
+      resetViewState();
+      render();
+    });
+
+    document.getElementById('saveProjectBtn').addEventListener('click', () => {
+      const exported = exportCurrentDefinition();
+      const text = JSON.stringify(exported, null, 2);
+      downloadJsonFile(`${exported.metadata?.id || 'tiling-project'}.json`, text);
+      setStatus('JSON を保存しました。');
+    });
+    document.getElementById('loadProjectBtn').addEventListener('click', () => document.getElementById('projectFileInput').click());
+    document.getElementById('projectFileInput').addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      try {
+        applyJsonText(text);
+        document.getElementById('jsonEditor').value = text;
+        setStatus(`JSON ${file.name} を読み込みました。`);
+      } catch (error) {
+        setStatus(`JSON読込に失敗しました: ${error.message}`);
+      }
+      e.target.value = '';
+    });
+
+    document.getElementById('applyFormulaBtn').addEventListener('click', () => {
+      applyFormulaSeedToDefinition();
+    });
+
+    document.getElementById('resetFormulaBtn').addEventListener('click', () => {
+      fillFormulaInputsFromDefinition(state.definition);
+      setStatus('数式欄をテンプレートの現在値へ戻しました。');
+    });
+
+    document.getElementById('applyStructureBtn').addEventListener('click', () => {
+      applyStructureInputsToDefinition();
+    });
+
+    document.getElementById('resetStructureBtn').addEventListener('click', () => {
+      fillStructureInputsFromDefinition(state.definition);
+      setStatus('原型・UV欄を現在値へ戻しました。');
+    });
+
+    document.getElementById('copyJsonBtn').addEventListener('click', () => {
+      document.getElementById('jsonEditor').value = JSON.stringify(exportCurrentDefinition(), null, 2);
+      setStatus('現在定義をJSON欄へ反映しました。');
+    });
+    document.getElementById('applyJsonBtn').addEventListener('click', () => {
+      try {
+        applyJsonText(document.getElementById('jsonEditor').value);
+        setStatus('JSON を適用しました。');
+      } catch (error) {
+        state.validation = [{ type: 'error', text: `JSON適用エラー: ${error.message}` }];
+        renderValidation();
+        setStatus('JSON適用に失敗しました。');
+      }
+    });
+    document.getElementById('formatJsonBtn').addEventListener('click', () => {
+      try {
+        const parsed = JSON.parse(document.getElementById('jsonEditor').value);
+        document.getElementById('jsonEditor').value = JSON.stringify(parsed, null, 2);
+        setStatus('JSON を整形しました。');
+      } catch (error) {
+        setStatus(`JSON整形に失敗しました: ${error.message}`);
+      }
+    });
+
+    setupTemplateCards();
+    syncControlsFromState();
+    loadTemplate(state.templateId);
+    document.getElementById('jsonEditor').value = JSON.stringify(exportCurrentDefinition(), null, 2);
+  </script>
+</body>
+</html>

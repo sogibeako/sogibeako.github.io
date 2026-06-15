@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ランダム折れ線（水彩にじみエフェクト）</title>
+  <style>
+    body{
+      background-color:#000000;
+      margin:0;
+    }
+    /* 二枚のキャンバスを重ねる */
+    #wrapper{
+      position:relative;
+      width:880px;
+      height:880px;
+      margin:20px auto;
+    }
+    canvas{
+      position:absolute;
+      top:0;
+      left:0;
+      width:880px;
+      height:880px;
+      background-color:transparent;
+      image-rendering:pixelated; /* ドット感を残したい場合 */
+    }
+  </style>
+</head>
+<body>
+  <div id="wrapper">
+     <canvas id="stainCanvas" width="880" height="880"></canvas>
+     <canvas id="drawCanvas"  width="880" height="880"></canvas>
+  </div>
+
+<script>
+(() => {
+  const stainCanvas = document.getElementById('stainCanvas');
+  const drawCanvas  = document.getElementById('drawCanvas');
+  const stainCtx = stainCanvas.getContext('2d'); // にじみを蓄積するレイヤー
+  const drawCtx  = drawCanvas.getContext('2d');  // くっきりライン用レイヤー
+
+  /* 初期背景色 */
+  stainCtx.fillStyle = '#000000';
+  stainCtx.fillRect(0,0,stainCanvas.width, stainCanvas.height);
+
+  /* MSX 16色パレット */
+  const colorPalette = [
+    '#0000AA','#00AA00','#00AAAA',
+    '#AA0000','#AA00AA','#AA5500','#AAAAAA',
+    '#555555','#5555FF','#55FF55','#55FFFF',
+    '#FF5555','#FF55FF','#FFFF55','#FFFFFF'
+  ];
+
+  /* ===== 調整用パラメータ ===== */
+  const LINE_INTERVAL = 50;   // ライン生成間隔(ms)
+  const DRAW_PHASE    = 3000; // 描画フェーズ長(ms)
+  const BLUR_PHASE    = 3000; // にじみフェーズ長(ms)
+  const MAX_BLUR  = 18;       // 最大ぼかし半径(px)
+  const MAX_SCALE = 1.10;     // 最大拡大率
+  const STAIN_ALPHA = 0.15;   // 1フレームごとのにじみの濃さ
+
+  /* 状態管理 */
+  let currentPoint = {x: drawCanvas.width/2, y: drawCanvas.height/2};
+  let drawTimer    = null;
+
+  function randomPoint(){
+    return {
+      x: Math.random()*drawCanvas.width,
+      y: Math.random()*drawCanvas.height
+    };
+  }
+
+  /* くっきりラインを描画 */
+  function drawLine(){
+    const next = randomPoint();
+    const color = colorPalette[(Math.random()*colorPalette.length)|0];
+    drawCtx.strokeStyle = color;
+    drawCtx.lineWidth   = 2;
+    drawCtx.beginPath();
+    drawCtx.moveTo(currentPoint.x, currentPoint.y);
+    drawCtx.lineTo(next.x, next.y);
+    drawCtx.stroke();
+    currentPoint = next;
+  }
+
+  /* ===== フェーズ制御 ===== */
+  function startDrawPhase(){
+    currentPoint = {x: drawCanvas.width/2, y: drawCanvas.height/2};
+    drawTimer = setInterval(drawLine, LINE_INTERVAL);
+    setTimeout(() => {
+      clearInterval(drawTimer);
+      startBlurPhase();
+    }, DRAW_PHASE);
+  }
+
+  function startBlurPhase(){
+    /* 現在のラインをオフスクリーンにコピー */
+    const off = document.createElement('canvas');
+    off.width  = drawCanvas.width;
+    off.height = drawCanvas.height;
+    const offCtx = off.getContext('2d');
+    offCtx.drawImage(drawCanvas, 0, 0);
+
+    // 描画キャンバスを先にクリア（にじみ中にくっきり見えないようにする）
+    drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+
+    let start = performance.now();
+
+    function step(now){
+      const t = Math.min((now - start) / BLUR_PHASE, 1); // 0.0 - 1.0
+      const blur  = t * MAX_BLUR;
+      const scale = 1 + t * (MAX_SCALE - 1);
+
+      /* にじみを stainCanvas に重ね描き */
+      stainCtx.save();
+      stainCtx.globalAlpha = STAIN_ALPHA;
+      stainCtx.filter      = `blur(${blur}px)`;
+      stainCtx.translate(stainCanvas.width/2, stainCanvas.height/2);
+      stainCtx.scale(scale, scale);
+      stainCtx.translate(-stainCanvas.width/2, -stainCanvas.height/2);
+      stainCtx.drawImage(off, 0, 0);
+      stainCtx.restore();
+
+      if(t < 1){
+        requestAnimationFrame(step);
+      }else{
+      // 1秒ウェイト後に次のフェーズ開始
+      setTimeout(() => {
+        startDrawPhase();
+      }, 2000);
+      }
+    }
+
+    requestAnimationFrame(step);
+  }
+
+  /* 実行開始 */
+  startDrawPhase();
+})();
+</script>
+</body>
+</html>

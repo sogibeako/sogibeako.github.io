@@ -1,0 +1,3 @@
+skillSetId,skillId,weight,minJudge,note
+basic_slime,attack,100,0,基本攻撃
+fire_magic_1,fire,70,20,単体炎魔法

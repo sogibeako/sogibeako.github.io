@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Palette Animator</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --accent-color: #bb86fc;
+            --border-color: #333;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            margin-top: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .canvas-panel {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        canvas {
+            max-width: 100%;
+            max-height: 70vh;
+            border: 2px dashed var(--border-color);
+            border-radius: 4px;
+            image-rendering: pixelated;
+        }
+
+        .swatches {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 10px;
+        }
+
+        .swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .swatch:hover {
+            transform: scale(1.1);
+        }
+
+        .swatch.selected {
+            border-color: var(--accent-color);
+        }
+
+        .swatch-drag-over {
+            border-left: 4px solid var(--accent-color);
+        }
+
+        button {
+            background: #333;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #444;
+            border-color: #666;
+        }
+
+        button.primary {
+            background: var(--accent-color);
+            color: #000;
+            border-color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        button.primary:hover {
+            background: #9965f4;
+            border-color: #9965f4;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        select,
+        input[type="number"] {
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 6px;
+            border-radius: 4px;
+            width: 100%;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .controls-row>* {
+            flex: 1;
+            margin-top: 0;
+        }
+
+        .drop-zone {
+            width: 100%;
+            height: 150px;
+            border: 2px dashed #666;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .drop-zone:hover,
+        .drop-zone.dragover {
+            border-color: var(--accent-color);
+            background: rgba(187, 134, 252, 0.1);
+            color: var(--accent-color);
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: var(--border-color);
+            margin: 20px 0;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .ranges-list {
+            margin-top: 10px;
+        }
+
+        .range-item {
+            background: #2a2a2a;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .range-item input[type="number"] {
+            width: 60px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Palette Animator</h1>
+    <div class="container">
+        <div class="panel">
+            <div class="drop-zone" id="drop-zone">
+                Click or Drag & Drop an image here
+            </div>
+            <input type="file" id="file-input" accept="image/png, image/jpeg, image/gif, image/webp">
+
+            <label>Color Quantization (Max Colors)</label>
+            <select id="max-colors">
+                <option value="8">8 Colors</option>
+                <option value="16">16 Colors</option>
+                <option value="32">32 Colors</option>
+                <option value="64">64 Colors</option>
+                <option value="128">128 Colors</option>
+                <option value="256" selected>256 Colors</option>
+            </select>
+
+            <label>Palette Ordering</label>
+            <select id="palette-order">
+                <option value="frequency">Usage Frequency</option>
+                <option value="appearance">Appearance Order</option>
+                <option value="luminance">Luminance (Bright to Dark)</option>
+                <option value="hue">Hue</option>
+            </select>
+
+            <label>Swatch Drag Mode</label>
+            <select id="drag-mode">
+                <option value="swap">Swap (入れ替え)</option>
+                <option value="insert">Insert (挿入)</option>
+            </select>
+
+            <div style="margin-top: 15px;">
+                <button id="btn-reprocess">Reprocess Image</button>
+                <button id="btn-undo" title="Ctrl+Z">Undo</button>
+            </div>
+
+            <hr>
+
+            <h3>Palette</h3>
+            <div class="swatches" id="palette-swatches"></div>
+
+            <hr>
+
+            <h3>Tone Adjustments (All Colors)</h3>
+            <label>Hue Shift <span id="val-hue">0</span>°</label>
+            <input type="range" id="adj-hue" min="-180" max="180" value="0">
+
+            <label>Saturation <span id="val-sat">1.0</span>x</label>
+            <input type="range" id="adj-sat" min="0" max="3" step="0.1" value="1.0">
+
+            <label>Lightness <span id="val-lit">0</span></label>
+            <input type="range" id="adj-lit" min="-1" max="1" step="0.05" value="0">
+
+            <div class="controls-row">
+                <button id="btn-unify-lit" title="Set all colors to average lightness">Unify Lightness</button>
+                <button id="btn-unify-sat" title="Set all colors to average saturation">Unify Saturation</button>
+            </div>
+
+        </div>
+
+        <div class="panel canvas-panel">
+            <canvas id="main-canvas"></canvas>
+        </div>
+
+        <div class="panel">
+            <h3>Animation Controller</h3>
+            <div class="controls-row">
+                <button id="btn-play" class="primary">Play</button>
+                <button id="btn-step">Step</button>
+            </div>
+
+            <label>Speed (ms per step)</label>
+            <input type="range" id="anim-speed" min="16" max="1000" value="100">
+
+            <hr>
+
+            <h3>Rotation Ranges</h3>
+            <p style="font-size: 12px; color: #888;">Define ranges of palette indices to rotate.</p>
+            <div id="ranges-container" class="ranges-list"></div>
+            <button id="btn-add-range" style="margin-top: 10px;">+ Add Range</button>
+
+            <hr>
+            <h3>Export</h3>
+            <button id="btn-export-gif" class="primary" style="margin-top: 5px;">Export GIF</button>
+            <div id="export-status" style="font-size: 12px; color: #aaa; margin-top: 5px;"></div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * omggif GifWriter embedded naturally
+         */
+        function GifWriter(buf, width, height, gopts) {
+            var p = 0;
+            var gopts = gopts === undefined ? {} : gopts;
+            var loop_count = gopts.loop === undefined ? null : gopts.loop;
+            var global_palette = gopts.palette === undefined ? null : gopts.palette;
+
+            if (width <= 0 || height <= 0 || width > 65535 || height > 65535) throw new Error("Width/Height invalid.");
+
+            function check_palette_and_num_colors(palette) {
+                var num_colors = palette.length;
+                if (num_colors < 2 || num_colors > 256 || num_colors & (num_colors - 1)) throw new Error("Invalid code/color length");
+                return num_colors;
+            }
+
+            buf[p++] = 0x47; buf[p++] = 0x49; buf[p++] = 0x46;
+            buf[p++] = 0x38; buf[p++] = 0x39; buf[p++] = 0x61;
+
+            var gp_num_colors_pow2 = 0;
+            var background = 0;
+            if (global_palette !== null) {
+                var gp_num_colors = check_palette_and_num_colors(global_palette);
+                while (gp_num_colors >>= 1) ++gp_num_colors_pow2;
+                gp_num_colors = 1 << gp_num_colors_pow2;
+                --gp_num_colors_pow2;
+                if (gopts.background !== undefined) {
+                    background = gopts.background;
+                    if (background >= gp_num_colors) throw new Error("Background index out of range.");
+                    if (background === 0) throw new Error("Background index explicitly passed as 0.");
+                }
+            }
+
+            buf[p++] = width & 0xff; buf[p++] = width >> 8 & 0xff;
+            buf[p++] = height & 0xff; buf[p++] = height >> 8 & 0xff;
+            buf[p++] = (global_palette !== null ? 0x80 : 0) | gp_num_colors_pow2;
+            buf[p++] = background;
+            buf[p++] = 0;
+
+            if (global_palette !== null) {
+                for (var i = 0, il = global_palette.length; i < il; ++i) {
+                    var rgb = global_palette[i];
+                    buf[p++] = rgb >> 16 & 0xff;
+                    buf[p++] = rgb >> 8 & 0xff;
+                    buf[p++] = rgb & 0xff;
+                }
+            }
+
+            if (loop_count !== null) {
+                if (loop_count < 0 || loop_count > 65535) throw new Error("Loop count invalid.")
+                buf[p++] = 0x21; buf[p++] = 0xff; buf[p++] = 0x0b;
+                buf[p++] = 0x4e; buf[p++] = 0x45; buf[p++] = 0x54; buf[p++] = 0x53;
+                buf[p++] = 0x43; buf[p++] = 0x41; buf[p++] = 0x50; buf[p++] = 0x45;
+                buf[p++] = 0x32; buf[p++] = 0x2e; buf[p++] = 0x30;
+                buf[p++] = 0x03; buf[p++] = 0x01;
+                buf[p++] = loop_count & 0xff; buf[p++] = loop_count >> 8 & 0xff;
+                buf[p++] = 0x00;
+            }
+
+            var ended = false;
+
+            this.addFrame = function (x, y, w, h, indexed_pixels, opts) {
+                if (ended === true) { --p; ended = false; }
+                opts = opts === undefined ? {} : opts;
+
+                if (x < 0 || y < 0 || x > 65535 || y > 65535) throw new Error("x/y invalid.")
+                if (w <= 0 || h <= 0 || w > 65535 || h > 65535) throw new Error("Width/Height invalid.")
+                if (indexed_pixels.length < w * h) throw new Error("Not enough pixels for the frame size.");
+
+                var using_local_palette = true;
+                var palette = opts.palette;
+                if (palette === undefined || palette === null) {
+                    using_local_palette = false;
+                    palette = global_palette;
+                }
+
+                if (palette === undefined || palette === null) throw new Error("Must supply either a local or global palette.");
+
+                var num_colors = check_palette_and_num_colors(palette);
+
+                var min_code_size = 0;
+                while (num_colors >>= 1) ++min_code_size;
+                num_colors = 1 << min_code_size;
+
+                var delay = opts.delay === undefined ? 0 : opts.delay;
+                var disposal = opts.disposal === undefined ? 0 : opts.disposal;
+                if (disposal < 0 || disposal > 3) throw new Error("Disposal out of range.");
+
+                var use_transparency = false;
+                var transparent_index = 0;
+                if (opts.transparent !== undefined && opts.transparent !== null) {
+                    use_transparency = true;
+                    transparent_index = opts.transparent;
+                    if (transparent_index < 0 || transparent_index >= num_colors) throw new Error("Transparent color index.");
+                }
+
+                if (disposal !== 0 || use_transparency || delay !== 0) {
+                    buf[p++] = 0x21; buf[p++] = 0xf9;
+                    buf[p++] = 4;
+                    buf[p++] = disposal << 2 | (use_transparency === true ? 1 : 0);
+                    buf[p++] = delay & 0xff; buf[p++] = delay >> 8 & 0xff;
+                    buf[p++] = transparent_index;
+                    buf[p++] = 0;
+                }
+
+                buf[p++] = 0x2c;
+                buf[p++] = x & 0xff; buf[p++] = x >> 8 & 0xff;
+                buf[p++] = y & 0xff; buf[p++] = y >> 8 & 0xff;
+                buf[p++] = w & 0xff; buf[p++] = w >> 8 & 0xff;
+                buf[p++] = h & 0xff; buf[p++] = h >> 8 & 0xff;
+                buf[p++] = using_local_palette === true ? (0x80 | (min_code_size - 1)) : 0;
+
+                if (using_local_palette === true) {
+                    for (var i = 0, il = palette.length; i < il; ++i) {
+                        var rgb = palette[i];
+                        buf[p++] = rgb >> 16 & 0xff;
+                        buf[p++] = rgb >> 8 & 0xff;
+                        buf[p++] = rgb & 0xff;
+                    }
+                }
+
+                p = GifWriterOutputLZWCodeStream(buf, p, min_code_size < 2 ? 2 : min_code_size, indexed_pixels);
+                return p;
+            };
+
+            this.end = function () {
+                if (ended === false) { buf[p++] = 0x3b; ended = true; }
+                return p;
+            };
+
+            this.getOutputBuffer = function () { return buf; };
+            this.setOutputBuffer = function (v) { buf = v; };
+            this.getOutputBufferPosition = function () { return p; };
+            this.setOutputBufferPosition = function (v) { p = v; };
+        }
+
+        function GifWriterOutputLZWCodeStream(buf, p, min_code_size, index_stream) {
+            buf[p++] = min_code_size;
+            var cur_subblock = p++;
+            var clear_code = 1 << min_code_size;
+            var code_mask = clear_code - 1;
+            var eoi_code = clear_code + 1;
+            var next_code = eoi_code + 1;
+            var cur_code_size = min_code_size + 1;
+            var cur_shift = 0;
+            var cur = 0;
+
+            function emit_bytes_to_buffer(bit_block_size) {
+                while (cur_shift >= bit_block_size) {
+                    buf[p++] = cur & 0xff;
+                    cur >>= 8; cur_shift -= 8;
+                    if (p === cur_subblock + 256) {
+                        buf[cur_subblock] = 255;
+                        cur_subblock = p++;
+                    }
+                }
+            }
+
+            function emit_code(c) {
+                cur |= c << cur_shift;
+                cur_shift += cur_code_size;
+                emit_bytes_to_buffer(8);
+            }
+
+            var ib_code = index_stream[0] & code_mask;
+            var code_table = {};
+            emit_code(clear_code);
+
+            for (var i = 1, il = index_stream.length; i < il; ++i) {
+                var k = index_stream[i] & code_mask;
+                var cur_key = ib_code << 8 | k;
+                var cur_code = code_table[cur_key];
+
+                if (cur_code === undefined) {
+                    cur |= ib_code << cur_shift;
+                    cur_shift += cur_code_size;
+                    while (cur_shift >= 8) {
+                        buf[p++] = cur & 0xff;
+                        cur >>= 8; cur_shift -= 8;
+                        if (p === cur_subblock + 256) {
+                            buf[cur_subblock] = 255;
+                            cur_subblock = p++;
+                        }
+                    }
+
+                    if (next_code === 4096) {
+                        emit_code(clear_code);
+                        next_code = eoi_code + 1;
+                        cur_code_size = min_code_size + 1;
+                        code_table = {};
+                    } else {
+                        if (next_code >= (1 << cur_code_size)) ++cur_code_size;
+                        code_table[cur_key] = next_code++;
+                    }
+                    ib_code = k;
+                } else {
+                    ib_code = cur_code;
+                }
+            }
+
+            emit_code(ib_code);
+            emit_code(eoi_code);
+            emit_bytes_to_buffer(1);
+
+            if (cur_subblock + 1 === p) {
+                buf[cur_subblock] = 0;
+            } else {
+                buf[cur_subblock] = p - cur_subblock - 1;
+                buf[p++] = 0;
+            }
+            return p;
+        }
+
+        /**
+         * Color Utilities
+         */
+        function rgbToHsl(r, g, b) {
+            r /= 255, g /= 255, b /= 255;
+            let max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+
+            if (max === min) {
+                h = s = 0;
+            } else {
+                let d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            return [h * 360, s, l];
+        }
+
+        function hslToRgb(h, s, l) {
+            let r, g, b;
+            h /= 360;
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                function hue2rgb(p, q, t) {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1 / 6) return p + (q - p) * 6 * t;
+                    if (t < 1 / 2) return q;
+                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                    return p;
+                }
+                let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                let p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1 / 3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1 / 3);
+            }
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+
+        function colorDistance(r1, g1, b1, r2, g2, b2) {
+            return (r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2;
+        }
+
+        /**
+         * Median Cut Quantization Algorithm
+         */
+        function medianCut(pixels, maxColors) {
+            if (pixels.length === 0) return [];
+
+            let boxes = [{ pixels: pixels }];
+
+            while (boxes.length < maxColors) {
+                // Find the box with the largest color range
+                let splitBoxIdx = -1;
+                let maxRange = -1;
+                let splitChannel = 0;
+
+                for (let i = 0; i < boxes.length; i++) {
+                    let box = boxes[i];
+                    if (box.pixels.length <= 1) continue;
+
+                    let minR = 255, maxR = 0, minG = 255, maxG = 0, minB = 255, maxB = 0;
+                    for (let p of box.pixels) {
+                        if (p[0] < minR) minR = p[0]; if (p[0] > maxR) maxR = p[0];
+                        if (p[1] < minG) minG = p[1]; if (p[1] > maxG) maxG = p[1];
+                        if (p[2] < minB) minB = p[2]; if (p[2] > maxB) maxB = p[2];
+                    }
+
+                    let rangeR = maxR - minR;
+                    let rangeG = maxG - minG;
+                    let rangeB = maxB - minB;
+                    let currentMaxRange = Math.max(rangeR, rangeG, rangeB);
+
+                    if (currentMaxRange > maxRange) {
+                        maxRange = currentMaxRange;
+                        splitBoxIdx = i;
+                        if (rangeR >= rangeG && rangeR >= rangeB) splitChannel = 0;
+                        else if (rangeG >= rangeR && rangeG >= rangeB) splitChannel = 1;
+                        else splitChannel = 2;
+                    }
+                }
+
+                if (splitBoxIdx === -1) break; // Cannot split further
+
+                let boxToSplit = boxes[splitBoxIdx];
+                boxToSplit.pixels.sort((a, b) => a[splitChannel] - b[splitChannel]);
+                let medianIdx = Math.floor(boxToSplit.pixels.length / 2);
+
+                let box1 = { pixels: boxToSplit.pixels.slice(0, medianIdx) };
+                let box2 = { pixels: boxToSplit.pixels.slice(medianIdx) };
+
+                boxes.splice(splitBoxIdx, 1, box1, box2);
+            }
+
+            // Calculate average color for each box
+            return boxes.map(box => {
+                let r = 0, g = 0, b = 0, count = 0;
+                for (let p of box.pixels) {
+                    r += p[0]; g += p[1]; b += p[2]; count += p[4];
+                }
+                return [Math.round(r / box.pixels.length), Math.round(g / box.pixels.length), Math.round(b / box.pixels.length)];
+            });
+        }
+
+        /**
+         * System State
+         */
+        const state = {
+            originalImage: null,
+            width: 0,
+            height: 0,
+            indices: null, // Uint16Array
+            basePalette: [], // Array of {r, g, b, a}
+            currentPalette: [], // Array of {r, g, b, a}
+            ranges: [], // Array of {start, end, dir}
+            isPlaying: false,
+            lastTick: 0,
+            history: [], // For Undo
+
+            // Adjustments
+            adjustments: {
+                hue: 0,
+                sat: 1.0,
+                lit: 0
+            }
+        };
+
+        /**
+         * History Manager
+         */
+        function saveState() {
+            state.history.push(JSON.parse(JSON.stringify({
+                basePalette: state.basePalette,
+                currentPalette: state.currentPalette,
+                adjustments: state.adjustments,
+                ranges: state.ranges
+            })));
+            if (state.history.length > 20) state.history.shift();
+        }
+
+        function undo() {
+            if (state.history.length === 0) return;
+            let s = state.history.pop();
+            state.basePalette = s.basePalette;
+            state.currentPalette = s.currentPalette;
+            state.adjustments = s.adjustments;
+            state.ranges = s.ranges;
+
+            syncControlsToState();
+            render();
+            renderSwatches();
+            renderRanges();
+        }
+
+        /**
+         * Core Logic
+         */
+        function processImage(img) {
+            state.originalImage = img;
+            state.width = img.width;
+            state.height = img.height;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            const imgData = ctx.getImageData(0, 0, img.width, img.height);
+            const data = imgData.data;
+
+            let colorMap = new Map();
+            let appearanceOrder = [];
+
+            for (let i = 0; i < data.length; i += 4) {
+                let r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+                if (a < 128) continue; // Skip highly transparent pixels for quantization
+
+                let key = `${r},${g},${b}`;
+                if (!colorMap.has(key)) {
+                    colorMap.set(key, { r, g, b, count: 0, firstAppeared: appearanceOrder.length });
+                    appearanceOrder.push(key);
+                }
+                colorMap.get(key).count++;
+            }
+
+            let uniqueColors = Array.from(colorMap.values());
+            // Reserve 1 slot for transparent color to guarantee total max is strictly <= 256
+            let maxColors = parseInt(document.getElementById('max-colors').value) - 1;
+
+            let palette = [];
+            if (uniqueColors.length <= maxColors) {
+                palette = uniqueColors.slice(0, maxColors);
+            } else {
+                // Quantize
+                let pixelsFormat = uniqueColors.map(c => [c.r, c.g, c.b, c.count]);
+                let medianColors = medianCut(pixelsFormat, maxColors);
+                palette = medianColors.map(c => ({ r: c[0], g: c[1], b: c[2], count: 0 }));
+
+                // Count frequencies again for the quantized palette
+                for (let c of uniqueColors) {
+                    let bestIdx = 0;
+                    let bestDist = Infinity;
+                    for (let i = 0; i < palette.length; i++) {
+                        let d = colorDistance(c.r, c.g, c.b, palette[i].r, palette[i].g, palette[i].b);
+                        if (d < bestDist) {
+                            bestDist = d;
+                            bestIdx = i;
+                        }
+                    }
+                    palette[bestIdx].count += c.count;
+                }
+            }
+
+            // Sort Palette
+            const order = document.getElementById('palette-order').value;
+            if (order === 'frequency') {
+                palette.sort((a, b) => b.count - a.count);
+            } else if (order === 'appearance') {
+                // Already implicitly somewhat ordered, skip or map to appearanceOrder
+            } else if (order === 'luminance') {
+                palette.sort((a, b) => {
+                    let hslA = rgbToHsl(a.r, a.g, a.b);
+                    let hslB = rgbToHsl(b.r, b.g, b.b);
+                    return hslB[2] - hslA[2];
+                });
+            } else if (order === 'hue') {
+                palette.sort((a, b) => {
+                    let hslA = rgbToHsl(a.r, a.g, a.b);
+                    let hslB = rgbToHsl(b.r, b.g, b.b);
+                    return hslA[0] - hslB[0];
+                });
+            }
+
+            // Add Alpha channel
+            palette.forEach(c => c.a = 255);
+            // Add transparent color at index 0
+            palette.unshift({ r: 0, g: 0, b: 0, a: 0 });
+
+            state.basePalette = palette;
+            state.currentPalette = JSON.parse(JSON.stringify(palette));
+            state.indices = new Uint16Array(state.width * state.height);
+
+            // Build Index Map
+            for (let i = 0, pIdx = 0; i < data.length; i += 4, pIdx++) {
+                let r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
+                if (a < 128) {
+                    state.indices[pIdx] = 0; // Transparent
+                    continue;
+                }
+
+                let bestIdx = 1;
+                let bestDist = Infinity;
+                for (let j = 1; j < palette.length; j++) {
+                    let d = colorDistance(r, g, b, palette[j].r, palette[j].g, palette[j].b);
+                    if (d < bestDist) {
+                        bestDist = d;
+                        bestIdx = j;
+                    }
+                }
+                state.indices[pIdx] = bestIdx;
+            }
+
+            // Reset settings
+            state.adjustments = { hue: 0, sat: 1.0, lit: 0 };
+            state.ranges = [];
+            state.history = [];
+
+            syncControlsToState();
+            updateAdjustedPalette();
+            renderSwatches();
+            renderRanges();
+            render();
+        }
+
+        function updateAdjustedPalette() {
+            let adj = state.adjustments;
+            for (let i = 1; i < state.basePalette.length; i++) {
+                let b = state.basePalette[i];
+                let [h, s, l] = rgbToHsl(b.r, b.g, b.b);
+
+                h = (h + adj.hue) % 360;
+                if (h < 0) h += 360;
+
+                s = Math.max(0, Math.min(1, s * adj.sat));
+                l = Math.max(0, Math.min(1, l + adj.lit));
+
+                let [nr, ng, nb] = hslToRgb(h, s, l);
+                state.currentPalette[i] = { r: nr, g: ng, b: nb, a: b.a };
+            }
+        }
+
+        function render() {
+            if (!state.indices) return;
+
+            const canvas = document.getElementById('main-canvas');
+            canvas.width = state.width;
+            canvas.height = state.height;
+            const ctx = canvas.getContext('2d');
+            const imgData = ctx.createImageData(state.width, state.height);
+            const data = imgData.data;
+
+            let idx = 0;
+            for (let i = 0; i < state.indices.length; i++) {
+                let c = state.currentPalette[state.indices[i]];
+                if (c) {
+                    data[idx++] = c.r;
+                    data[idx++] = c.g;
+                    data[idx++] = c.b;
+                    data[idx++] = c.a;
+                } else {
+                    idx += 4;
+                }
+            }
+
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+        function renderSwatches() {
+            const container = document.getElementById('palette-swatches');
+            container.innerHTML = '';
+
+            for (let i = 1; i < state.currentPalette.length; i++) {
+                let c = state.currentPalette[i];
+                let swatch = document.createElement('div');
+                swatch.className = 'swatch';
+                swatch.style.backgroundColor = `rgb(${c.r}, ${c.g}, ${c.b})`;
+                swatch.title = `Index: ${i}\nRGB: ${c.r}, ${c.g}, ${c.b}`;
+                swatch.draggable = true;
+                swatch.dataset.index = i;
+
+                swatch.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', i);
+                });
+
+                swatch.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    swatch.classList.add('swatch-drag-over');
+                });
+
+                swatch.addEventListener('dragleave', () => {
+                    swatch.classList.remove('swatch-drag-over');
+                });
+
+                swatch.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    swatch.classList.remove('swatch-drag-over');
+                    let fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+                    let toIdx = i;
+                    let mode = document.getElementById('drag-mode').value;
+
+                    if (fromIdx !== toIdx) {
+                        saveState();
+
+                        if (mode === 'swap') {
+                            // Swap in base palette
+                            let tempBase = state.basePalette[fromIdx];
+                            state.basePalette[fromIdx] = state.basePalette[toIdx];
+                            state.basePalette[toIdx] = tempBase;
+
+                            // Swap in indices
+                            for (let j = 0; j < state.indices.length; j++) {
+                                if (state.indices[j] === fromIdx) state.indices[j] = toIdx;
+                                else if (state.indices[j] === toIdx) state.indices[j] = fromIdx;
+                            }
+                        } else if (mode === 'insert') {
+                            // Insert logic
+                            let newBase = [...state.basePalette];
+                            let moved = newBase.splice(fromIdx, 1)[0];
+                            newBase.splice(toIdx, 0, moved);
+
+                            let idxMap = new Array(state.basePalette.length);
+                            for (let k = 0; k < idxMap.length; k++) idxMap[k] = k;
+                            let movedIdx = idxMap.splice(fromIdx, 1)[0];
+                            idxMap.splice(toIdx, 0, movedIdx);
+
+                            let reverseMap = new Array(state.basePalette.length);
+                            for (let k = 0; k < idxMap.length; k++) {
+                                reverseMap[idxMap[k]] = k;
+                            }
+
+                            state.basePalette = newBase;
+                            for (let j = 0; j < state.indices.length; j++) {
+                                let oldVal = state.indices[j];
+                                // we ignore 0 (transparent) since it's unmovable for now
+                                if (oldVal !== 0 && oldVal < reverseMap.length) {
+                                    state.indices[j] = reverseMap[oldVal];
+                                }
+                            }
+                        }
+
+                        updateAdjustedPalette();
+                        renderSwatches();
+                        render();
+                    }
+                });
+
+                container.appendChild(swatch);
+            }
+        }
+
+        function renderRanges() {
+            const container = document.getElementById('ranges-container');
+            container.innerHTML = '';
+
+            state.ranges.forEach((r, idx) => {
+                let div = document.createElement('div');
+                div.className = 'range-item';
+                div.innerHTML = `
+            <span>#${idx + 1}</span>
+            <input type="number" value="${r.start}" min="1" max="${state.basePalette.length - 1}" onchange="updateRange(${idx}, 'start', this.value)">
+            <span>to</span>
+            <input type="number" value="${r.end}" min="1" max="${state.basePalette.length - 1}" onchange="updateRange(${idx}, 'end', this.value)">
+            <select style="width: 80px;" onchange="updateRange(${idx}, 'dir', this.value)">
+                <option value="1" ${r.dir === 1 ? 'selected' : ''}>Forward</option>
+                <option value="-1" ${r.dir === -1 ? 'selected' : ''}>Backward</option>
+            </select>
+            <button onclick="removeRange(${idx})" style="background: #aa3333;">X</button>
+        `;
+                container.appendChild(div);
+            });
+        }
+
+        function addRange() {
+            saveState();
+            state.ranges.push({ start: 1, end: Math.min(8, state.basePalette.length - 1), dir: 1 });
+            renderRanges();
+        }
+
+        function removeRange(idx) {
+            saveState();
+            state.ranges.splice(idx, 1);
+            renderRanges();
+        }
+
+        function updateRange(idx, key, value) {
+            state.ranges[idx][key] = parseInt(value);
+        }
+
+        function rotatePalette(quiet = false) {
+            if (state.ranges.length === 0) return;
+
+            let newPalette = JSON.parse(JSON.stringify(state.currentPalette));
+
+            for (let r of state.ranges) {
+                let { start, end, dir } = r;
+                if (start >= end) continue;
+                if (start < 1) start = 1;
+                if (end >= state.currentPalette.length) end = state.currentPalette.length - 1;
+
+                let segment = state.currentPalette.slice(start, end + 1);
+                if (dir === 1) {
+                    let last = segment.pop();
+                    segment.unshift(last);
+                } else {
+                    let first = segment.shift();
+                    segment.push(first);
+                }
+
+                for (let i = 0; i < segment.length; i++) {
+                    newPalette[start + i] = segment[i];
+                }
+            }
+
+            state.currentPalette = newPalette;
+
+            let newBasePalette = JSON.parse(JSON.stringify(state.basePalette));
+            for (let r of state.ranges) {
+                let { start, end, dir } = r;
+                if (start >= end) continue;
+                let segment = state.basePalette.slice(start, end + 1);
+                if (dir === 1) { segment.unshift(segment.pop()); }
+                else { segment.push(segment.shift()); }
+                for (let i = 0; i < segment.length; i++) {
+                    newBasePalette[start + i] = segment[i];
+                }
+            }
+            state.basePalette = newBasePalette;
+
+            if (!quiet) {
+                render();
+                renderSwatches();
+            }
+        }
+
+        /**
+         * Animation Loop
+         */
+        function animationTick(timestamp) {
+            if (!state.isPlaying) return;
+
+            let speed = parseInt(document.getElementById('anim-speed').value);
+
+            if (timestamp - state.lastTick >= speed) {
+                rotatePalette();
+                state.lastTick = timestamp;
+            }
+
+            requestAnimationFrame(animationTick);
+        }
+
+        /**
+         * Event Listeners
+         */
+        window.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                e.preventDefault();
+                undo();
+            }
+        });
+
+        document.getElementById('btn-undo').addEventListener('click', undo);
+
+        function handleFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = new Image();
+                img.onload = () => processImage(img);
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.getElementById('file-input').addEventListener('change', e => {
+            handleFile(e.target.files[0]);
+        });
+
+        const dropZone = document.getElementById('drop-zone');
+        dropZone.addEventListener('click', () => document.getElementById('file-input').click());
+        dropZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        document.getElementById('btn-reprocess').addEventListener('click', () => {
+            if (state.originalImage) processImage(state.originalImage);
+        });
+
+        // Adjustments
+        ['hue', 'sat', 'lit'].forEach(type => {
+            document.getElementById(`adj-${type}`).addEventListener('input', e => {
+                state.adjustments[type] = parseFloat(e.target.value);
+                document.getElementById(`val-${type}`).textContent = e.target.value;
+                updateAdjustedPalette();
+                renderSwatches();
+                render();
+            });
+
+            // Save state on change completion
+            document.getElementById(`adj-${type}`).addEventListener('change', () => {
+                // Simple hack: to avoid saving state on every little scroll,
+                // we might better save state before adjustment starts, but here we just save periodically or on mousedown
+            });
+        });
+
+        document.getElementById('adj-hue').addEventListener('mousedown', saveState);
+        document.getElementById('adj-sat').addEventListener('mousedown', saveState);
+        document.getElementById('adj-lit').addEventListener('mousedown', saveState);
+
+        // Unify Commands
+        document.getElementById('btn-unify-lit').addEventListener('click', () => {
+            saveState();
+            let totalL = 0;
+            for (let i = 1; i < state.basePalette.length; i++) {
+                totalL += rgbToHsl(state.basePalette[i].r, state.basePalette[i].g, state.basePalette[i].b)[2];
+            }
+            let avgL = totalL / (state.basePalette.length - 1);
+
+            for (let i = 1; i < state.basePalette.length; i++) {
+                let b = state.basePalette[i];
+                let hsl = rgbToHsl(b.r, b.g, b.b);
+                let rgb = hslToRgb(hsl[0], hsl[1], avgL);
+                state.basePalette[i] = { r: rgb[0], g: rgb[1], b: rgb[2], a: b.a };
+            }
+            updateAdjustedPalette();
+            renderSwatches();
+            render();
+        });
+
+        document.getElementById('btn-unify-sat').addEventListener('click', () => {
+            saveState();
+            let totalS = 0;
+            for (let i = 1; i < state.basePalette.length; i++) {
+                totalS += rgbToHsl(state.basePalette[i].r, state.basePalette[i].g, state.basePalette[i].b)[1];
+            }
+            let avgS = totalS / (state.basePalette.length - 1);
+
+            for (let i = 1; i < state.basePalette.length; i++) {
+                let b = state.basePalette[i];
+                let hsl = rgbToHsl(b.r, b.g, b.b);
+                let rgb = hslToRgb(hsl[0], avgS, hsl[2]);
+                state.basePalette[i] = { r: rgb[0], g: rgb[1], b: rgb[2], a: b.a };
+            }
+            updateAdjustedPalette();
+            renderSwatches();
+            render();
+        });
+
+        // Animation Controls
+        document.getElementById('btn-play').addEventListener('click', e => {
+            state.isPlaying = !state.isPlaying;
+            e.target.textContent = state.isPlaying ? 'Pause' : 'Play';
+            if (state.isPlaying) {
+                state.lastTick = performance.now();
+                requestAnimationFrame(animationTick);
+            }
+        });
+
+        document.getElementById('btn-step').addEventListener('click', () => {
+            rotatePalette();
+        });
+
+        document.getElementById('btn-add-range').addEventListener('click', addRange);
+
+        function syncControlsToState() {
+            document.getElementById('adj-hue').value = state.adjustments.hue;
+            document.getElementById('val-hue').textContent = state.adjustments.hue;
+
+            document.getElementById('adj-sat').value = state.adjustments.sat;
+            document.getElementById('val-sat').textContent = state.adjustments.sat;
+
+            document.getElementById('adj-lit').value = state.adjustments.lit;
+            document.getElementById('val-lit').textContent = state.adjustments.lit;
+        }
+
+        document.getElementById('btn-export-gif').addEventListener('click', async () => {
+            if (!state.indices || state.ranges.length === 0) return;
+
+            const status = document.getElementById('export-status');
+            status.textContent = "Loading GIF encoder...";
+
+            try {
+                // We now use the embedded GifWriter directly.
+
+                // Calculate LCM of range lengths for a full perfect loop
+                function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+                function lcm(a, b) { return (a * b) / gcd(a, b); }
+
+                let stepCount = state.ranges.map(r => r.end - r.start + 1).reduce((acc, val) => lcm(acc, val), 1);
+
+                if (stepCount > 100) {
+                    if (!confirm(`Cycle length is ${stepCount} frames. This might take a while. Proceed?`)) {
+                        status.textContent = "Canceled.";
+                        return;
+                    }
+                } else if (stepCount <= 0) {
+                    stepCount = 1;
+                }
+
+                status.textContent = `Rendering ${stepCount} frames...`;
+
+                // Wait a frame for UI to update
+                await new Promise(resolve => setTimeout(resolve, 50));
+
+                // Ensure buffer is large enough for the whole GIF
+                // Worse case logic: width * height bytes per frame + overhead
+                const maxBufferSize = state.width * state.height * stepCount + 1024 * stepCount + 1024;
+                const buffer = new Uint8Array(maxBufferSize);
+                const gifOpts = { loop: 0 }; // 0 = infinite loop
+                const gif = new GifWriter(buffer, state.width, state.height, gifOpts);
+
+                let originalPalette = JSON.parse(JSON.stringify(state.currentPalette));
+                let originalBase = JSON.parse(JSON.stringify(state.basePalette));
+                let speed = parseInt(document.getElementById('anim-speed').value);
+                let delayInHundredths = Math.max(2, Math.round(speed / 10)); // Convert ms to 10ms units
+
+                // Ensure indices is flattened to 8-bit and bounded to 255
+                const indices8 = new Uint8Array(state.indices.length);
+                for(let i=0; i<state.indices.length; i++) {
+                    indices8[i] = state.indices[i] > 255 ? 255 : state.indices[i];
+                }
+
+                for (let f = 0; f < stepCount; f++) {
+                    let curPalLen = state.currentPalette.length;
+                    if (curPalLen > 256) curPalLen = 256;
+                    
+                    let omgPalette = [];
+                    for (let i = 0; i < curPalLen; i++) {
+                        let c = state.currentPalette[i];
+                        omgPalette.push((c.r << 16) | (c.g << 8) | c.b);
+                    }
+
+                    // omggif requires palette length to be a power of 2 (2, 4, 8, 16, 32, 64, 128, 256)
+                    let p2 = 2;
+                    while (p2 < omgPalette.length) p2 *= 2;
+                    while (omgPalette.length < p2) omgPalette.push(0);
+
+                    gif.addFrame(0, 0, state.width, state.height, indices8, {
+                        palette: omgPalette,
+                        delay: delayInHundredths,
+                        transparent: 0 // transparent index
+                    });
+
+                    rotatePalette(true); // quiet
+                }
+
+                state.currentPalette = originalPalette;
+                state.basePalette = originalBase;
+                render();
+                renderSwatches();
+
+                // Slice the buffer to the actual compiled length
+                const finalBuffer = buffer.slice(0, gif.end());
+                const blob = new Blob([finalBuffer], { type: 'image/gif' });
+                const url = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'animated_palette.gif';
+                a.click();
+
+                status.textContent = "Export complete!";
+                setTimeout(() => status.textContent = "", 3000);
+
+            } catch (e) {
+                console.error(e);
+                status.textContent = "Failed to load encoder. Are you offline or is the CDN blocked?";
+            }
+        });
+
+    </script>
+</body>
+
+</html>

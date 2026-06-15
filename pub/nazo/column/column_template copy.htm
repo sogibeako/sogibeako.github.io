@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2026年NazoText * 湫埜と雨滴 *</title>
+  <link rel="preload" as="font" href="/seoremium/Seoremium_clg.ttf" type="ttf" crossorigin />
+  <!-- Lightbox2 CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="../../style/diary_style.css">
+  <link rel="stylesheet" href="../js/cat-diagram-style.css">
+  <script src="../js/cat-diagram.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script>
+    document.addEventListener("copy", function (event) {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+
+      const range = selection.getRangeAt(0);
+      const container = document.createElement("div");
+      container.appendChild(range.cloneContents());
+
+      // 選択範囲内の data-copy を持つ要素を、コピー用文字列に置換
+      container.querySelectorAll("[data-copy]").forEach(el => {
+        const text = document.createTextNode(el.dataset.copy);
+        el.replaceWith(text);
+      });
+
+      const plainText = container.innerText;
+
+      event.clipboardData.setData("text/plain", plainText);
+      event.preventDefault();
+    });
+  </script>
+</head>
+
+<body>
+
+  <!-- jQuery（先） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <!-- Lightbox2（後） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
+</body>
+
+</html>

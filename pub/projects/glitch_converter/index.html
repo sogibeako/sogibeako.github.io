@@ -1,0 +1,1183 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<title>レトロ相互誤読グリッチ変換機</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="icon" href="data:,">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=M+PLUS+1+Code:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a12;--panel:#101020;--border:#2a2a4a;--glow-cyan:#00fff2;--glow-mag:#ff00ea;--glow-grn:#39ff14;--glow-yel:#ffe600;--ink:#c8c8e0;--sub:#6a6a8a;--font-retro:'Press Start 2P',monospace;--font-mono:'M PLUS 1 Code','Consolas',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-mono);background:var(--bg);color:var(--ink);line-height:1.5;overflow-x:hidden}
+body.crt-on::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;
+background:repeating-linear-gradient(0deg,rgba(0,0,0,.15) 0px,rgba(0,0,0,.15) 1px,transparent 1px,transparent 3px)}
+h1{font-family:var(--font-retro);font-size:14px;color:var(--glow-cyan);text-shadow:0 0 8px var(--glow-cyan),0 0 20px rgba(0,255,242,.3);padding:12px 16px}
+h2{font-family:var(--font-retro);font-size:10px;color:var(--glow-grn);margin:0 0 8px;text-shadow:0 0 6px var(--glow-grn)}
+.app{max-width:1400px;margin:0 auto;padding:8px}
+.top-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:8px}
+.top-bar select,.top-bar button{font-family:var(--font-mono);font-size:12px;background:var(--panel);color:var(--ink);border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer}
+.top-bar select:hover,.top-bar button:hover{border-color:var(--glow-cyan);box-shadow:0 0 6px rgba(0,255,242,.2)}
+.columns{display:grid;grid-template-columns:280px 1fr;gap:8px}
+@media(max-width:900px){.columns{grid-template-columns:1fr}}
+.sidebar{display:flex;flex-direction:column;gap:6px}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:10px;position:relative}
+.panel:hover{border-color:var(--glow-cyan);box-shadow:0 0 8px rgba(0,255,242,.08)}
+.outputs{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:6px}
+@media(max-width:700px){.outputs{grid-template-columns:1fr}}
+.output-panel{min-height:280px;display:flex;flex-direction:column}
+.output-panel canvas{width:100%;background:#000;border-radius:4px;image-rendering:pixelated;object-fit:contain;max-height:350px}
+.output-panel pre{flex:1;overflow:auto;font-family:var(--font-mono);font-size:11px;background:#000;color:var(--glow-grn);padding:8px;border-radius:4px;white-space:pre;line-height:1.4;max-height:350px}
+label{font-size:11px;color:var(--sub);display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+input[type="number"],input[type="range"],select{font-family:var(--font-mono);font-size:11px;background:#080818;color:var(--ink);border:1px solid var(--border);border-radius:3px;padding:2px 4px}
+input[type="number"]{width:60px}
+input[type="range"]{width:100%;accent-color:var(--glow-cyan)}
+input[type="file"]{font-size:10px;color:var(--sub)}
+button{font-family:var(--font-mono);font-size:11px;background:var(--panel);color:var(--glow-cyan);border:1px solid var(--glow-cyan);border-radius:4px;padding:4px 10px;cursor:pointer;transition:all .15s}
+button:hover{background:rgba(0,255,242,.1);box-shadow:0 0 10px rgba(0,255,242,.2)}
+.btn-mag{color:var(--glow-mag);border-color:var(--glow-mag)}
+.btn-mag:hover{background:rgba(255,0,234,.1);box-shadow:0 0 10px rgba(255,0,234,.2)}
+.btn-grn{color:var(--glow-grn);border-color:var(--glow-grn)}
+.btn-grn:hover{background:rgba(57,255,20,.1)}
+.ctrl-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px}
+.ctrl-row{display:flex;align-items:center;gap:4px}
+.ctrl-row label{flex:1}
+#console{background:#000;color:var(--glow-grn);font-family:var(--font-mono);font-size:10px;padding:6px;border-radius:4px;max-height:120px;overflow-y:auto;white-space:pre-wrap;line-height:1.3}
+#hexView{background:#000;color:var(--glow-yel);font-family:var(--font-mono);font-size:9px;padding:6px;border-radius:4px;max-height:200px;overflow:auto;white-space:pre;line-height:1.6;user-select:none}
+.hex-byte{cursor:pointer;padding:1px 2px;border-radius:2px;transition:background .1s}
+.hex-byte:hover{background:rgba(255,230,0,.2)}
+.hex-byte.editing{background:rgba(255,230,0,.3);outline:1px solid var(--glow-yel)}
+.hex-byte.modified{color:#ff5555}
+.hex-addr{color:#6a6a8a;user-select:none}
+.hex-ascii{color:#4a8a6a;user-select:none}
+.music-controls{display:flex;align-items:center;gap:6px;padding:4px 0;flex-wrap:wrap}
+.music-controls input[type="range"]{flex:1;min-width:80px}
+.tab-bar{display:flex;gap:2px;margin-bottom:4px}
+.tab-bar button{font-size:9px;padding:2px 6px;border-radius:3px 3px 0 0;opacity:.6}
+.tab-bar button.active{opacity:1;background:rgba(0,255,242,.15)}
+textarea{width:100%;min-height:60px;font-family:var(--font-mono);font-size:11px;background:#080818;color:var(--ink);border:1px solid var(--border);border-radius:4px;padding:6px;resize:vertical}
+.walk-indicator{position:absolute;top:4px;right:8px;font-size:9px;color:var(--glow-yel);font-family:var(--font-retro)}
+[title]{cursor:help}
+.ctrl-grid label[title]:hover{color:var(--glow-cyan)}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top-bar">
+  <h1>レトロ相互誤読グリッチ変換機</h1>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <label>解釈形式 <select id="selMode"><option value="toy" selected>0: おもちゃ</option><option value="smb">1: SMB風</option><option value="dq1" disabled>2: DQ1風</option><option value="ff4" disabled>3: FF4風</option><option value="pokemon" disabled>4: Pokémon風</option></select></label>
+    <label>忠実度 <select id="selFidelity"><option value="toy" selected>toy</option><option value="approx" disabled>approx</option><option value="research" disabled>research</option><option value="strict" disabled>strict</option></select></label>
+    <button id="btnReinterpret" class="btn-mag">▶ 再解釈</button>
+    <label title="CRTスキャンライン効果のON/OFF"><input type="checkbox" id="chkCRT" checked> CRT</label>
+  </div>
+</div>
+
+<div class="columns">
+<div class="sidebar">
+  <!-- Input -->
+  <div class="panel">
+    <h2>入力</h2>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <label>ファイル <input type="file" id="fileInput" accept="*/*"></label>
+      <label>テキスト直接入力</label>
+      <textarea id="textInput" rows="3" placeholder="テキストを入力..."></textarea>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+        <button id="btnLoadText" class="btn-grn">テキスト読込</button>
+        <button id="btnLoadFile" class="btn-grn">ファイル読込</button>
+        <label title="テキストのエンコーディング方式。UTF-8=通常のバイト列化。game=文字表の逆引きでエンコード（1文字=1バイト、「やくそう」→「やくそう」と往復可能）">enc <select id="pTextEnc" style="font-size:10px"><option value="utf8">UTF-8</option><option value="game">game</option></select></label>
+      </div>
+      <label title="入力データの読み取り上限バイト数。0=無制限">read limit <input type="number" id="pReadLimit" value="0" min="0" step="256" style="width:70px"> bytes</label>
+      <div style="font-size:10px;color:var(--sub)" id="inputInfo">未読込</div>
+    </div>
+  </div>
+
+  <!-- Glitch Params -->
+  <div class="panel">
+    <h2>グリッチ制御</h2>
+    <div class="ctrl-grid">
+      <label title="読み取り開始位置をNバイトずらす。データの先頭を飛ばすことで構造がずれ、グリッチが発生する">byte offset<input type="number" id="pByteOffset" value="0" min="0" step="1"></label>
+      <label title="全バイト列をNビット左にずらす（ビット単位オフセット）。バイト境界を超えてビットが流れ込み、微細なグリッチが発生する">bit offset<input type="number" id="pBitOffset" value="0" min="0" max="7" step="1"></label>
+      <label title="全バイトを左にNビット回転シフトする。ビット境界をまたぐことで値域が変化し、色・音・文字が大きく変わる">bit shift<input type="number" id="pBitShift" value="0" min="0" max="7" step="1"></label>
+      <label title="マップの横幅（タイル数）。同じデータでも幅を変えると全く異なる地形パターンが出現する">map width<input type="number" id="pMapWidth" value="32" min="4" max="256" step="1"></label>
+      <label title="マップ1タイルの表示ピクセル数。大きくすると拡大、小さくすると広域表示">tile size<input type="number" id="pTileSize" value="8" min="2" max="32" step="1"></label>
+      <label title="画像の横幅（ピクセル数）。幅を変えると縦横比が変わり、隠れた構造が見えることがある">img width<input type="number" id="pImgWidth" value="128" min="8" max="512" step="8"></label>
+      <label title="バンクサイズ（バイト数）。GB=16384, NES=8192 など。ポインタ計算やbank越境判定に使用">bank size<input type="number" id="pBankSize" value="16384" min="256" step="256"></label>
+      <label title="ポインタテーブルのストライド（バイト数）。2=16bit, 3=24bitアドレス。ポインタ候補の検出精度に影響">ptr stride<input type="number" id="pPtrStride" value="2" min="1" max="4" step="1"></label>
+      <label title="テキスト表示の折り返し幅（文字数）。ゲーム画面の幅に合わせると自然な表示になる">text wrap<input type="number" id="pTextWrap" value="32" min="8" max="128" step="1"></label>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+      <label title="各バイトの上位4bitと下位4bitを入れ替える。色や文字の対応が劇的に変化する"><input type="checkbox" id="pNibbleSwap"> nibble swap</label>
+      <label title="2バイトずつペアにして前後を入れ替える。リトルエンディアン⇔ビッグエンディアン変換"><input type="checkbox" id="pEndianSwap"> endian swap</label>
+      <label title="各バイトのビット順序を反転する（MSB⇔LSB）。画像の左右反転的な効果"><input type="checkbox" id="pBitReverse"> bit reverse</label>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+      <label title="loose=未定義バイトを代替記号で表示（グリッチ鑑賞向け）  strict=未定義は未定義のまま">mode <select id="pStrictLoose"><option value="loose">loose</option><option value="strict">strict</option></select></label>
+      <label title="画像のピクセルフォーマット。indexed=1byte1色(256色), 1bpp=1bit1pixel(白黒), 2bpp=2bit1pixel(4色)">img fmt <select id="pImgFmt"><option value="indexed">indexed</option><option value="1bpp">1bpp</option><option value="2bpp">2bpp</option></select></label>
+      <label title="画像パレット。ゲーム機ごとの典型的な配色を切り替え可能">palette <select id="pPalette"><option value="spectrum">spectrum</option><option value="nes">NES</option><option value="gb">Game Boy</option><option value="snes">SNES</option><option value="cga">CGA</option><option value="pico8">PICO-8</option><option value="gray">grayscale</option></select></label>
+      <label title="テキスト解釈モード。glitch=レトロ文字表で誤読, transparent=UTF-8そのまま, semi=定義文字はそのまま/未定義は化ける">text <select id="pTextMode"><option value="glitch">glitch</option><option value="transparent">transparent</option><option value="semi">semi-transparent</option></select></label>
+    </div>
+  </div>
+
+  <!-- Console -->
+  <div class="panel">
+    <h2>コンソール</h2>
+    <div id="console">Ready.\n</div>
+  </div>
+
+  <!-- Hex -->
+  <div class="panel">
+    <h2>Hex Editor</h2>
+    <div id="hexView">--</div>
+    <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;align-items:center">
+      <button id="btnHexApply" class="btn-grn" style="font-size:9px">✔ 編集適用</button>
+      <button id="btnHexUndo" style="font-size:9px">↩ 元に戻す</button>
+      <button id="btnHexCopy" style="font-size:9px">Hexコピー</button>
+      <span id="hexStatus" style="font-size:9px;color:var(--sub)"></span>
+    </div>
+  </div>
+
+  <!-- Preset -->
+  <div class="panel">
+    <h2>プリセット</h2>
+    <div style="display:flex;gap:4px;flex-wrap:wrap">
+      <button id="btnPresetSave" style="font-size:9px">⬇ 保存</button>
+      <button id="btnPresetLoad" style="font-size:9px">⬆ 読込</button>
+      <input type="file" id="presetFileInput" accept=".json" style="display:none">
+    </div>
+  </div>
+</div>
+
+<!-- 4-panel outputs -->
+<div class="outputs">
+  <!-- Map -->
+  <div class="panel output-panel">
+    <h2>マップ</h2>
+    <div class="walk-indicator" id="walkInfo">⬆⬇⬅➡ 移動 / Shift+矢印: 通過</div>
+    <canvas id="cvMap"></canvas>
+    <div style="font-size:9px;color:var(--sub);margin-top:2px" id="mapInfo">--</div>
+  </div>
+  <!-- Text -->
+  <div class="panel output-panel">
+    <h2>テキスト</h2>
+    <pre id="textOut"></pre>
+    <div style="margin-top:2px"><button id="btnTextToInput" style="font-size:9px" title="出力テキストを入力欄に流し込んで再解釈する">↩ 出力→入力</button></div>
+  </div>
+  <!-- Image -->
+  <div class="panel output-panel">
+    <h2>画像</h2>
+    <canvas id="cvImg"></canvas>
+    <div style="display:flex;gap:4px;margin-top:4px;align-items:center;flex-wrap:wrap">
+      <button id="btnSaveImg" class="btn-grn" style="font-size:9px">PNG保存</button>
+      <label title="画像の拡大率。1x=等倍, 4x=4倍拡大, 16x=16倍拡大">scale <select id="pImgScale" style="font-size:10px"><option value="1">1x</option><option value="2">2x</option><option value="4" selected>4x</option><option value="8">8x</option><option value="16">16x</option></select></label>
+    </div>
+  </div>
+  <!-- Music -->
+  <div class="panel output-panel">
+    <h2>音楽</h2>
+    <canvas id="cvMusic" style="max-height:180px"></canvas>
+    <div class="music-controls">
+      <button id="btnPlay">▶</button>
+      <button id="btnStop">■</button>
+      <input type="range" id="seekBar" min="0" max="100" value="0" step="1">
+      <label style="white-space:nowrap">Vol<input type="range" id="volSlider" min="0" max="100" value="50" step="1" style="width:60px"></label>
+    </div>
+    <div class="music-controls">
+      <label>tempo<input type="number" id="pTempo" value="120" min="20" max="300" step="1" style="width:50px"></label>
+      <label>pitch base<input type="number" id="pPitchBase" value="48" min="0" max="127" step="1" style="width:50px"></label>
+      <button id="btnExportMid" class="btn-grn" style="font-size:9px">MID出力</button>
+      <button id="btnExportWav" class="btn-grn" style="font-size:9px">WAV出力</button>
+    </div>
+    <div style="font-size:9px;color:var(--sub)" id="musicInfo">--</div>
+  </div>
+</div>
+</div>
+</div>
+
+<script>
+
+// ============================================================
+//  レトロ相互誤読グリッチ変換機 — Core Engine
+// ============================================================
+
+// ---------- Console Logger ----------
+const CON = {
+  el: document.getElementById('console'),
+  log(msg) { this.el.textContent += msg + '\n'; this.el.scrollTop = this.el.scrollHeight; },
+  warn(msg) { this.log('⚠ ' + msg); },
+  clear() { this.el.textContent = ''; }
+};
+
+// ---------- Fallback Charset (JP priority, 256 entries) ----------
+const CHARSET_FALLBACK = (() => {
+  const t = new Array(256);
+  // 0x00-0x09 digits
+  for (let i = 0; i < 10; i++) t[i] = String(i);
+  // 0x0A-0x11 symbols (8)
+  '。、！？「」・ー'.split('').forEach((c, i) => t[0x0A + i] = c);
+  // 0x12-0x61 hiragana (80 slots) — full set incl. dakuten, handakuten, small kana
+  const hira = 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんがぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽっゃゅょぁぃぅぇぉゐゑゔゝゞ';
+  for (let i = 0; i < 80 && i < hira.length; i++) t[0x12 + i] = hira[i];
+  // 0x62-0xB1 katakana (80 slots) — full set incl. dakuten, handakuten, small kana
+  const kata = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲンガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポッャュョァィゥェォヰヱヴヽヾ';
+  for (let i = 0; i < 80 && i < kata.length; i++) t[0x62 + i] = kata[i];
+  // 0xB2-0xE5 ASCII letters (52 slots) — full A-Z + a-z
+  const ascii = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+  for (let i = 0; i < 52 && i < ascii.length; i++) t[0xB2 + i] = ascii[i];
+  // 0xE6-0xF5 RPG kanji (16 slots)
+  const kanji = '勇者魔王剣盾城町村森山川海空火水';
+  for (let i = 0; i < 16 && i < kanji.length; i++) t[0xE6 + i] = kanji[i];
+  // 0xF6-0xFE glitch / box-drawing / special (9 slots)
+  const glitch = '░▒▓█╔╗╚╝♪';
+  for (let i = 0; i < 9 && i < glitch.length; i++) t[0xF6 + i] = glitch[i];
+  t[0xFF] = '◈'; // end marker
+  for (let i = 0; i < 256; i++) if (!t[i]) t[i] = '·';
+  return t;
+})();
+
+// Build reverse lookup: which bytes map to "meaningful" chars in the table
+const CHARSET_DEFINED = new Set();
+const CHARSET_REVERSE = new Map(); // char → byte value
+(() => {
+  for (let i = 0; i < 256; i++) {
+    if (CHARSET_FALLBACK[i] !== '·') {
+      CHARSET_DEFINED.add(i);
+      // First occurrence wins (for duplicates)
+      if (!CHARSET_REVERSE.has(CHARSET_FALLBACK[i])) {
+        CHARSET_REVERSE.set(CHARSET_FALLBACK[i], i);
+      }
+    }
+  }
+})();
+CON.log(`文字表: ${CHARSET_REVERSE.size}文字定義済み`);
+
+// ---- CRT toggle ----
+document.body.classList.add('crt-on');
+document.getElementById('chkCRT').addEventListener('change', (e) => {
+  document.body.classList.toggle('crt-on', e.target.checked);
+});
+
+// ---------- Retro Byte Stream ----------
+class RBS {
+  constructor(data, meta = {}) {
+    this.data = data instanceof Uint8Array ? data : new Uint8Array(data);
+    this.meta = { sourceType: 'raw', originalLength: this.data.length, ...meta };
+  }
+  get length() { return this.data.length; }
+  applyGlitch(params) {
+    let d = new Uint8Array(this.data);
+    // byte offset
+    if (params.byteOffset > 0 && params.byteOffset < d.length) {
+      d = d.slice(params.byteOffset);
+    }
+    // read limit
+    if (params.readLimit > 0 && d.length > params.readLimit) {
+      d = d.slice(0, params.readLimit);
+    }
+    // bit offset (shift entire stream left by N bits across byte boundaries)
+    if (params.bitOffset > 0) {
+      const s = params.bitOffset & 7;
+      const out = new Uint8Array(d.length);
+      for (let i = 0; i < d.length; i++) {
+        const hi = d[i] << s;
+        const lo = (i + 1 < d.length) ? (d[i + 1] >> (8 - s)) : 0;
+        out[i] = (hi | lo) & 0xFF;
+      }
+      d = out;
+    }
+    // nibble swap
+    if (params.nibbleSwap) {
+      for (let i = 0; i < d.length; i++) d[i] = ((d[i] & 0x0F) << 4) | ((d[i] & 0xF0) >> 4);
+    }
+    // bit shift (rotate each byte)
+    if (params.bitShift > 0) {
+      const s = params.bitShift & 7;
+      for (let i = 0; i < d.length; i++) d[i] = ((d[i] << s) | (d[i] >> (8 - s))) & 0xFF;
+    }
+    // endian swap (pairs)
+    if (params.endianSwap) {
+      for (let i = 0; i + 1 < d.length; i += 2) { const t = d[i]; d[i] = d[i+1]; d[i+1] = t; }
+    }
+    // bit reverse
+    if (params.bitReverse) {
+      for (let i = 0; i < d.length; i++) {
+        let v = d[i], r = 0;
+        for (let b = 0; b < 8; b++) { r = (r << 1) | (v & 1); v >>= 1; }
+        d[i] = r;
+      }
+    }
+    return new RBS(d, { ...this.meta, glitched: true });
+  }
+}
+
+// ---------- Normalizer ----------
+function normalizeText(str) {
+  const enc = new TextEncoder();
+  const bytes = enc.encode(str);
+  return new RBS(bytes, { sourceType: 'text', originalLength: bytes.length });
+}
+
+// Game-encoding: use CHARSET_REVERSE to map each character to its byte index
+function normalizeTextGameEncoding(str) {
+  const chars = [...str]; // spread to handle multi-byte chars properly
+  const bytes = new Uint8Array(chars.length);
+  let unmapped = 0;
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
+    if (ch === '\n' || ch === '\r') {
+      bytes[i] = 0x00; // control char
+    } else if (CHARSET_REVERSE.has(ch)) {
+      bytes[i] = CHARSET_REVERSE.get(ch);
+    } else {
+      // Character not in table — hash to a byte
+      bytes[i] = ch.charCodeAt(0) & 0xFF;
+      unmapped++;
+    }
+  }
+  if (unmapped > 0) CON.warn(`gameエンコード: ${unmapped}文字が文字表に未定義`);
+  return new RBS(bytes, { sourceType: 'text-game', originalLength: bytes.length, unmapped });
+}
+function normalizeImageFile(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const cv = document.createElement('canvas');
+        const sz = Math.min(img.width, 256);
+        const h = Math.round(img.height * (sz / img.width));
+        cv.width = sz; cv.height = h;
+        const ctx = cv.getContext('2d');
+        ctx.drawImage(img, 0, 0, sz, h);
+        const id = ctx.getImageData(0, 0, sz, h);
+        // reduce to 1 byte per pixel (grayscale)
+        const out = new Uint8Array(sz * h);
+        for (let i = 0; i < out.length; i++) {
+          const off = i * 4;
+          out[i] = Math.round(id.data[off] * 0.299 + id.data[off+1] * 0.587 + id.data[off+2] * 0.114);
+        }
+        resolve(new RBS(out, { sourceType: 'image', width: sz, height: h, originalLength: out.length }));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function normalizeBinary(arrayBuf) {
+  const d = new Uint8Array(arrayBuf);
+  return new RBS(d, { sourceType: 'binary', originalLength: d.length });
+}
+
+// ---------- Game Palettes ----------
+const PALETTES = {
+  spectrum: null, // use HSL rainbow
+  nes: [[124,124,124],[0,0,252],[0,0,188],[68,40,188],[148,0,132],[168,0,32],[168,16,0],[136,20,0],[80,48,0],[0,120,0],[0,104,0],[0,88,0],[0,64,88],[0,0,0],[0,0,0],[0,0,0],[188,188,188],[0,120,248],[0,88,248],[104,68,252],[216,0,204],[228,0,88],[248,56,0],[228,92,16],[172,124,0],[0,184,0],[0,168,0],[0,168,68],[0,136,136],[0,0,0],[0,0,0],[0,0,0],[248,248,248],[60,188,252],[104,136,252],[152,120,248],[248,120,248],[248,88,152],[248,120,88],[252,160,68],[248,184,0],[184,248,24],[88,216,84],[88,248,152],[0,232,216],[120,120,120],[0,0,0],[0,0,0],[252,252,252],[164,228,252],[184,184,248],[216,184,248],[248,184,248],[248,164,192],[240,208,176],[252,224,168],[248,216,120],[216,248,120],[184,248,184],[184,248,216],[0,252,252],[216,216,216],[0,0,0],[0,0,0]],
+  gb: [[15,56,15],[48,98,48],[139,172,15],[155,188,15]],
+  snes: [[0,0,0],[128,0,0],[0,128,0],[128,128,0],[0,0,128],[128,0,128],[0,128,128],[192,192,192],[128,128,128],[255,0,0],[0,255,0],[255,255,0],[0,0,255],[255,0,255],[0,255,255],[255,255,255]],
+  cga: [[0,0,0],[0,0,170],[0,170,0],[0,170,170],[170,0,0],[170,0,170],[170,85,0],[170,170,170],[85,85,85],[85,85,255],[85,255,85],[85,255,255],[255,85,85],[255,85,255],[255,255,85],[255,255,255]],
+  pico8: [[0,0,0],[29,43,83],[126,37,83],[0,135,81],[171,82,54],[95,87,79],[194,195,199],[255,241,232],[255,0,77],[255,163,0],[255,236,39],[0,228,54],[41,173,255],[131,118,156],[255,119,168],[255,204,170]],
+  gray: null // grayscale
+};
+function getPaletteColor(byteVal, paletteName) {
+  const pal = PALETTES[paletteName];
+  if (!pal) {
+    if (paletteName === 'gray') return [byteVal, byteVal, byteVal];
+    // spectrum
+    return hsl2rgb(byteVal / 255 * 360, 70, 50);
+  }
+  return pal[byteVal % pal.length];
+}
+
+// ---------- Params ----------
+function readParams() {
+  return {
+    byteOffset: +document.getElementById('pByteOffset').value || 0,
+    bitOffset: +document.getElementById('pBitOffset').value || 0,
+    bitShift: +document.getElementById('pBitShift').value || 0,
+    mapWidth: +document.getElementById('pMapWidth').value || 32,
+    tileSize: +document.getElementById('pTileSize').value || 8,
+    imgWidth: +document.getElementById('pImgWidth').value || 128,
+    bankSize: +document.getElementById('pBankSize').value || 16384,
+    ptrStride: +document.getElementById('pPtrStride').value || 2,
+    textWrap: +document.getElementById('pTextWrap').value || 32,
+    nibbleSwap: document.getElementById('pNibbleSwap').checked,
+    endianSwap: document.getElementById('pEndianSwap').checked,
+    bitReverse: document.getElementById('pBitReverse').checked,
+    strictLoose: document.getElementById('pStrictLoose').value,
+    imgFmt: document.getElementById('pImgFmt').value,
+    palette: document.getElementById('pPalette').value,
+    textMode: document.getElementById('pTextMode').value,
+    readLimit: +document.getElementById('pReadLimit').value || 0,
+    imgScale: +document.getElementById('pImgScale').value || 1,
+    mode: document.getElementById('selMode').value,
+    tempo: +document.getElementById('pTempo').value || 120,
+    pitchBase: +document.getElementById('pPitchBase').value || 48,
+    volume: +document.getElementById('volSlider').value / 100
+  };
+}
+
+// ---------- Hex Editor (Interactive) ----------
+let hexEditorData = null; // working copy for edits
+let hexModifiedSet = new Set(); // track modified byte indices
+
+function renderHex(rbs) {
+  const el = document.getElementById('hexView');
+  if (!rbs || !rbs.data.length) { el.innerHTML = '<span style="color:var(--sub)">(empty)</span>'; return; }
+  hexEditorData = new Uint8Array(rbs.data); // working copy
+  hexModifiedSet.clear();
+  rebuildHexDOM();
+}
+
+function rebuildHexDOM() {
+  const el = document.getElementById('hexView');
+  const d = hexEditorData;
+  if (!d) return;
+  const len = Math.min(d.length, 512);
+  el.innerHTML = '';
+  for (let i = 0; i < len; i += 16) {
+    // address
+    const addr = document.createElement('span');
+    addr.className = 'hex-addr';
+    addr.textContent = i.toString(16).padStart(6, '0') + '  ';
+    el.appendChild(addr);
+    // hex bytes
+    const bytesInRow = [];
+    for (let j = 0; j < 16 && i + j < len; j++) {
+      const idx = i + j;
+      const span = document.createElement('span');
+      span.className = 'hex-byte' + (hexModifiedSet.has(idx) ? ' modified' : '');
+      span.textContent = d[idx].toString(16).padStart(2, '0');
+      span.dataset.idx = idx;
+      span.addEventListener('click', onHexByteClick);
+      el.appendChild(span);
+      el.appendChild(document.createTextNode(' '));
+      bytesInRow.push(d[idx]);
+    }
+    // pad if short row
+    const pad = 16 - bytesInRow.length;
+    if (pad > 0) el.appendChild(document.createTextNode('   '.repeat(pad)));
+    // ascii
+    const asc = document.createElement('span');
+    asc.className = 'hex-ascii';
+    asc.textContent = ' ' + bytesInRow.map(b => (b >= 0x20 && b < 0x7F) ? String.fromCharCode(b) : '.').join('');
+    el.appendChild(asc);
+    el.appendChild(document.createTextNode('\n'));
+  }
+  if (d.length > 512) {
+    const more = document.createElement('span');
+    more.style.color = 'var(--sub)';
+    more.textContent = `... (${d.length} bytes total)`;
+    el.appendChild(more);
+  }
+  updateHexStatus();
+}
+
+function onHexByteClick(e) {
+  const span = e.target;
+  if (span.classList.contains('editing')) return;
+  const idx = +span.dataset.idx;
+  const oldVal = span.textContent;
+  span.classList.add('editing');
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = oldVal;
+  input.maxLength = 2;
+  input.style.cssText = 'width:18px;font-family:inherit;font-size:inherit;background:transparent;color:var(--glow-yel);border:none;padding:0;text-align:center;outline:none;';
+  span.textContent = '';
+  span.appendChild(input);
+  input.focus();
+  input.select();
+  const commit = () => {
+    const val = parseInt(input.value, 16);
+    if (!isNaN(val) && val >= 0 && val <= 255) {
+      hexEditorData[idx] = val;
+      hexModifiedSet.add(idx);
+      span.textContent = val.toString(16).padStart(2, '0');
+      span.classList.add('modified');
+    } else {
+      span.textContent = oldVal;
+    }
+    span.classList.remove('editing');
+    updateHexStatus();
+  };
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') { ev.preventDefault(); commit(); }
+    if (ev.key === 'Escape') { span.textContent = oldVal; span.classList.remove('editing'); }
+    if (ev.key === 'Tab') {
+      ev.preventDefault();
+      commit();
+      // move to next byte
+      const nextIdx = idx + (ev.shiftKey ? -1 : 1);
+      const nextSpan = document.querySelector(`.hex-byte[data-idx="${nextIdx}"]`);
+      if (nextSpan) setTimeout(() => nextSpan.click(), 10);
+    }
+  });
+}
+
+function updateHexStatus() {
+  const el = document.getElementById('hexStatus');
+  if (hexModifiedSet.size > 0) {
+    el.textContent = `${hexModifiedSet.size}バイト編集済み`;
+    el.style.color = '#ff5555';
+  } else {
+    el.textContent = '';
+  }
+}
+// ============================================================
+//  Reader Architecture
+// ============================================================
+class BaseReader {
+  constructor(name, label) { this.name = name; this.label = label; }
+  getCharset()    { return CHARSET_FALLBACK; }
+  getMapColor(v)  { return '#000'; }
+  isPassable(v)   { return false; }
+  getMapDefaults(){ return { mapWidth: 32, tileSize: 8 }; }
+  readText(rbs, params) { return null; } // null = use default renderer
+  readMusic(rbs, params) { return null; } // null = use default
+  getImageDefaults() { return {}; } // override imgFmt, palette, etc.
+  getMusicDefaults() { return {}; }
+}
+
+// ---------- Toy Reader ----------
+class ToyReader extends BaseReader {
+  constructor() { super('toy', 'おもちゃ'); }
+  getMapColor(v) {
+    const MAP_COLS = [
+      '#0044aa','#0055cc','#0066dd','#0077ee',
+      '#228B22','#2e8b2e','#33a033','#3cb371',
+      '#c2b280','#d2c290','#daa520','#e8c840',
+      '#555555','#666666','#777777','#888888',
+      '#cc2222','#dd3333','#ee4444','#ff5555',
+      '#ff00ea','#cc00ff','#aa22ff','#8844ff','#6666ff','#4488ff'
+    ];
+    if (v < 0x20) return MAP_COLS[v >> 3];
+    if (v < 0x40) return MAP_COLS[4 + ((v - 0x20) >> 3)];
+    if (v < 0x60) return MAP_COLS[8 + ((v - 0x40) >> 3)];
+    if (v < 0x80) return MAP_COLS[12 + ((v - 0x60) >> 3)];
+    if (v < 0xA0) return MAP_COLS[16 + ((v - 0x80) >> 3)];
+    return MAP_COLS[20 + ((v - 0xA0) % 6)];
+  }
+  isPassable(v) { return v < 0x60; }
+}
+
+// ---------- SMB1 Reader ----------
+class SMBReader extends BaseReader {
+  constructor() {
+    super('smb', 'Super Mario Bros.');
+    // SMB1-style character table (uppercase + digits + score symbols)
+    this._charset = new Array(256);
+    for (let i = 0; i < 256; i++) this._charset[i] = '·';
+    // 0x00-0x09 = digits 0-9
+    for (let i = 0; i < 10; i++) this._charset[i] = String(i);
+    // 0x0A-0x23 = A-Z
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach((c,i) => this._charset[0x0A+i] = c);
+    // 0x24 = space
+    this._charset[0x24] = ' ';
+    // 0x28 = -, 0x29 = ×, 0x2A = !, 0x2B = ©
+    this._charset[0x28] = '-'; this._charset[0x29] = '×'; this._charset[0x2A] = '!'; this._charset[0x2B] = '©';
+    // special game symbols
+    this._charset[0xAF] = '🍄'; this._charset[0xCE] = '★'; this._charset[0xCF] = '👑';
+    this._charset[0xF0] = '🟫'; this._charset[0xF1] = '❓'; this._charset[0xF2] = '🪙';
+    // Glitch region markers
+    for (let i = 0xD0; i <= 0xEF; i++) {
+      const glitchSym = '░▒▓█╔╗╚╝║═╬┃━◆☠⚡'[((i - 0xD0) % 17)];
+      this._charset[i] = glitchSym;
+    }
+  }
+  getCharset() { return this._charset; }
+  getMapDefaults() { return { mapWidth: 16, tileSize: 10 }; }
+  getMapColor(v) {
+    // SMB1-inspired terrain: sky, ground, bricks, ? blocks, pipes, castle, enemies, glitch
+    if (v < 0x10) return '#5c94fc'; // 空 (sky blue - NES blue)
+    if (v < 0x20) return '#7cc8ff'; // 雲/空の装飾 (light sky)
+    if (v < 0x38) return '#c84c0c'; // 地面/レンガ (brown bricks)
+    if (v < 0x40) return '#e8a000'; // ？ブロック (gold ? block)
+    if (v < 0x50) return '#00a800'; // パイプ (green pipe)
+    if (v < 0x58) return '#005800'; // パイプ暗部 (dark green)
+    if (v < 0x68) return '#6844fc'; // 城壁 (purple castle)
+    if (v < 0x70) return '#4428bc'; // 城壁暗部 (dark purple)
+    if (v < 0x80) return '#0058f8'; // 水 (water blue)
+    if (v < 0x88) return '#fcfcfc'; // 雲 (white clouds)
+    if (v < 0x90) return '#fc9838'; // コイン (gold)
+    if (v < 0x98) return '#e40058'; // 敵:クリボー etc (red)
+    if (v < 0xA0) return '#d82800'; // 敵:ファイア (fire red)
+    if (v < 0xA8) return '#74d40c'; // ツタ/草 (vine green)
+    if (v < 0xB0) return '#f8d878'; // スター/アイテム (bright yellow)
+    // 0xB0-0xFF: undefined/glitch territory
+    // Glitch: noisy color derived from byte value
+    const h = (v * 137) % 360;
+    return `hsl(${h},80%,${30 + (v % 20)}%)`;
+  }
+  isPassable(v) {
+    if (v < 0x10) return true;   // 空
+    if (v < 0x20) return true;   // 雲/装飾
+    if (v < 0x40) return false;  // ブロック/？
+    if (v < 0x58) return false;  // パイプ
+    if (v < 0x70) return false;  // 城壁
+    if (v < 0x80) return true;   // 水(通過可)
+    if (v < 0x88) return true;   // 雲
+    if (v < 0x90) return true;   // コイン
+    if (v < 0xA0) return true;   // 敵(通過可、ダメージ演出)
+    if (v < 0xB0) return true;   // アイテム
+    return false;                // glitch = wall
+  }
+  getImageDefaults() { return { imgFmt: '2bpp', palette: 'nes' }; }
+  getMusicDefaults() { return { tempo: 140, pitchBase: 48 }; }
+}
+
+// Reader registry
+const READERS = {
+  toy: new ToyReader(),
+  smb: new SMBReader(),
+};
+let currentReader = READERS.toy;
+
+// Switch reader on mode change
+document.getElementById('selMode').addEventListener('change', (e) => {
+  const mode = e.target.value;
+  if (READERS[mode]) {
+    currentReader = READERS[mode];
+    CON.log(`解釈形式: ${currentReader.label}`);
+    // Apply reader defaults to UI
+    const md = currentReader.getMapDefaults();
+    if (md.mapWidth) document.getElementById('pMapWidth').value = md.mapWidth;
+    if (md.tileSize) document.getElementById('pTileSize').value = md.tileSize;
+    const id = currentReader.getImageDefaults();
+    if (id.imgFmt) document.getElementById('pImgFmt').value = id.imgFmt;
+    if (id.palette) document.getElementById('pPalette').value = id.palette;
+    const mu = currentReader.getMusicDefaults();
+    if (mu.tempo) document.getElementById('pTempo').value = mu.tempo;
+    if (mu.pitchBase) document.getElementById('pPitchBase').value = mu.pitchBase;
+    if (currentRBS) interpret();
+  }
+});
+
+// ---------- Map Reader + Walking ----------
+
+let mapData = null, mapW = 32, mapH = 0;
+let playerX = 0, playerY = 0, playerVisible = false;
+
+function renderMap(rbs, params) {
+  const cv = document.getElementById('cvMap');
+  const ctx = cv.getContext('2d');
+  mapW = params.mapWidth;
+  const ts = params.tileSize;
+  const d = rbs.data;
+  mapH = Math.ceil(d.length / mapW);
+  mapData = d;
+  cv.width = mapW * ts;
+  cv.height = Math.min(mapH, 64) * ts;
+  const visH = Math.min(mapH, 64);
+  // camera centering
+  let camY = Math.max(0, playerY - Math.floor(visH / 2));
+  if (camY + visH > mapH) camY = Math.max(0, mapH - visH);
+  for (let row = 0; row < visH; row++) {
+    for (let col = 0; col < mapW; col++) {
+      const idx = (camY + row) * mapW + col;
+      const v = idx < d.length ? d[idx] : 0;
+      ctx.fillStyle = currentReader.getMapColor(v);
+      ctx.fillRect(col * ts, row * ts, ts, ts);
+      // grid line
+      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+      ctx.strokeRect(col * ts, row * ts, ts, ts);
+    }
+  }
+  // player
+  if (playerVisible) {
+    const px = playerX * ts;
+    const py = (playerY - camY) * ts;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(px + 1, py + 1, ts - 2, ts - 2);
+    ctx.fillStyle = var_glow_cyan;
+    ctx.fillRect(px + 2, py + 2, ts - 4, ts - 4);
+  }
+  document.getElementById('mapInfo').textContent =
+    `${mapW}×${mapH} tiles | Player: (${playerX},${playerY}) | Tile: 0x${(mapData[playerY*mapW+playerX]||0).toString(16).padStart(2,'0')}`;
+}
+const var_glow_cyan = '#00fff2';
+
+document.addEventListener('keydown', (e) => {
+  if (!mapData || !playerVisible) return;
+  if (document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'INPUT') return;
+  const shift = e.shiftKey;
+  let dx = 0, dy = 0;
+  if (e.key === 'ArrowUp') dy = -1;
+  else if (e.key === 'ArrowDown') dy = 1;
+  else if (e.key === 'ArrowLeft') dx = -1;
+  else if (e.key === 'ArrowRight') dx = 1;
+  else return;
+  e.preventDefault();
+  const nx = playerX + dx, ny = playerY + dy;
+  if (nx < 0 || nx >= mapW || ny < 0 || ny >= mapH) return;
+  const tgtIdx = ny * mapW + nx;
+  const tileVal = tgtIdx < mapData.length ? mapData[tgtIdx] : 0;
+  if (shift || currentReader.isPassable(tileVal)) {
+    playerX = nx; playerY = ny;
+    renderMap(currentGlitchedRBS, readParams());
+  }
+});
+
+// ---------- Toy Text Reader ----------
+// Transparent mode: try to decode UTF-8 bytes back to readable chars
+function transparentDecode(data) {
+  // Try UTF-8 decode first
+  try {
+    const decoded = new TextDecoder('utf-8', { fatal: false }).decode(data);
+    return decoded;
+  } catch(e) {
+    // fallback: byte-by-byte
+    let out = '';
+    for (let i = 0; i < data.length; i++) {
+      const b = data[i];
+      if (b >= 0x20 && b < 0x7F) out += String.fromCharCode(b); // ASCII printable
+      else if (b === 0x0A) out += '\n';
+      else if (b === 0x0D) out += '';
+      else if (b === 0x09) out += '\t';
+      else out += '·';
+    }
+    return out;
+  }
+}
+
+function renderText(rbs, params) {
+  const el = document.getElementById('textOut');
+  const d = rbs.data;
+  const wrap = params.textWrap;
+  if (params.textMode === 'transparent') {
+    const raw = transparentDecode(d);
+    let out = '', col = 0;
+    for (const ch of raw) {
+      if (ch === '\n') { out += '\n'; col = 0; continue; }
+      out += ch; col++;
+      if (col >= wrap) { out += '\n'; col = 0; }
+    }
+    el.textContent = out;
+  } else if (params.textMode === 'semi') {
+    // semi-transparent: defined chars shown as-is, undefined get glitched
+    let out = '';
+    for (let i = 0; i < d.length; i++) {
+      const b = d[i];
+      if (CHARSET_DEFINED.has(b)) {
+        // This byte maps to a real char in the table — show it transparently
+        out += CHARSET_FALLBACK[b];
+      } else {
+        // Undefined byte — glitch it with visual corruption markers
+        const glitchChars = '░▒▓█▄▀╔╗╚╝║═╬┃━◆·■□▲△';
+        out += glitchChars[b % glitchChars.length];
+      }
+      if ((i + 1) % wrap === 0) out += '\n';
+    }
+    el.textContent = out;
+  } else {
+    // glitch mode: use reader's charset table
+    const charset = currentReader.getCharset();
+    let out = '';
+    for (let i = 0; i < d.length; i++) {
+      out += charset[d[i]];
+      if ((i + 1) % wrap === 0) out += '\n';
+    }
+    el.textContent = out;
+  }
+}
+
+// ---------- Toy Image Reader ----------
+function renderImage(rbs, params) {
+  const cv = document.getElementById('cvImg');
+  const ctx = cv.getContext('2d');
+  const d = rbs.data;
+  const w = params.imgWidth;
+  const fmt = params.imgFmt;
+  let pixelCount, h;
+  if (fmt === '1bpp') {
+    pixelCount = d.length * 8;
+    h = Math.ceil(pixelCount / w);
+  } else if (fmt === '2bpp') {
+    pixelCount = d.length * 4;
+    h = Math.ceil(pixelCount / w);
+  } else {
+    pixelCount = d.length;
+    h = Math.ceil(pixelCount / w);
+  }
+  cv.width = w; cv.height = h || 1;
+  const imgData = ctx.createImageData(w, h || 1);
+  const palName = params.palette;
+  // For 1bpp/2bpp, use palette if available
+  const pal2 = palName !== 'spectrum' && PALETTES[palName] ? [PALETTES[palName][0], PALETTES[palName][PALETTES[palName].length-1]] : [[0,0,0],[255,255,255]];
+  const pal4 = palName !== 'spectrum' && PALETTES[palName] ? PALETTES[palName].slice(0,4) : [[0,0,0],[85,85,85],[170,170,170],[255,255,255]];
+  while (pal4.length < 4) pal4.push([255,255,255]);
+  let px = 0;
+  for (let i = 0; i < d.length && px < pixelCount; i++) {
+    if (fmt === '1bpp') {
+      for (let b = 7; b >= 0 && px < pixelCount; b--, px++) {
+        const v = (d[i] >> b) & 1;
+        const c = pal2[v];
+        const off = px * 4;
+        imgData.data[off] = c[0]; imgData.data[off+1] = c[1]; imgData.data[off+2] = c[2]; imgData.data[off+3] = 255;
+      }
+    } else if (fmt === '2bpp') {
+      for (let b = 6; b >= 0 && px < pixelCount; b -= 2, px++) {
+        const v = (d[i] >> b) & 3;
+        const c = pal4[v];
+        const off = px * 4;
+        imgData.data[off] = c[0]; imgData.data[off+1] = c[1]; imgData.data[off+2] = c[2]; imgData.data[off+3] = 255;
+      }
+    } else {
+      const off = px * 4;
+      const [r, g, b] = getPaletteColor(d[i], palName);
+      imgData.data[off] = r; imgData.data[off+1] = g; imgData.data[off+2] = b; imgData.data[off+3] = 255;
+      px++;
+    }
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+function hsl2rgb(h, s, l) {
+  s /= 100; l /= 100;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+  const m = l - c / 2;
+  let r, g, b;
+  if (h < 60) { r=c;g=x;b=0; } else if (h<120) { r=x;g=c;b=0; }
+  else if (h<180) { r=0;g=c;b=x; } else if (h<240) { r=0;g=x;b=c; }
+  else if (h<300) { r=x;g=0;b=c; } else { r=c;g=0;b=x; }
+  return [Math.round((r+m)*255), Math.round((g+m)*255), Math.round((b+m)*255)];
+}
+
+// ---------- Image Save ----------
+document.getElementById('btnSaveImg').addEventListener('click', () => {
+  const cv = document.getElementById('cvImg');
+  const link = document.createElement('a');
+  link.download = 'glitch_image.png';
+  link.href = cv.toDataURL('image/png');
+  link.click();
+});
+
+// ---------- Toy Music Reader ----------
+let audioCtx = null, musicNotes = [], isPlaying = false, playTimer = null, currentNoteIdx = 0;
+
+function parseMusicNotes(rbs, params) {
+  const d = rbs.data;
+  const notes = [];
+  const baseNote = params.pitchBase;
+  for (let i = 0; i + 1 < d.length; i += 2) {
+    const pitch = baseNote + (d[i] % 48); // map to ~4 octaves
+    const durByte = d[i + 1];
+    const durMs = 30 + (durByte / 255) * 470; // 30-500ms
+    const freq = 440 * Math.pow(2, (pitch - 69) / 12);
+    const ch = (i / 2) % 3; // 0=pulse1, 1=pulse2, 2=noise
+    notes.push({ pitch, freq, durMs, ch, byteIdx: i, raw: [d[i], d[i+1]] });
+  }
+  return notes;
+}
+
+function renderMusicCanvas(notes, params) {
+  const cv = document.getElementById('cvMusic');
+  const ctx = cv.getContext('2d');
+  cv.width = cv.clientWidth * (window.devicePixelRatio || 1);
+  cv.height = 160;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  if (!notes.length) return;
+  const totalTime = notes.reduce((s, n) => s + n.durMs, 0);
+  let x = 0;
+  for (let i = 0; i < notes.length; i++) {
+    const n = notes[i];
+    const w = Math.max(1, (n.durMs / totalTime) * cv.width);
+    const y = cv.height - ((n.pitch - 20) / 90) * cv.height;
+    const colors = ['#00fff2', '#ff00ea', '#39ff14'];
+    ctx.fillStyle = i === currentNoteIdx ? '#ffffff' : colors[n.ch];
+    ctx.fillRect(x, y, Math.max(w - 0.5, 0.5), 3);
+    x += w;
+  }
+  // seek position
+  const seekPct = currentNoteIdx / Math.max(notes.length - 1, 1);
+  document.getElementById('seekBar').value = Math.round(seekPct * 100);
+  document.getElementById('musicInfo').textContent = `${notes.length} notes | ${(totalTime/1000).toFixed(1)}s | note ${currentNoteIdx}/${notes.length}`;
+}
+
+function playNote(note, params) {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const vol = params.volume;
+  const gain = audioCtx.createGain();
+  gain.gain.value = vol * 0.15;
+  gain.connect(audioCtx.destination);
+  const durSec = note.durMs / 1000 * (60 / params.tempo);
+  if (note.ch < 2) {
+    const osc = audioCtx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.value = note.freq;
+    osc.connect(gain);
+    osc.start();
+    osc.stop(audioCtx.currentTime + durSec);
+  } else {
+    // noise burst via buffer
+    const len = Math.floor(audioCtx.sampleRate * durSec);
+    const buf = audioCtx.createBuffer(1, Math.max(len, 1), audioCtx.sampleRate);
+    const ch = buf.getChannelData(0);
+    for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1;
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(gain);
+    src.start();
+  }
+}
+
+function startPlayback() {
+  if (isPlaying) return;
+  const params = readParams();
+  isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸';
+  function tick() {
+    if (!isPlaying || currentNoteIdx >= musicNotes.length) { stopPlayback(); return; }
+    const n = musicNotes[currentNoteIdx];
+    playNote(n, params);
+    renderMusicCanvas(musicNotes, params);
+    const durMs = n.durMs * (60 / params.tempo);
+    currentNoteIdx++;
+    playTimer = setTimeout(tick, durMs);
+  }
+  tick();
+}
+
+function stopPlayback() {
+  isPlaying = false;
+  if (playTimer) { clearTimeout(playTimer); playTimer = null; }
+  document.getElementById('btnPlay').textContent = '▶';
+}
+
+document.getElementById('btnPlay').addEventListener('click', () => {
+  if (isPlaying) stopPlayback(); else startPlayback();
+});
+document.getElementById('btnStop').addEventListener('click', () => {
+  stopPlayback(); currentNoteIdx = 0;
+  if (musicNotes.length) renderMusicCanvas(musicNotes, readParams());
+});
+document.getElementById('seekBar').addEventListener('input', (e) => {
+  const pct = +e.target.value / 100;
+  currentNoteIdx = Math.floor(pct * musicNotes.length);
+  if (musicNotes.length) renderMusicCanvas(musicNotes, readParams());
+});
+
+// ---------- MIDI Export ----------
+document.getElementById('btnExportMid').addEventListener('click', () => {
+  if (!musicNotes.length) { CON.warn('音楽データがありません'); return; }
+  const params = readParams();
+  const midi = buildMidiBytes(musicNotes, params);
+  downloadBlob(new Blob([midi], {type:'audio/midi'}), 'glitch_music.mid');
+  CON.log('MIDファイル出力完了');
+});
+
+function buildMidiBytes(notes, params) {
+  // Simple Format 0 MIDI
+  const tempo = params.tempo;
+  const TPQ = 480;
+  const track = [];
+  function writeVLQ(val) {
+    const bytes = [];
+    bytes.push(val & 0x7F);
+    val >>= 7;
+    while (val > 0) { bytes.push((val & 0x7F) | 0x80); val >>= 7; }
+    return bytes.reverse();
+  }
+  // tempo meta event
+  const uspqn = Math.round(60000000 / tempo);
+  track.push(0x00, 0xFF, 0x51, 0x03, (uspqn >> 16) & 0xFF, (uspqn >> 8) & 0xFF, uspqn & 0xFF);
+  for (const n of notes) {
+    const midiNote = Math.max(0, Math.min(127, n.pitch));
+    const vel = 100;
+    const durTicks = Math.round((n.durMs / 1000) * (tempo / 60) * TPQ);
+    const ch = Math.min(n.ch, 15);
+    // note on (delta=0 for simplicity in sequence)
+    track.push(...writeVLQ(0), 0x90 | ch, midiNote, vel);
+    // note off
+    track.push(...writeVLQ(durTicks), 0x80 | ch, midiNote, 0);
+  }
+  // end of track
+  track.push(0x00, 0xFF, 0x2F, 0x00);
+  // build file
+  const trackLen = track.length;
+  const header = [
+    0x4D,0x54,0x68,0x64, 0,0,0,6, 0,0, 0,1,
+    (TPQ >> 8) & 0xFF, TPQ & 0xFF,
+    0x4D,0x54,0x72,0x6B,
+    (trackLen >> 24) & 0xFF, (trackLen >> 16) & 0xFF, (trackLen >> 8) & 0xFF, trackLen & 0xFF
+  ];
+  return new Uint8Array([...header, ...track]);
+}
+
+// ---------- WAV Export ----------
+document.getElementById('btnExportWav').addEventListener('click', () => {
+  if (!musicNotes.length) { CON.warn('音楽データがありません'); return; }
+  const params = readParams();
+  renderWavAndDownload(musicNotes, params);
+});
+
+function renderWavAndDownload(notes, params) {
+  const sr = 44100;
+  const totalSamples = notes.reduce((s, n) => s + Math.ceil(sr * n.durMs / 1000 * 60 / params.tempo), 0);
+  const buf = new Float32Array(totalSamples);
+  let pos = 0;
+  for (const n of notes) {
+    const durSec = n.durMs / 1000 * 60 / params.tempo;
+    const len = Math.ceil(sr * durSec);
+    for (let i = 0; i < len && pos < totalSamples; i++, pos++) {
+      if (n.ch < 2) {
+        const phase = (i * n.freq / sr) % 1;
+        buf[pos] = phase < 0.5 ? 0.3 : -0.3;
+      } else {
+        buf[pos] = (Math.random() * 2 - 1) * 0.15;
+      }
+      buf[pos] *= params.volume;
+    }
+  }
+  // encode WAV
+  const wavBuf = new ArrayBuffer(44 + totalSamples * 2);
+  const view = new DataView(wavBuf);
+  const writeStr = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+  writeStr(0, 'RIFF'); view.setUint32(4, 36 + totalSamples * 2, true);
+  writeStr(8, 'WAVE'); writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+  view.setUint32(24, sr, true); view.setUint32(28, sr * 2, true);
+  view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+  writeStr(36, 'data'); view.setUint32(40, totalSamples * 2, true);
+  for (let i = 0; i < totalSamples; i++) {
+    const s = Math.max(-1, Math.min(1, buf[i]));
+    view.setInt16(44 + i * 2, s * 32767, true);
+  }
+  downloadBlob(new Blob([wavBuf], {type:'audio/wav'}), 'glitch_music.wav');
+  CON.log('WAVファイル出力完了');
+}
+
+function downloadBlob(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ============================================================
+//  Main Controller
+// ============================================================
+let currentRBS = null, currentGlitchedRBS = null;
+
+function interpret() {
+  if (!currentRBS) { CON.warn('入力データがありません'); return; }
+  CON.clear();
+  const params = readParams();
+  CON.log(`入力: ${currentRBS.meta.sourceType} / ${currentRBS.length} bytes`);
+  CON.log(`グリッチ: offset=${params.byteOffset} shift=${params.bitShift} nibble=${params.nibbleSwap} endian=${params.endianSwap}`);
+
+  currentGlitchedRBS = currentRBS.applyGlitch(params);
+  CON.log(`変換後: ${currentGlitchedRBS.length} bytes`);
+
+  // render all 4 outputs
+  renderHex(currentGlitchedRBS);
+  renderMap(currentGlitchedRBS, params);
+  playerVisible = true; playerX = 0; playerY = 0;
+  renderMap(currentGlitchedRBS, params);
+  renderText(currentGlitchedRBS, params);
+  renderImage(currentGlitchedRBS, params);
+  musicNotes = parseMusicNotes(currentGlitchedRBS, params);
+  currentNoteIdx = 0;
+  renderMusicCanvas(musicNotes, params);
+  CON.log(`マップ: ${params.mapWidth}×${Math.ceil(currentGlitchedRBS.length/params.mapWidth)}`);
+  CON.log(`テキスト: ${currentGlitchedRBS.length}文字 (wrap=${params.textWrap})`);
+  CON.log(`音楽: ${musicNotes.length}ノート`);
+  CON.log('✓ 再解釈完了');
+}
+
+// --- Event Bindings ---
+document.getElementById('btnReinterpret').addEventListener('click', interpret);
+
+document.getElementById('btnLoadText').addEventListener('click', () => {
+  const val = document.getElementById('textInput').value;
+  if (!val) { CON.warn('テキストが空です'); return; }
+  const encMode = document.getElementById('pTextEnc').value;
+  if (encMode === 'game') {
+    currentRBS = normalizeTextGameEncoding(val);
+    document.getElementById('inputInfo').textContent = `テキスト(game): ${currentRBS.length} bytes (${[...val].length}文字)`;
+    CON.log(`gameエンコード入力: ${currentRBS.length} bytes`);
+  } else {
+    currentRBS = normalizeText(val);
+    document.getElementById('inputInfo').textContent = `テキスト(UTF-8): ${currentRBS.length} bytes`;
+    CON.log(`UTF-8テキスト入力: ${currentRBS.length} bytes`);
+  }
+  interpret();
+});
+
+document.getElementById('btnLoadFile').addEventListener('click', () => {
+  const file = document.getElementById('fileInput').files[0];
+  if (!file) { CON.warn('ファイルが選択されていません'); return; }
+  const isImage = file.type.startsWith('image/');
+  if (isImage) {
+    normalizeImageFile(file).then(rbs => {
+      currentRBS = rbs;
+      document.getElementById('inputInfo').textContent = `画像: ${rbs.meta.width}×${rbs.meta.height} → ${rbs.length} bytes`;
+      CON.log(`画像入力: ${rbs.length} bytes`);
+      interpret();
+    });
+  } else {
+    const reader = new FileReader();
+    reader.onload = () => {
+      currentRBS = normalizeBinary(reader.result);
+      document.getElementById('inputInfo').textContent = `バイナリ: ${currentRBS.length} bytes (${file.name})`;
+      CON.log(`バイナリ入力: ${currentRBS.length} bytes`);
+      interpret();
+    };
+    reader.readAsArrayBuffer(file);
+  }
+});
+
+// Auto-reinterpret on param change
+document.querySelectorAll('.ctrl-grid input, .ctrl-grid select, #pNibbleSwap, #pEndianSwap, #pBitReverse, #pStrictLoose, #pImgFmt, #pPalette, #pTextMode, #pReadLimit')
+  .forEach(el => el.addEventListener('change', () => { if (currentRBS) interpret(); }));
+
+// --- Text output → Input ---
+document.getElementById('btnTextToInput').addEventListener('click', () => {
+  const text = document.getElementById('textOut').textContent;
+  if (!text) { CON.warn('テキスト出力が空です'); return; }
+  document.getElementById('textInput').value = text;
+  currentRBS = normalizeText(text);
+  document.getElementById('inputInfo').textContent = `テキスト(出力から): ${currentRBS.length} bytes`;
+  CON.log(`出力テキストを入力に流し込み: ${currentRBS.length} bytes`);
+  interpret();
+});
+
+// --- Hex Editor (inline edit) ---
+document.getElementById('btnHexApply').addEventListener('click', () => {
+  if (!hexEditorData) { CON.warn('Hexデータがありません'); return; }
+  if (hexModifiedSet.size === 0) { CON.warn('変更がありません'); return; }
+  currentRBS = new RBS(new Uint8Array(hexEditorData), { sourceType: 'hex-edit', originalLength: hexEditorData.length });
+  document.getElementById('inputInfo').textContent = `Hex編集: ${hexEditorData.length} bytes (${hexModifiedSet.size}箇所変更)`;
+  CON.log(`Hexエディタから適用: ${hexModifiedSet.size}バイト変更`);
+  interpret();
+});
+
+document.getElementById('btnHexUndo').addEventListener('click', () => {
+  if (!currentGlitchedRBS) { CON.warn('データがありません'); return; }
+  hexEditorData = new Uint8Array(currentGlitchedRBS.data);
+  hexModifiedSet.clear();
+  rebuildHexDOM();
+  CON.log('Hex編集を元に戻しました');
+});
+
+document.getElementById('btnHexCopy').addEventListener('click', () => {
+  if (!hexEditorData) { CON.warn('データがありません'); return; }
+  const hex = Array.from(hexEditorData).map(b => b.toString(16).padStart(2, '0')).join(' ');
+  navigator.clipboard?.writeText(hex).then(() => CON.log('Hexをクリップボードにコピー'));
+  CON.log(`Hexコピー: ${hexEditorData.length} bytes`);
+});
+
+// Initial demo data
+(function loadDemo() {
+  const demo = 'レトロ相互誤読グリッチ変換機へようこそ！同じバイト列がテキスト・音・画像・マップに化ける不思議をお楽しみください。';
+  document.getElementById('textInput').value = demo;
+  currentRBS = normalizeText(demo);
+  document.getElementById('inputInfo').textContent = `テキスト: ${currentRBS.length} bytes`;
+  interpret();
+})();
+
+</script>
+</body>
+</html>

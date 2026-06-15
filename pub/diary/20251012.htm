@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2025年第四期 * 湫埜と雨滴 *</title>
+  <link rel="preload" as="font" href="/seoremium/Seoremium_clg.ttf" type="ttf" crossorigin />
+  <!-- Lightbox2 CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="../style/diary_style.css">
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+  <div class="wrapper">
+    <div class="p_left">
+      現在位置 : <a href="../index.html">ホーム</a> ＞ <a href="index.htm">Diary</a> ＞
+      <a href="20251012.htm"><b>2025年第四期</b></a>
+    </div>
+    <hr />
+    <p style="text-align: center">
+      <a href="20250709.htm">←2025年第三期</a>　　　　　　　<a href="20260103.htm">2026年第一期→</a>
+    </p>
+    <h1>2025年12月31日</h1>
+    <h2>大晦日ですね。</h2>
+    風邪をこじらせ、喘息で咳が止まらなくなってしまったせいで、昨日くらいまで寝込んでいました。
+    非実在JSじゃない方のアバターの年齢のせいか、寒暖差とか乾燥がえらくきついです（実肉体、外せない呪われた装備とかそういうやつか？）
+    体調不良を押しつつ、仕事もなんとか（？）納まった感じもあり、なんとか年越しできそうです。<br />
+    <br />
+    <div style="
+          width: 80%;
+          max-width: 100%;
+          margin: 0 auto;
+          position: relative;
+          padding-top: 56.25%;
+        ">
+      <iframe src="https://www.youtube.com/embed/RbagK3-LCGo?si=Pg8rOTrJJ5fRfeDz" title="YouTube video player" style="
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+          " allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
+      </iframe>
+    </div>
+    <br />
+    うまく埋め込めてるかな？ 初めてMax for Live(Max9)を触りました。
+    正直、MaxというよりAbleton
+    Liveの扱いがよくわからなくてしばらく鳴らなかった……ｗ<br />
+    <br />
+    110Hz =
+    A2から始めて、32倍音まで上がっていきます。オシロスコープもつきました。
+    来年はJitterとかも含めてもっといろいろ触れると嬉しいです。<br />
+    <br />
+    実家に顔出して、ちょっとご飯でも囲みながら、なんとなく年越しすると思います。<br />
+    皆さんもよいお年を！<br />
+    <br />
+    <h1>2025年12月26日</h1>
+    <h2>CGIカウンターを設置した。</h2>
+    KENT Webさんの『夢カウンター』をお借りしました。<br />
+    <br />
+    最初、「パーミッションね？ ふんふん？」と意気揚々と動かしたものの、 500
+    Server Internal Errorが出てしまい「うぐぐ」。<br />
+    <br />
+    どうもSFtpでアップした時に改行コードが変わってしまうことがあるらしく、ChatGPTによれば、「<br />
+    <pre><code>head -n 1 dream.cgi | cat -A</code></pre>
+    でもし行末に<code>^M$</code>が付いていたら
+    間違いなくCRLF（Windowsの改行コード）になってるから、それのせいやで～」と。
+    ……っていうか「CRLFってなんかめっちゃ見たことある文字列だな～」と思ったらVSCodeの右下によく書いてあるわ！
+    クリックしたことなかった（クリックしたらLFになったので次からLFにして保存したらいいのだろう）<br />
+    <br />
+    あとShift-JISだったためVSCodeで ＋ 激しく文字化け ＋ したりもしたので、
+    メモ帳→VSCodeに貼り付けたりしてUTF-8にいたしました（だから正直CRLFになったのも自分のせいじゃね？
+    感）。<br />
+    <br />
+    結局、またもChatGPTに教わりつつ、RLoginのターミナルから該当ディレクトリに入り、
+    <pre><code>sed -i 's/\r$//' *.cgi *.pl *.pm 2>/dev/null</code></pre>
+    を使って改行コードをLFに変換してからアップしたら動きました。<br />
+    同一IPは一日一回しかカウントされないので、数年経って1000とか行ったらまあいいところかな～という。<br />
+    あんまり注目され過ぎないようにとは思いつつも、やっぱり回ったら回ったで嬉しくもなるだろうなという距離感です。<br />
+    <br />
+    <hr />
+    <h4>自習</h4>
+    <hr />
+    <ul>
+      <li>
+        <code>sed</code>：テキストを変換するコマンド（ストリームエディタ）
+      </li>
+      <li><code>-i</code>：ファイルをその場で書き換える</li>
+      <li>
+        <code>'s/\r$//'</code>：
+        <ul>
+          <li>
+            <code>s/検索文字列/置換文字列/</code>：検索文字列を置換文字列に変換する
+          </li>
+          <li><code>\r</code>：キャリッジリターン（CR、改行コードの一部）</li>
+          <li><code>$</code>：行末を表す正規表現</li>
+          <li>
+            <code>//</code>：（空）。「何もない」に置換＝「行末のCRを削除する」
+          </li>
+        </ul>
+      </li>
+
+      <li>
+        <code>*.cgi *.cgi *.pl *.pm</code>：CGI本体、Perlスクリプト、Perlモジュールに適用
+      </li>
+      <li>
+        <code>2>/dev/null</code>：エラーメッセージを捨てる（.pmが一つもない時などに黙らせる）
+      </li>
+      <li>
+        あとここのタグを書く時に<code>&lt;li&gt;</code>じゃなくて<code>&lt;ls&gt;</code>とか書いててもう頭ごちゃごちゃである。
+        list itemの略なんだって。へえ～！
+      </li>
+    </ul>
+    <br />
+    <h1>2025年12月25日</h1>
+    <h2>クリスマスです。</h2>
+    <a href="../img_gallery/0017.png" data-lightbox="gallery">
+      <img src="../img_gallery/0017.png" class="tatenaga-image" alt="クリスマスのイラスト" /></a>
+    ちょっとフフフな雰囲気ですが、セーフ、セーフです！<br />
+    <br />
+    SSH、というかRLoginによるSFtpを使って、ファイルマネージャを経由せずアップできるようになりました。
+    今後、カウンターとかを設置していきたいかなあと思っています（デザインどうしようかな……）<br />
+    <br />
+    <a href="20251012src/0066.gif" data-lightbox="gallery">
+      <img src="20251012src/0066.gif" class="yokonaga-image" alt="プールルームのGIFアニメーション" /></a>
+    Z-Image
+    Turboで生成したプールルームを、Grokに読み込ませてGIFアニメーションにしました。<br />
+    奥行きの関係がちょっと不整合になるのが逆にちょっと面白い。<br />
+    <br />
+    <h1>2025年12月24日</h1>
+    <h2>近況</h2>
+    このクリスマスの日に結構ガチめに風邪を引いている。まあこの歳になって浮つくようなもんでもないけど……。
+    体調が悪いせいか、「健康なんて暴力なんだよ」とLLMに愚痴っている。
+    非生産的な……こんなことやっても何にもならないけど、何か出来そうなほどの体力が今は枯渇している。<br />
+    <br />
+    弟夫婦に会った。弟の奥さんは落ち着いてて可愛い感じの人だった。
+    弟によく合う人だと思うし、仲良く生活をやっていってほしい。
+    実は今日も会う。親類の付き合いというのは時々億劫に感じることもあるけれど、
+    自分の場合はここを失うと、リアルの人間関係がほとんどまったくなくなってしまう。<br />
+    <br />
+    <a href="https://dmdepart.jp/museum/sapporo/delicious-in-dungeon/">九井諒子展</a>に行った。すっげぇ～よかった。後々まとめるかも。<br />
+    <br />
+    それと、<a href="https://www.amazon.co.jp/gp/video/detail/B07JQQTH3P/ref=atv_dp_share_cu_r">電脳コイル</a>
+    を久々に見た。イサコと兄あたりの話でがっちがちに号泣。
+    やっぱり自分も過去に戻りたいよ。存在しなかったかもしれない過去に。
+    <!--この「存在しない」についても今度書きたいんだけど、「リンクがあったけど失われた」「今創造されている」「まったく隔離されていて想像すら不可能」の3層があると思う-->
+    創作も勉強も、自分の場合、結局は退行願望を抑え込むための麻酔に過ぎないのかもしれない……というより、そうに違いないんだろうな。<br />
+    <br />
+    色々あってちょっと虚無り気味。妹よ！！<br />
+    <br />
+    <hr />
+    <br />
+    愚痴っぽくなったので、ちょっと前までやってたことを書いておこうかな。<br />
+    <br />
+    <a href="https://huggingface.co/Tongyi-MAI/Z-Image-Turbo">Z-Image Turbo</a>は触り、いくらか生成する。<br />
+    <br />
+    <a href="20251012src/0063.png" data-lightbox="gallery">
+      <img src="20251012src/0063.png" class="yokonaga-image" alt="Z-Image Turboで生成したプールルームの画像" /></a>
+    プールルーム。プロンプトはこんな感じ。<br />
+    <code>A huge, surreal indoor bathhouse / floating temple, entirely made from
+        small white ceramic tiles. Minimalist geometric shapes, monumental open
+        halls and long, repeating corridors, multi-tiered stepped pools and
+        terraces, steps descending into the water, water cascading in thin
+        sheets over sharp edges like miniature waterfalls, a central stepped
+        platform and tiered waterfall wall, soft, diffused sunlight with subtle
+        volumetric rays, cool cyan to turquoise water, wet reflective tile
+        surfaces, gentle mist and humidity, a quiet, empty, reverberating
+        atmosphere, a serene yet eerie liminal space, ultra-wide-angle
+        architectural photography, oblique perspectives, a strong lead to a
+        vanishing point, high-definition photorealistic 3D architectural
+        visualization, global illumination, ray-traced reflections, subtle
+        bloom, and vivid texture details. High detail, crisp linework, subtle
+        shading, depth of field, cinematic composition, ultra high
+        resolution.</code>
+    <br />
+    <br />
+    <a href="20251012src/0064.png" data-lightbox="gallery">
+      <img src="20251012src/0064.png" class="yokonaga-image" alt="Z-Image Turboで生成したプールルームの画像" /></a>
+    ダックスフント。文字が正確に出るのがいいなあ。<br />
+    <br />
+    <a href="20251012src/0065.png" data-lightbox="gallery">
+      <img src="20251012src/0065.png" class="yokonaga-image" alt="Z-Image Turboで生成したプールルームの画像" /></a>
+    現在5枚あるトップ絵のうち一つの元イラスト。ここからimg2imgで顔の感じを微修正している。<br />
+    <br />
+    5chスレとかを見ると、テクスチャとして画像を指定したりもしてて楽しそうなので、やっぱりComfyUIも導入したいニャー。<br />
+    <br />
+    Ableton Live 12 Suiteをインストールした（が触ってない）
+    正直、Max/MSPを触るだけだったら単体サブスク版で試せばいいというのもありそうだ。
+    どのみちDAWと連携させる方向を考えてるんだからLive
+    12を買ったのは悪くないけど。
+    <code>dac~</code>, <code>ezdac~</code>, <code>gain~</code>,
+    <code>cycle~</code>, <code>noise~</code>, <code>buffer~</code>,
+    <code>groove~</code>などを勉強中。<br />
+    <br />
+    前にも書いたけど、数式シンセは部分音合成が出来るようになったので、色んなInharmonicの部分音を試してみている。
+    ある音を幾何級数的に足すとか、伸縮された倍音列とか、リニアなものとか……。
+    今度は近々、不協和曲線の描画を実現できるといいかもしれない。<br />
+    <br />
+    <a href="https://github.com/yuma-mizuno/lean-math-workshop">Leanのチュートリアル</a>をすごくゆっくり触っている。<code>apply</code>,
+    <code>intro</code>, <code>False.elim</code>, <code>constructor</code>,
+    <code>case</code>などを触った。
+    <code>False</code>がどこからでも繋がるポータルみたいになってて（始対象？）、例えば
+    <pre><code>example (h : ¬P) : P → Q := by
+    -- h : P → False
+  intro hP
+    -- hP         :: P
+    -- Goal       :: Q
+  apply False.elim
+    -- False.elim :: False → Q
+    -- Goal       :: False
+  apply h
+    -- h          :: P → False
+    -- Goal       :: P
+  apply hP
+    -- hP         :: P
+    -- Goal!</code></pre>
+    みたいになってるのがすごい面白いと思う。これは「矛盾爆発」だとのことだけど、
+    ぱっと見た感じむしろ「空虚真」に見える。<br />
+    <ul>
+      <li><code>P</code>「埼玉には海がある」</li>
+      <li><code>¬P</code>「埼玉には海がない」</li>
+      <li><code>Q</code>「その海は美しい」</li>
+      <li>
+        <code>P → Q</code>「もし『埼玉に海がある』ならば、その海は美しい」
+      </li>
+    </ul>
+    みたいな……（厳密にやろうとすると多分「その海」を表す変数がいるのだろうか？）<br />
+    <br />
+    と思ったけど、LeanのFalse自体が「偽」ではなく「矛盾」を表す到達不能型（voidみたいな）だから、
+    <code>apply False.elim</code>は「矛盾 →
+    （現在ゴール）」を表すものってことでいいのか。だから正確には、<br />
+    <ul>
+      <li><code>P</code>「埼玉には海がある」</li>
+      <li>
+        <code>¬P : P → False</code>「もし『埼玉には海がある』ならば矛盾する」
+      </li>
+      <li><code>Q</code>「その海は美しい」</li>
+      <li>
+        <code>P → Q</code>「もし『埼玉には海がある』ならば『その海は美しい』」
+      </li>
+      <li>
+        <code>P ⋀ ¬P</code>「『埼玉に海がある』、かつ『もし『埼玉には海がある』ならば矛盾する』」（よって矛盾が取り出せる）
+      </li>
+      <li><code>False</code>「矛盾している」</li>
+      <li>
+        <code>False.elim</code>「矛盾からは任意の命題（例：その海は美しい）が従う」
+      </li>
+    </ul>
+    みたいなことかな。<br />
+    <br />
+    <h1>2025年12月11日</h1>
+    <h2>StableDiffusionの環境を更新した</h2>
+    Z-Image Turboに興味があったので、WebUIのReForgeから、ForgeNeoに更新した。
+    cmdを触るのにだいぶ慣れて来ていて恐怖感はあまりなかった。
+    ただSSDをexFATでフォーマットして始めたせいでかなりハマることに。これは反省材料です。<br />
+    <br />
+    結局ChatGPTに聞きつつ、
+    <pre><code>cd  (WebUI用に用意したディレクトリ)
+git clone https://github.com/Haoming02/sd-webui-forge-classic sd-webui-forge-neo --branch neo
+cd <sd-webui-forge-neo>uv venv venv -- python 3.11 --seed</sd-webui-forge-neo>
+</code></pre>
+    で落としていくと……。
+    ざっくり本体を落としてきて仮想環境を作って、いつも通り webui-user.bat
+    を動かす。
+    落とすPyTorch（機械学習用のPythonライブラリ）のバージョンを（GPU性能とにらめっこしつつ）トライアンドエラーで吟味してようやく動作。<br />
+    <br />
+    その後、ADetailerを導入するところでコケにコケて、exFATで動かしていたことが判明。
+    白状するとexFATについて知らなかったです。なんか権限周りでNGが出て、Gitが「君怪しいからダメ」ってしてたみたい。<br />
+    一日かけて外付けHDDに退避させてフォーマットして戻しての作業を行う。<br />
+    <br />
+    結果的にZ-Image Turboはいい感じに動いたんだけど、<s>とにかくメモリを圧迫してるのか、
+      いきなり「アンタのCドライブ残り1GBなんだけど！」と怒られが発生。
+      768×1024でADetailer掛けは無謀だった模様。pagefile.sysがクソでかくなったみたいです。</s>
+    <br />
+    <div class="inner_wrapper">
+      （12月12日追記）これは根も葉もない誤解です！
+      ZITたんは悪くない、私が完全に悪いんです！
+      Dropboxで外付けHDD2TBをまるごとバックアップする設定になってて、
+      しかもその2TBHDDに件のSD環境200GBを退避させたりしたせいで、
+      キャッシュが無尽蔵にCに溜まっていく形になってたみたいです。
+      もともとDropbox自体が重くてちょっと前にCからFに退避させたんだけど、
+      もしかするとその時に色々やらかしたのかも……。
+      Fに蓄積しろって言ってんのにFをまるごとバックアップするとか、 Patrick's
+      Paraboxか何かみたいになってるじゃん。
+      流石に再帰的に無限にバックアップしてとかじゃないとは思うけど、これは本当に恥ずかしい。生きておられんごっ……！
+    </div>
+    <br />
+    うーん、買った時はつよつよパソコンだったんだけどニャ～。
+    まあ買った動機が「マイクラに影MOD入れて工業MOD入れて遊びたい！」だったからなあ（結構昔だ）
+    まだまだDTMとかはいけるしもうちょっと使いたいので、様子見ながら生成していきたい。<br />
+    <br />
+    気になってたからComfyUIも導入したい。色々やってみますです。<br />
+    <br />
+    <h2>数式シンセ</h2>
+    <a
+      href="https://melxen28.lsv.jp/jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIDuBDAbmABAXkwJgCoAKEqACwEpMBqTABgDoBWKgUkwEYqBaTgHQB2ggDYBLALaiALjnoMAnINQZZ4lBCKSBRZWAA0mMZKkUDR6QW5cl6MMQ4B6cyYIcGdEHpABnFADMwKQBPBB8Aez8pTxAAEwBjBDovAHMUUQFE5i9vOJRhMFCOOkZBPGKGQQBmcsEAFhqBJgaANgaAdgaADgb5BqK+-oqBDjLGaIAjFG8wAAkALwRa+q80URgpAGUAJUXu4q8oFHXRPIB1W1CpFHH86MPjvO9QgGIYFClRMMwUcShBEaYDhGnTklSYgm6Dk6HDk4OG-AE0KhdFh-zwnSBeCYoLhzzwzDkdEEz2xjDwxLacg4tRAAF8gA">
+      SuperSaw
+    </a>
+    を試しに作ってみた。81/80と128/125でずらして計5本。おもろいです。<br />
+    <br />
+    <br />
+    <h1>2025年12月8日</h1>
+    <h2>波形博物館のページを作りました</h2>
+    <a href="../column/music/waveform_museum.htm"> こちらです。 </a>まあ「博物館」というと大きく出過ぎというか、それほどのこともないけど、段々増やしていけたら……。
+    <a
+      href="../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIDuBDAbmAjAAgLzYApCoALbAUm0wEpsAebABgDoAmbAfiu3mwFoc1ADoA7UQBcUIkgRYAOAFSoMNEABoQAZxQAzMOICeCLQHsd49SAAmAYwSMNAcxQBLEfbYBWDZpsoANmDGAJwA9HKirJihmABsogDMoayimJ7hkTGiYQAskdERIkmYlgBGKJpgABIAXgg5OQ4gaC4w4gDKAEr1cox9GlAobS4BAOroQYiSpYGWg8MBmsYAxDAo4i4m2CgAtlCp2IdUiUdMzAkXh6Gh2KwKBEmswiJh7GesH1c3CfePz7GnFhxAHYa7YHK-ZLPNLJd59L7YTyQp7ZQHMTAYhGxZHPKKwoHw0E3ADsONSbzOjDkCQRigeUJAAF8gA">
+      007
+    </a>
+    も触りまして、Partialsで作成した波形を複製しながら上に連ねられるように。加法合成がちょっと安定した感じです。<br />
+    <br />
+    これ以上機能を足そうとするとフィルターとかADSRとかその辺の話になってくるので、流石にMaxとかVSTiに着手する感じになりそう。
+    今は波形を作るのが面白いからしばらくこれかな？<br />
+    <br />
+    仕事周りのごたごたを何とか落ち着けられた感じです。年末感も出て来ました。<br />
+    <br />
+    <br />
+    <h1>2025年12月7日</h1>
+    <h2>波形のこと</h2>
+    <a
+      href="../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIByACAvCgzAHQHZXRSgAsAqJPAa0IDMAbAewZgAooBKPAQ0IIFoUlPHgY0aABkLiAdOPEixARimz5uUTQBMKgKxqFNQi0po0kgPwoNk+CmOnlljctsbN7TrgDOAS1wtNUigfUhYeAGorMQ88EAAaEC8uGjAAFwBPBBAAYzofKHiQABNshHEEgHMuPzLpTR0Er2yuOjAsxTlpPE1OvExe3AAWAb0ZPAA2AYB2AYAOAYBOAY7lla7cRR6ZQoAjLi8wAAkALwRB4YSANx8YVIBlACUz+bkAXyA">
+      同じく007で </a>。正弦波3つの周期を好きにずらせるような関数を組んだ。変調波である3倍が現れて、それ以外の6倍、9倍……は消えるようだ。
+    下の2倍モードで位相をずらした時も、2倍が現れるだけで、その上の4倍、6倍……は消えてしまう。不思議だねぇ。
+    消える理由自体はだいたいこの間の「等間隔のnステップで構成された周期的信号はn倍音を含まない」でいいらしいけど、まだよくわからない。
+    搬送波分だけが現れてくるのが解せないのかも。<br />
+    <br />
+    <a
+      href="https://melxen28.lsv.jp/jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcICGSAEBeVAWAOgOyQCMNUB2fJAYxIEYAGCgE1oGYKxaA2CgM1oE58+AO5IAbh0wBnAJZ4AFACYAVFBmqAFgEpUAalTzZClWs3KUO5ahoB6C3oNGlq9VA3nCl63c8PDc51M3c0ovWyodfX9jFzMkRjC7BL8nE1d3JDBEzMjHALS4nmyioTwAFyQ8DXlRCS0QABoQKSQeMDKATwRmgHseMsaQRkoEGiaAcyQ5BDoAOkUAViapSiQAGzBu+jn8RTodvBZ92fwsY-wF87xOK9IrgA4r-ivtg5ptk7waPbnBwiQpGAABIALwQWDOTTEMhgZQAygAlcGPfYAXyAA">
+      こっち
+    </a>
+    は1,4,7,10,13……という倍音を含む波形です。現実世界では考えづらいらしいです。なんか包丁みたいに尖ってますね。そのうち、面白い式集のページとかあったらいいかもね。<br />
+    <br />
+    仕事で嫌なことがあったので、今日はもう終わりです。<br />
+    <br />
+    <br />
+    <h1>2025年12月5日</h1>
+    <h2>音のこと</h2>
+    <a href="https://youtu.be/YexTdsV4nFo?si=ZfMMeJFj827ctDch">正弦波を1周期ごとに反転すると音はどう変わる？【ゆっくり実況】</a>
+    という動画が面白かったので、自分でも試してみた。<br />
+    <a href="../column/music/waveform_museum_src/double_phase_sin.png" data-lightbox="gallery"><img
+        src="../column/music/waveform_museum_src/double_phase_sin.png" , class="yokonaga-image" /></a>
+    <br />
+    なぜ奇数成分しか出ないのかがとても気になったのだけど、ChatGPT 5.1
+    Thinkingによると、どうも「半波対称性」というものらしい。<br />
+    <ul>
+      <li>
+        前半（0.0～0.5）： \( y(\text{ph}) = \text{sin}(4 \pi \text{ph}) \)
+      </li>
+      <li>
+        前半（0.5～1.0）： \( y(\text{ph}) = -\text{sin}(4 \pi \text{ph}) \)
+      </li>
+    </ul>
+    つまり<br />
+    <p style="text-align: center">
+      \( y( \text{ph} +0.5) = -y( \text{ph}) \)
+    </p>
+    が成り立つことが原因だとか……。後半が前半の完全なマイナスコピーなので、偶数次の「同じ向き」の成分が打ち消し合うのだとか。
+    半波対称性についてググると<a
+      href="https://yuyumoyuyu.com/2021/06/04/halfwavesymmetry/">「モータ研究者の技術解説」</a>様というところの解説が出てきたので、後々勉強させていただければ……。<br />
+    <br />
+    <a
+      href="https://melxen28.lsv.jp/jssproject/test/0007_1205.htm#v1=N4IgpgHgDgTiBcID2AzFACAvOgDAOgFZ1iTSBiXPPARkAh-6zAZgDYcAGgGkoCYDMBOdoEh-gDoA7KFnRQAFgCpu4gIZTJAWnQoANkiQwAFFACU5SjXEBrKdt0HjpUznR701cQGcAlmP3c5UTzl9FQBqdAs5VBQjIxAOEHclFDAAFwBPBBAAYy1PKDiQABMshGp4gHMlbwR8Xnj3LKUtMEzqHHxxbna8cUZu8QAWfrECYdYOsQB2YYAOYcEJtuHqJZ6xai78AoAjJXcwAAkALwRuLviAN08YFIBlACUEAbn2gF8gA">007</a>
+    でその波形を聞くことができるようにしてみた。<code>off</code>
+    をいじれば後半の位相を任意にいじくれる。180度の状態では、くぐもった矩形波に近い。興味のある人は、<a
+      href="https://melxen28.lsv.jp/jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIAUACJUAWKCkKCMAlCgDwoAMAdAKwoD8+K8KAtHigSADQgDOAhgDMwAFwCeCEAGMANgEsoXEABNJCPNwDmfWQDsElAExVuPSX2lgJeMpQA6OgzYr2AzE-sAWdzqreAbN4A7N4AHN4AnN7WUdHOOniOlIoARnw8YAASAF4IBo7cAG6yMMIAygBKCB5hNgC+QA">生の矩形波</a>
+    と聞き比べてみてください。<br />
+    <br />
+    後はSunoAIでVaporwaveとかを作ったりしながら過ごしていました。まだSunoAI周りは音楽ページにアップしていない。キュレーションしてさっさとやってしまいたいのだけど～（いつも腰が重い）<br />
+    <br />
+    <h1>2025年12月3日</h1>
+    <h2>雑記</h2>
+    <b>もしかすると、思っていたより<a href="https://amzn.asia/d/dL9KO0B">『裏世界ピクニック』</a>がかなり、相当好きかもしれん……。</b><br />
+    <br />
+    コンセプトに惹かれて原作1巻を読んで、それからはコミックスで追っていたのだけど、待ちきれずにKindleで原作の方を買って読んでいます。
+    特に9巻、かなり好きかも。8巻から出てくる実践魔術師の辻さんが活躍するのですが、すげえいい。やっぱり魔術ってかっこいいな～。
+    <a href="https://amzn.asia/d/bULpDwZ">『モダンマジック』</a>
+    で見たやつだ！ ＞小五芒星追儺儀式（LBRP）<br />
+    <br />
+    『ソラリス』みの出てきた裏世界に対して、大規模言語モデルでアプローチするというアイデアもウフフ。
+    あとちょっと『禍話』要素もあったニャ。<br />
+    <br />
+    大規模言語モデルと言えば、動画目当てで導入したSuperGrok、実はエロ会話がかなり得意。
+    すぐ突っぱねる（どころかモデレータ削除でこっちのメッセージまで削除する）ChatGPTに比べるとかなり寛容で、ロリとかでも書けちゃう。
+    最近のおかずです。動画も復活してくれよ～？（本国のレギュレーションが厳しいだろうからしょうがないかなあ）<br />
+    <br />
+    ゆる言語学ラジオの
+    <a href="https://www.youtube.com/watch?v=aDLr5jFmL_8">「フィリピンの賭博」と「ジャンクション」に共通点を見つけました。（※YouTube）</a>
+    回を視聴する。「プロジェクション」（＝自分の内的な表象を外界に投射し、物理世界と心理世界を重ね合わせる心の働き）の話が面白かった。
+    <a href="https://kakuyomu.jp/works/16816927859268545348">『幻想再帰のアリュージョニスト』</a>
+    の『邪視』って、もしかしてこれ？<br />
+    <br />
+    妹のために台湾みやげのパイナップルケーキを送りました。<br />
+    <br />
+    <br />
+    <h1>2025年12月1日</h1>
+    <h2>JSS Projectをちょっと更新</h2>
+    <ul>
+      <li>
+        <a href="../jssproject/0005_hexTiling.htm">005</a> と
+        <a href="../jssproject/0006_PenroseTiling.htm">006</a>
+        をスマホから触れるようにしました。
+      </li>
+      <li>
+        <a href="../jssproject/0007_formulaSynth.htm">007</a>
+        を変数宣言可能にしました。
+      </li>
+    </ul>
+    007は将来「こういうの作れたらいいな～」みたいなVSTiの雛型なので推してます。可能なのかはわからないけど……。<br />
+    <br />
+    外付けSSD第二号が届いたので、そろそろStable
+    Diffusion周りのデータはそちらに移行して、
+    ComfyUIとかz-imageとかwan2.2とか色々試してみたいなあ～と思いつつあります（多分wan2.2は動かないなあ……メモリ増設とか可能なのかしら）
+    と同時に、空いたところに購入したAbleton Liveを突っ込んでいくと。<br />
+    <br />
+    Max9でやってみたいことはまあ色々あるので、来年はそれとLeanを触っていく流れなのではないか。どこまで出来るかわからないけど。<br />
+    <br />
+    仕事があわただしくて若干不機嫌気味です。まあしょうがない。<br />
+    <br />
+    <br />
+    <h1>2025年11月30日</h1>
+    <h2>旅行記</h2>
+    11月20日から初めての海外旅行として友人と台湾に行ってきました。旅行記をまとめます。<br />
+    <br />
+    <h3>台北1日目：移動と夜市と西門町</h3>
+    <h4>移動</h4>
+    朝6時半起床、7時出発。前日ほぼ2時間睡眠だったので眠すぎる。これは忙しいとかではなく<b>単純に寝るのが下手</b>なんです。
+    っていうか峠なんかもう雪降ってるじゃないか。<br />
+    <a href="20251012src/0038.jpg" data-lightbox="gallery"><img src="20251012src/0038.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <br />
+    モンエナを流し込みながら新千歳空港へ。腎臓がフル稼働した結果、台北までの道中で何度もトイレにも寄るはめになった。<br />
+    <br />
+    新千歳からさらに4時間かけて桃園空港へ。
+    機内食はチキンが「雞肉蛋飯」（親子丼っぽいご飯）、ポークが豚カツレツのデミグラスソース。私はチキン、友人はポークにした。空き腹に染み渡る……美味すぎる。
+    飛行機のWi-Fiは「インターネット」ではなく、有料コンテンツ視聴権という感じだったので、音楽を聴いたり、友人と中国語をシミュレーションしつつぼんやり過ごす。<br />
+    <br />
+    到着予定時刻が「3時間後」になっていたので「意外と東京行くのとあまり変わらないのかな？」と思ったら、
+    台湾とは1時間の時差があるので、実質フライトは4時間だった。
+    相対性理論的に言えば、西に移動するとはつまり微小に過去へとタイムスリップし続けることなのかもしれない（？）<br />
+    <br />
+    <h4>桃園空港に到着</h4>
+    <a href="20251012src/0005.jpg" data-lightbox="gallery"><img src="20251012src/0005.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <b>ウオオオ緊張してきた！</b>
+    Duolingoで付け焼き刃の中国語を頭の中で思い出しまくる。<br />
+    <br />
+    そういえば “duo”
+    って、ラテン語っぽく「2」と思えば「二言語」、中国語っぽくduo2（多）だと思えば「多言語」だよな！？
+    そういえばオートマトンとかオートマタとか言うけど、-onってギリシャ語の語尾っぽさあるよな！？
+    ……などと脱線。 実際、From Ancient Greek "αὐτόματον" (autómaton), neuter of
+    "αὐτόματος" (autómatos, “self moving, self willed”). とのことなので（<a
+      href="https://en.wiktionary.org/wiki/automaton">Wiktionary</a>）、当たってるやんけ。嬉しい。
+    automataは複数形なのだとか。あれか、melonがmelaになるやつか。<br />
+    <br />
+    気持ちが逸れている。そんな場合ではない。<b>こんなんでちゃんと海外でやっていけるのか！？</b><br />
+    <br />
+    ……と不安になるも、空港の雰囲気を見て「意外となんとかなりそう、むしろ東京よりプレッシャー少ないかも？」と少し安心するなど（なんでだろう？）。
+    スキンヘッドのナイスミドルなヨーロピアンが、フェンスをまたいで入国審査の列を抜かしながら横入りしていった。
+    係員さんはやや呆れ顔だったように見えたが、彼には彼なりに何か事情があったのかもしれない（乗り継ぎがギリギリとか、家族が先に並んでいたとか）。
+    旅は色々だ……（実際、私も帰りの空港でミスをやらかすことになる）<br />
+    <br />
+    入国審査自体は、パスポート提示＋顔写真と指紋撮影だけで、一言も交わさず終了。あっさり入国。
+    <b>「3泊4日ってなんて言ったらいいの！？」</b>と戦々恐々としていたので拍子抜け。オンライン入国カードのおかげだろうか。
+    「我的行李箱在哪里！？」と若干不安になりつつターンテーブルを眺めるが、時間差でちゃんと荷物とも再会できた。<br />
+    <br />
+    <h4>桃園から台北へ、そして夜市</h4>
+    JTBの現地スタッフさんにガイドしてもらい、桃園から台北市内へと送迎してもらう。車で40分ほどでホテルに到着、一息つく。<br />
+    <br />
+    よし、という気持ちになってきたので外出。<br />
+    <a href="20251012src/0046.jpg" data-lightbox="gallery"><img src="20251012src/0046.jpg" ,
+        class="yokonaga-image" /></a><br />
+    歩きながら見つけた落書き。ヨガファイア……。<br />
+    <br />
+    そのまま、ホテル近くの夜市で夕食。友人はやる気満々だったのに、いざ入って注文しようとなるとまごまごし始める。
+    出かける前は「もうここからは笑顔とジェスチャーで行こう！」と言ってたのに……。<br />
+    <a href="20251012src/0006.jpg" data-lightbox="gallery"><img src="20251012src/0006.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <a href="20251012src/0041.jpg" data-lightbox="gallery"><img src="20251012src/0041.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <ul>
+      <li>
+        <b>台湾ビール</b>：いきなりサーブされたのでサービスかと思ったが、多分こちらの意思疎通ミスで注文が通っていたっぽい。
+        でも普通においしいし大満足。あとで調べると、<a href="https://beergirl.net/taiwanbeer180days_n/">18天台灣生啤酒（ONLY 18DAYS BEER）</a>という、
+        出荷後18日しか賞味期限のない珍しいものだったようだ。
+      </li>
+      <li>
+        <b>牛肉炒飯</b>：空芯菜入り。鹽というよりは牛肉の脂や米の旨みで味がしっかり構築されている印象。美味すぎ。
+      </li>
+      <li>
+        <b>揚げ臭豆腐</b>：「美味い」しか言っていない気がするがこれも美味しかった。えびせん入り。チリソースがついていた。
+        噛むとほかほかしていて口の中が熱くなる。思っていたほど臭わない。冷めてくると少しだけ酸味が出てくる。
+        一方、煮込み臭豆腐の屋台の前を通ると「スーパーで買ったホルモンを焼いたときの生臭い匂い」が立ちこめていた。
+        ただ、自分はそういうホルモンはわりと食べ慣れているので、きっとこれもいける気がする。
+      </li>
+      <li>
+        <b>えびの葱油炒め</b>：これは優勝。タマネギ、ピーマン、ベビーコーン、ナルト、油条（揚げパン）など、いろんな具材と一緒に炒めてある。
+        ソースはバターとレモンの味も。特に油条がソースを吸っていて、「サクじゅわ」な食感で最高だった。
+      </li>
+    </ul>
+    <a href="20251012src/0039.jpg" data-lightbox="gallery"><img src="20251012src/0039.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <a href="20251012src/0040.jpg" data-lightbox="gallery"><img src="20251012src/0040.jpg" ,
+        class="tatenaga-image" /></a><br />
+    <br />
+    <h4>西門町をぶらぶら</h4>
+    夜市のあとMRTで西門町へ移動。BLEACHの広告がでかでかと出ていて、謎にテンションが上がる。<br />
+    <a href="20251012src/0008.jpg" data-lightbox="gallery"><img src="20251012src/0008.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <a href="20251012src/0047.jpg" data-lightbox="gallery"><img src="20251012src/0047.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <a href="20251012src/0049.jpg" data-lightbox="gallery"><img src="20251012src/0049.jpg" ,
+        class="yokonaga-image" /></a><br />
+    レッドハウスや「6号彩虹」、裏手の少しゲイバーっぽい雰囲気の店を眺めつつ、
+    『檸厚
+    暴打檸檬茶』でパクチーレモンティーを注文。複雑な味だが、なかなか悪くない組み合わせ。
+    LGBTフレンドリーさと、台湾の独立性を主張する空気感が同居していて、
+    「若者らしさってこういうことなのかもなあ」と感銘というか、少し羨ましさを覚える。
+    翻って我が国の政治のことについても色々考えたりしたが、まあ今書くことでもないか。<br />
+    <a href="20251012src/0007.jpg" data-lightbox="gallery"><img src="20251012src/0007.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <a href="20251012src/0017.jpg" data-lightbox="gallery"><img src="20251012src/0017.jpg" ,
+        class="tatenaga-image" /></a><br />
+    <br />
+    このあたりで体力の限界が来て、足が棒のようになったのでホテルへ退散。
+    ホテルではウェルカムドリンクとしてカクテルのサービスがあるとのことで、ありがたくいただく。
+    <a href="20251012src/0009.jpg" data-lightbox="gallery"><img src="20251012src/0009.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <a href="20251012src/0042.jpg" data-lightbox="gallery"><img src="20251012src/0042.jpg" ,
+        class="tatenaga-image" /></a><br />
+    台湾ウイスキーのカクテルとのこと。レモンと紫蘇とウイスキーの味が混ざり合って、おいしい。気づけばけっこう酔っぱらってしまう。
+    普段全然飲まないのでフラフラだ。<br />
+    <br />
+    <br />
+    <h3>台北2日目：中正記念堂と翡翠市場と迪化街</h3>
+    朝7時半ごろ起床。<br />
+    <br />
+    朝食をいただく。パン(クロワッサンとかフランスパンとかアップルパイ)、アラカルトのハムとかチーズ、メインのポークリブやサーモンハラスのソテー、オムレットやサニーサイドアップ、どれも美味しい！
+    サーモンハラスにはあまりみたことない野菜のピクルスが。赤いパリパリしたものはおそらくビーツだったのだと思う（このあと屋台でも見かけた気がする）。<br />
+    <br />
+    <h4>外出</h4>
+    MRTで移動するために最寄りの松山南京駅へ。<b>胡乱な日本人四人組がいた。</b><br />
+    <br />
+    <b>「だからそれってタロットよりも効くの？」<br />
+      「浮かび上がってくる素材を料理するんです、そこから術士の腕前が物を言う」<br />
+      「そういう感じじゃなかったら商売として成り立たないでしょ？」</b><br />
+    <br />
+    な、なんだよこの会話。ヒューム値が低いというか現実感がないというか……。
+    二十代くらいと思われる彼らは横並びで改札へと向かっていった。<b>彼らはこれから霊能力バトルでもするのだろうか？</b>
+    澤村伊智の世界観？
+    常識的に考えると、ビジネスか何かのための占いか何かだろうか……？
+    台北ってひょっとして呪術都市なのか……？
+    （そんなばかな、とは思いつつ、そういえば仏教系の宗教施設が滞在している周りにも近い気がする）<br />
+    <br />
+    <h4>中正記念堂</h4>
+    <a href="20251012src/0010.jpg" data-lightbox="gallery"><img src="20251012src/0010.jpg" ,
+        class="yokonaga-image" /></a><br />
+    松山新店線に乗り、中正記念堂見る。建物すごい。門がまず度肝を抜くレベルで大きかった。
+    上の組み物の部分なんか、遠目に見ると支点が細く見えるし張りだしとかちょっと心配にすら見えちゃうが、おそらく根元で四点をしっかり支えているのだろう。<br />
+    <br />
+    <a href="20251012src/0011.jpg" data-lightbox="gallery"><img src="20251012src/0011.jpg" ,
+        class="yokonaga-image" /></a><br />
+    庭園や戯劇場などを横目に、広い広場を抜け、階段を登る。直射日光と、純白の石材で目が眩みそうだ。<br />
+    <br />
+    <a href="20251012src/0056.jpg" data-lightbox="gallery"><img src="20251012src/0056.jpg" ,
+        class="yokonaga-image" /></a><br />
+    蒋介石像にご対面。彼はアルカイックスマイルで台北の街を見ていた。
+    ちょうど11:00くらいで、1時間おきに儀仗兵の交替式を見られるとのことだったので階段の上から観覧させていただくことに。
+    一糸乱れない動き、銃剣を空中でくるくる回したり……。うーんすごいなあ。<br />
+    <br />
+    巨大な蒋介石像の置いてある部屋はこれまたでかい。科学、倫理、民主、という三つの標語が書いてあり、
+    側面には「人生は次の人生を育むことと宇宙を作るためにある」「生活の目的は人類全体の生活を増進するためにある」みたいな雰囲気の標語が。
+    空間としてもやたら大空間、柱もないので、上部の組み物はさておき躯体自体は木造ではまずありえない。SRC造か何かか。<br />
+    <br />
+    <a href="20251012src/0012.jpg" data-lightbox="gallery"><img src="20251012src/0012.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <a href="20251012src/0051.jpg" data-lightbox="gallery"><img src="20251012src/0051.jpg" ,
+        class="tatenaga-image" /></a><br />
+    見事すぎる……。<br />
+    <br />
+    <a href="20251012src/0013.jpg" data-lightbox="gallery"><img src=" 20251012src/0013.jpg" ,
+        class="yokonaga-image" /></a><br />
+    階段で降りると、内部は美術館になっているようだ。孩子們の描いた美術の展示があり、ついつい夢中で見てしまう。絵が可愛い！<br />
+    <br />
+    <a href="20251012src/0014.jpg" data-lightbox="gallery"><img src="20251012src/0014.jpg" ,
+        class="yokonaga-image" /></a><br />
+    建物が見事だ……。一階にお土産売り場があったので購入。タイリング好きなので狙っていたマジョリカタイルと、絵葉書と、ブレスレット二本を購入。<br />
+    <br />
+    <a href="20251012src/0052.jpg" data-lightbox="gallery"><img src="20251012src/0052.jpg" ,
+        class="yokonaga-image" /></a><br />
+    横の戯劇場の組み物。これもすげえ～。<br />
+    <br />
+    <h4>翡翠市場へ</h4>
+    大安森林公園へ移動。友人が改札から脱出不能になる（悠遊カードを取るのが早かったせいかゲートが閉まってしまい、しかし外にいる判定になったみたい）。
+    浜松町のモノレールからの乗り換えでよくあるやつ〜！<br />
+    <a href="20251012src/0058.jpg" data-lightbox="gallery"><img src="20251012src/0058.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <br />
+    徒歩で移動。交差点に止まった車のおじさんが菱角を売っていた。<br />
+    <br />
+    <a href="20251012src/0043.jpg" data-lightbox="gallery"><img src="20251012src/0043.jpg" ,
+        class="yokonaga-image" /></a><br />
+    友人が気になっていたらしく、買ってみる。真っ黒な殻が鋭く尖っていて、「これを撒くのがマキビシか〜！」と納得。
+    「日本人？」と聞かれて、「對！」と返事。これはほくほくだ。栗と芋の間みたいな感じで香りが良い。残りはホテルに持って帰って食べた。<br />
+    <br />
+    Jianguo Holiday Flower
+    Marketを通り抜ける。そこまでずっと直射日光だったので、日陰がありがたい。
+    かなり規模の多い園芸用品売り場で、大変賑わっている。なんと庭木まで売っている。どうやって持って帰るのだろう？
+    犬を連れている人が多い。酸梅湯を飲む。地元な中華料理店でも飲めるのだけど、ほとんど同じ味だ！
+    でも色合いはこちらの方が紫っぽい。<br />
+    <br />
+    そのままJade
+    Marketへ。すごい綺麗な石や工芸品がいっぱい。翡翠だけかと思ったら、瑪瑙や紫水晶も。角煮とか寿司みたいに加工された石が可愛らしい。
+    だが価格交渉とかまともに出来る感じがしないのでウィンドウショッピングである。<br />
+    <a href="20251012src/0055.jpg" data-lightbox="gallery"><img src="20251012src/0055.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <a href="20251012src/0054.jpg" data-lightbox="gallery"><img src="20251012src/0054.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <br />
+    <h4>迪化街へ</h4>
+    <a href="20251012src/0015.jpg" data-lightbox="gallery"><img src="20251012src/0015.jpg" ,
+        class="yokonaga-image" /></a><br />
+    大橋頭へ移動。この辺(12000歩あたり)から我的腳底死了……。
+    だが家族への（あと自分たち向けのｗ）お土産が欲しくて迪化街を彷徨い歩く。ここは問屋街のようなところで、地元の人も観光客もたくさん訪れるようだ。
+    狙っていた飲食店がなんと予約必須で食事できず。というか日曜だからとてつもなく人が多かった。
+    そんな中をバイクやら自転車やらが通り抜けるので、これはまさにカオス。
+    この日は20時までご飯を食べなかった。ま、まあ前日食べ過ぎだったしええやろ……。<br />
+    <br />
+    足の裏の痛みはかなり極限に達しており、<b>一歩一歩が青竹踏みみたいになってしまって</b>友人に心配されたり呆れられたり（扁平足ですまぬ）しつつも頑張る。<br />
+    <br />
+    迪化街では色んなお土産を購入。店を4つか5つくらい見て、スパイス(雞肉用)、紅茶、凍頂烏龍茶、生姜キャンディ、パイナップルケーキ(ジュースとゼリーをプレゼントしてくれた)、
+    エコバッグとグラス(嵌め込みガラス入り！)、辛いスナック二つ、石虎のタイル、甘草、カラスミ……カラスミは自分たち向け。多分大根味噌漬けとチーズあたりと組み合わせるとおいしそう。<br />
+    <br />
+    <a href="20251012src/0016.jpg" data-lightbox="gallery"><img src="20251012src/0016.jpg" ,
+        class="yokonaga-image" /></a><br />
+    迪化街キャット。<br />
+    <br />
+    父から頼まれていた工芸茶を売っているはずの迪化街内の店が、なんと日曜早仕舞い！
+    代わりの店がなかなか見つからず検索すると、迪化街のかなり北の高架そばの店
+    （<a href="https://ameblo.jp/mangostationjapan/entry-12825381143.html">新點子茶舖</a>） にあるとのことで移動。
+    16:20くらいだったのだが閉店が17:00だったのでちょっと焦って（這々の態になりつつw）、移動。<br />
+    <br />
+    到着。つていうかここ、乗り込んだ大橋頭站の地下から出てすぐ向かいの店じゃん！
+    16:40着。工芸茶2つ、お茶2つ、瓶詰め調味料三つ……。客はほとんど日本人女性である。
+    売り込みが上手でついつい瓶詰めを大量に買ってしまったが、そもそも試食が美味しすぎた（特にカラスミ油漬け……）のでこれはもう購入待ったなし。
+    「pasta」とのことだったけど、普通にご飯にかけてもおいしいんじゃ？（……なおこの瓶詰め類が後に波紋を呼ぶことに……）<br />
+    <br />
+    <h4>ホテルで休憩後、再度夜市へ</h4>
+    ボロボロになりながらホテルに直帰。この時点で20,000歩！ 新記録じゃない？
+    もう死了……。<br />
+    <br />
+    19:10くらいまでお風呂で足の裏を労り、結局前の日に行った遼寧街夜市に再度乗り込む。牛肉麵をとうとういただく。
+    前日とは異なり、ちゃんと台湾らしく紙に書いての注文成功。
+    微辣、スネ肉のみならずハチノスやナンコツまで載っており、これはどう考えても美味すぎる。足の痛さもしばし忘れてひたすら啜る。<br />
+    <br />
+    <a href="20251012src/0057.jpg" data-lightbox="gallery"><img src="20251012src/0057.jpg" ,
+        class="yokonaga-image" /></a><br />
+    そのあと、北投紅茶のお店に行き、外带（テイクアウト）する。この時、「ストロー持ったかい！？」と他の列のおじさんたちが聞いてくれた。
+    言葉もわからん我々にこんなにいいの？と言うくらい優しい……ちゃんと持っているのをアピールしつつ「謝謝！」とお礼。<br />
+    <br />
+    <a href="20251012src/0018.jpg" data-lightbox="gallery"><img src="20251012src/0018.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <a href="20251012src/0060.jpg" data-lightbox="gallery"><img src="20251012src/0060.jpg" ,
+        class="yokonaga-image" /></a><br />
+    夜の朱崙公園に座って紅茶を……。思ったより甘く、足に染み渡る……。夜風が涼しい。
+    小型犬（ペキニーズ？）を散歩させる人、隣の敷地では子供達がバスケットボール、そしてそばでは女性が猫ちゃんにキャットフードをあげている。
+    あら〜黒猫ちゃん💕
+    かと思いきや、胸からお腹が綺麗に白い。写真を撮ろうとするとイカ耳をされてしまい、對不起……という気持ちにｗ<br />
+    <a href="20251012src/0034.jpg" data-lightbox="gallery"><img src="20251012src/0034.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <br />
+    台北にいた間、一番落ち着いたのがこの瞬間だったと思う。気分が良くなり、足の裏をいたわりつつ、ゆっくりと帰宅。24,000歩になった。あすけんいわく、これだけで1184kcalだとか。頑張ったなぁ。<br />
+    <br />
+    部屋で昼頃買った菱の実を食べる。角みたいになっているところを持って、外側に折り開くようにすると、綺麗に剥ける。
+    友人は喫ワイン。お土産の整理。テレビを点けると、難しい漢字クロスワードクイズ(部首がヒントになるもの)、あと柯南(名探偵コナン)の劇場版(探偵たちのレクイエム)をやっている。
+    なんとなくつけつつ、今日は早めに寝るつもり……(˘ω˘)<br />
+    <br />
+    そうそう、台湾ドルが足りなくなってきているので、明日は両替しないと……。<br />
+    <br />
+    <h3>台北3日目：士林、台北101</h3>
+    前日のホテル朝食が多すぎたので、スマホからのオーダーでヨーグルトやパンなど減らしたのだが、減らずｗ
+    まあ美味しいのでいいか……！<br />
+    <br />
+    <h4>士林、閉まっていた故宮博物院</h4>
+    淡水線に乗り込んで士林に移動。淡水線、唭哩岸という地名に大興奮して
+    「出おったぞ！」と騒ぐ。(某コンテンツの激しいネタバレなので分かる人だけ分かってくださいｗ)<br />
+    <a href="20251012src/0061.jpg" data-lightbox="gallery"><img src="20251012src/0061.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <br />
+    國泰世華銀行でキャッシング。駅を出ると鳩が多い。バスがよくわからないので調べる。<br />
+    <br />
+    <a href="20251012src/0022.jpg" data-lightbox="gallery"><img src="20251012src/0022.jpg" ,
+        class="yokonaga-image" /></a><br />
+    マスコットが駅でお出迎えしていた。故宮博物院にバス移動。<br />
+    <br />
+    <a href="20251012src/0019.jpg" data-lightbox="gallery"><img src="20251012src/0019.jpg" ,
+        class="yokonaga-image" /></a><br />
+    がらがら。<b>「ま、まさか……」</b>嫌な予感がして調べると、案の定<b>『月曜日は休み』とのこと</b>。やっちまったァー！<br />
+    <br />
+    二人で爆笑していたが、やがて友人がガチ凹みして「もっと調べれば良かった……ごめん……」。
+    私は「いやー私ももっと確認しておけば良かった……こっちこそごめん……」<br />
+    <br />
+    しかし、二人で暗くなってももう仕方がない。
+    実際、後続にも結構日本人がいて、友人は遠くに見える彼らを見ながら「おっ、アホづら並べとるぞこいつらw」と（自分たちの状況を脇に置いて）嘲笑。
+    暴言やめなさい！ だいたいそのアホづらの先頭は我々じゃん……。<br />
+    <br />
+    まあ一応、ということで入り口まで登る。中正祈念堂の時にも思ったやつだけど、真っ白い石材+日差しで流石に暑すぎる！
+    たまらず日傘利用。それでも建物外観や、登った上からの風景だけでも面白い！<br />
+    <br />
+    <a href="20251012src/0020.jpg" data-lightbox="gallery"><img src="20251012src/0020.jpg" ,
+        class="yokonaga-image" /></a><br />
+    結構人がいた。散歩コースとかでもあるのかもしれない。<br />
+    次はぜひ入りたいものです……(角煮とか白菜、あと何重かになった球形彫刻とかを見たかったのですよ……)<br />
+    <br />
+    <a href="20251012src/0021.jpg" data-lightbox="gallery"><img src="20251012src/0021.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <b>マジであっちい。</b>
+    29度とのことだったが、体感ではもっと暑かった。<br />
+    <br />
+    これはもうドンマイである。捷運士林站までバスで戻り、お店で豆花を食べる。<br />
+    <a href="20251012src/0062.jpg" data-lightbox="gallery"><img src="20251012src/0062.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <br />
+    注文システムがよくわからなかった。
+    机のシステムから入力して、発行された画面を店員さんに見せればOKだったようだ。
+    テーブルを先に選び、その上でメニューを作り、テーブルの数字を客が店員さんに口頭で教える、という意味では夜市のシステムと同じだ。
+    銀耳（キクラゲ）と仙草、赤豆入りにした。友人は芋餅入り。それ、なんて名前だったの！？（芋圓
+    yùyuán と言うそうです）<br />
+    <br />
+    <h4>台北101</h4>
+    <a href="20251012src/0023.jpg" data-lightbox="gallery"><img src="20251012src/0023.jpg" ,
+        class="tatenaga-image" /></a><br />
+    台北101へ。6階展望台まで上がり、そこから90階までエレベータで上昇。スカイツリーとかJRタワーのやーつを思い出す。耳が！
+    <br />
+    <a href="20251012src/0024.jpg" data-lightbox="gallery"><img src="20251012src/0024.jpg" ,
+        class="yokonaga-image" /></a><br />
+    そして上は怖い。窓側にいくと、くらっとするような、ふわっとするような……！？
+    中を何周か。<br />
+    <br />
+    <a href="20251012src/0059.jpg" data-lightbox="gallery"><img src="20251012src/0059.jpg" ,
+        class="yokonaga-image" /></a><br />
+    天空の劉備。<br />
+    <br />
+    <a href="20251012src/0025.jpg" data-lightbox="gallery"><img src="20251012src/0025.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <a href="20251012src/0026.jpg" data-lightbox="gallery"><img src="20251012src/0026.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <a
+      href="https://ja.wikipedia.org/wiki/%E5%8B%95%E5%90%B8%E6%8C%AF%E5%99%A8">チューンドマスダンパー</a>というものがあり、これがでかい+高いのでかなりの恐怖を感じる。
+    ワイヤーもぶっといので、<b>「こんなの今切れてぶつかったら私はミンチどころか赤い霧に変わるな……」</b>などと軽口を……（縁起でもないよ）<br />
+    <br />
+    おそるおそる覗き込むと、下が真っ黒で何も見えない……落ちたら死どころか死体回収不能なのでは！？
+    （と思いきや帰り際に見ると実はスラブはちゃんとあって、黒くて見えないだけでした……w）
+    こんなでかいもの、どうやって吊り上げるのだろう？
+    最初は「言うて注水とかじゃないのかしら」と思ってたけど、どうも金属を何層かにしているもののようだ……。<br />
+    <br />
+    トロピカルティーを飲んだり、おみやげに色々買ったり、AI画像作成のための写真を撮ったり（笑）していたら、また足が痛くなってきた。
+    うぐぐぐ。観光地によくある、「代替硬貨を伸ばして記念コインにするやつ（スーベニアメダルというらしい）」を友人が買うので、
+    それ用の機械をぐりぐり舵を回して製麺機みたいに伸ばそうとするのだが、友人は腰が終わり込んでいるため、こちらで回す。何やってんだァ！
+    私も足腰がそろそろ……ヒィヒィ。<br />
+    <br />
+    降りると89階。<br />
+    <br />
+    <a href="20251012src/0029.jpg" data-lightbox="gallery"><img src="20251012src/0029.jpg" ,
+        class="yokonaga-image" /></a><br />
+    こちらは天井材が張っておらず、ガス管、水道管、電気用の可撓管、通気ダクトなどが見える。<br />
+    楽しくて写真パシャパシャ。チューンドマスダンパーもまた見ることができたので、ベンチに座りつつ観察。<br />
+    <br />
+    <a href="20251012src/0028.jpg" data-lightbox="gallery"><img src="20251012src/0028.jpg" ,
+        class="tatenaga-image" /></a><br />
+    エレベータを降りると、《諸羅紀:
+    人在、神在、城就在》なるものがやっている……。台中の嘉儀市ゆかりの展示のようだ。<br />
+    <br />
+    <a href="20251012src/0030.jpg" data-lightbox="gallery"><img src="20251012src/0030.jpg" ,
+        class="tatenaga-image" /></a><br />
+    入り口の像が「顔の黒い、べろりと舌を出したもの」だった。無常とかあのあたり？
+    無料とのことで入らせてもらう。<br />
+    <br />
+    <a href="20251012src/0031.jpg" data-lightbox="gallery"><img src="20251012src/0031.jpg" ,
+        class="yokonaga-image" /></a><br />
+    3Dというか、壁面床面を使った投影アニメーションのようなもの。「なんとなく神代、色んなものがいて、色んな人が現れて、人の世ができていく……」みたいな話。
+    風景自体は部屋一周でしっかり辻褄が合っている一方、壁面を移動している船が角で消えて、次の角で現れるなどのちょっとメタっぽい表現もあり興味深い。<br />
+    <br />
+    一巡したし、足も休まったので席を立つ。奥にギャラリーもある。見てみると、(友人によると)どうも台中にある嘉義市のお祭りの映像などが。
+    あと、「異様な速さで街並みが変化していく3D街頭ムービー」などもあり、これはもしかしたらStable
+    Diffusionとかかもしれない。
+    <a href="20251012src/0032.jpg" data-lightbox="gallery"><img src="20251012src/0032.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <br />
+    そういえば、街中でもAIイラストを見ることが多かった。友人（AIに好意的）による台湾AIイラスト事情解説はというと、
+    「イラストレーターからはあまり歓迎されていない一方、産業部門ではよく活用されている」とのことであり、そういうところもやっぱり日本と似てるのかも……。<br />
+    <br />
+    撮影して回っていると、展示に関わる女性から声をかけられた。「我們是日本人」と答えると、翻訳アプリでいろいろと教えてくれた。
+    どうも、<a
+      href="https://note.com/joelfukuzawa/n/n29f236ae4265">「神様の使いたちが、鬼を払う話」</a>らしい。「彼らは神に扮しているとき、化粧をする。化粧をしたら喋ってはならない。喋ると、人間だとバレるから」なのだとか。
+    神は言葉を発さないということか、それとも神の話す言葉はとても古いものだから(真言みたいな？)、人間の知る言葉はどれも神の言葉とは異なるということだろうか？<br />
+    <br />
+    なんと「服があるので着てみてください！」とのことで、着つけていただいてしまった。まさか台北101に来て昇神してしまうとは思わなかった……(！？)
+    すごく楽しかったです。チップの箱が出してあったので、友人と二人で100NTDと、「ジャパニーズイェン、オーケー？」と聞いて「OK!」とのことなので1000円札を入れてみた。
+    お手間をおかけしますね……💦<br />
+    <br />
+    その後、4階の歩廊から台湾世界貿易センターの入り口まで見てみたり、台北市議会とかを見たりしつつ、MRTに乗り込む。時間はもう17時近くて、帰宅ラッシュ……！<br />
+    <br />
+    乗り換えてあと一駅、と思ったのだけど、あまりに混んでいるので、普通にそこから歩くことにする。
+    台北科技大と高速道路高架の間を縫うように休み休み歩く。<br />
+    <a href="20251012src/0033.jpg" data-lightbox="gallery"><img src="20251012src/0033.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <br />
+    17:40くらいにホテル到着。ここまでで14700歩ほど。着くと、やっぱいてぇわ足……！
+    またテレビ。パウパトロールズ、ぴちぴちピッチ、メルモでポン、DORAなどをやっている。適当に流し見。
+    ぴちぴちピッチって正体明かすと泡になるんか……人魚だもんな。<br />
+    <br />
+    <h3>台北4日目：帰国</h3>
+    前日の夕食はコンビニとかでいいかということでコンビニ飯にしたのだった。
+    スパイシーな砂肝ということで買ってみたら、沙茶入りとのことでお茶フレーバー。しかも甘め。
+    台湾では辛い物は大体甘くもある。暖かい地方だからなのかな？<br />
+    <br />
+    ガイドさんの台北→桃園間の道についての「台湾はハトレースが盛ん。人はお金を、ハトは命を懸ける。あれもハト小屋、これもハト小屋」という話を聞いて笑ったりしながら、空港へ移動。
+    ここで<b>手荷物検査で、迪化街で買った瓶詰めが引っかかる。</b>後で調べて分かったことなのだが、国際便の場合は特に液体の扱いにうるさいようだ。<br />
+    <br />
+    <b>「Is this sauce？」</b><br />
+    「……ソー、ス……？」<br />
+    <br />
+    そ……<b>そっすか？（死）</b>
+    じゃのうて……止められたからには仕方なし、不承不承頷き、甘んじて没収される。まさかここでアイテムロストとは……がっくり。
+    せめて美味しく食べてくれ！ マジで！
+    でないとソースが浮かばれん……（業務上横領になるので無理です。お前が悪い。命にも作った人にも申し訳ない……）。<br />
+    <br />
+    瓶の中には液体よりも固体の方が多かったと思うんですけど、これでソースなんですね……。
+    わかりやすい指標として、「チューブ歯磨き粉はジェルだから液体」「キムチは傾けると流れるから液体」というものがあるようです。<br />
+    <br />
+    皆さん、<b>国際便搭乗時は、少しでも汁気のあるお土産は、マジで絶対に預け荷物にしてください（一敗）</b><br />
+    <br />
+    <a href="20251012src/0045.jpg" data-lightbox="gallery"><img src="20251012src/0045.jpg" ,
+        class="yokonaga-image" /></a><br />
+    <br />
+    機内ではもう体力の限界である。Dropboxでオフライン利用可能にしたつもりの音楽はまだ落とせてなくて聞けてなかったし……。
+    「ブギーポップは笑わない」とか「裏世界ピクニック（漫画版）」とかをちょっと読みながらいつの間にか眠りに落ちる。
+    なんだかんだでむちゃくちゃ楽しかったぜ、台湾……。また行きたいなあ。<br />
+    <br />
+    <a href="20251012src/0035.jpg" data-lightbox="gallery"><img src="20251012src/0035.jpg" ,
+        class="tatenaga-image" /></a><br />
+    <a href="20251012src/0036.jpg" data-lightbox="gallery"><img src="20251012src/0036.jpg" ,
+        class="tatenaga-image" /></a><br />
+    <a href="20251012src/0037.jpg" data-lightbox="gallery"><img src="20251012src/0037.jpg" ,
+        class="tatenaga-image" /></a><br />
+    見かけたかわいいものたち<br />
+    <br />
+    <br />
+    <h1>2025年11月17日</h1>
+    <h2>近況</h2>
+    <a href="../music/music.htm">音楽ページ</a>を作っています。まだ途中ですが……。InternetArchiveで目にした「Webamp」が超ナツカシ＋便利なので導入してみました。<br />
+    <br />
+    せっかくなので単純にMIDIをアップするのではなくリメイクしちゃえと思ってやってみているのですが、その……思ったより面倒くさい（ｗ
+    まあ、さくさく音楽作業する再訓練になっていいのかもしれませんが……（あと普通にミキシングの練習になる）お耳がお暇でしたら、何曲かどうぞ。<br />
+    <br />
+    <audio controls src="../music/src/ananas.mp3" preload="none"></audio>
+    <b>"♪Ananas"</b><br />
+    <br />
+    <audio controls src="../music/src/holy_place.mp3" preload="none"></audio>
+    <b>"♪神聖な場所"</b><br />
+    <br />
+    <audio controls src="../music/src/kanojono_kioku.mp3" preload="none"></audio>
+    <b>"♪彼女の記憶"</b><br />
+    <br />
+    <audio controls src="../music/src/rainy_circle.mp3" preload="none"></audio>
+    <b>"♪Rainy Circle"</b><br />
+    <br />
+    あとなんとなくかずのこちゃんをば。<br />
+    <a href="20251012src/0004.png" data-lightbox="gallery"><img src="20251012src/0004.png" height="512px" /></a><br />
+    ではまた……。<br />
+    <br />
+    <h1>2025年11月7日</h1>
+    <h2>近況</h2>
+    <ul>
+      <li>癌ドックと人間ドック終了。仕事がたまっているので頑張る。</li>
+      <li>年末調整について考えておかなきゃならない。</li>
+    </ul>
+    <br />
+    <h1>2025年11月5日</h1>
+    <h2>近況</h2>
+    <ul>
+      <li>
+        ちょっと横になっている間に激しく首を寝違えて、ちょっと回すだけで割とエグい寄りの痛みが走る。
+      </li>
+      <li>
+        がっちり目に微分音のコラムを書いてみていた。近々更新されるかも、されないかも。
+      </li>
+      <li>
+        友人との台湾旅行を予定しているのだけど、実はここのところ忙しくて若干体力が底を尽いている感がある。
+        三連休ほとんど動かなかったのに……。
+      </li>
+      <li>
+        「ちょっと暇を作ろう」と思った時に限って忙しくなるのは、
+        ある種「暇してる奴には何かを振ってやれ」という信仰がスケール不変で作用する社会の基本原則と化しているせいで、
+        無意識領域まで影響しているせいなのではないか？
+        つまり我々は病気なのである。知らんけど。
+      </li>
+      <li>
+        こまめに更新しようと思うとヘッダが長いのが鬱陶しく感じてきた。.cssファイルを分ける時が来たのではないか。
+      </li>
+    </ul>
+    <br />
+    <h1>2025年10月30日</h1>
+    <h2>してたこと</h2>
+    またなんだか期間が明いちゃったニャン。<br />
+    <br />
+    Grok君の動画生成（特にエロ）がすごいねー！
+    と思ったんだけど、最近は超モデレートされるので割と萎えている。
+    それはそれとしてプールルームっぽい動画を作らせたりするのは楽しく、どこかに出すわけでもないのだがとりあえず一人で見て楽しんでいる。
+    （特にしばりを設けてるわけでもないけどいちおう）健全なものをシェアします。かがくのちからってすげ～。<br />
+    <br />
+    <a href="20251012src/0001.gif" data-lightbox="gallery"><img src="20251012src/0001.gif" /></a>
+    <a href="20251012src/0002.gif" data-lightbox="gallery"><img src="20251012src/0002.gif" /></a><br />
+    ギャラリー部屋に置いているものから。<br />
+    <br />
+    <a href="20251012src/0003.gif" data-lightbox="gallery"><img src="20251012src/0003.gif"
+        class="yokonaga-image" /></a><br />
+    pixivに置いている画像から動画生成→スクショ→動画生成……を何回か繰り返したもの。勝手にマップが出来ていく。
+    水の表現が良い感じで、流体シミュレーションとかより3Dモデル＋AI描画の方が実用的になったりするのかなーなどと（全く詳しくもないことへの）思いを馳せてしまった。
+    しかしどうでもいいけど段差の多いところを走り回るのはあぶない。<br />
+    <br />
+    それはそれとして<strong>モデレートされるのはまあ気に食わない</strong>ので、ComfyUIからの
+    <a href="https://ascii.jp/elem/000/004/316/4316324/">Wan2.2</a>、それと
+    <a href="https://note.com/yuki_ii/n/n7f8287ee0b29">Qwen-Image-Edit-2509</a>
+    を触れるようにむしろデスクトップPCを買い替えるのもいいのかな～とも思ってたんだけど、
+    現行PCがDTMとかする分にはまだぜんぜん過不足なくって、それを「名目サブ機、実質持て余し」みたいにするのも痛ましいので、
+    それよりも先にDTMやったり、勢い任せに途中まで書いて放置してる微分音周りのコラムをまとめた方がいいよねって……。
+    <span class="del">てゆーかローカルで動かすことを度外視するなら、来年あたりとかにNovelAIあたりが普通に対応してそうな気もする。</span><br />
+    <br />
+    とにかくMax9を触らなくてはという気持ちだ。SunoAIがパートごとにステムできたりと色んなことが出来るっぽいので、色々試したい。
+    Melodyne、Ableton
+    Live、Omnisphere3を買うかな～という感じ。作曲とかペンシルパズルとかやりつつ、Leanとか知ってたらカッコイイだろうな～……みたいな余生になるんじゃないかと想像しています。<span
+      class="del">たぶん一生ワナビ</span><br />
+    <br />
+    <h2>作曲</h2>
+    <audio controls src="../music/20251024.mp3" preload="none"></audio>
+    <b>"♪20251024.mp3"</b><br />
+    気のない名前で恐縮ですが、一応かるーくReaperを触りました。
+    エレキギターの音をさぐりつつ、フュージョンっぽい何某……（ならもうちょっとキメとかあるべきだよね）<br />
+    <br />
+    <audio controls src="../music/20251024_Cover1.mp3" preload="none"></audio>
+    <b>"♪20251024_Cover1.mp3"</b><br />
+    <audio controls src="../music/20251024_Cover2.mp3" preload="none"></audio>
+    <b>"♪20251024_Cover2.mp3"</b><br />
+    SunoAIに投げ込んだもの。かるーく触っただけのものにも、すごいクオリティのアレンジ、創意工夫と活力を与えてくれる。
+    こういうのを自分でやらなきゃならないんじゃないのかとは思うものの、正直自分の今の能力と気力ではここまでは……💦（ｗ<br />
+    <br />
+    ただn平均律とかには当然ながら対応しないので、この辺りのことをMelodyneやらMaxやらで少し考えてみたくなりつつある。
+    5年後くらいには何か結果が出るかも？（遠いよ）というわけでとりあえずMax for
+    Live目当てでAbleton Live買いのつもりです～。<br />
+    <br />
+    <h1>2025年10月13日</h1>
+    <h2>してたこと</h2>
+    一か月近く書いていなかった。Obsidianにもあまり触っていなかったので、何していたかな……。<br />
+    <br />
+    そうだ、オフはひたすらアニメを見ていた。
+    <a href="https://www.amazon.co.jp/gp/video/detail/B01MRNY65W/ref=atv_dp_share_cu_r">シュタゲ</a>全部、
+    <a href="https://www.amazon.co.jp/gp/video/detail/B0D9ZJCG7T/ref=atv_dp_share_cu_r">ダンダダン</a>の放送済み分、
+    <a href="https://www.amazon.co.jp/gp/video/detail/B0DRPN6C7Z/ref=atv_dp_season_select_s1">ゴールデンカムイ</a>の放送済み分と、
+    <a href="https://www.amazon.co.jp/gp/video/detail/B0CL7F5T8Q/ref=atv_dp_share_cu_r">進撃の巨人</a>全部。
+    進撃の巨人以外は多媒体で触れていたので筋は知っていて、進撃だけ新規で触れた。と言ってもシーズン3から見てなかったというだけだが……。<br />
+    <br />
+    進撃の巨人は元々面白い話だな～と思っていたけど、実際続きを見てみると、「まだ加速するの！？」というくらいストーリーの筋がどんどん加速していくところがいい。
+    生活の都合上、放送当時はアニメを見られる環境になかったのだがずっと気になってはいて、ちょっと生活の忙しさが空いたので見てみたらまあ面白いこと。
+    オチの落としどころも良かった。考察要素もいっぱいあるみたいなので、世のファンに倣って考察動画でも流し見してみようと思う。<br />
+    <br />
+    どのキャラも好きなのだが、全編通して特に「いい」と思ったのはミカサとハンジとジークだ。
+    ミカサというキャラクターはちょっと自分が高校生のころ書いていたキャラクターの一人と精神的に近いところがある（多分キノあたりが影響元だと思う）、強さの原点に湿度があるのだ。
+    ハンジはとにかく面白いのに締めるところはきっちり締めてくるところが格好良くて良い。段々と辛い「順番」を背負わざるを得なくなっていくのだが、それをしっかりとやり遂げる。
+    ジークは……問題意識は深刻なくせに言動が一言二言余計なやつ（笑）で、何だか見ていてちょっと愛おしいところがある。
+    出自の重さもそうだが元々「現状に対して何か疑問がある、つい何か言いたくなる」みたいなタイプで、しかもそれが思いやりから発している、というのが思想の出処でもあり、萌え所かもしれない。そこが上手くかみ合っている感じだ。
+    キャラクターの魅力には色んなものがあるが、自分の場合、「感情の重さ」と「知的な開放性」を書かれると、グッとキャラクターを好きになってしまうことが多い。
+    もちろん「進撃」のキャラクターにおいて、挙げた三人以外にも、この二つの要素は大きく見られる。<br />
+    <br />
+    それと、<a href="https://www.youtube.com/watch?v=EDntdjc39U8">「ドンキーコングバナンザ」</a>とか
+    <a href="https://www.youtube.com/watch?v=1ybRc-8sywk">「FFタクティクス - イヴァリース・クロニクル - 」</a>なども発売されている。
+    特にFFTは「ファミ通で読んで当時欲しかったけど買ってもらえず、時間が経ってから遊んだ」ゲームなので、なんだか妙に執着してしまう。
+    つまり「積んでたコンテンツを崩している」時期だと思う。放っておいても「未視聴コンテンツ」をどんどん積み上げてしまうタイプなので、ちょっとほっとしている。
+    そういえばSound
+    Horizonの「聖戦と死神」にはやたらFFTみがあるなと思ってたけど、もともと獅子戦争自体が薔薇戦争モチーフなので、元ネタを同じくしているのである。
+    FFTは「FF＋ベルセルク＋薔薇の名前＋妹」だと思っており、この妹概念が「ダンジョン飯」に継承されたり、
+    あるいは「毛皮骨肉店」といったあんまりな要素を古典的ローグライクによって再解釈しつつ「S県月宮」と悪魔合体して「Elona」になるのである……というちょっと電波交じりの系譜図が頭の中にある（笑）
+    自分の中で少女というものが重要な位置を占め始めたのはおそらく<a
+      href="https://danbooru.donmai.us/posts?tags=rydia_%28young%29_%28ff4%29&z=2">FF4のリディア</a>、 あるいは<a
+      href="https://ja.wikipedia.org/wiki/%E9%87%91%E7%94%B0%E4%B8%80%E5%B0%91%E5%B9%B4%E3%81%AE%E4%BA%8B%E4%BB%B6%E7%B0%BF">「金田一少年の事件簿」</a>の班目るりちゃんなのだが、
+    では妹は？
+    と言われると、案外マジでFFTかもしれない。妹っていいよね（あとはまあ、自分の場合、生育環境とか神経学的特性とか、まあ色々あるんだと思う）。
+    ダンジョン飯を通して描かれた「妹」について何かめちゃくちゃ<u
+      title="（逆説的に「性的ファンタジー」でなくても人は単にファンタジーがあるだけでアブナい方向に行く、ということでもある）">感じるところがあった</u>ために今ホームページを持っている、というのもある。ある種のミューズなのだろう。<br />
+    <br />
+    勉強についてなのだが、CPUとか型についてまたちょっとだけ勉強していた。
+    CPUについては先月も書いていた「ポケモンのバグ」から、「Z80ってどう動いてるの？」
+    みたいな方向がちょっと気になって勉強しているというのと、
+    型については名詞は <code>Noun :: Entity -> Bool</code> とか、命題は
+    <code>Prop :: World -> Bool</code> とか、 じゃあ <code>Entity</code> とか
+    <code>World</code> の中身については構造体で見ていきますかとか、
+    <code>World</code>
+    を導入すると今度は様相が気になってくるよね、到達可能性は
+    <code>Accessible :: World -> World -> Bool</code> なんだねとか、
+    「数学的には存在可能なのに現世界から到達不可能な状態って気にならない？」とか（この辺<a
+      href="https://amzn.asia/d/hGqUpMv">『チョコかバニラか？』（ジェイソン・シガ著）</a>でちらっと触れてた気もする）、
+    比喩についてはモナドが使えるんじゃないのとかそういう……。
+    昔からどうも関数に執着するところがあり（自分そんなんばっかりだな）、しかしプログラミングについては環境を構築できなかったため触らずに来たのだが、
+    ここに来てLLMがすごく勉強の助けになっている。しかし何かを書くわけではないので、世間的に見れば、まったく生産性が低い。何がしたいのやら＞自分<br />
+    <br />
+    そうそう、弟が入籍し、妹も入籍の方向性で決まった模様。あまりにもめでたい。
+    手入れの行き届いていない現実世界のアバターで会うのがちょっと申し訳ないのだが、仕方がないか。
+    全身のアトピーがちょっと良くなったのでまあ少し良いとも言える。
+    あすけんの女に放置プレイをぶちかましていることについては言い訳の余地はない（食べるのが好きすぎるのよ）<br />
+    <br />
+    <br />
+    <hr />
+    <p style="text-align: center">
+      <a href="20250709.htm">←2025年第三期</a>　　　　　　　<a href="20260103.htm">2026年第一期→</a>
+    </p>
+  </div>
+
+  <!-- jQuery（先） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <!-- Lightbox2（後） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
+</body>
+
+</html>

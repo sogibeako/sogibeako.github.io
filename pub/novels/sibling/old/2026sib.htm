@@ -1,0 +1,2192 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>2026年兄妹小話 * 湫埜と雨滴 *</title>
+    <link rel="preload" as="font" href="/seoremium/Seoremium_clg.ttf" type="ttf" crossorigin />
+    <!-- Lightbox2 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
+    <style>
+        /* 色は出来るだけ、SB Creative出版『日本の美しい色と言葉』から取っていく。 */
+        /* 当ページはp256『しとしと』 */
+        /* 氷雨 #e3e8f1 */
+        /* 俄雨 #6290b1 */
+        /* 長雨 #afd3e6 */
+        /* 秋雨 #609aa0 */
+        /* 五月雨 #9ec8d1 */
+
+        /* Seoremium */
+        @font-face {
+            font-family: "Seoremium_clg";
+            src: url("/seoremium/Seoremium_clg.ttf") format("truetype");
+            font-display: swap;
+        }
+
+        /* Source */
+        @font-face {
+            font-family: "Source Code Pro";
+            src: url("../jssproject/SourceCodePro-VariableFont_wght.ttf");
+            font-display: swap;
+        }
+
+        body {
+            font-size: 1rem;
+            background-color: #111822;
+            /* 青っぽい背景色 */
+            margin: 0;
+            padding: 0;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        h1 {
+            background-color: #609aa0;
+            /* 秋雨 */
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.5em;
+            /* 内側の余白で見た目よく */
+        }
+
+        h2 {
+            background-color: #6290b1;
+            /* 俄雨 */
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.2em;
+            /* 内側の余白で見た目よく */
+        }
+
+        h3 {
+            background-color: #fde5c5;
+            /* フルムーン */
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.1em;
+            /* 内側の余白で見た目よく */
+        }
+
+        .p_left {
+            text-align: left;
+        }
+
+        .wrapper {
+            max-width: 700px;
+            width: 80%;
+            margin: 50px auto;
+            padding: 20px;
+            border: 0px solid #111;
+            background-color: #afd3e6;
+            /* 長雨 */
+            font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+        }
+
+        .inner_wrapper {
+            width: 600px;
+            margin: 10px auto;
+            padding: 20px;
+            border: 1px solid #111;
+            background-color: #ffffee;
+            font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", sans-serif;
+        }
+
+        .grid-table {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 2px;
+        }
+
+        .grid-table2 {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 2px;
+        }
+
+        .cell {
+            border: 1px solid #ccc;
+            padding: 4px 8px;
+            line-break: strict;
+            /* 日本語の自然な改行ルールに従う */
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        summary {
+            font-weight: bold;
+            text-decoration: underline solid #000000;
+        }
+
+        img.yokonaga-image {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        img.tatenaga-image {
+            width: 60%;
+            max-width: 800px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        hr {
+            border-width: 2px 0 0 0;
+            /* 線の太さ */
+            border-style: dashed;
+            /* 線の種類 */
+            border-color: #609aa0;
+            /* 線の色 */
+        }
+
+        dd {
+            margin-bottom: 1.0em;
+        }
+
+        dt {
+            font-weight: bold;
+        }
+
+        .seoremium {
+            font-family: "Seoremium_clg";
+            font-size: 1.4rem;
+            font-weight: 599;
+            letter-spacing: 0.1rem;
+        }
+
+        .br-sp {
+            display: none;
+        }
+
+        pre,
+        pre code {
+            background-color: #bbbbbb;
+            color: #000;
+            padding: 0.5em;
+            display: block;
+            overflow-x: auto;
+            border-radius: 4px;
+            font-family: "Source Code Pro", "Courier New", Courier, monospace;
+        }
+
+        code {
+            background-color: #bbbbbb;
+            color: #000;
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+            font-family: "Source Code Pro", "Courier New", Courier, monospace;
+            display: inline-block;
+            line-height: 1.2;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .del {
+            text-decoration: line-through;
+            text-decoration-color: gray;
+            font-size: 0.75rem;
+            color: gray;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1em 0;
+        }
+
+        table th,
+        table td {
+            border: 1px solid #666;
+            padding: 0.4em 0.6em;
+            text-align: left;
+        }
+
+        ol {
+            font-weight: bold;
+        }
+
+        .copy-bar {
+            top: 0;
+            z-index: 10;
+            display: flex;
+            justify-content: flex-end;
+            padding: 1rem 0;
+        }
+
+        .copy-bar-local {
+            padding: 0.4rem 0 0.8rem 0;
+        }
+
+        .copy-btn {
+            font-family: inherit;
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+            padding: 0.5em 1.4em;
+            border: 1px solid var(--border, #777);
+            border-radius: 4px;
+            background: #888888;
+            color: #000000;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .copy-btn:hover {
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+        }
+
+        .copy-btn:active {
+            transform: scale(0.97);
+        }
+
+        .copy-btn.copied {
+            background: #f0f5f0;
+        }
+
+        /* =========================
+   LINE風トークUI
+   読みやすさ重視・小話向け
+   ========================= */
+
+        .chat-log {
+            max-width: 560px;
+            margin: 2em auto;
+            padding: 1.2em 1em;
+            background: #eef3f7;
+            border: 1px solid #d8e0e8;
+            border-radius: 18px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+            box-sizing: border-box;
+        }
+
+        .chat-log *,
+        .chat-log *::before,
+        .chat-log *::after {
+            box-sizing: border-box;
+        }
+
+        .chat-date {
+            width: fit-content;
+            margin: 0 auto 1.2em;
+            padding: 0.35em 0.9em;
+            background: rgba(70, 90, 110, 0.14);
+            color: #425466;
+            font-size: 0.82rem;
+            line-height: 1.4;
+            border-radius: 999px;
+        }
+
+        .chat-system {
+            width: fit-content;
+            max-width: 90%;
+            margin: 1em auto;
+            padding: 0.45em 0.9em;
+            background: rgba(70, 90, 110, 0.1);
+            color: #4e6172;
+            font-size: 0.82rem;
+            line-height: 1.5;
+            text-align: center;
+            border-radius: 999px;
+        }
+
+        .chat-row {
+            display: flex;
+            align-items: flex-end;
+            margin: 0.5em 0;
+            gap: 0.5em;
+        }
+
+        .chat-row.left {
+            justify-content: flex-start;
+        }
+
+        .chat-row.right {
+            justify-content: flex-end;
+        }
+
+        .chat-icon {
+            width: 42px;
+            height: 42px;
+            flex: 0 0 42px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #d8dfe6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: #5b6670;
+        }
+
+        .chat-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .chat-main {
+            display: flex;
+            flex-direction: column;
+            max-width: min(78%, 420px);
+        }
+
+        .chat-row.right .chat-main {
+            align-items: flex-end;
+        }
+
+        .chat-name {
+            margin: 0 0 0.2em 0.35em;
+            color: #607080;
+            font-size: 0.78rem;
+            line-height: 1.3;
+        }
+
+        .chat-bubble-wrap {
+            display: flex;
+            align-items: flex-end;
+            gap: 0.35em;
+        }
+
+        .chat-row.right .chat-bubble-wrap {
+            flex-direction: row-reverse;
+        }
+
+        .chat-bubble {
+            position: relative;
+            padding: 0.72em 0.95em;
+            border-radius: 1.1em;
+            font-size: 0.96rem;
+            line-height: 1.75;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+        }
+
+        .chat-row.left .chat-bubble {
+            background: #ffffff;
+            color: #222;
+            border-top-left-radius: 0.4em;
+        }
+
+        .chat-row.right .chat-bubble {
+            background: #bff0a8;
+            color: #183018;
+            border-top-right-radius: 0.4em;
+        }
+
+        .chat-row.left .chat-bubble::before,
+        .chat-row.right .chat-bubble::before {
+            content: "";
+            position: absolute;
+            bottom: 0.45em;
+            width: 0.8em;
+            height: 0.8em;
+            background: inherit;
+        }
+
+        .chat-row.left .chat-bubble::before {
+            left: -0.28em;
+            clip-path: polygon(100% 0, 0 100%, 100% 100%);
+        }
+
+        .chat-row.right .chat-bubble::before {
+            right: -0.28em;
+            clip-path: polygon(0 0, 0 100%, 100% 100%);
+        }
+
+        .chat-meta {
+            color: #71808f;
+            font-size: 0.72rem;
+            line-height: 1.2;
+            white-space: nowrap;
+            padding-bottom: 0.2em;
+        }
+
+        .chat-read {
+            color: #71808f;
+            font-size: 0.68rem;
+            line-height: 1.2;
+            white-space: nowrap;
+            padding-bottom: 0.2em;
+        }
+
+        .chat-row.right .chat-meta-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.1em;
+        }
+
+        .chat-row.left .chat-meta-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.1em;
+        }
+
+        .chat-row.compact {
+            margin-top: 0.18em;
+        }
+
+        .chat-row.compact .chat-name,
+        .chat-row.compact .chat-icon {
+            display: none;
+        }
+
+        .chat-row.compact.left {
+            padding-left: 42px;
+        }
+
+        .chat-image-card,
+        .chat-link-card {
+            margin-top: 0.45em;
+            padding: 0.65em 0.8em;
+            border-radius: 0.9em;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            font-size: 0.87rem;
+            line-height: 1.55;
+        }
+
+        .chat-row.left .chat-image-card,
+        .chat-row.left .chat-link-card {
+            background: #f7f9fb;
+        }
+
+        .chat-card-title {
+            font-weight: 700;
+            margin-bottom: 0.2em;
+        }
+
+        .chat-card-desc {
+            color: #4f5d6a;
+            font-size: 0.82rem;
+        }
+
+        .chat-stamp {
+            display: inline-block;
+            margin-top: 0.15em;
+            font-size: 1.8rem;
+            line-height: 1;
+            filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.12));
+        }
+
+        .chat-typing {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.28em;
+            padding: 0.7em 0.9em;
+            background: #ffffff;
+            border-radius: 1.1em;
+            border-top-left-radius: 0.4em;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+        }
+
+        .chat-typing span {
+            width: 0.42em;
+            height: 0.42em;
+            border-radius: 50%;
+            background: #8d99a6;
+            display: inline-block;
+            animation: chatTyping 1.2s infinite ease-in-out;
+        }
+
+        .chat-typing span:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .chat-typing span:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes chatTyping {
+
+            0%,
+            80%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.45;
+            }
+
+            40% {
+                transform: translateY(-0.18em);
+                opacity: 1;
+            }
+        }
+
+        /* スマホ調整 */
+        @media (max-width: 640px) {
+            .chat-log {
+                margin: 1.4em 0;
+                padding: 1em 0.7em;
+                border-radius: 14px;
+            }
+
+            .chat-main {
+                max-width: 82%;
+            }
+
+            .chat-bubble {
+                font-size: 0.95rem;
+                line-height: 1.7;
+            }
+
+            .chat-icon {
+                width: 36px;
+                height: 36px;
+                flex-basis: 36px;
+            }
+
+            .chat-row.compact.left {
+                padding-left: 36px;
+            }
+        }
+
+        /* ============================================================
+     案D: 雨窓ボタン（Canvas雨粒アニメーション背景）
+     ============================================================ */
+        .rain-window-btn {
+            position: relative;
+            width: 200px;
+            height: 64px;
+            background: rgba(17, 24, 34, 0.85);
+            border: 2px solid #609aa055;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: border-color 0.4s, box-shadow 0.4s;
+            margin: 0 auto;
+        }
+
+        .rain-window-btn canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .rain-window-btn .rw-label {
+            position: relative;
+            z-index: 1;
+            font-family: 'Zen Maru Gothic', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.2em;
+            color: #e3e8f1;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+            transition: text-shadow 0.4s;
+        }
+
+        .rain-window-btn:hover {
+            border-color: #9ec8d1;
+            box-shadow: 0 0 24px rgba(158, 200, 209, 0.15);
+        }
+
+        .rain-window-btn:hover .rw-label {
+            text-shadow: 0 0 10px rgba(158, 200, 209, 0.5), 0 1px 4px rgba(0, 0, 0, 0.6);
+        }
+
+        /* ====== レスポンシブ ====== */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1rem;
+            }
+
+            .rain-badge {
+                width: 140px;
+                height: 46px;
+            }
+
+            .rain-badge .badge-label {
+                font-size: 0.75rem;
+            }
+
+            .ripple-btn {
+                width: 150px;
+                height: 48px;
+            }
+
+            .rain-window-btn {
+                width: 160px;
+                height: 54px;
+            }
+
+            .drop-links-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media screen and (max-width: 600px) {
+            body {
+                font-size: 0.7rem;
+            }
+
+            h1,
+            h2 {
+                font-size: 1rem;
+            }
+
+            .seoremium {
+                font-size: 1rem;
+            }
+
+            .wrapper,
+            .inner_wrapper {
+                width: 95%;
+                padding: 10px;
+                word-wrap: break-word;
+                box-sizing: border-box;
+            }
+
+            .grid-table,
+            .grid-table2 {
+                grid-template-columns: 1fr;
+            }
+
+            .br-sp {
+                display: inline;
+            }
+        }
+    </style>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        const pressed = new Set();
+        window.addEventListener("keydown", (e) => {
+            const tag =
+                e.target && e.target.tagName ? e.target.tagName.toLowerCase() : "";
+            if (tag === "input" || tag === "textarea" || e.target.isContentEditable)
+                return;
+            pressed.add(e.key.toLowerCase());
+            if (e.key === "Enter") {
+                if (pressed.has("a") && pressed.has("b")) {
+                    e.preventDefault();
+                    window.location.href = "../nazo/2026.htm";
+                }
+            }
+        });
+        window.addEventListener("keyup", (e) => {
+            pressed.delete(e.key.toLowerCase());
+        });
+        window.addEventListener("blur", () => pressed.clear());
+    </script>
+</head>
+
+<script>
+    /*
+    編集方針……
+    - 普段の会話から、 `名前「` で検索、`<dt>名前</dt><dd>「` にリプレイス。
+        - これだけでだいぶスピーディ。
+        - 変換後は `<dt>名前</dt>` になっているため、そのまま全置換しても引っかかることはない。
+    */
+</script>
+
+<body>
+    <div class="wrapper">
+        <div class="p_left">
+            現在位置 : <a href="../../index.html">ホーム</a> ＞ <a href="../index.htm">Novels</a> ＞
+            <a href="2026sib.htm"><b>2026年兄妹小話</b></a>
+        </div>
+        <hr />
+        <p style="text-align: center">
+            ←2025年　　　　　　　2027年→
+        </p>
+        <div class="copy-bar">
+            <button class="copy-btn" data-copy-target="#novel-content">📋 ページ全体をコピー</button>
+        </div>
+
+        <div id="novel-content">
+            <h1>兄妹小話</h1>
+            <h4>シスコンのお兄ちゃん、つよい妹、そして猫などがだいたい何かします。</h4>
+            <br />
+            <h2>キャラ紹介</h2>
+            <article class="profile">
+                <dl>
+
+                    <dt>水原一彌（みずはら-かずや）</dt>
+                    <dd>
+                        <ul>
+                            <li>兄、20歳。</li>
+                            <li>ドのつくシスコン。感覚が過敏なのでダボダボのTシャツを着ている。</li>
+                            <li>大学生であることを主張しているが、市内の大学に学籍がない。何者……。</li>
+                            <li>数学、プログラム、古代言語が出来る人のことをすごくかっこいいと思っている。</li>
+                            <li>……のだが、自分で勉強しようとするとすぐ気が逸れる。</li>
+                            <li>妹と一緒に散歩していると異界に迷い込みやすい。</li>
+                        </ul>
+                    </dd>
+                    <dt>水原一埜（みずはら-かずの）</dt>
+                    <dd>
+                        <ul>
+                            <li>妹、9歳。トップ絵にいる女の子。</li>
+                            <li>ドのつく近眼。赤い眼鏡と黒いベレー帽がトレードマーク。</li>
+                            <li>一彌と筆者による異常な寵愛を受ける。一彌にとっては「世界との盟約」。</li>
+                            <li>妹パンチはすごい力をもつ（秒間85発、計12200Jほど）。</li>
+                            <li>怪談とYouTube視聴とゲームが好き。実は霊感がある。</li>
+                            <li>なんだかんだでお兄ちゃんのことが好き。</li>
+                        </ul>
+                    <dt>こにゃん</dt>
+                    <dd>
+                        <ul>
+                            <li>水原家に住まう保護猫。スーパーキャット。キジトラ9歳♀。</li>
+                            <li>プログラム能力を持つ。「Nyankopad」を愛用。</li>
+                            <li>アカシックレコードにアクセスして各種ライブラリをダウンロードする。</li>
+                    </dd>
+                    <dt>中畑為明（なかはた-ためあき）</dt>
+                    <dd>
+                        <ul>
+                            <li>男。一彌の友人、20歳。</li>
+                            <li>落ち着きがあまりなく生活能力も怪しいが、根はいいやつで真面目。</li>
+                            <li>こちらは正真正銘の大学生。教育大に通う。</li>
+                            <li>無類のRPG好き。ダメージ計算式などに詳しい。</li>
+                            <li>暗算が超人レベルに速い。</li>
+                            <li>VTuberを愛する。</li>
+                        </ul>
+                    </dd>
+                    <dt>夕畑目ななよ（なばため-ななよ）</dt>
+                    <dd>
+                        <ul>
+                            <li>女の子。一埜の親友、9歳。ゲラ。</li>
+                            <li>クラスのファッションリーダー。人間社会の革命を画策する不穏な少女。</li>
+                            <li>かなり多くの下僕がいるらしい。乗り物に弱い。</li>
+                        </ul>
+                    </dd>
+                    <dt>沖中真宵（おきなか-まよい）</dt>
+                    <dd>
+                        <ul>
+                            <li>女の子。一埜の親友、9歳。素直クール。</li>
+                            <li>スポーツ大好き少女。男女問わずモテるらしい。</li>
+                            <li>一彌のだらしない肉体を見るたびに「鍛えたい」と漏らすが一彌は断固拒否する。</li>
+                        </ul>
+                    </dd>
+            </article>
+            <br />
+            <h2>2026/04/09</h2>
+            <div class="inner_wrapper">
+                <section class="talk-block" data-date="2026-04-09" data-tags="一彌,一埜,ななよ,真宵,道具,眼鏡,ドタバタ,日常" data-title="">
+
+                    <div class="copy-bar copy-bar-local">
+                        <button class="copy-btn" data-copy-target="#talk-2026-04-09">📋 この小話をコピー</button>
+                    </div>
+                    <details id="talk-2026-04-09">
+                        <summary>小学校にて、一埜のクラスメイトが一埜の眼鏡を触ると……？</summary>
+                        <article class="talk" id="talk-body-2026-04-09">
+                            <dl>
+                                <dt>＊　小学校にて……！　＊</dt>
+                                <br />
+                                <dt>ななよ（9歳JS、一埜の友達）</dt>
+                                <dd>「一埜ちゃ～ん、その眼鏡取って前髪上げなよー、可愛いんだからさ～（いちゃいちゃ）」</dd>
+                                <dt>一埜（9歳妹）</dt>
+                                <dd>「えー？ そんなことないってぇ～（いちゃいちゃ）」</dd>
+                                <dt>真宵（9歳JS、一埜の友達）</dt>
+                                <dd>「何でも物は試し。眼鏡も似合うけど、自分の可能性を広げてみるべき（いちゃいちゃ）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「えぇー？ そうかなぁー？（てれっ）」</dd>
+                                <br />
+                                <dt>＊　一方その頃、自宅！　＊</dt>
+                                <br />
+                                <dt>一彌のスマホ</dt>
+                                <dd>「ブー」</dd>
+                                <dt>一彌（20歳兄）</dt>
+                                <dd>「一埜かっ！？ ……なんだ、ビッグクランチか……（←だらだらと<a
+                                        href="https://ivark.github.io/AntimatterDimensions/">Antimatter
+                                        Dimensions</a>をプレイしてる）」</dd>
+                                <br />
+                                <dt>＊　その時である……！　＊</dt>
+                                <br />
+                                <dt>神託機械</dt>
+                                <dd>「カラカラ……カラ……」</dd>
+                                <br />
+                                <dt>これは一彌の作った『神託機械』……！
+                                    メスシリンダー10個の中に、それぞれサイコロ……そしてその土台はバネとなっており、定期的に振動、無限にサイコロを回し続けている……。</dt>
+                                <br />
+                                <dt>神託機械</dt>
+                                <dd>「……ブーッ！ ブーッ！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「ぐわっ！（ソファから落ちる）」</dd>
+                                <dt>一彌のお気に入りのマグカップ</dt>
+                                <dd>「ビシィ！（ヒビが入る）」</dd>
+                                <dt>黒猫</dt>
+                                <dd>「んにゃァァァア！！（窓の外でムーンサルトしながらネズミをゲット）」</dd>
+                                <dt>太陽</dt>
+                                <dd>「うわー（雲に一瞬隠れて周囲が真っ暗になる）」</dd>
+                                <dt>一彌</dt>
+                                <dd>「な、何が……はっ！？」</dd>
+                                <br />
+                                <dt>神託機械のなかではサイコロ10個が同時に6を出している……！</dt>
+                                <br />
+                                <dt>一彌</dt>
+                                <dd>「わ、悪い予感がしてきた……！（キュリリリリン！）はっ！ ……そうか、あの機能の出番がとうとう来たようだな！」</dd>
+                                <br />
+                                <dt>　＊　＊　＊</dt>
+                                <br />
+                                <dt>真宵</dt>
+                                <dd>「ほら、ななよ、今（一埜の前髪を持ち上げる）」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「ほらほらー、こうしてさ……えーい！（一埜の眼鏡に手を触れる）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「いやーんもう、だめだってばー！（にこにこ）」</dd>
+                                <dt>一埜の眼鏡</dt>
+                                <dd>「指紋認証エラー。作動します」</dd>
+                                <dt>ななよ/一埜</dt>
+                                <dd>「えっ？」</dd>
+                                <br />
+                                <dt>一埜の眼鏡</dt>
+                                <dd>「＊ビリビリビリビリ！＊」</dd>
+                                <br />
+                                <dt>ななよ</dt>
+                                <dd>「あばばばばばぱぱぱぱ」</dd>
+                                <dt>一埜</dt>
+                                <dd>「ななよちゃん！？」</dd>
+                                <dt>真宵</dt>
+                                <dd>「？？💦」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「……ゲホッ、ゴホゴホ……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「だ、大丈夫……？」</dd>
+                                <br />
+                                <dt>ななよ</dt>
+                                <dd>「……ククク……一埜の眼鏡を奪いし者に、災いあれ……！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「なっ！？ え、ななよちゃん、どうしたの！？💦」</dd>
+                                <dt>真宵</dt>
+                                <dd>「どうしたの、その喋り方？」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「ななよちゃん？ ……ククク！ ななよちゃんの精神は……今は眠っているわぁ！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「そのトンチキな技術と喋り方……ま、まさか、お兄ちゃん！？」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「クククク……フハハハ！」</dd>
+                                <dt>真宵</dt>
+                                <dd>「そんな馬鹿な……」</dd>
+                                <br />
+                                <dt>ななよ</dt>
+                                <dd>「ウ……（目の色が一瞬戻る）くっ、な、何これぇ……！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「あ！ ななよちゃん！ しっかりして！」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「ううぅーっ、なんだかすごく高笑いしたい気持ち……フフフ、くーはっはっはっはっ！！ あーすっきり……ククク……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「変な状態になってる！💦」</dd>
+                                <br />
+
+                                <dt>一埜</dt>
+                                <dd>「お兄ちゃん変なことしないで！💢（LINE）」</dd>
+                                <dt>一彌</dt>
+                                <dd>「ぼくは何もしていないぞ！ 一埜の眼鏡に触れた者には、ぼくの精神波動が一時的に注入されるのだ……！（LINE）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「ななよちゃんが高笑いしてるんだけど！💢（LINE）」</dd>
+                                <dt>一彌</dt>
+                                <dd>「一埜の眼鏡は神にして聖なる遺物、洋風に言えばアーティファクトッ！ そんなものに軽々しく触れる者にはマインドブラストだッ！ これこそが兄のディフェンスシステム！
+                                    一埜も、リアクションアビリティが得られたことを喜ぶがいい！（LINE）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「あのさ、お兄ちゃんが改造したならお兄ちゃんが一番軽々しく触れてない？（LINE）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「ねえ（LINE）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「ちょっと（LINE）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「既読無視すんな！💢（LINE）」</dd>
+                                <dt>一彌</dt>
+                                <dd>「……💦」</dd>
+                                <br />
+                                <dt>　＊　アイキャッチ　＊</dt>
+                                <br />
+                                <dt>腕が七本ある白い影</dt>
+                                <dd>「アヴェッ（←校舎の上でニワトリのように鳴き声を上げる）」</dd>
+                                <br />
+                                <dt>　＊　＊　＊</dt>
+                                <br />
+                                <dt>ななよ</dt>
+                                <dd>「あれ？ なんか気持ちが落ち着いてきた……？」</dd>
+                                <dt>一埜</dt>
+                                <dd>「そうか、論破すればお兄ちゃんの精神が弱まるんだ！」</dd>
+                                <dt>真宵</dt>
+                                <dd>「ななよ、しっかり。頑張って」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「うー、腹立つー！ 一埜ちゃん、会話に招待して！」</dd>
+                                <dt>真宵</dt>
+                                <dd>「私も」</dd>
+                                <dt>一埜</dt>
+                                <dd>「う、うん」</dd>
+                                <br />
+                                <dt>　＊　＊　＊</dt>
+                                <br />
+                                <dt>ななよ</dt>
+                                <dd>「えっ？ お兄さん一埜ちゃんの眼鏡にマインドブラスト仕込んでたの？ ウケるんだけどwww まあ私には効かないけどねー」</dd>
+                                <dt>一彌</dt>
+                                <dd>「何っ！💦」</dd>
+                                <dt>真宵</dt>
+                                <dd>「一埜、この眼鏡かけないほうがいいよ」</dd>
+                                <dt>一埜</dt>
+                                <dd>「た、確かに……うー、気に入ってたのに、この眼鏡！ お兄ちゃんのバカ！💢」</dd>
+                                <dt>真宵</dt>
+                                <dd>「一埜かわいそう」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「先生に言お？」</dd>
+                                <dt>一埜</dt>
+                                <dd>「うん……」</dd>
+                                <dt>一彌</dt>
+                                <dd>「うっ、うぅ……！💦」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「あと私がコンタクトのコーデ教えてあげるからさ！✨」</dd>
+                                <dt>一埜</dt>
+                                <dd>「えへへ、ありがと！✨ あーあ、でもこの眼鏡、ほんとに気に入ってたんだ……ちぇー」</dd>
+                                <dt>一彌</dt>
+                                <dd>「あぁあ……一埜が裸眼派に……！？💦」</dd>
+                                <dt>真宵</dt>
+                                <dd>「だいたいこれくらいで論破されるとか本当に大学生？
+                                    筋トレから始めたほうがいいと思う。健全な精神は健全な肉体に宿る。スクワット10回20セット、プッシュアップ5回20セット、レッグランジ10回10セットから始めよう」
+                                </dd>
+                                <dt>一彌</dt>
+                                <dd>「出来るか、そんなに！💦」</dd>
+                                <br />
+                                <dt>　＊　＊　＊</dt>
+                                <br />
+                                <dt>一彌</dt>
+                                <dd>「くそッ！ か、かくなる上は学校に乗り込み、再度マインドブラストを……！（玄関を出る）」</dd>
+                                <dt>カラス</dt>
+                                <dd>「カァー！🐦‍⬛」</dd>
+                                <dt>一彌</dt>
+                                <dd>「ぐわっ！？ か、カラス！？ あぁ……ぼくはもうダメだ……（うずくまり、動かなくなる……）」</dd>
+                                <dt>カラス</dt>
+                                <dd>「ヴァルワ！ ヴッワァー！🐦‍⬛（そこらを飛び回る）」</dd>
+                                <dt>町内会の人々</dt>
+                                <dd>「こ、こんなところにカラスが！？ ぐぁ……（次々とうずくまる……）」</dd>
+                                <br />
+                                <dt>　＊　＊　＊</dt>
+                                <br />
+                                <dt>ななよ</dt>
+                                <dd>「お兄ちゃんどうなった？」</dd>
+                                <dt>一埜</dt>
+                                <dd>「んー（見守りアプリを起動）……あ」</dd>
+                                <dt>真宵</dt>
+                                <dd>「どうしたの？」</dd>
+                                <dt>一埜</dt>
+                                <dd>「……カラスにまとわりつれちゃったみたい……」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「え！？ か、カラスに！？ うわぁー……」</dd>
+                                <dt>ニュース</dt>
+                                <dd>「◯市でつい先ほど、カラスが住宅街に出現し、地域住民を次々とうずくまらせる事態になりました。（VTR）」</dd>
+                                <dt>一彌（VTR）</dt>
+                                <dd>「ぐわぁぁ……」</dd>
+                                <dt>カラス（VTR）</dt>
+                                <dd>「カァー！🐦‍⬛」</dd>
+                                <dt>真宵</dt>
+                                <dd>「まあ、自業自得かな……」</dd>
+                                <br />
+                                <dt>　＊　アイキャッチ　＊</dt>
+                                <br />
+                                <dt>校舎の壁に張り付いたカタツムリ</dt>
+                                <dd>「ニュルー🐌」</dd>
+                                <br />
+                                <dt>　＊　＊　＊</dt>
+                                <br />
+                                <dt>一埜</dt>
+                                <dd>「ただいまー」</dd>
+                                <dt>一彌</dt>
+                                <dd>「うーん、うーん……カラスが……🐦‍⬛」</dd>
+                                <dt>一埜</dt>
+                                <dd>「すごかったみたいだね。まあ、もう音波で山に返されたみたいだけど……もう、慌てて表出たらダメだよ！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「くっ……一埜……せめて、最後に顔をよく見せてくれ……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「もう、大げさだなぁ。はい（身を乗り出す」</dd>
+                                <dt>一彌</dt>
+                                <dd>「……はっ！？」</dd>
+                                <dt>一埜</dt>
+                                <dd>「？ どうしたの？（いつもの赤い眼鏡を掛けている）」</dd>
+                                <dt>一彌</dt>
+                                <dd>「あぁ……コンタクト派には、ならずにいてくれたんだな……ふふふ、やはりその眼鏡が、一番……似合っている……ぞ……（ガクッ）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「もー……（おしぼりを取りに行く）」</dd>
+                                <br />
+                                <dt>　＊　＊　＊</dt>
+                                <br />
+                                <dt>一埜</dt>
+                                <dd>「お兄ちゃーん（扉を開ける）」</dd>
+                                <dt>一彌</dt>
+                                <dd>「ふしゅぅるるる……（立ち上がって、口から煙を出している）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「はっ！？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「一埜の眼鏡ェェェェ！！（一埜へと迫る！）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「妹パンチ！（ドゴォ！）（秒間85発、計12200J）」</dd>
+                                <dt>一彌</dt>
+                                <dd>「ぐはぁ！！（壁へと衝突し、ベッドへと倒れ込む）」</dd>
+                                <dt>布団</dt>
+                                <dd>「ファサァ……（風圧でめくれあがってから、一彌を優しく包み込む……）」</dd>
+                                <br />
+                                <dt>　＊　＊　＊</dt>
+                                <br />
+                                <dt>一彌</dt>
+                                <dd>「ぐっ……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「もー、反射的にパンチしちゃったじゃん……大丈夫？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「一埜の、眼鏡……（手を伸ばす）」</dd>
+                                <dt>一埜の眼鏡</dt>
+                                <dd>「指紋認証エラー。作動します」</dd>
+                                <dt>一埜</dt>
+                                <dd>「えっ？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「あっ」</dd>
+                                <br />
+                                <dt>一埜の眼鏡</dt>
+                                <dd>「ビリビリビリビリビリビリ！！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「ぐわぁぁぁぁぁあ！！」</dd>
+                                <br />
+                                <dt>この時、何が起きたか……？
+                                    一埜の眼鏡に搭載されたマインドブラストは、一彌の精神波動を、一埜の眼鏡に触れた者に投射するもの……そして、今回はそれが一彌自身に投射されたわけである。</dt>
+                                <br />
+                                <dt>すなわち、</dt>
+                                \[一彌 = \lbrace 一彌\rbrace = \lbrace \lbrace 一彌\rbrace \rbrace = \lbrace \lbrace \lbrace
+                                一彌\rbrace \rbrace \rbrace = \cdots \]
+                                <br />
+                                <dt>つまり、\( \lbrace \lbrace \lbrace \cdots \rbrace \rbrace \rbrace \)
+                                    という、無限再帰構造の回廊の中に、一彌の精神は投射されたのである！！</dt>
+                                <br />
+                                <dt>一彌</dt>
+                                <dd>「（無限回廊の中で）ここはどこだぁぁぁぁ！！💦」</dd>
+                                <dt>一彌の肉体</dt>
+                                <dd>「……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「寝ちゃったのかな？ まあ、ゆっくり休んでね……お大事にね」</dd>
+                                <dt>黒猫</dt>
+                                <dd>「ニャーン🐈‍⬛（縁側でゴロゴロ）」</dd>
+                                <dt>カラス</dt>
+                                <dd>「カァー🐦‍⬛（山から鳴き声を街に轟かす）」</dd>
+                            </dl>
+                        </article>
+
+                    </details>
+                </section>
+            </div>
+            <h2>2026/03/29</h2>
+            <div class="inner_wrapper">
+                <section class="talk-block" data-date="2026-03-29" data-tags="一彌,一埜,こにゃん,中畑,猫,旅行,東京,秋葉原,PC,凡ミス,ドタバタ,日常"
+                    data-title="一彌、一埜は愛猫こにゃんを預けて旅行へ。友人の中畑がお世話をするが……">
+
+                    <div class="copy-bar copy-bar-local">
+                        <button class="copy-btn" data-copy-target="#talk-2026-03-29">📋 この小話をコピー</button>
+                    </div>
+                    <details id="talk-2026-03-29">
+                        <summary>一彌、一埜は愛猫こにゃんを預けて旅行へ。友人の中畑がお世話をするが……</summary>
+                        <article class="talk" id="talk-body-2026-03-29">
+                            <dl>
+                                <dt>一彌</dt>
+                                <dd>「こにゃんー、ごめんな……！ 明後日には帰ってくるからな！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「ごめんね……！」</dd>
+                                <dt>こにゃん</dt>
+                                <dd>「ハァーン（ちゃんと帰って来ないと承知しないわよ！）」</dd>
+                                <dt>中畑（一彌の友人）</dt>
+                                <dd>「こにゃんちゃんは任せろ！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「だ、大丈夫だよな？
+                                    と、とにかく……フード、お水、トイレの掃除、あと何かあったら動物病院……これだけ頼む！（日当支払い済み、ピザ出前権エンチャント済み）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「お願いします……！」</dd>
+                                <dt>中畑</dt>
+                                <dd>「任せろい！」</dd>
+                                <dt>こにゃん</dt>
+                                <dd>「ハァーン……」</dd>
+                                <br />
+                                <dt>　＊　＊　＊</dt>
+                                <br />
+                                <dt>一埜</dt>
+                                <dd>「お兄ちゃーん、東京楽しいね！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「ああ！ 秋葉原……フフフ！ このPCパーツは……ふむ！ GPUに違いない！」</dd>
+                                <dt>店員さん</dt>
+                                <dd>「それはPC-9801です」</dd>
+                                <dt>一埜</dt>
+                                <dd>「流石に私でもGPUではないと思ったよ」</dd>
+                                <dt>一彌</dt>
+                                <dd>「💦💦💦」</dd>
+                                <dt>一彌のスマートフォン</dt>
+                                <dd>「この持ち主に仕えていて大丈夫なのだろうか……（物言わぬ不安）」</dd>
+                                <br />
+                                <dt>　＊　＊　＊</dt>
+                                <br />
+                                <dt>一彌のスマートフォン</dt>
+                                <dd>「☎︎」</dd>
+                                <dt>一彌</dt>
+                                <dd>「おっと！ 中畑くんからだぞ……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「こにゃんに何かあったのかな……？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「はいもしもし」</dd>
+                                <dt>中畑</dt>
+                                <dd>「一彌ァァ……こにゃんが、こにゃんが、ハンストしてるんだ！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「な、何っ！！💦」</dd>
+                                <dt>一埜</dt>
+                                <dd>「ビデオ！ お兄ちゃん、ビデオ通話にしてもらおう！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「こにゃん！ 大丈夫か！💦」</dd>
+                                <dt>こにゃん</dt>
+                                <dd>「ムスゥゥゥ……！」</dd>
+                                <dt>中畑</dt>
+                                <dd>「トイレの砂とフードもちゃんと交換したのに……！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「フード、見せてくれるか！？」</dd>
+                                <dt>中畑</dt>
+                                <dd>「これだ……」</dd>
+                                <dt>お皿</dt>
+                                <dd>「砂ァ〜！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「中畑くんそれトイレの砂だよ！💦」</dd>
+                                <dt>中畑</dt>
+                                <dd>「えっ！？💦 そ、それでか……！？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「それでかじゃない！💦 ま、まさかお前、トイレも……」</dd>
+                                <dt>トイレ</dt>
+                                <dd>「フードォォ！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「中畑ァァァ！💢💢💦💦」</dd>
+                                <dt>こにゃん</dt>
+                                <dd>「ハァーン！（早く帰って来なさいよアンタら！💢）」</dd>
+                                <dt>中畑</dt>
+                                <dd>「ごめん！ ごめん、間違えた！！💦」</dd>
+                                <dt>一埜</dt>
+                                <dd>「全部ちゃんと入れ替えて！ あ、でもトイレのフードは一回捨ててよ！ それで、洗ってから入れてあげて！💦」</dd>
+                                <dt>中畑</dt>
+                                <dd>「あ、当たり前だ、ちゃんとやる！ こにゃんごめん！！💦」</dd>
+                                <dt>出前</dt>
+                                <dd>「ピザでーす」</dd>
+                                <dt>中畑</dt>
+                                <dd>「うわぁぁ！💦」</dd>
+                                <dt>一彌</dt>
+                                <dd>「お前はピザ抜きだぁぁぁ！！💢（エンチャントしていたピザ出前権をディスペル）」</dd>
+                                <dt>中畑</dt>
+                                <dd>「ごめん！ ごめん！ ちゃんとやるからピザは許して！！💦」</dd>
+                                <br />
+                                <dt>　＊　＊　＊</dt>
+                                <br />
+                                その後、中畑くんはちゃんとしたのでした……！<br />
+                                <br />
+                                <dt>　＊　＊　＊</dt>
+                                <br />
+                                <dt>こにゃん</dt>
+                                <dd>「ハァン（ちゃんとお世話を覚えるのよ）」</dd>
+                                <dt>中畑</dt>
+                                <dd>「ごめんなぁー（なでなで）」</dd>
+                            </dl>
+                        </article>
+
+                    </details>
+                </section>
+            </div>
+            <h2>2026/03/07</h2>
+            <div class="inner_wrapper">
+                <section class="talk-block" data-date="2026-03-29" data-tags="一彌,一埜,鏡の中の人物,鏡,自宅,プリン,シスコン,位相,ドタバタ,日常"
+                    data-title="普段通りの会話と思いきや、突然一彌が二人に……！？">
+                    <div class="copy-bar copy-bar-local">
+                        <button class="copy-btn" data-copy-target="#talk-2026-03-07">📋 この小話をコピー</button>
+                    </div>
+                    <details id="talk-2026-03-07">
+                        <summary>普段通りの会話と思いきや、突然一彌が二人に……！？</summary>
+                        <article class="talk" id="talk-body-2026-03-07">
+                            <dl>
+                                <dt>一埜（9歳妹）</dt>
+                                <dd>「お兄ちゃーん、冷蔵庫のプリン食べてもいいー？」</dd>
+                                <dt>一彌（20歳兄……！？）</dt>
+                                <dd>「……！！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「え、ど、どしたの……？💦」</dd>
+                                <dt>一彌（真・20歳兄）</dt>
+                                <dd>「ふわぁーあぁ。昼寝してたらこんな時間だ……って、<b>あれ！？</b>」</dd>
+                                <dt>一埜</dt>
+                                <dd>「（ただでさえうるさい）<b>お兄ちゃんが二人</b>！？」</dd>
+                                <dt>一彌？</dt>
+                                <dd>「や、やっと、会えた……！ あぁ、<b>一埜……一埜</b>！！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「<b>なんだテメェはぁぁぁ！ ぼくの妹に触るんじゃねぇぇ！！💦</b>」</dd>
+                                <dt>一彌？</dt>
+                                <dd>「ま、待て、違う！ 違うんだ！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「このシスコン感……こっちのお兄ちゃんも、間違いなくお兄ちゃんだ……！💦」</dd>
+                                <dt><br />　　　＊ <br /><br /></dt>
+                                <dt>一彌</dt>
+                                <dd>「つまり君は、<b>鏡の世界のぼく</b>だと、そういうことか……」</dd>
+                                <dt>一彌？</dt>
+                                <dd>「そうだ……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「鏡の中からなんて、なんでまた、そんなところから……？」</dd>
+                                <dt>一彌？</dt>
+                                <dd>「ぼくにはぼくの妹がいる。鏡の世界の中に……。だが……」</dd>
+                                <dt>一彌</dt>
+                                <dd>「あっ……（←何かを察した）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「だが？」</dd>
+                                <dt>一彌？</dt>
+                                <dd>「毎朝鏡を見た時にそこにいる、<b>『鏡の中の妹』</b>……！！ ぼくはそれを愛してあげられないことをずっと気に病んでいた！
+                                    見ることは、会うことはできるのに……そう、ぼくにはもう一人の妹がいるのに、言葉をかけてあげられない！！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「ぇええええ！？💦」</dd>
+                                <dt>一彌</dt>
+                                <dd>「（ガタっと音を立てて立ち上がる）<b>感動した</b>！！ さすがぼくだ！！
+                                    そうだ、同じことを考えていたんだ。もちろん『こちら側』の一埜を愛で、プリンを買ってあげたり、
+                                    頭を撫でてあげたりすることはできるし、日頃からそうしている！
+                                    ……だが、ぼくには『見えているのに、会うことができない妹』が、鏡の中いることをずっと気に病んでいた……！！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「<b>普段いっしょに歯磨きしながら、そんなこと考えてたの！？</b> 怖っっ！！！💦」</dd>
+                                <dt>一彌？</dt>
+                                <dd>「そうだ！ 『この妹にもプリンをあげられないのは何故だ！？』 ……さすが、ぼくだ……！（ほとんど感涙しながら）」</dd>
+                                <dt>一彌</dt>
+                                <dd>「そちらの世界の一埜は……元気にしているかい。よく笑い、よく泣き、よく遊び、よく食べ、よく勉強に励んでいるのかい……」</dd>
+                                <dt>一彌？</dt>
+                                <dd>「あぁ、そうだ。安心してくれ……君の世界の一埜も、元気そうで、幸せそうで、ぼくは嬉しい……！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「……うぅー！ なんかすごいヤダ！ シスコン時空が展開されてるぅ！！💦（赤面）」</dd>
+                                <dt>一彌</dt>
+                                <dd>「しかし、鏡の世界のぼくも、なかなかやるではないか。まさか、鏡の境界（？）を超えてくるとはな！
+                                    ぼくも通り抜けて一埜を撫でようとしたのだが、<b>必ず自分自身の手に衝突してしまう</b>んだ。
+                                    もしかしてあれか？ 鏡を連続性を保ちながら半分に割り（？）、片方を回転させて繋ぎ合わせてから……」</dd>
+                                <dt>一彌？</dt>
+                                <dd>「わはは、さすがぼくだな。そうだ、<b>『モノポータル』を作る手法でもある</b>が……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「（顔を手で仰ぎながら）あーもう、恥ずかしい！ あっ（うかつに居間の姿見と手鏡の間に入ってしまい、無数に複製される）」</dd>
+                                <dt>一彌/一彌？</dt>
+                                <dd>「（指さしながら）<b>あ！！ あそこに無限に一埜がいる</b>！！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「もうやめてぇぇえ！！💦」</dd>
+                            </dl>
+                        </article>
+                    </details>
+                </section>
+            </div>
+
+            <h2>2025/04/19</h2>
+            <div class="inner_wrapper">
+                <section class="talk-block" data-date="2025-04-19"
+                    data-tags="一彌,一埜,クマ,山,神社,神,凡ミス,シスコン,格ゲー,心理学,願い,ドタバタ,日常" data-title="大田山神社の冒険">
+                    <div class="copy-bar copy-bar-local">
+                        <button class="copy-btn" data-copy-target="#talk-2025-04-19">📋 この小話をコピー</button>
+                    </div>
+                    <details id="talk-2025-04-19">
+                        <summary>せたな町、太田山神社にやってきた兄妹……！？</summary>
+                        <article class="talk" id="talk-body-2025-04-19">
+                            <dl>
+                                <dt><br />＊ここはせたな町、太田山神社……！＊<br /><br /></dt>
+                                <dt>一埜</dt>
+                                <dd>「お兄ちゃん、これ本当に行くの？ 階段の角度半端ない（44度）んだけど……踏み面も狭いし」</dd>
+                                <dt>一彌</dt>
+                                <dd>「行くぞ！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「やだなぁ」</dd>
+                                <dt><br />＊20分後＊<br /><br /></dt>
+                                <dt>一埜</dt>
+                                <dd>「し、死ぬぅ……やっと階段終わった！ やったー、そろそろ本殿？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「ん？ まだ半分だぞ？」</dd>
+                                <dt>一埜</dt>
+                                <dd>「うそ！？ え、まさかこのハシゴ上がるの？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「そうだぞ」</dd>
+                                <dt><br />＊1時間後＊<br /><br /></dt>
+                                <dt>一埜</dt>
+                                <dd>「……鉄鎖……崖じゃないこれ？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「これを上がった石窟の中に本殿があるんだ！ 登り切れば絶対に願いが叶うという……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「そんなにして叶えたい願いないよ～。お兄ちゃん行っておいでよ、怖いし……」</dd>
+                                <dt>一彌</dt>
+                                <dd>「よし！ 行くぞ！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「落ちて来ても受け止めないからね」</dd>
+                                <dt><br />＊10分後＊<br /><br /></dt>
+                                <dt>一彌</dt>
+                                <dd>「はぁっ、はぁっ、着いた……！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「……神様！！ ぼくは妹が好きだ！！ 妹と一生添い遂げたい！！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「よしこれでOK！……奥尻島と日本海が見える……すごいところだな、ここは」</dd>
+                                <dt>一彌</dt>
+                                <dd>「……気を付けて帰るか！」</dd>
+                                <dt><br />＊鎖を降りて……＊<br /><br /></dt>
+                                <dt>一埜</dt>
+                                <dd>「おかえり、お兄ちゃん」</dd>
+                                <dt>一彌</dt>
+                                <dd>「景色すごかったよ」</dd>
+                                <dt>一埜</dt>
+                                <dd>「ここでもう十分だよ……帰ろうよ」</dd>
+                                <dt>一彌</dt>
+                                <dd>「そうだな。……ほら」</dd>
+                                <dt>一埜</dt>
+                                <dd>「え？ 手？ ……つながないよ？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「何っ！？ おかしい、願いが……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「何を願ったのさ……」</dd>
+                                <dt>クマ</dt>
+                                <dd>「ゴバアアアア！！」
+                                <dt>一埜</dt>
+                                <dd>「うわあああああ！！！ えっ、ヒグマ！？ え、お兄ちゃん……死ぬんじゃ、私達……！？（蒼白）」</dd>
+                                <dt>一彌</dt>
+                                <dd>「くっ！！ うおおおお、妹はオレが守るっっ！！（体が黄金に光る）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「お兄ちゃん！？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「オラァァ、お兄ちゃんパンチ！！ ＊クマの鼻面に命中＊」</dd>
+                                <dt>クマ</dt>
+                                <dd>「アアアア！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「よぉし命中判定クリった！ のけぞったところにお兄ちゃん目つぶし！ 2D10！ すげぇぞまたクリティカル！ まだダイスが回る！
+                                    たまらずヒグマは強P擦るがここはバクステッ、出たお兄ちゃん金的！ 中段で崩していくゥ！
+                                    ヒット確認っ、ブースト吐いて硬直キャンセル、小P小Pお兄ちゃんアッパー（上昇中無敵）！
+                                    空中ダッシュからのエリアル小K+小K+大Kで繋いでクマの巨体を画面端まで運ぶッ、着地と同時に超必、お兄ちゃんクマスプレー（多段ヒット）でフィニッシュ死んだぁぁぁ！」
+                                </dd>
+                                <dt>一埜</dt>
+                                <dd>「す、すごい！ ことごとく命中してる！」</dd>
+                                <dt>クマ</dt>
+                                <dd>「（KOされた）ヒィーッ、なんだこの登山客！ か、帰る……！」</dd>
+                                <dt><br />＊クマ退散！＊<br /><br /></dt>
+                                <dt>一彌</dt>
+                                <dd>「ハァーッ、ハァーッ……！ ま、まさかこんなにうまく撃退出来るなんて……ひょっとしてぼく、強かったのか！？」</dd>
+                                <dt>一埜</dt>
+                                <dd>「クマ殺しの兄……（ちょっと引いてる）」</dd>
+                                <dt>一彌</dt>
+                                <dd>「み、見ただろ、一埜！ お兄ちゃんが一埜を一番守れるんだ！
+                                    ワーハハ、なーにが『大文字の他者』やら『退行』やら『プエルシンドローム』やら『エディプスコンプレックス』だ！？
+                                    〈他者〉！？ ハッ！！ あいつらに素手でクマが倒せるか！？ ぼくが一番最強なんだぞーっ、ワハハハ！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「なんか言ってる……」</dd>
+                                <dt>一彌</dt>
+                                <dd>「一埜！ 『兄妹の閉じた理想的関係への退行』がどうとか、ファンタスマS/◇aがどうとかじゃないッ！ 単純にッ！ あらゆる女性の中で、お前が一番魅力的でかわいいんだ！
+                                    全次元の女の子の中でお前が一番かわいい！ 甘くとろける！ ぼくはお前の、等身大の人格そのものを愛するっ！ お前のためならお兄ちゃんはなんでもできるんだぞ！
+                                    ほら、クマをやっつけるお兄ちゃんには惚れただろ！？ 一生そばにいてもいいんだぜ～！？」</dd>
+                                <dt>一埜</dt>
+                                <dd>「え、えぇ……？ ……ん？ あれ、お兄ちゃん、なんかいきなり色褪せてない！？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「えっ！？ ……はっ、もしかして！」</dd>
+                                <dt>山に響き渡る謎の声</dt>
+                                <dd>「願いはこれで使い切ったからな～……からな～……からな～……（山彦）」</dd>
+                                <dt><br />＊キラキラした光と共に願いパワーが一彌から失われる＊<br /><br /></dt>
+                                <dt>一彌</dt>
+                                <dd>「ね、願いの効果だったの！？ 妹と添い遂げる願いは！？ く、クソッ、もう一回登るぞ……！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「もうやだ！ またクマとエンカウントするよ！ 早く降りようよ～！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「そうだ、一埜と一緒に登ればぼくが前衛職、一埜が後衛職で行けば、願いパワーを持ち帰れるんじゃ？」</dd>
+                                <dt>一埜</dt>
+                                <dd>「お兄ちゃんが前衛やるなら、どっちにしろエンカウントの度にお兄ちゃんは願いパワーを消費するんじゃない？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「そ、そんなぁ……そんなのってないよぉ～！（通常の色に戻りながら昔のディズニーのようにアイリスアウト）」</dd>
+                                <dt><br />＊その後、妹を連れたまま危険な山中に入り込んだ罪により、一彌は両親からメチャメチャ厳しく叱責を受けたのであった……＊<br /><br /></dt>
+                                <dt>一埜</dt>
+                                <dd>「ちゃんちゃん♪」</dd>
+                            </dl>
+                        </article>
+                    </details>
+                </section>
+            </div>
+            <h2>2025/03/24</h2>
+            <div class="inner_wrapper">
+                <section class="talk-block" data-date="2025-03-24" data-tags="一彌,一埜,ななよ,真宵,山,祝詞,お経,メタ,位相,ドタバタ,日常"
+                    data-title="対角線上の妹？">
+                    <div class="copy-bar copy-bar-local">
+                        <button class="copy-btn" data-copy-target="#talk-2025-03-24">📋 この小話をコピー</button>
+                    </div>
+                    <details id="talk-2025-03-24">
+                        <summary>山で遭難した一彌たち！ しかし山小屋の様子がおかしくて……？</summary>
+                        <article class="talk" id="talk-body-2025-04-19">
+                            <dl>
+                                <dt><br />＊秋の山！ 夕方……！＊<br /><br /></dt>
+
+                                <dt>一埜</dt>
+                                <dd>「はぁ、はぁ、お兄ちゃん……！ うぅー、おぇ……（疲れて空えずき）」</dd>
+                                <dt>一彌</dt>
+                                <dd>「一埜、大丈夫か……？」</dd>
+                                <dt>ななよ（一埜の同級生）</dt>
+                                <dd>「一埜ちゃんのお兄ちゃ～ん、もう足が……」</dd>
+                                <dt>真宵（一埜の同級生）</dt>
+                                <dd>「お兄さん、みんな疲れてる。私はまだいけるけど、このままじゃ怪我しちゃうかも。暗くなってきたし……どこかで休まないと」</dd>
+                                <dt>一彌</dt>
+                                <dd>「くそっ、まさか、山の天気がこんなに変わりやすいなんて……！ ごめんな、みんな……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「疲れたよ～！ もう歩けない～！」</dd>
+                                <dt>真宵</dt>
+                                <dd>「でも……どうやって休もう？ テント張れそう？」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「！ 見て、みんな！ あれは……」</dd>
+                                <dt>一彌</dt>
+                                <dd>「山小屋だ！ 助かった！」</dd>
+
+                                <dt><br />＊山小屋の中！＊<br /><br /></dt>
+
+                                <dt>一埜</dt>
+                                <dd>「中、暗いね。……それに、寒い……」</dd>
+                                <dt>真宵</dt>
+                                <dd>「一埜ちゃん、寝たら死んじゃうよ」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「……あ、そうだ！ 壁に手を付いて……みんなで起こし合おう！ 角にそれぞれいて、ぐるぐる回りながらお互いを起こすの！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「おー、いい作戦！（……あれ……？）」</dd>
+                                <dt>一彌</dt>
+                                <dd>「ん？ ……なんかそれ聞いたことがあるような……まあいいか……よし、みんな頑張ろう！ 朝になれば下山できる！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「よ、よーし、頑張ろうね、みんな！」</dd>
+
+                                <dt><br />＊『ぐるぐる寝ない作戦』開始！＊<br /><br /></dt>
+
+                                <dt>真宵</dt>
+                                <dd>「タッチしたよ、一埜ちゃん」</dd>
+                                <dt>一埜</dt>
+                                <dd>「うん！ さて、……ななよちゃんにタッチ！ えへへ、お兄ちゃんによろしくね！」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「ありがとう、一埜ちゃん！ さて私はお兄ちゃんに……」</dd>
+                                <dt>一彌</dt>
+                                <dd>「ん、ありがとう。ぼくは真宵ちゃんに……」</dd>
+
+                                <dt><br />＊しばらくして……＊<br /><br /></dt>
+
+                                <dt>一埜</dt>
+                                <dd>（＊両手の指で四角を作りながら＊ A,B,C,D……A,B,C,D……うぅぅん……？？）</dd>
+                                <dt>真宵</dt>
+                                <dd>「タッチ、一埜ちゃん」</dd>
+                                <dt>一埜</dt>
+                                <dd>「（びくっ！）……真宵ちゃんだよね？」</dd>
+                                <dt>真宵</dt>
+                                <dd>「うん。……なんかみんな、様子が変？ どうしたの……？」</dd>
+                                <dt>一埜</dt>
+                                <dd>「ううん、なんでもないの。朝まで頑張ろ！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「……タッチ、ななよちゃん」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「（びくっ）……一埜ちゃんだよね？」</dd>
+                                <dt>一埜</dt>
+                                <dd>「ななよちゃん……やっぱりこれ、おかしい？」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「……気づいちゃった？ 一埜ちゃん。私も……何かおかしい気がするんだけど……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「やっぱりそうだよね、でも……ななよちゃん、私怖い……」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「私だって怖いよ……」</dd>
+                                <dt>一彌</dt>
+                                <dd>（……Commonuī, 思い出した！ これは、『スクエア』だ……！
+                                    四隅に一人ずつ、移動する人が一人……四角形の部屋では、五人いないとこの起こし方は成功しないんだよ！）</dd>
+                                <dt>一彌</dt>
+                                <dd>（くそっ、どうなってるんだ？ 一人増えてるのか？ サードマン現象？ それとも本当に降霊……！？ くっ、怖い……！ だけど、言い出すとパニックになりかねない……）
+                                </dd>
+                                <dt>一彌</dt>
+                                <dd>（対角線上の一埜は大丈夫なのか……！？）</dd>
+
+                                <dt><br />＊一埜の内心＊<br /><br /></dt>
+
+                                <dt>一埜</dt>
+                                <dd>（お兄ちゃんが気を利かせて二辺分歩いてる……？）</dd>
+                                <dt>一埜</dt>
+                                <dd>（ううん、そうしたら、次はななよちゃんがお兄ちゃんにタッチできないよね……）</dd>
+                                <dt>一埜</dt>
+                                <dd>（……誰かが二辺歩いて、次の人にタッチしてから、一辺ぶん戻ってる？）</dd>
+                                <dt>一埜</dt>
+                                <dd>（うーん、そんなこと出来るの……？）</dd>
+
+                                <dt><br />＊全員声を上ずらせながらも……＊<br /><br /></dt>
+
+                                <dt>一彌</dt>
+                                <dd>「み、みんな！ ぐるぐる作戦、成功してるよな！（一人増えてないか探り探り……）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「そ、そうだね！ この調子でいこう！」</dd>
+                                <dt>一彌</dt>
+                                <dd>（一埜の声だ……ほっ）</dd>
+                                <dt>一埜</dt>
+                                <dd>「お兄ちゃん、休めてる？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「……大丈夫だよ」</dd>
+                                <dt>一埜</dt>
+                                <dd>（本当……？）</dd>
+                                <dt>ななよ</dt>
+                                <dd>「うん！ もうすぐ朝だよ！」</dd>
+                                <dt>真宵</dt>
+                                <dd>「うん。ほら、空が明るくなってきたよ……もう少し、頑張ろう」</dd>
+
+
+                                <dt><br />＊朝！＊<br /><br /></dt>
+
+                                <dt>一埜</dt>
+                                <dd>「なんとか朝だ～！ あ、ほら見て、窓から看板が見えるよ！ 登山道だって！」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「でもさ、言い出しておいてなんだけど……何かおかしかったよね～……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「それ私も思った……お兄ちゃん、もしかして、二辺ぶんとか歩いてたりした……？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「あ、う、うーん……どうかな、暗いからなぁ、ハハ……」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「（ひそっ）目が慣れてきたら、一人増えてたりとかして……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「や、やめてよ～！」</dd>
+                                <dt>真宵</dt>
+                                <dd>「……あ！ そういうことか、全然気づかなかった……え、怖ぁ……」</dd>
+                                <dt>一彌</dt>
+                                <dd>（やっぱりみんな、何かおかしいとは思ってたんだな……）
+                                <dt>真宵</dt>
+                                <dd>「うん……あ、光が差し込んできた……山小屋の中が見えてきたよ」</dd>
+                                <dt>一彌</dt>
+                                <dd>（一人増えてないよな……うーん……）
+
+                                <dt><br />＊恐る恐る室内を見ると……＊<br /><br /></dt>
+
+                                <dt>ななよ</dt>
+                                <dd>「……いや、三角形の山小屋だったのかい！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「ああー、それでか～！ あははは……！」</dd>
+                                <dt>真宵</dt>
+                                <dd>「うーん、これは気付かなかった」</dd>
+                                <dt>一埜</dt>
+                                <dd>「えっ、タンスの形どうなってるの？ 使いづらくない？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「と、とりあえず怪奇現象じゃなくてよかった……よし、この隙に下山しよう！」</dd>
+                                <dt>全員</dt>
+                                <dd>「おー！」</dd>
+
+                                <dt><br />＊パラレル展開＊<br /><br /></dt>
+
+                                <dt><br />いや、やはり……部屋はよくある四角だったのだ！<br /><br /></dt>
+
+                                <dt>一埜</dt>
+                                <dd>「うわああ、絶対増えてる！！ ＊般若心経を詠唱＊」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「えっ何それ！？」</dd>
+                                <dt>真宵</dt>
+                                <dd>「えっ怖い怖い怖い」</dd>
+                                <dt>一彌</dt>
+                                <dd>「般若心経だ！ 流石だぞ、一埜！」</dd>
+                                <dt>5人目</dt>
+                                <dd>「幼女の経文が聞けて幸せだぁ……（成仏）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「よし、5人目は去った！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「やった！ ……あれ、でもこれではぐるぐる作戦が成功しないのでは？」</dd>
+                                <dt>一埜</dt>
+                                <dd>「え、除霊しない方が良かったパターン！？」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「そんなことある！？」</dd>
+                                <dt>真宵</dt>
+                                <dd>「……あっ、ああ。なるほど、そうか、『ぐるぐる作戦』は4人じゃ成立しないのか……（遅ればせながら）」</dd>
+                                <dt>一彌</dt>
+                                <dd>「よし、一埜……般若心経を逆再生するんだ！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「え、何それ！？ えーっと、gate gate paragate parasamgate bodhi svaha iti Prajnaparamitahrdayam
+                                    samaptamだから……matpamas mayadrhatimarapanjarp iti ahavs ihdob etagmasarap etagarap
+                                    etag
+                                    etag……うぅ、読んでて気持ち悪くなってきた……（作者注：経文の逆唱は本当に縁起が悪いぞ！ 作者は一番お気に入りの一埜には本当はこれを読ませたくなかったのだ！
+                                    一彌、無責任なことを言わずに、テメェが読め！！ ごほん。読者諸君も、あまりこの行はしっかり読まないように！）」</dd>
+                                <dt>一彌</dt>
+                                <dd>「うっ（吐き気）」</dd>
+                                <dt>5人目</dt>
+                                <dd>「おぉぉぉぉ……極楽浄土からただいま……せっかく成仏したのに……でも幼女とスクエアごっこ出来るならいいか……」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「ぎゃああああ！？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「何てものを呼んでしまったのだ、一埜！」</dd>
+                                <dt>真宵</dt>
+                                <dd>「キモい（直球）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「お兄ちゃんがやれって言ったんでしょ～！？ もう！」</dd>
+                                <dt>5人目</dt>
+                                <dd>「朝まで付き合うぜ」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「言い方がキモい！ あの幽霊、作者だろ！」</dd>
+                                <dt>5人目</dt>
+                                <dd>「＊どきり＊」</dd>
+
+                                <dt><br />朝が来たので私は成仏させてもらったのでした……。一埜が祟られると良くないので、全員で山に捧げものをして、念のためお祓いを受けて帰ったのです。その後、全員健康で暮らしたとさ。羯諦羯諦、波羅羯諦、波羅僧羯諦、菩提薩婆訶、般若心経。（順再生によりキャラクター＋読者を除霊）<br /><br />
+                                </dt>
+
+                                <dt><br />＊パラレル展開2！＊<br /><br /></dt>
+
+                                <dt><br />いや、山小屋は三角形でも四角形でもない、もっと抽象的な空間だったのだ……（！？）<br /><br /></dt>
+
+                                <dt>ななよ</dt>
+                                <dd>「ね、ねぇ、なんか出られないよ？」</dd>
+                                <dt>一埜</dt>
+                                <dd>「山小屋の扉から出たはずなのに……また山小屋！？」</dd>
+                                <dt>真宵</dt>
+                                <dd>「しかも、今度は向こうの壁まで辿り着けない……これじゃサバイバルも登山術も役に立たない、まさか屋内で遭難するなんて……（頭を抱える）」</dd>
+                                <dt>一彌</dt>
+                                <dd>「窓はどうだ！？ くっ、だめか……！」</dd>
+
+                                <dt><br />＊まるで迷宮のような山小屋！＊<br /><br /></dt>
+
+                                <dt>一彌</dt>
+                                <dd>「Hodie est dies perditionis……（小声） くそっ、これは……！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「お兄ちゃーん、お腹すいた～……」</dd>
+                                <dt>真宵</dt>
+                                <dd>「ワンチャン、この山小屋の内部だけでも山より広いかもね……」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「もはやBackroomsだろこれ……（絶望）」</dd>
+
+                                <dt><br />＊何かが狂っている……窓の外の風景も、徐々に奇妙な色彩を帯び始め、山も太陽も、全ては文字と矢印の連なりのように見えてくる……＊<br /><br />
+                                </dt>
+
+                                <dt>一彌</dt>
+                                <dd>「おかしい……どれだけ歩いても、さっきの入口にすら戻れない……」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「どうなってるの！？ だって、三角形だったんでしょ！？」</dd>
+                                <dt>真宵</dt>
+                                <dd>「いや、四角だったかも……？」</dd>
+                                <dt>一埜</dt>
+                                <dd>「え、じゃあ、どっちなの！？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「……ダメだ、座標が安定していない……簡単な測量すらうまくいかない！ これは……距離空間ではない！」</dd>
+                                <dt>全員</dt>
+                                <dd>「？？？？？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「……つまり、山小屋内部は通常の三次元ユークリッド空間ではなかったんだ。ぐるぐる寝ない作戦が四人で成功したのはそのせいだったんだ……距離とか内積とかじゃない、ここは、もっと抽象的な空間として成立している！」
+                                </dd>
+                                <dt>ななよ</dt>
+                                <dd>「言葉が難しい！ わけわかんないよー！ これだから理系の大学生は！」</dd>
+                                <dt>真宵</dt>
+                                <dd>「まあ、空間がおかしいのはなんとなくわかる……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「ゲームのダンジョンみたいにおかしくなってる！ お兄ちゃん、結局どういうことなの！？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「……そうだな……位相空間……いや、この窓の外の矢印……もしかするとこの山小屋は、ある種の圏として存在しているのかもしれない。ぼくたちは通常の物理空間にいるんじゃなくて、何らかの数学的構造の内部にいるんだ！」
+                                </dd>
+                                <dt>一埜</dt>
+                                <dd>「全然わからない……」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「つまり？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「つまり、我々が認識している壁や床の概念は、本質的には射（morphism） であり、我々の位置関係が対象として定義されている 可能性がある……！！
+                                    窓の外の図式……ここはもしかすると、層トポスなのかもしれない！」</dd>
+                                <dt>真宵</dt>
+                                <dd>「……要するに、『山小屋の内部は、フツーの空間じゃなくて、数学的な概念として作られてるから、普通の方法では出られない』ってこと？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「その通りだ！」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「詰んでるじゃん！！！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「うぅぅ……お腹すいた……あ、あれは……フライドチキン！？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「違う、ここが層トポスならそれは層関手だ！ 一埜、層関手を食うな！（？）」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「ううー、ここから出られるの？ 私疲れちゃったよ……」</dd>
+                                <dt>真宵</dt>
+                                <dd>「みんなもう限界が近いかもしれない……」</dd>
+                                <dt>一彌</dt>
+                                <dd>「Omnes qui errant non pereunt……みんな、諦めちゃだめだ！
+                                    入って来られたなら出口がある、この空間と元の世界との間には必ず随伴性が成り立つはずだ！
+                                    元世界との間の随伴関手を探ることさえ出来れば……だが今は、出口は『層』として存在している、つまり局所的な情報から大域的な情報を構築する方法として、情報の整合性そのものとして……つまり、出口は、ぼくらの中にバラバラに散らばってるんだとも言える！
+                                    心を一つにしなくては！」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「何かそれっぽいようなわけわかんないこと言ってる！」</dd>
+                                <dt>真宵</dt>
+                                <dd>「怪しいエネルギー担当大臣みたいだ（直喩）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「うー、よくわかんないよ！」</dd>
+                                <dt>5人目</dt>
+                                <dd>「ここはどこだぁ……（涙声）」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「出たぁぁぁ！？」</dd>
+                                <dt>5人目</dt>
+                                <dd>「適当に書き始めたが、山小屋内部が層トポスなんて、どうしたらいいんだよ……書き終えるまで出られないんだよぉぉ！」</dd>
+                                <dt>真宵</dt>
+                                <dd>「知らないよ……」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「作者ぁぁ……（本気で嫌そうな声）」</dd>
+
+                                <dt><br />＊脱出作戦……＊<br /><br /></dt>
+
+                                <dt>5人目</dt>
+                                <dd>「くそっ、わけがわからない……スクエア降霊術とかもう関係ないだろ……」</dd>
+                                <dt>一彌</dt>
+                                <dd>「いや、待てよ……スクエア……？ 四角……そうか、scīvī!! デカルトの四角形！ pullback……！ そうか！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「お兄ちゃん、なにかわかったの！？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「この空間は層トポス……もしかすると、pullback を用いることで我々の位置を特定し直せるかもしれない！」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「え、pullback って何？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「簡単に言うと、複数の射（関係性）を持つ対象が、共通する構造を持つように制約されるときに発生する数学的な図形だ！ 別名、デカルトの四角形とも言う！」</dd>
+                                <dt>真宵</dt>
+                                <dd>「？？？？？」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「……ま、まあ、大学生がそう言うなら……で、それをどうやって使うの？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「pullback の定義からすると、俺たちはこの部屋の構造を正しく写像できれば、通常のユークリッド空間へと戻れるはずだ！！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「ど、どうやって写像するの！？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「4人で、互いに対応する位置を探すんだ！ 4人！ ぼくたちは トポスの構造を表すpullback 図式の4つの対象に対応してるはず！
+                                    すなわち、対象、部分対象、終対象、部分対象分類子！ ぼくらが自分の立ち位置を見つけ出し、正しい図式を理解すれば、出口が現れる！！ これこそが『抽象的スクエア降霊術』だ！
+                                    ぼくたちは今から『出口そのもの』を召喚するんだ！」</dd>
+
+                                <dt><br />＊脱出開始！＊<br /><br /></dt>
+
+                                <dt>全員</dt>
+                                <dd>「おー！！」</dd>
+                                <dt>5人目</dt>
+                                <dd>「……あれ、俺は？」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「……余りなんじゃない？」</dd>
+                                <dt>5人目</dt>
+                                <dd>「そ、そんなひどい！！！！」</dd>
+
+                                <dt><br />＊対応するpullbackの位置を探りだし、それぞれ移動する4人……そして！！＊<br /><br /></dt>
+
+                                <dt>一彌</dt>
+                                <dd>「……来たぞ！！」</dd>
+                                <dt>真宵</dt>
+                                <dd>「えっ、なにが！？」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「空間が……元に戻っていく！！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「あっ、お兄ちゃん、出口が見えた！！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「いや、あれは……5人目！？」</dd>
+                                <dt>5人目</dt>
+                                <dd>「おわあぁああﾞ」</dd>
+                                <dt>真宵</dt>
+                                <dd>「え、めっちゃ口開いてる……口の向こうに出口が！」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「キモ！？ でもあれを通れば抜けられそうだよ！？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「……そうか！ あいつがななよちゃんの言う通り作者なら、あいつが物語の抽象的出口になるのも道理！ あいつは作者にして時間推進演算子そのものなんだ！
+                                    この空間における唯一のユニタリ性、無時間性の破れ、作者の指にして言葉だ！ 初めに言葉があったんだ！
+                                    口から溢れ出るもの、言葉……まさか冒頭の一埜のかわいい空えずきすら伏線だったのか！？」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「大学生よくわからんこと言うのもうやめろ！ 妹の空えずきを可愛いとか言うなキモい！」</dd>
+                                <dt>真宵</dt>
+                                <dd>「待って、出口の光が弱まってきてるよ！」</dd>
+                                <dt>一埜</dt>
+                                <dd>「？？？ よくわかんないけど、そうか、あの人が出口だったんだ！
+                                    うおお、一二三四五六七八九十（ひふみよいむなやここのたり）、布瑠部（ふるべ／pullback）、由良由良止（ゆらゆらと）、布瑠部（pullback）、此の処をば祓へして厳の湯庭と斎ひ定めて招坐奉る随伴の御名の白さく、埴安の比古比売神と御名は白をし、辞竟奉ば今度対象と射是抽象空間の此の処を千代の矢処の甘き矢処と撰び定めて、カルテジアン図式顕れ対象と終対象を四つ縁にて結びたまへと祈願奉ることの由しを聞し食し、大願成就成さしめ給へと恐しこみ恐しこみ白うす、色即是層、層即是色、層不異色、色不異層、不生不滅、不垢不浄、層不増不減、南無遍在層トポス、帰命随伴関手……＊何やら空間を保持する経文＊」
+                                </dd>
+                                <dt>5人目</dt>
+                                <dd>「ああぁああぁ˝（口が更に開く）」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「おお、よくわからんがなんか広がった！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「Milabilis!! いいぞ一埜！ みんな、そのまま突き抜けろぉー！」</dd>
+
+                                <dt><br />＊現実世界へ帰還＊<br /><br /></dt>
+
+                                <dt>一埜</dt>
+                                <dd>「やったー！ やっと出られたぁ！！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「一埜の呪文はすごかったな！ なんだったんだあれ？」</dd>
+                                <dt>一埜</dt>
+                                <dd>「わけわかんなかったから地鎮祭の祝詞と、縁結びの祝詞と、般若心経を適当に組み合わせちゃった……神様仏様、適当な呪文でごめんなさい！」</dd>
+                                <dt>一彌</dt>
+                                <dd>「でも布瑠部（ふるべ／pullback）、由良由良止（ゆらゆらと）、布瑠部は……くく……（肩を震わす）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「えへへ、面白いでしょ……！」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「まじで死ぬかと思った……てか、pullbackって結局なんだったんだよ……」</dd>
+                                <dt>真宵</dt>
+                                <dd>「うーん……難しいことはともかく、この山小屋がバグってた ってことでいいよね？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「まあ、そういうことにしておこう……（本当は数学的にはめちゃくちゃ興味深いけど、説明すると全員のSAN値が削れるのでやめておこう）」</dd>
+
+                                <dt><br />＊5人目の行方……＊<br /><br /></dt>
+
+                                <dt>5人目</dt>
+                                <dd>「くそぉ……pullbackに入れなかった……」</dd>
+                                <dt>5人目</dt>
+                                <dd>「……って、あれ！？ 俺、まだ山小屋の中じゃん！？ おかしい、おかしいぞ！？ なんで俺だけ出られないんだ！？」</dd>
+                                <dt>5人目</dt>
+                                <dd>「待ってくれぇぇぇ！！ 俺をpullbackに入れてくれぇぇぇぇ！！！！（涙目）」</dd>
+
+                                <dt><br />＊全員無事に脱出……5人目を除いて＊<br /><br /></dt>
+
+                                <dt>一埜</dt>
+                                <dd>「うーん、結局、山小屋って何だったんだろうね？（ズレた眼鏡を両手で直しながら）」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「うーん……わからんけど……絶対封鎖しておいた方がいい！ この山小屋は最悪！（枝で入り口を塞ぐ）」</dd>
+                                <dt>一埜</dt>
+                                <dd>「あはは、そだね……（手伝い）」</dd>
+                                <dt>真宵</dt>
+                                <dd>「でも、無事に帰ってこられてよかった……よし、早く下山しないと（嬉しそう）」</dd>
+                                <dt>一彌</dt>
+                                <dd>「そうだな……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「……とりあえずお経読んどこうかな、位相空間の定義を超えて届くかわかんないけど……なーむー」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「なんかぞんざいじゃない？」</dd>
+                                <dt>一埜</dt>
+                                <dd>「だってあんまりしっかり読むと喜ぶし、あの幽霊……」</dd>
+                                <dt>真宵</dt>
+                                <dd>「それもそうだ」</dd>
+
+                                <dt><br />＊わっはっは……＊<br /><br /></dt>
+
+                                <dt>一埜</dt>
+                                <dd>「……あ、いや待って！ もしかして……＊般若心経逆唱＊」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「また！？」</dd>
+                                <dt>一彌</dt>
+                                <dd>「いや、なるほど、一埜は層トポスを幽世と解釈したのか！ つまり……彼はまた呼び出される！」</dd>
+                                <dt>5人目</dt>
+                                <dd>「出してくれぇぇぇ……あ、あれ！？」</dd>
+                                <dt>一埜</dt>
+                                <dd>「やったね！」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「ハッピーエンドじゃん！」</dd>
+                                <dt>真宵</dt>
+                                <dd>「やるね、さすが一埜だ」</dd>
+                                <dt>5人目</dt>
+                                <dd>「ありがとう、眼鏡っ子幼女……！」</dd>
+                                <dt>ななよ</dt>
+                                <dd>「もう変な話書くなよ！」</dd>
+                                <dt>真宵</dt>
+                                <dd>「そうだそうだ」</dd>
+                                <dt>5人目</dt>
+                                <dd>「は、はい……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「では……『高天原に神留坐す神漏岐神漏美の命以ちて』……」</dd>
+                                <dt>一彌</dt>
+                                <dd>「そこは般若心経じゃないのか……」</dd>
+                                <dt>一埜</dt>
+                                <dd>「また層トポス行きになったら可哀想だから！」</dd>
+
+                                <dt><br />一埜の大祓儀によって私は安らかに眠ったとさ……めでたしめでたし！<br /><br /></dt>
+                            </dl>
+                        </article>
+                    </details>
+                </section>
+            </div>
+        </div>
+        <br />
+        <hr />
+        <p style="text-align: center">
+            ←2025年　　　　　　　2027年→
+        </p>
+        <div style="text-align: center;">
+            <a href="../index.htm" class="rain-window-btn">
+                <canvas data-rainwindow="true"></canvas>
+                <span class="rw-label">Back</span>
+            </a>
+        </div>
+
+        <script>
+            async function copyTextFromTarget(targetSelector, button) {
+                const content = document.querySelector(targetSelector);
+                if (!content) {
+                    console.warn('コピー対象が見つかりません:', targetSelector);
+                    return;
+                }
+
+                const originalText = button.dataset.originalLabel || button.textContent;
+                const copiedText = button.dataset.copiedLabel || '✓ コピーしました！';
+
+                const detailsToRestore = [];
+
+                // 1. 祖先の details を開く
+                let node = content.parentElement;
+                while (node) {
+                    if (node.tagName && node.tagName.toLowerCase() === 'details' && !node.open) {
+                        detailsToRestore.push(node);
+                        node.open = true;
+                    }
+                    node = node.parentElement;
+                }
+
+                // 2. 対象自身が details なら開く
+                if (content.tagName && content.tagName.toLowerCase() === 'details' && !content.open) {
+                    detailsToRestore.push(content);
+                    content.open = true;
+                }
+
+                // 3. 子孫の details も開く
+                content.querySelectorAll('details').forEach(details => {
+                    if (!details.open) {
+                        detailsToRestore.push(details);
+                        details.open = true;
+                    }
+                });
+
+                // 4. テキスト取得
+                const text = content.innerText.trim();
+
+                // 5. 元に戻す
+                detailsToRestore.forEach(details => {
+                    details.open = false;
+                });
+
+                if (!text) {
+                    console.warn('コピー対象のテキストが空です:', targetSelector);
+                    return;
+                }
+
+                try {
+                    await navigator.clipboard.writeText(text);
+                } catch (err) {
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.focus();
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                }
+
+                button.textContent = copiedText;
+                button.classList.add('copied');
+
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }
+
+            document.querySelectorAll('.copy-btn[data-copy-target]').forEach(button => {
+                button.dataset.originalLabel = button.textContent;
+                button.addEventListener('click', () => {
+                    copyTextFromTarget(button.dataset.copyTarget, button);
+                });
+            });
+        </script>
+
+        <script>
+            /* ============================================================
+               案D: 雨窓 — 常に降る雨粒
+               ============================================================ */
+            document.querySelectorAll('canvas[data-rainwindow]').forEach(cv => {
+                const dpr = window.devicePixelRatio || 1;
+                const parent = cv.parentElement;
+                const rect = parent.getBoundingClientRect();
+                cv.width = rect.width * dpr;
+                cv.height = rect.height * dpr;
+                const ctx = cv.getContext('2d');
+                ctx.scale(dpr, dpr);
+                const w = rect.width, h = rect.height;
+
+                const drops = Array.from({ length: 30 }, () => ({
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    speed: 0.5 + Math.random() * 1.5,
+                    len: 4 + Math.random() * 10,
+                    opacity: 0.15 + Math.random() * 0.35,
+                    width: 0.5 + Math.random() * 0.8
+                }));
+
+                // 水滴の着弾スプラッシュ
+                const splashes = [];
+
+                function draw() {
+                    ctx.clearRect(0, 0, w, h);
+
+                    // 雨粒
+                    drops.forEach(d => {
+                        ctx.beginPath();
+                        ctx.moveTo(d.x, d.y);
+                        ctx.lineTo(d.x - 0.3, d.y + d.len);
+                        ctx.strokeStyle = `rgba(158,200,209,${d.opacity})`;
+                        ctx.lineWidth = d.width;
+                        ctx.stroke();
+                        d.y += d.speed;
+                        if (d.y > h) {
+                            splashes.push({ x: d.x, y: h - 2, r: 0, opacity: 0.4 });
+                            d.y = -d.len - Math.random() * 20;
+                            d.x = Math.random() * w;
+                        }
+                    });
+
+                    // スプラッシュ
+                    splashes.forEach(s => {
+                        s.r += 0.3;
+                        s.opacity -= 0.015;
+                        if (s.opacity <= 0) return;
+                        ctx.beginPath();
+                        ctx.ellipse(s.x, s.y, s.r * 1.5, s.r * 0.5, 0, 0, Math.PI * 2);
+                        ctx.strokeStyle = `rgba(158,200,209,${s.opacity})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    });
+
+                    // 古いスプラッシュを除去
+                    while (splashes.length > 0 && splashes[0].opacity <= 0) splashes.shift();
+
+                    requestAnimationFrame(draw);
+                }
+                draw();
+            });
+        </script>
+    </div>
+
+    <!-- jQuery（先） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <!-- Lightbox2（後） -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
+</body>
+<script>
+    /*
+    ???????????????>>>>>>>>>>>>>>;;>;;;;;;;;;;;;;:;::::::::::::::::::::::~:~:~:~:~~:~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~:~~:~::~::~::~:::::::::::::::::::::::::::;:;;:;;;;;;;;;;;;;;;>;>>>>>>>>>>>>??
+    ??????????>?>>>?>>?>>>>>;>;;>;;;;;;;;;;;;:;:;:::;:::::::::::::::~:~:~:~:~:~~~:~~:~:~~:~~~~~~~~~~~~~~~~~~~~~~~~~~:~~~:~~:~~:~~:~~~~:~~:~~:~~~~~:~:~::~:::::::::::::;:::::;:;:;;;;;;;;;;;;;>;>;>>>>>>?>>>?
+    ????????>>?>>>?>>>>>>>>>>;;>;;;;;;;;;;;::;:::;:::::::::::::~:~:~:~~:~~:~~~:~~~:~~~~~~~~:~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~:~~:~~:~~:~::~::~:~:~::~::~::::::::::::;::::;::;;:;;;;;;;;>;;>;>;>>>>>>?>>
+    ??????>>??>??>>>>?>>>>;;>;;;;>;;;;;;;:;:;::;::::::::::::~:~:~:~:~::~~:~~:~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~:~~~~:~~~:~~:~~:~:~:~::~:~::~:::::::::::::::;::;;::;:;;:;;;;;;;;>;>;>>>>>>>>>
+    ?????>??>?>>>>>>>>>>>;>;;>;;;;;;;;;::;:::::::::::::::~:~::~::~:~~~:~~~~~~~~:~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~:~~~~:~~:~~::~:~::~:~~::::::::::::::::;;:;:;;;;;;;;;;;;;>;;>>>>>>?
+    ????>?>?>>?>>>?>>>>;;>;;;;;;;;;;;;:;:::::::::::::::~::~::~:~~~:~~:~~:~~:~~~~~~~~~~~~~~~~~_-((JJJJJJ--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~:~~~~:~~:~~:~~:~~:~~::~::~::::::::::::::::::;:;::;;;;;;;;;>;;>;>>>>>>
+    ?????>?>?>>?>>>>>>;>;;>;;>;;;;;;:::;::::::::::::~:~:~:~:~~:~~:~~:~~~~~~~~~~~~~~~~((JgWMMHWZZyyZZZZWWHMMHaJ._~~~~(Jka+-~~~~~~~~~~~~~~~~~~~~:~~:~:~~:~::~:~::~:~~:~::::::::::;::::;:;;::;;;;;;;;;>;>;>>>>>
+    ??>?>?>>?>>>>>>>>;>;>;;;;;;;;;;:::;:::::::::::~::~:~:~~:~~~:~~~~~~~~~~~~~~~~(JgMHWyZZZZZZZZZyZyZyZZZZZZZZZZXMH&Jpppppbr~~~~~~~~~~~~~~~~~~~~~~~~~:~~:~~:~~:~:::~::~::~::::::::::;:::;;;;;;;;;;;;;;>;;>>>>
+    ??>?>>?>>>>>>>>>;>;;;;;;;;;;;::;:::::::::::::~:~:~:~~:~~:~~~~~~~~~~~~~~~~(JMMHZyZZZZZZZZZZyZNMMMNmkyZZZZZZZZZZZyHMNk9<~~~~~~~~~~~~~~~~~~~~~~~~:~~~~:~~:~:~~~~::~::~::~::::::::::::;:::;:;;;;;;;;;;;>;;>>
+    ?>?>?>>?>>>>>>;;>;;;;;;;;;;::;::;:::::::::~:~:~:~:~:~~:~~:~~~~:~~~~~~~~(JMMHyZZyZyZyyZyZyZZZWMMMMMMMNkkyZyZZyZZZZZZyWMGJ_~~~~~~~~~~~~~~~~~~~~~~~~:~~~:~~:~::~~:~~::~::~:::::::::::::;::;:;;;;;;;;;>;;>;>
+    ??>>?>>>>>>>>>;;;;;;;;;;;;:;::::::::::::~::~~:~~~~~~:~~~~~~~~~~~~~~~~_(MMWyZZyyZXyXXXWQQkXXXyZXyWMMMMMMMNkyZyZZyZZZyZZZZWNa,~~.~~~~~~~~~~~~~~~~~~~~~~~~:~~~:~:~:~:~:~::~::~::::::::;:;;::;::;;;;;;;;;>;>
+    ?>>>>>>>>>>>;;>;;>;;;;;;:::::::::::::~:~:~:~:~:~:~~:~~~~~~~~~~~~~~~~(MMNHXXMMMMNMMMMMMMMMMMMMMMMMMMMMMMMMMMNkyZyyZZZyZZZyZZHNJ_~~.~~~~~~~~~~~~~~~~~~~~~~~:~~~~:~:~:~:~:~:::::::::::::::;;:;;;;;;;;;;>;;>
+    ?>?>>>>>>>;>;;>;;;;;;;::;:::::::::::~:~:~:~~~~~:~~~~~~~~~~~~~~~~;~(uMMM#WNMMMMMMMMMMMMHyZXQQQggmmmmmQkZXWMMMMNmXZyyZZyZyZZZyZWMe_~~.~.~~~~~~~~~~~~~~~~:~~~~:~~~~~~~:~:~:~:~:~:::::::::::::;::;;;;;;;;;>;
+    >?>>>>>>>;;>;;;;;;;;:::;::::::::::~~:::~:~~:~:~~~~~~~~~~~~~~~~~~<(MMMMMNMMMMMMMMMMMNWQNMH9=?<<??TYT""WMMMNNmkMMMNkZyZyZZyyZZyZyWMe-~~~.~~~~~~~~~~~~~~~~~~~~~:~~::~:~:~::~:~::~::~::::::::;:;::;;;;;;;;;;
+    >>?>>>>>;>;;;;;;;;;:;::::::::::::~::~~~:~~:~~~~~~~~~~~~~~~~~~.~.(KMMMMMMMMMMMMMMMMMMM8=<!_`..`.... _.... _??TMMMMMNmyyyZZyZZyZZZXMMe~~~..~.~~~~~~~~~~~~~~~~~~~~~~:~~~:~~:~:~:~:~:::::::::::;;::;;;;;;;;;
+    ?>>>>>>;>;;;;;;;;::;:;:::::::::~:~:~:~~:~~~~~~~~~~~~~~~~~~~.~~.(MMNHMMMMMMMMMMMHYT711v+xz+-. `.```.``.`._~. `._??WMMMmWyyyyZZyyZZyMMN,~~.~.~..~~~~~~~~~~~~~~~~~~~~~:~~:~:~::~::::::::::::::::;:;:;;;;;;;
+    >>>>>;;>;;;;;;;;:;:::::::::::~:~:~~:~~:~~~~~~~~~~~~~~~~~~~.~.~(MMMMMmsvTHMMMSzv>~_<?<jOzz=zzOO-...`.``.``.`-~- `` _?TMMNmyZyZZyyZZZMMNx~~.~~.~..~..~~~~~~~~~~~:~~~~~:~~:~~~:~~:~~:~::::::::::;;::;;;;;;;
+    >>>>;>;;;;;;;;;:::::::::::::~:~:~:~~~:~~~~~~~~~~~~~~~~~.~.~~.(dMMMMMMMNNgx(.-.... ..(1IC7<?<?71zI-...`.`.`.`..-~.`` .-?TMMNNNmkQmMMMMMMN-~.~~.~~.~~.~~~~~~~~~~~~~~:~~~~:~:~~::~:~::~::::::::;::;:;:;;;;;
+    >>>>;;>;;;;;;::;::;:::::::~~::~~:~:~~~~~~:~~~~~~~~~~.~.~.~..~jMMMMMMMMMM6z>_.vIzzOv!!!.`..`..`.. ??&..`.`.`.``.`. -__...?TMMMMMMMMMMMMMMN,..~.~.~.~.~.~.~~~~~~~~~~~~~~:~~~:~~:~::~:~:~::::::::::;:;:;;;;
+    >>;;>;;;;;;;::::::::::::~::~:~:~~~~~~~~~~~~~~~~~~~~.~.~.~.~.(MMMMMMMMM5zv! JIzv!_~.(+:`.``.``.```.`.?i.`.`.`.`.`   ~.`.?(_1TMMMMMMMMMMMMMMe..~..~.~~.~.~~.~~~~~~~~~~~~~~~~:~~~:~~:~:::~:::::::::;::;;:;;
+    >;;;;;;;;;;:;::::::::::~:~:~~:~~:~~~~~~~~~~~~~~~~.~~.~~..~._MMMMMMMMSI=v_.z=>.._...(:.`.`.`..`..``.``.__.`..`.` .``..<.``.<JOdMMMMMMMMMMMMMc..~~...~.~~.~~.~~~~~~~~~~~~~~:~~:~~:~::~:~:::::::::::;:;:;;;
+    ;;;>;;;;;;:;::;:::::::~:~:~:~~:~~~~:~~~~~~~~~~~.~..~..~....(MMMMMMM@==v..vv~`..``. (_`.`.`.``..`..`.`..._.`    `..`.`.(-... jZrMMMMMMMMMMMM@~...~.~..~.~.~~.~.~~~~~~~~~~~~~~~:~~:~~:~:~:~:::::::::;:;;;;
+    >;;;;;;;;:::;:::::::~:~::~~:~~~~~~~~~~~~~~~~~.~~.~~.~..~..~dMMMMNM@==v_.j<..`._.`` (_.`..`..``.``..`.``   _`  .`..``.`..1<._~zuWHpHMMHMMMHHHWkaJ-~.~..~.~.~~.~~.~~~~~~~~~~~~~~:~~:~::~:::~::::::::::::;;
+    ;>;;;;;::;:::::::::::~:~~~:~~:~~~~~~~~~~~~~..~.~..~..~.....dMMMMM#l=z~ (>.`...`...`__.`.``..._`..`..``    -_..``.`...`...1z+(dppppWmHkkHHHHHppppppk,~..~..~.~~.~~.~~~~~~~~~~~~~~~~:~~:~::~:::::::::;:;:;
+    ;;;;;;;::::::::::~:~~:~:~:~~:~~~~~~~~~~~~.~~.~.~.~......~..dMMMM#I=l:..c..``._``...-~`..`.``..+.`.`  .  .``__.`.`.`.`.``..(dppppppmmmHHHHHWppppppWmt....~..~..~.~~.~~~~~~~~~~:~~:~~~:~~:~:~:~::::::::;:;
+    ;;;;;;:;::;:::::::~:~:~~:~~~~~~~~~~~~~~~.~.~~.~.....~......(MMNM6==<. ?_.`.`.;`.``..__.`...``.?1-.   ...`..`...`..``..`.` JpppppppHHHpWWHg@HkbppWmP...~..~.~.~~.~~.~~.~~~~~~~~~~~:~~:~:~:~:::~::::::::;:
+    ;;;;;:::;:::::::~::~:~:~~~~~~~~~~~~~~~.~~.~..~..~.........._MMMD===~.-_.`  ..>...`.` ~.      `( (i--.`._...`.._..`.._`.`.`.VWkWbppppppWHpWHMHHHkHH!.........~..~..~~.~~~~~~~~~~~~~~:~~:~::~:::::::::::;:
+    ;;;;:::;:::::::~:~:~:~~:~~:~~~~~~~~~~.~.~.~..~....~.........(M#l==>.`->...  .l``      _     .`.-  ?<.-.`._ .`.(-`.``- `..`.1=ldWHHkbppHgbppWXv1-_<71._....~...~.~~.~~.~.~~~~~~~~~~~~~:~~~:~~:~::~::::::;
+    ;;;;::;:::::::~::~::~:~~~~~~~~~~~~~~~.~~.~..~..............-JHwl=l:..(:`.-..(Z_... _  .-....`..>    ?<_-.`_-.` 1-.`. <.`.... (zXOrWgHHpWHppppWn_<-.._?G,.....~...~..~.~~.~~~~~~~~~~~:~~:~::~::~:::::::::
+    ;;::;::::::::~::~:~~~~:~~~~~~~~~~~~.~~..~..~..............(HUOyl==_.-=:. ~. Z(<-`.`(<.._-`.`.``(  .(((J1--. <-.(1-.`.>`.``.``.(zUrdHppppWWpppppk-(_ ..._4,.....~..~.~~.~~.~~~~~~~~~~~~:~~:~:~::~::::::::
+    ;:;:::::::::~::~:~:~:~~~~~~~~~~~~~.~.~~..~......._i-_..-(d9AdHOl=1..(=<...`.\ I_.`..(i..--.......O====lz77J1._1-+l..`<_..`.`.`._vkdHpppppHppppppW-<~   ` _1,.~...~..~.~.~~..~~~~~~~~~~~~:~~:~::~::::::::
+    ;::;:::::::~::~~:~~:~~~~~~~~~~~~.~~.~.~.......~...._77TZAkqqqKlll?..?l>.(:.(` .o<..``(1-..~``.`(- ``       _<C&Jlz_`.(<.`....`.`-OZHpppppWbppppppk+(_ `..`.(O,.....~..~..~~~.~~~~~~~~:~~:~:~:~::~:~:::::
+    :;:::::::::~:~::~~~~~~~~~~~~~~~~.~.~..~.~.~...........-Jmmmmm0l==?. =l>.(>.J .zwzz-..`.<1-.~..._}      `    ` _?1wl..+:.`._`.``.`-wHppppppHpppppWWkx<.`` -` -?l...~..~.~.~.~~.~~~~~~~~~~~~~:~:~::~::::::
+    :::::::::~::~~:~::~~:~~~~~~~~~~.~.~.~~...............-JqqqqmHZll==_.1=z_(z.r(llv7Zz-._ `_<1-.~.-1   ` ._~-...JJ.__1- =:...<.`..`...4ppppppWbppW9=4zI+_.`.l..zi-3_...~.~.~.~.~~.~~~~~~~~~~:~~:~~:::::~:::
+    ;::::::::~::~:~~~~:~~~~~~~~~~.~~.~.~...~.............-7TWmmmHOll==<-(l=:(=_$?!   (O=z-1--..(zz+<j.  ``.dMMMMMMMMMNm6(l!`.(_..`(.``..CpbpppXHW#!.._St+:...$.Izyz-1_.....~.~.~.~~.~~~~~~~~~~:~~::~~:~:::::
+    :;:::::::~:~~:~:~~~~~~~~~~~~~.~.~~..~......~...........-JIZHKll=l=1_-llz(l+t      _1l=1+=1-.(z+llO?! _d"(NWWh.UWNTMNms_.-<....zli..(-JZU9WbJ=.....(yz>..0dZllX1z-3...~..~.~.~.~~.~~~~~~~~~~:~~:~:~:::~::
+    :::::::~::~:~~:~~~~~~~~~~~~.~~.~..~..~..............`.(IllzHKl=l==l<-(llzllr` ._...-zOll=lll=vIzlOG.    ,DlvMM0lW qHK:..<(~.-jTXszi.4ZvVUwW>_...`.(Kl>-0lzOl=d>?2(_.~..~..~.~~.~~.~~~~~~~~~~~:~:~:~:::::
+    ::::::~::~:~:~~~~:~~~~~~~~~~.~.~.~......~...........(zlllldmHllz==llz-1llZlr((MMMMMMMNmZlzl=llG_1zI<(..?7OOzzzUWXOVWD.-(z!-ivC.jrZVUXdWslld-.`.`..(K=j6Zlzl==d_.Xd~....~..~..~.~~~.~~~~~~~:~~~~:~:~~::::
+    ::::::~:~:~:~:~~~~~~~~~~~~.~~.~.~..~...............(Il=l=zHmHtO1+=zzlz(llwzr(MM^.Nffk.MNCzvOzzZO-JZ=!     1x_(x=jpU3(zze>(d$_~_zjXlllllllllh..`...(6d$jIltl==y.-?!....~..~.~.~~.~.~~~~~~~~~~:~~~:~::~:~:
+    :::::~::~:~~:~~:~~~~~~~~~.~..~.~.....~...........-JIl=llldmmHZtz1<zzlllJwdkWOMF  MkOzMMEL_?1(Ju+W\          ._``.flJXW91dUd>_(Z<>wZzlllllllv;. .`.SZ=.JlzZzvC>.............~..~~.~~.~~~~~~~~~:~:~::~::::
+    ::::::~::~:~~~~~~~~~~~~~~~~.~.~..~..............-JluylllldmmHttXz1<+?OOlvSWXHMb.J7WO=vY5rTfWYY7TWl        ``````.f._(SV6lOvevC>>>jkz+<111lllw.`(777..-Zy!!...........~..~..~..~.~~~~.~~~~~~~~~~~:~~:~:::
+    :::~~::~~:~:~~:~~~~~~~~..~.~~.~..~..~...........JuC(Oll=lXqmHttdZzl+<-(CwwUHWHUk.  Tg&(/  jr     Tx       `````.V~(JJllv1Z:$>>>>><wO(>`. <lllt.`.`...<..................~..~.~.~.~.~~.~~~~~~~:~~:~:~:~~:
+    :::::~:~~~:~~~~~~~~~~~~~~.~..~..~..............(f:.wl==lzWHHHttwUywllz++-JWWHS0z-  ` ._   .$ `    .T+.      ..Z^ .WCkl<_jC.I>>>>;>+S>1_`` 1lld;.`.`.`..`..`.................~.~.~.~.~~.~~~~~~~:~~:~:~:::
+    ::~::~::~:~~:~~~~~~~~~.~~.~~.~.................(l..0lll=z=lldttXXXyVWezlvXXbpWS++n``````  J'         _?77"7?`  .J6>+$.`.Z_.I>>>;>>>do(<.``.1llX-..`...`......`........~..~..~..~~.~~~.~~~~~~~~~:~~~::~::
+    :::~:~~~:~~~~~~~~~~~~~.~.~..~..~..~...............-S=z1lz?luSwVwlVdWVCzdHUUUVWkz>?[```  .J'    ``            .-6>>>j>..J!..I>>>>>;>>O-<_.`..+=vn.`..`....`...............~..~..~.~.~~~~.~~~~~~~~:~:~~:~~
+    ::~:::~:~~:~~~~~~~~~~.~~~.~..~................``...0u!,v<?~JV!(0lllvT9VXWtlttwXUS&d+..J=!                  .(D>>>>>Z_-(!.`.Z>>>>;>>>+l(<..`._(=Zl.`.`..`...`...............~.~..~.~..~~~~~~~~~~~~:~:~::~
+    ::~:~~:~~:~~~~~~~~~~.~~..~.~..~..............`..`..,Z~..``?_..(Illlz>>>JZOlltdd>>>>+T+..              ..<_~.Jz>>>>+P-J{.`.-w>>>>>;>>>j_1_`.`._(lX<.`..`......`.........~......~.~.~~.~.~~.~~~~~:~~~:~~::
+    :::~::~~:~~~~~~~~~~~~~.~.~..~...~...............`.`...`..`.`..Zllzv>>>>JCZtlOkf>>>>>>>>?17CC1zz777WHUY~~.~..(Z?>>>jI1>.`..tZ>>>>>>;;>>l(>.``..<(=X-.`...`...`............~..~..~.~.~~~.~~~~~~~~~:~~:~:~:
+    :~::~:~~:~~:~~~~~~~.~.~~.~~.................`..`...`.`.``.`.`(0llzz>>>>d>XttwZ>>>>>>>>>>>+&&zv7=<74r.~..~.~~.(nJJ?K1>..-<Z>Z>>>;>>>>;>+-<_.``..<(zD_.`.`..`....`............~..~.~.~.~~.~~~~~~~~~~:~:~:~
+    ::~:~~:~~~~~~~~~~~~.~~..~...~..............`..`..`.`..`..`...Zll1v>>>>>d>zZwf>>?>>?+uug#"<~~.~jVYT7~~.~.~.~(-z=~~JI!.-+1d1z$>>>;>>;>>>>+.>..``. <?v;~....`................~...~.~.~.~.~~.~~~~~~~~~~:~~::
+    ::~::~~:~~:~~~~~~~~~.~~..~.....~.............`..`.`.`..`..`.(0lvz>>>>>>wz-WK>>>>uv^(dM^~~~.~.~_?n((---<?7<~.~.~~(C.-Jzld1jO?>>>>>>>>;>>><.-`.``. <(d._.`.....`..`............~..~.~~.~~~.~~~~~~~~:~~:~~:
+    :~:~~:~~:~~~~~~~~~.~..~~.~.~..............`....`...`.`.``.`.Zlvz<>>>>>>wl<.6?>jZ~~(MMN,~._((+Ne+_z/~.~.~~.~~.~.(^.JuZGNx?z<>>>;>>;>>>>;><i.`..``` <(G._-..`................~..~..~.~.~.~~.~~~~~~~~~:~:~:
+    :~::~~:~~~~~~~~~~.~~.~..~....~..............`..`.`..`.`..`.(Oltz>>>>>>>dlv1.?z%--(MMMM5(MMMBMMMMMMN,~.~._` C__i-zOvOdMMNNx>>>>>;>>;>>;>>;<<.``..`` <<n`._..`...`............~..~..~.~.~~~~~~~~~~~~~~:~:~
+    ::~:~~~~~~~~~~~~~~.~~.~...~.............`...`...`.`...`.`..0ttz>>>>>>>>JZ1_1kOZ^(MMM#?M#=(&M#~dMdMeTe_   -..1dgMM9QMMV=~_?4+>>>;>>;>>;>>>;_-`.``..` <<l. _...`................~.~~.~~~.~.~.~~~~~~:~~:~~:
+    :~:~::~~:~~~~~~~~~..~.~.~................`...`.`..`.``.`..vOOz>;>;>>>>>>Wzde(=_(MMM@~.?MMNM=~(MM-/Mk/T6-..+(RMMNgMN#!      ?c>;>>;>>;>>>;>< .`.`.`.`.<?l`._.......`........~...~..~.~.~~~.~~~~~~~~~:~:~:
+    :~:~~~:~~~~~~~~~.~~~.~.~.~..~..~............`..`.`....`. JtI<>>>;>>;>;>>+dAU_?wMNM5_` `(M@~``dMUb..M]   ~<jMMMMNMM$         ?+>>;>>>>>;>;>><..`.``.`.._(/.`_-...`...........~..~.~.~.~~.~~~~~~~~~~~~~:~:
+    ::~:~~~~~~~~~~~.~.~.~.....................`...`..`.`.`..JIv>>>;>>>;>>;+u$~_Tn(MMM^`  .jM^   .Mt(H9"!     .MMMMWyW%           jx>>>;>>>>;>>;>_`.`..``.`.-(,..--...............~..~.~.~.~~.~~.~~~~~~:~~~:~
+    ~:~:~:~~~~~~~~~~~~.~.~~.~..............`...`...`..`.`. J1z>>>;>>>>;>>jv:....(jM8!   .M@    .M#          -HZyyZZd%    .        u<>>;>;>>;>>>><.`...`.`.`. ?+.`._...............~...~.~.~~~.~~~~~~~~~:~:~:
+    :~:~~~:~~~~~~~.~.~~.~..~..~..............`..`..`..`..-J=<>>;>>;;>;>>u$(<_~._mmg!   .MF     (M!         (4yyZyyd$    ~_(`      (S>>>;>>;>;;>;>-.`._.`.``.``?l.` _...`.......~...~.~.~.~.~.~~~~~~~~~~~~~:~
+    :~~:~~~~~~~~~~~.~.~.~..~.....~..........`.....`.`..`.Zv>>>>;;>>>;>jV~._l(.~(MM>`  .M@     .MF         ZdHnJ7TXD    ~~.(        ~h>>>>;>>>>;>>>_._._`..``...(1_.--...........~..~..~.~~.~~~.~~~~~~~~:~:~:
+    :~:~:~~~~~~~~~~~~~.~.~................`....`...`.`.JVv>;>;>>;>>>+d=._~.j(~(MM$_  .MM`    .MM`        .WWJJTWM<.   -_~~<         (I>;>>;>>>>;>;<. <-.`..`.``..1-._.............~..~.~.~~~~.~~~~~~~~~~:~~:
+    ~:~~~:~~:~~~~~.~.~.~..~..~...............`..`..` (Ztz>>;>>>>>;>jf_.(~.~(:(MM@~   dM'     JMt        .WyZZyHNp`    _<.~;         _(s>>>;>>;>>>>><.(>-.``.`.``..?-._.........~..~.~.~.~..~.~~.~~~~~~~~~~:~
+    :~:~~~~~~~~~~~~.~.~.~.~......................`-(JOv<>>>>>>;>>jd^..~<..~_uMM#~_  -M%     .M#        .WZZZZZQ#`     (>~_!      `  ._?2>>>;>>;>;>>>< <><..`..`.``.<i._..........~...~.~~~.~~~~~~~~~~~~:~~~:
+    :~~:~~:~~~~~~~.~~.~~-/~!.............`..`.`.-(<1lz>>>;>;>;>>gD...~(~.~.(MMM3~          .MM'       .dZyZyZXM!      (~~(`   ~` .`  ` ?c>>>>>>;>;>>>_(>>1.`.`.`..`._1-...........~.~..~..~~.~~~~~~~~~~~~:~~
+    ~:~:~~~~~~~~~.~.~.-_~`.-..~.............--~(++lv<>;>;>>>;>jV!~.~..(.~~(MMMD~_          ,""        dZZZZZyW%      .<~~<    (~        j+>>>>>>>>;>>>_<>><,.`..`.`...(l.......~...~.~~.~~.~~.~.~~~~~~~~~:~:
+    :~:~~~~~~~~~~~.~.~~<_..<-..........---?!--z=+<<>>;>>>;>>+g3.~.~.~~;.~(MMN@!`                     JyZyZZydF       ._~(! .! ~          ?x>;;>;>>;>>><-;>>+<.``.`.```. ?+-.....~.~..~..~~.~~~~~~~~~~~~~:~~~
+    ~:~~~:~~~~~~.~~~~..._<-._!~_((_(<?<~--<<-(>>>>;>;>>;>>;jY_...~..~(<_(MSQD                       .HyZyyZX@        (~_<.`  .~           jx>>>>;>>;>;><->>>1_.`.`.-.``.`.<+_.....~.~.~.~.~~.~~.~~~~~~__~~~:
+    :~~:~~~~~~~~~.~.~.~.~.~_<+((--((-~--((>;;>>;>;>;>>;>>jX!..~.~..~.(~(MRX#                      `.#yZZZZyW!       `((<!    ~.            jx>>;>>;>>>;><-<><l..` _...``.`..1+_..~.~.~.~~.~~.~~~~~~~~__<+~~~
+    :~:~~~~~~~~~~~.~.~.~.~..?z+?>?>>>>>>>>>>>>>>;>;>;>>+dt.....~..~.~<.~/MMMx(--..             .. .dHyyyZyd%        `(<~`    ~~            _j+>>;>>>;>>>>>-<>z<.`.(?+...`.`.`.<+_..~..~.~~.~~.~~~~~~~(J!I~~~
+    ~:~~:~~~~~~~~~~~.~..~...._?1z>?>>>>>>>>>>>>;>>;>>>uV~~.~~.~.~..~_>..~.JMMNWm?7u.-.        ~~.~(MMHyZyXF          (:~_    .~             _1<>>;>>;>>;>>><_1c.`..+.-<_...`.`..?i-~.~~.~.~~~~.~~~((v!..>~~:
+    :~~~~~~~~~~~..~.~~.~.~~...._?1+>>>>>>>>>;>;>>;>;>g=..~..~..~.~..(~...~dMMMMMMNgJzT&.-.     `.(MMWgMNy#`          (<~`    ~~              _1<>>;>>;>>;>>>>>O_._`Z><--._<(..`.._(1._.~.~~.~~_(+v^.`..+l~~~
+    ~::~~:~~~~~~~~.~~.~~...~......_?1&+>++>>>>>;;>;+d~.~..~..~..~.~.(~.~.(@jJMMMMMMMMMNNNgJ-.    dMMMMMNM%          .(+~_    ~_               _1>>>;>>;>>;>;>;z:.~.$>>;>><-.._?!._. _<<<--(-+v7!.`.`..<>~~~~
+    ~~:~~~~~~~~~~.~..~..~...~.........._+z<>><>>;>+d:~..~.~.~.~..~.~<.~._HIzdMMMMMMMMMMMMMMMNNJ-(MNmdMMN@_(+<?!``?~(=JI~_   -~_             `  _z>>>;;>>>>>>>>+}._J0;>>>>><<<<(-.....__~?<~`.`.``_..(+<<~~~:
+    :~~~~~~~~~~~.~~~.~.~.~............_(=<>;;>>>;>>W+.~..~.~..~..~.~<.._jNxQMMMMMMMMMMMMMMMMMMMMMMMMMMMMx___-((..  ~~(I._   .~`                 _I>>>>>>>>;>>>+I((z+<<;>>>>><(<<<?>?>+<<+?>>>++++zzz1<~~~~:~
+    ::~~:~~~~~~~~~.~~.~.~.~..~...__..(zz>>>>>>>;>;>+N:.~..~..~.~..~..~(JMMMMMMMMMMHyZyZZZZZZZZyHKT9HMMMMMMMMMNa-.._~_($~.   ~~`           `      _z>;>;;>>;>;>+IdIZ>>><<<<><+111<;((<<<;>;<<>??????vz~~~~~~:
+    ~~:~~~~~~~~~~.~.~~..~..~.......-J+C>>>>>>>;>>>;>dk-~.~.~..~.~.~.(MMMMMMMMMWWyZZZyZZyZZyZZZZM<~<-?MMMMMMMMM#Tm,___X:.~_  ~.                    _C>>>>;;>>>>jXCdI>>>>>>>>>>>>>>>>>>>>>>>>?>>???1v+>~~~~:~~
+    :~~:~~~~~~~~.~~.~(<!--_~.~..~(x1v?>>>>>;>;>;;>jjX$1_..~.~..~.~(dMMMNMMMMMNMMmkXyyZyZyZZyZyZMp1??1HMMMMMMMM@;;7YBYMr~~~  .~                    ._<>>;>>>>>jXCvz>>;>>;>>;;;;>>>>>>>>>>>?>???>?1>+>~~~~:~:~
+    :~:~~:~~~~~~~~.~.~1-.._<??<1OC1>>>>>>>>>jgXH9=<<~._l~..~.~...(MMMBdMMMMNMMMMNmWHHHHWQkyyyZZUMNgdHWNMMMMMMMN<;;>;;db..~_.~.                    ~~_1;>>1>+u0OC+<>>;>>;>>>>>>>>>>>>>>>?>>?>>?1z+<~~~~~~~~~:
+    ~:~~~~~~~~~~~.~~~<((_---(Jv1>>>?>>>>>>;g8~_<~.~.~~.(+~..~.~~(MMMHdMMyMNMMMdMMNHHMMHHmmkXXQkXZZXXXyWMMMMMMMMMNgJ;;+N_.~..~~          `         ~.._G>j+z6<>>>>>;>>;;>>;>>>>>>>>>>>>>?>?>?1c<~~~~~~~~~~:~~
+    :~:~:~~~~~~.~~~.~..<?lz<(++>>??>>>>>>>>dr_<-.~...~.~(1~._~_(MMM#XMMNdBMMMHMMMMWZdMMZZdMNWMHMMMHqMMMMMMMMNHMMMMMNe;dr~.~...                    .~.~(I>;;>;>>;>>>;>>>>;>>>>>>>>>>????>?1+?~~~~~~~~~~~:~~:~
+    ~:~~~~~~~~~~~~.~.~~..~..~~<<<<<<z?>>>+>_4/..?<(-~~~-_j<..(MMMMMZMMM#MXMMMMMMMZXMM#yZZWMMHZZMMNyXMMmyZyMMMMRZMMMMMNxW-~.~~_                    .~.~.(x>>>>;>>;>>>;>>>>>+>+>>>>>>++zlzI<~~~~~~~~~~~~~~~~:~
+    ~:~:~~~~~~~~~.~~.~~.~........?<-:<z1?~...Wx_..~~?<1<<<<~(MMMMMNWMMMMWXMMNMM#ZyMMM#ZZZXMMyZyMMMNXyMMyZZyMMM#ZXMMMMMMNb.~.~_                    -~..~.q+;>>;>>;>;>>;>>>>z+I1+>>>?>>?1z+i_~~~~.~~~~~~~~:~~:
+    :~~:~:~~~~~~~~~.~.~~.~~........_~~_-.-uKXdD(<~....~..~(gMMMMM#ZMMMMHydMMMMMWyyMNM#ZZZZMNZyyMMMM#ZZMRyZZyMMNZZMMMMMMMMp.~.`   `               ` ~~.~~(N+;>;;>>>>>>>>;>>z>I._?I+?>???+z+?1-_~~~~~~~(-~~~~:
+    :~:~~~~~~~~~~~.~~..~..~.~.......(x~(1<$...~-~<-~~..~.(MMMMMMMHdMMMMyyWMMMM#ZZZUMMWyZZyM#ZZyMMMM#ZyZM#NmyZZMHZUMMMMMMMN/~__.                    ..~..~db>;>>;>>>;>;>>>>j>I..._<1zz+?>>?111zOz+(--<(v~:_~~
+    ~::~:~~~~~~~~~~~~~~.~..~..~..1_?>(Ji_.I~.~._~__<_.~.(MMMMMMM#ZMMMM#ZydMMMMHZZZZZZZZyZZMHZZZMMMM#ZZyZMNMMNmMHZZdMMMMMMMb~~~~~.   `          `     `_~_.?n<>>>;>>>;>>>>>jzj_~....~~<<?1++<;++++(.-?<~~_<:~
+    :~~:~~:~~~~~~~~.~.~~.~~.......<j--....(/.~~..___<.~(MMMMMMMMHXMMMM#yydMMMMHZyZZZZZZZyyMWZZZWMMM#ZyZZZWNMMMMHyZyMMMMMMMM[..~..~_    `        `          _?4+>>;>>>>>;>>>I+<..~.~.~.~~~~~~_<?<<<<<~~~~~~~:
+    ::~~~:~~~~~~~~.~~.~~..~.~........-_<u_.?,..~....~~(MMMMMMMM#ZMMMMM#ZydMMMMWZZyZyyZyZZXMZyZyUMMMyZyZZyZUMMMMHZyZUMMMMMMMN/~..~.~.~._.   `                  ,h+>>;>;>>>>>?zj-~._~~.~.~.~~~~~~~~~~~~~~:~:~:
+    :~:~:~~~~~~~~~~~~~.~~..~.~.......-(<!...?h--_-_.-dMMMMMMMMMHZMMMMM#yZdMMMMZZZyZZyZZyZd#ZZZZyMN#yZZZyZZZZMMMHZZyZMMMMMMMMN/~~.~.~.~.~~~~-..         ..-__~<- Uc;>><>>;>>>>>O<..~.~~.~~.~.~~~~~~~~~~:~:~:~
+    ~:~:~~:~~~~~~~~~.~~.~~.~..~......1_~-(((-CTY"Y9jMMMMMMMMMMMZXMMMMMHyydMMM#yyZZyZZZZZyM#ZZZZyMMHZZZyZZZZZZWMZyZZydMMMMMMMMN-.~.~.~(-(+<;<<<<<<<<??<<<~___~(<`.#>;+Zz>>>>>>>1w+-.~.~~~__~~~~~~~~~~~~~~~:~:
+    :~:~~~~:~~~~~~~.~~.~.~..~..~......__..........-MMMMMMMMMMMyyXMMMMMWZZXMMM#yZyZyZZyZZXMHZZyZZyZZZyZZZyZyZZZZZZyZyXMMMMMMMMMN-~.(-v!_~_`` `_~~.~~.~~(?<_<<<_` .D><>>_1x>>>>>>>zz+-(_<<_<_~~~~~~~~~~:~:~~::
+    ::~::~~~~~~~~~~~~~~.~.~~.....~..............`-MMMMMMMMMMM#yyMMMMMMZZZyMMMNZZZyZZyZyydMWZZZyZZZZZZyZZZyZZyZZyZZZZZMMMMMMMMMMN,~~_             _~~(?~~__~_   _d1<<+<.._?Iz1++?>?11(..__.>~~~~~~~~~:~~::~~~
+    :~:~~:~~~~~~~~~~.~~.~~.~.~~.................(MMMMMMMMMMMMyyWMMMMMMZyyZMMMNWZZZZyZZZZMMyZZyZyZyZyZZyZZZyZZyZZyZZyZWMMMMMMMMMMMQ,..~-.       .__(/~~_~ .`  .~(D>><!....._<?1+<<<1?>?<<<~~~~~~~~~~~~~:~~:::
+    ::~:~::~:~~~~~~~~~.~~..~.~.~.~.............(MMMMMMMMMMMM#ZZWMMMMM#ZZZyMMMMHZyyZXmyZXMNZZyZZZyZZZyZZyyZZyZZZZZyZZyyMMMMMMMMMMMMMNa,.~~~_..~(?_J! `    ~ ._~~Jt__.....~...~.~_<<<~~~~~~~~~~~~~~~~~:~~:~:~:
+    :~:~:~~~~~~~~~~~.~~.~~~.~...~..~..........(MMMBdMMMMMMM#yyyMMMMMM#ZyyZMMMMNyZZydNZZdM#yyZZyZZyZZyZZZZyZZyZyZyZZZZZUNMMMMMMMMMMMMMMNg,(-~(>_(!    ..  _-_~~_d;......~.~.~...~..~.~.~~~~~~~~~~~~~:~:~:~~:~
+    ::~:~~:~~:~~~~~~~~~.~.~.~~...~..~.......-(MMMHXMMMMMMMMHZyXMMMMMMHZZZydMMMNWZyZMMWZMM#yZZZZyZyZZZyZZyZZZZZZyZZyZZyyMKMMMMMMMMMMMMMMMM#~~~(! ..-_~<_`        7h,.......~.~~.~~.~~.~~.~~.~~~~~~~~~:~:~::::
+    ::~::~:~~~~~~~~~.~~~.~.~..~~...........-gMMMWydMMMMMMM#yZZWMMMMMMWZyZZdMMMNWyyyMMHyMM#ZZyZZZZZyyZyZZyyZyZyZZZyZZyZZUNMMMMMMMMMMMMMMMM#~(!-_?<~~.~~` .`       (f..~.~.~..~.~.~~.~~~~~~~~~~~~~~~~:~~:~:~~:
+    :~:~:~~:~~:~~~~~~~~.~~~.~~..~~.~..~...-dMMMZyXMMMMMMMMHyyyMMMMMMNZZZyZUMMMMHyyXMM#WMMHZyZyZyZZZZyZZZyZZyZZyZZZZyZZZyMdMMMMMMMMMMMMMMMM_~~__.~..~.(/      `.v?4C...~..~~..~.~.~.~~.~~~~~~~~~~~~:~~:~:~:::
+    ::~:~:~~:~~~~~~~~~~~~.~~.~.~..~......(dM#TZZZMMMMMMMM#ZZZXMMMMMM#ZZyZyXMMMM#WyWMMNdMMHZZyZyZyyZZyZZyZZZZZZZyZZyZZyZyU#MWMMMMMMMMMMMMNMNNgmgJ(-.~~_.     .J!    ?~--_..~.~~.~~.~~~~~.~~~~~~~~~~:~:~:~:::~
+    :::~::~:~~~~~~~~~~.~~.~.~.~~...~....(MMMS+(4XMMMMMMMMHZZZXMMMMMM#ZZyZyyMMMMNpfMMMNMMMyZyZZZZZyZZyZZyZZyZyZZZyZZZyZZZyMXWZMMMMMMMMMMMMMMMm_..__7Wa,~_.  (=`  .....    !?-.~..~~.~~~.~~~~~~~~~~:~~~:~:~:~:
+    ::~::~~:~::~~~~~~~~~.~~~.~.~~.~.~.~(MMMyZyyXmVMMMMMM#ZZyydMMMMMMHyZZyZyMMMMMHWMMMNMMNZZZZyZZyZZyZZyZZyZZyyZZZyZZZyZZyU#ZyZMMMMMMMMMMMMMM#N......(Wm__.D_`   <--._<?c;(<!~.~~.~~.~~~~~~~~~~~~:~~::~:~:~::
+    :::~::~~:~~:~~~~~~~~~~.~~.~.~..~...?MMZyZZZdMMNmdMMMHyZZyMMMMMMMWZyZZZyMMMMM#WMMMMMM#yyZZZyZZZyyZZZZZZZZZZyZZZyZZZyZZyNZZyyMMMMMMMMMMMMHqMN,......?WJGXSi-.  <J1..._<..~.~~.~~~~~~~~~~~~~~~:~~:~~::~::::
+    ::::~::~:~~~:~~~~~~.~~~.~~.~.~..~..._TWkyZyMMMMMMMM#ZyyZyMMMMMMMyZyyZyZdMMMMMMMMMMMM#ZZyyZZyZyZZyyZyyZyyZZZyZyZyZZZZZZdKZZZyMMMMMMMMHQMMMMMMm-......<...+~<-.`.l_?i--(>~~.~~.~.~~~~~~~~~~~~~:~:~~:~:~:~:
+    ::~::~::~:~~~~~~~~~~~~.~~~.~~.~~.~.....(THNMMMMMMMMHZyZyWMMMMMMMZZZZyZyXMMMMMMMMMMMM#ZZZZZZZZyZZyZZZZZyZyZyZZyZyZyZZZZyNyZZZyMMMMQgMMMMMMMMMN,..........j_(>?v~_l.~.~.~~.~.~~~~~~.~~~~~~~~:~~:~::~::::::
+    :::~::~:~:~:~~:~~~~~~~~~.~~.~.~..~........_?TMMNMM#yZyZyWMMMMMM#yZyZyZyyMMMMMMMMMMMM#ZZZyZyZyZZZZZyyZZZZZyZyZZZZZZyyZyZMkyZyZUMMNMMMMMMMMMMM#~.........._?<._<+?!~..~.~.~~~.~.~~~~~~~~~~~~~:~~:~::~:~:::
+    ::::::~::~:~:~~~~~~~~~.~~.~~.~.~..~~.~........(HMMD?TUUXMMMMMMM#ZyyZyyZyMMMMMMMMMMMMHZyZZyZZZyyyZZZZyZyZZZZZyZyZZZZZZZyUNXyXUUTWMMMMMMMMMMM=....................~..~.~~~..~~.~~~~~~~~~~~~:~:~:~:~~:::~::
+    :::::~::~~:~~~~~~~~~~~~~~~.~~.~~.~..~..~.......dMMHG+J((ggkHMMM#ZyZZZZZZMMMMMMMMMMMMWZZyZZZyZZZyZZyZZZZyZyZZZZZyZyZZyZZyMI(J+udMMMMMMMMM5!...............~..~..~..~.~.~.~~~~~~.~~~~~~~~~~~:~:~::~::~::::
+    ::::~::~::~:~::~~~~~~~~~.~~.~~.~~.~.....~......dM#ZyZZZXMMMMMMM#yyZyyZyyUMMMMMMMMMMMZyZZyZZZyZZZZyZZyZZZyZyZZZyZZZyZZZy0zMkZZZZUMMMMMF....................~.~.~.~~.~~~.~~~.~~~~~~~~~~~~~:~~:~:~:::::::::
+    ::::::::~:~:~~:~~~~~~~~~~~~~.~~..~.~~..~......(MMHyZyyZdMMMMMmMHyyyZyyZZWMMMMMMMMMMNZZZZZyZZZyZZyZZZZZyZZZZyZyyZyZyZXV>(dMNZZZZZUMMMM-................~.~....~..~.~..~~.~.~~.~~~~~~~~~~:~:~~:~:~~:~:::::
+    :::::::~:~:~:~~:~~~~~~~~~.~~.~.~~.~.~.~..~...._MNmXZZyZMMMMMMMNx(<?>-((+dNNNmkMMMMMNZyZyZZyZZZZZZZZZy0V7=<<:_((((((JJ+wZZMMkXZyZZdMMN,.................~..~~..~.~~.~~.~~.~~~~~~~~~~~~~~~:~:~::~::~::::::
+    ::::::::::::~:~~:~~~~~~~~~~~~.~~.~..~.~.~.~...._7MMNmmQMMMMMMMNZZyZZZZZZZMMMMMMMNggNyZyZZZyZyZZVT=<((JwZZZZZZZZZZZZZZZZZyUMMNmkkXqMMB~..............~....~..~~.~.~.~~.~~~~~.~~~~~~~~~~:~~:~:~:::::::~:::
+    ;::::~::~:~::~:~~:~~~~~~~~.~~~~.~~~..~...~..~.......____7TWMMM#ZyyZyZZyZZMMMMMMMMMMNJ?777=<<<((J+wyyZyyZZZZZZZZZZZZZZZZyZyMM=7"""^_..................~.~..~..~~.~.~~.~~~.~~~~~~~~~~~~:~:~~::~:~::~::::::
+    :::::::::~:~:~:~~~:~~~~~~~~~~.~~.~~~.~.~..~..~............(MMMHZZyZZyZZyZdMMMMMMMMMMZZZyZZyZyZZZZZZZZZZZyZZZZZZZyZZyZZyZZyqB~......................~..~.~.~.~..~~~.~~~~.~~~~~~~~~~~~:~~::~:~:::~::::::::
+    ;:::::::::::~:~::~~~~~~~~~~~.~~.~.~.~.~~.~.~..~............(MMMRyZZZZyZXQMMMMMMMMMMMZZZZZZZZZZZyZZZZZZZyXZXXXZyZZZZZyXQg#T^......................~.....~.~.~.~~.~.~~~~~~~~~~~~~~~~~~~:~~~:~::~::::::::::
+    ;;::::::::~::~:~~:~:~~~~~~~~~~~~~~.~~~.~.~.~...~.............(TMMHQHMMMH"9""T"WMMMMMKZyZyyZZZyZZyZyZyXkQMMMHMMMMMMMM""=~............................~~..~.~.~.~~.~~.~.~~~~~~~~~~~~:~~::~::~:::::~:::::::
+    ;:;::::::::~::~:~~:~~:~~~~~~~~.~~~~.~.~.~.~.~.~.~.~................._h_~.~~.~.~.~dMM#yZyZZyZyZZZyXQN#"=~~~~(#_.................................~.~.~..~..~.~~~.~~~~~~~~~~~~~~~~~~~:~:~~::~::~:::::::::::
+    ;;:;:::::::::~:::~~~:~~~~~~~~~~~.~~~.~~~.~..~~...~..~................(h_~~~~.~~.~._TMMNNNNNggNM#9=~~~~.~.~.($.................................~...~.~.~~.~~.~.~~.~~.~~~~~~~~~~~~~:~~::~~::~:::~:::::::::
+    ;;;::::::~::::~::~::~~~~~~~~~~~~~.~~.~~.~.~~..~..~...~.~..............(b~~~~~~~~.~~.~?WTD<~~~~~~.~~~.~~.~~~J~................................~..~..~.~..~.~.~~~.~~~~~~~~~~~~~~~~:~~:~~::~::~::::::::::::
+    ;;:;::::::::~::~::~~:~:~~~~~~~~~~~~~~.~.~~..~~.~~..~..~................(r~~~~~~~~~~~~~J{?/~...~.~~~.~.~.~~~X.............................~.....~.~..~.~~.~~~.~~~~~.~~~~~~~~~~~~~:~:~:~:::::::::::::::::;
+    ;;;:;::::::::::~:~::~:~~:~~~~~~~~~.~~~~~.~~.~.~..~..~..~.~.............(b~::~~~~~~~_.~J~.z/~~~.~~.~~~~.~~~~R..............................~.~.~..~~.~~.~~.~~~.~~~~~~~~~~~~~~~~:~~:~:::~~:~:::::::::::;;;
+    ;;;;:;;:::::::::~::~~:~~~:~~~~~~~~~~.~~.~~.~~~.~~.~.~..~..~............_S::~~~~~~~~~~(P..-W_~~~~~~~.~~~~.~~O..........................~..~..~..~..~~.~.~~~.~~~.~~~~~~~~~~~~~~~:~:~:~~::::::~::::::::::;:
+    ;;;:;::::::::~:::~:~:~::~~~~~~~~~~~~~~~~~~~.~.~~.~.~.~..~..~.~..........J<~::::~:~:~~(:...(h~~~~~~~~~~~~~~~(-........................~..~..~.~~.~~.~~.~~.~~~.~~~~~~~~~~~~~~~:~~:~::~::~::::::::::::;;;;;
+    ;;;;;;:;::::::::~:::~:~:~::~~~~~~~~~~~.~~.~~.~~.~~.~~.~~.~..~...........({~~::~::~~~~J_....(R_~~~~~~~~~~~~_~$..........................~..~..~.~.~.~.~~.~~~~~~~~~~~~~~~~~~~:~:~:~:~:::~::~:::::::::;:;;;
+    ;;;;:;;:;::::::::::~::~~:~~::~~~~~~~~~~~~~~~~~.~.~~.~..~..~..~.~~.~.....(l~~~:~:~~~~~(r.....4~:~~~~~~___`  _j.....................~.~.~..~.~~.~~.~~.~~~~.~~~~~~~~~~~~~~~~:~~:~:~::~:::::::::::::::;:;;;;
+    ;;;;;;:;:;:::::::::::~::~:~~~:~~~~~~~~~~~~~~.~~~~.~~.~~.~~.~..~..~......(r~:~~:~:~~~~~q-....(n~:~~~_`       (<..................~..~..~.~.~.~.~.~~~~~.~~~~.~~~~~~~~~~~~~:~~:~:~::~::~::::::::::::;;:;;;;
+    ;;;;;;;:;::::::::::~::::~::~~:~:~~~~~~~~~.~~~~~.~~.~~~.~~.~~~.~...~..~...$:~::~::::~~~({....._S_~~`         .]...............~.~.~..~.~~.~.~.~~~.~.~~~.~~~~~~~~~~~~~~~:~~::~:~::~:::::::::::::::;;:;;;;;
+    ;;;;;;;;;:;::::::::::~:~::~:~~:~~:~~~~~~~~~~~~~~~~~.~~~.~~..~.~~.~.~.~..~j_~::~:~:~::~({......(b_``         `6..............~...~.~.~.~.~.~~~.~~~.~~.~~~~~~~~~~~~~~~~:~:~~::~:~:::::::~::::::::;;:;;;;;;
+    >;;;;;;;;;:;:::::::::::~::~::~~:~~:~~~~~~~~~~~.~~.~~~.~~.~~~.~.~~.~.~..~.(P:~::~::~:::(:.......k_            (.......~..~.~.~.~..~.~.~.~~.~~~~.~~~~~~~~~~~~~~~~~~~~:~~:~::~~:::~::~::::::::::;;:;;;;;;;;
+    >>;>;;;;;:;;:;::::::~:::~::~::~:~~:~~~~~~~~~~~~~~~~~~~~~~.~~.~~..~~.~.~...?c:::::::~:~(!......_f_  `  `  `   -_..~~..~.~..~..~.~~.~.~.~~.~~.~~~.~~~~~~~~~~~~~~~~~~:~::~:~:::~::::::::::::::::;;;:;;;;;;;
+    >;>;;;;;;;;:;::::::::::::~::~:~::~~::~:~~~~~~~~~~~~~.~~.~~~.~~~.~.~..~.~...z+::~::~:::J_...~..(F_`` `` ` `` `,~.~..~..~.~.~~.~~..~~.~~.~~~.~~.~~~~.~~~~~~~~~~~~:~:~~:~:~:~:::~:::::::::::::;;:;;;;;;;;;;
+    >>;>;;;;;;;;;:;::::::::::::~::~::~:~~:~~~~~~~~~~~~~~~~~~~~~~~.~~.~~~~.~~~~..j+::::::::J<~...~.(]_` `` ` ` ` `(..~..~.~..~..~..~~~.~~.~~.~~~~~~~~~~~~~~~~~~~~~~:~~:~:~:~:::~:::::~::::::::::;;;:;;;;;;;;>
+    >>;;>>;;;;;;;;;;::::::::~::::::~::~:~~:~:~~~~~~~~~~~~~~~~.~~.~~~~.~.~~..~.~~.j-:::::::J;.~...~(t_`` `` ``` ``x.~.~~.~.~~.~~.~~.~.~~.~~~~.~~~~~~~~~~~~~~~~~~~:~~::~:~::~::~:::::::::::::::;;:;;;;;;;;;;>>
+    >>>>;;;;;;;;;:;;;:;:::::::::~:::~::~::~:~:~:~~~~~~~~~~~~~~~~~~~.~~~.~~.~.~..~~4<::::~:<$..~~..(r_```````````.%~.~..~.~~.~~.~~.~~~.~~~.~~~~~.~~.~~~~~~~~~~~:~~::~~:::~::~::::~:::::::::::;:;;;;;;;;;;;>;>
+    >>>>>;>>;;;;;;:;:;:::::::::::::~::~::~:~:~:~~:~~~~~~~~~~~~~~~~~~~~~~.~~~~.~~.~_S<::::::z-..~.~(r `````````` J_~.~~.~~.~.~~.~~~~.~~.~~~~~~~~~~~~~~~~~~~~~~:~::~::~:~:::::::::::::::::::;;;;:;;;;;;;;;;>>>
+    >>>>>>;>;;;;;;;;;:;;:::::::::::::::~::~:~:~~:~~:~~~~~~~~~~~~~~~~.~~~~~.~~~~.~.~(R:::::::4_~.~~(l.``````````(>.~~.~~.~~.~~.~~.~~~~~~~~~~~~~~~~~~~~~~~~~:~:~~:~~:::~::~::~::::::::::::;;:;;;;;;;;;;;>;>;>>
+    >>>>>>;>>;;;;;;;;;;:;:;:::::::::~:::~::~:~::~:~~:~~~~~~~~~~~~~~~~~.~~.~~.~.~~~.~d+::::::<h~~.~({``````````.t~.~.~.~~.~~.~~~~~~.~~~~~~~~~~~~~~~~~~~~~:~~:~::~::~~:::::::::::::::::::;;;;:;;;;;;;;;;>>>>>>
+    >>>>>>>>;>;;;;;;;;;:;;:::::::::::::::~::::~::~::~:~:~~~~~~~~~~~~~~~~~~~~~~~~~~~~(r;;;;;<:q;~~.J:...`.````.$~~~.~~~.~~.~~~~.~~~~~~.~~~~~~~~~~~~~~:~:~:~::~:~:::::~::~::::::::::::::;;:;;;;;;;;;;;>>;>;>>>
+    ?>>>>>>>>;>>;;;;;;;;;:;;:::::::::::::::~::~:~:~~:~:~:~:~~~~~~~~~~~~~~~~~~~~.~.~~($;;;;;<<JHe~(K_`.`.`....$~~.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~:~~:~:~:~::~:~::~::::::::::::::::;;:;;;;;;;;;;;;;>;>>>>>>>
+    ?>?>>>>>>>;>>;;;;;;;;;:;;;::::::::::::::~::::~::~:~:~:~:~~~~~~~~~~~~.~~~~~~~~~~~JI<;;;:<:JNdcJ{.`.`.``.-$~~~~~~.~~~.~~~~.~~~~~~~~~~~~~~~~~~~:~~:~~:~:~:~:::::~:::::::::::::::::;;;;;;;;;;;;;;>>;>>>>>>>>
+    >?>?>>>>>>>>;>>;;;;;;;;:;;:;::::::::::::::::::::~::~:~~::~:~~~~~~~~~~~~~~~.~~~~(H<:;:::;:JHWhD_..`....($~~~.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~:~::~::~:~:::~:~::::::::::::::::::;;:;;:;;;;;;;;>>>>>>>>>>>>?
+    ??>>?>>>>>>>>>;>;;;;;;;;;;;;;:;:::::::::::~::~:~::~::~:~~:~:~:~~~~~~~~~~~~~~~~_(NgHWWmaJ<dMM@_.`...`.($~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~:~:~~:~:~::~:::~:::::::::::::::::::;;;;;:;;;;;;;;>;>;;>>>>>>>?>?
+    ???>?>?>>>>>>>;>>;;;;;;;;;;:;;;;:::::::::::::::::~::~::~:~:~:~:~~~~~~~~~~~~~(ddHHyVyyyyyHWH@__.__...(D~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~:~::~::~:~:~:~::~:::::::::::::::::::::;;;:;;;;;;;;;>;>>>>>>>>>>>>>??
+    ?>??>?>?>>>>>>>>;>;>;;;;;;;;;::;;:::::::::::::::::::~::~::~:~~:~::~~~~~~~~~~(XHHWYYYT9Hk0MH<_.___...J:~~~~~~~~~~~~~~~~~~~~~~~~~~:~:~~:~~~:~::~::::~::~::::::::::::::::::;;;;;;;;;;;;;;>;>>;>>>>>>>???>?>
+    ?????>?>?>>>>>>>>>>;>;;;;;;;;;;;:;;::::::::::::::~::::~::~::~:~:~~::~:~~~~~~_dHP:;:::::+HM= ` ~.__..Nx~~~~~~~~~~~~~~~~~~~~~~~:~~~:~:~:~::~:~::~::::::::::::::::::::::;;;;;;;;;;;;;;;;>>>>>>>>>>>>?>>??>?
+    ??????>??>??>>>>>>;>;>;;;;;;;;;;;;;;:::::::::::::::::::::~::::~::~:~:~:~:~~:jHWN+:;:;:+d#!`````. __(HW_~~~~~~~~~~~~~~~~~~:~::~::~::~:~:~::~:::::~:::::::::::::::::;;;:;;;:;;;;;;;>>;>>;>>>>>>>>??>?>?>??
+    ???>???>??>?>>>>>>>>;>>>;;;;;;;;;;:;;;;;:;::::::::::::::::~::~::~:~:~:~:~::(NVVVVfHHHHHMB91. `````.ZdWr~~~~~~~~~~~~:~:~:~~:~~:~::~::~::~::::~:::::::::::::::::::;;:;;;;;;;;;;;;;>;>>>;>>>>>>>>?>>?>??>??
+    ????????>?>>?>>>>>>>>>>;>>;;;;;;;;;;;;:;;:;:::::::::::~::::::::~:::~::~:~~:JHVVVVVfVWHHax????&.``.V=XW$~~~~~~::~::~~:~:~::~:~:~~:~::::~::~::::::::::::::::::::;;;;;;;;;;;;;;;;>;>>;>>>>>>>>>??>???>?????
+    ?????>??????>??>>>>>>>>;>>>;>;;;;;;;;;;:;;:;:::::::::::::::~:::::~::~::~::~(HbkVVVVWHB!`_TGxz?T&J11dKM<~:::~:~~:~:~:~:~:~::~::::::~:~::::::::::::::::::::::;:;;;:;;;;;;;;;;;>;>>;>>>>>>>>?>??>??>???????
+    ?????????>???>??>?>>>>>>>>>>>>;>;;;;;;;;;;;;;;;:::::::::::::::::~:::::~::~::?MHkbHMSS``````?HxXkdzd9d$~:~~:~::~:~~:::~::~:::~::~:::::::::::::::::::::::;:;;;;;:;;;;;;;;;;;>>;>>>>>>>>>>?>??>???>???>????
+    ????????????>?>??>?>>>>>>>;>;>>;>;;;;;;;;;;:;;:;;::::::::::::::::::~::::~::~:~?THM0v=O(.```..9XdOdmV>::~::~:~:::::~:~::~::~:::::~::::~:::::::::::::::;:;;;;:;;;;;;;;;;;;>>;>>>>>>>>>>>?>?>????>?????????
+    ==?????????????>?>??>?>>>>>>>>>>;>>;;;;;;;;;;;;:;;:;;::::::::::::::::::::::~:::j#V======zOO1??=uWB>:~::~::~::~:~::::::::::::~:::::::::::::::::::::;;;:;;;;;;;;;;;;;;;;>>>>>>>>>>>>>>??>???>?????????????
+    =??=??????????????>??>?>>>>>>>>>>>;>;>;;;;;;;;;;;;;:;;;:;:::::::::::::~::~:::~(HHZ=====>.(?==1dq5::~::~::~::::::~::~:~::::::::::::::::::::::::::;;:;;;;;:;;;;;;;;;;>>;>>;>>>>>>>>?>?>??>????>???????????
+    ?==?==????????>?????>?>??>>>>>>>>>>>>;>;;;;;;;;;;;;;:;;;:;:;::::::::::::::::::JMKkn-========uVdt::~:::::::::~::::::::::::~:::::::::::::::::::;;;;;;;;;;;;;;;;;;;>>>;>>>>>>>>>>>>?>???>???>?????????????=
+    =??=??=????????????????>????>>>>>>>;>>>>;>;;;;;;;;;;;;;:;;;:;::::::::::::::::::XWWHHkOuyuwwUwf>::::::::::::::::::::::::::::::::::::::::::;;;;;:;;;;;;;;;;;;;;>;>>>>>>>>>>>>>??>???>?>????????????????=??
+    ?=??=?==???????????>????>>?>>?>>>>>>>>>>>;>>;;;;;;;;;;;;;;;;;;;:;:::::::::::::::?4AwZTYTXXwY>::::::::::::::::::::::::::::::::::::::;:;;;;:;;:;;;;;;;;;;;;;>>>;>>;>>>>>>>>>??>????????????????????????===
+    ====??==?=????????????????>??>?>>>>>>>>>;>>>>>>;;;;;;;;;;;;;;;;;;;:::::::::::::::::<<7<<<::::::::::::::::::::::::::::::::::::::;:;;;;;;:;;;;;;;;;;;;;;;;>>;>>>>>>>>>>>>>??>??>>?>????>????????????==???=
+    ==?==?=?=====?????????>??????????>?>>>>>>>>>>;>>>;>;;;;;;;;;;;:;;;;;;;:;:::::::::::::::::::::::::::::::::::::::::::::::::::;:;;;;;;:;;;;;;;;;;;;;;;;>>>>>;>>>>>>>>>>>??>???>???????????????????=?=======
+    */
+</script>
+
+</html>

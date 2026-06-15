@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <link rel="icon" href="data:,">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>デバッグ戦闘 - Strange Terrain Battle</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&display=swap');
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(180deg, #0a0a12 0%, #12121f 50%, #0a0a12 100%);
+      color: #fffefd;
+      font-family: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', serif
+    }
+
+    .section {
+      margin-bottom: 20px;
+      padding: 20px;
+      border: 1px solid #1a1a2a;
+      background: linear-gradient(180deg, #0e0e1a00, #0e0e1a)
+    }
+
+    .section h3 {
+      font-size: 13px;
+      color: #777;
+      letter-spacing: 4px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #1a1a2a;
+      padding-bottom: 8px;
+      font-weight: normal
+    }
+
+    .gen-btn {
+      background: linear-gradient(135deg, #1a1a2e, #2a2a4a);
+      border: 1px solid #444;
+      color: #e0dcd0;
+      padding: 16px 48px;
+      font-size: 18px;
+      font-family: inherit;
+      cursor: pointer;
+      letter-spacing: 4px;
+      transition: all .3s
+    }
+
+    .gen-btn:hover {
+      border-color: #888;
+      background: linear-gradient(135deg, #2a2a4e, #3a3a6a);
+    }
+
+    #content {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0 20px 60px
+    }
+
+    /* FFA BATTLE STYLE (From terrain06) */
+    .ffa-b1 { background: #9ac; border: 1px solid #ccf; color: #fff; font-size: 11pt; padding: 4px; }
+    .ffa-b2 { background: #669; border: 1px solid #99c; color: #fff; text-align: center; font-size: 11pt; font-weight: bold; padding: 4px; }
+    .ffa-dmg { color: #FF0000; font-size: 18pt; font-weight: bold; }
+    .ffa-heal { color: #00FF00; font-size: 18pt; font-weight: bold; }
+    .ffa-crit { color: #0000FF; font-size: 18pt; font-weight: bold; }
+    .ffa-table { border-collapse: collapse; width: 100%; border: 1px solid #333; }
+    .ffa-table td { font-size: 11pt; color: #333333; background: #ffffff; padding: 4px; border: 1px solid #333; }
+    
+    #battleLogTerminal {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: #FFFFFF;
+      color: #333;
+      border: 2px solid #555;
+      padding: 16px;
+      min-height: 400px;
+      height: auto;
+      overflow-y: visible;
+      border-radius: 4px;
+      font-family: "MS Gothic", "ＭＳ ゴシック", "MS PGothic", "ＭＳ Ｐゴシック", monospace;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: inline-block;
+      width: 150px;
+    }
+
+    .form-group input[type="number"], .form-group select {
+      background: #1a1a2a;
+      color: white;
+      border: 1px solid #444;
+      padding: 4px 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="pageTopLogo" style="text-align:center;padding:40px 20px 20px;border-bottom:1px solid #222">
+    <h1 style="font-size:28px;font-weight:900;letter-spacing:8px;color:#c8c0b0;margin-bottom:8px">デバッグ戦闘</h1>
+    <p style="font-size:12px;color:#666;letter-spacing:3px">DEBUG BATTLE SYSTEM</p>
+  </div>
+
+  <div id="content">
+    <div class="section">
+      <h3>設定パラメータ</h3>
+      <div class="form-group">
+        <label>一彌レベル:</label>
+        <input type="number" id="debugBrotherLevel" value="10" min="1" max="99">
+      </div>
+      <div class="form-group">
+        <label>一埜レベル:</label>
+        <input type="number" id="debugSisterLevel" value="10" min="1" max="99">
+      </div>
+      <div class="form-group">
+        <label>敵基準レベル:</label>
+        <input type="number" id="debugEnemyLevel" value="10" min="1" max="99">
+      </div>
+      <div class="form-group">
+        <label>ダーク太陽:</label>
+        <input type="checkbox" id="debugDarkSun"> ON
+      </div>
+      <div class="form-group">
+        <label>地形効果:</label>
+        <select id="debugTerrain">
+          <option value="none">なし</option>
+          <option value="water">水</option>
+          <option value="lava">溶岩</option>
+          <option value="alcohol">酒</option>
+          <option value="acid">酸</option>
+          <option value="potion">各種ポーション</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>敵の編成:</label>
+        <select id="debugEnemyFormation">
+          <option value="default">デフォルト (テストモンスター)</option>
+          <option value="poison">ポイズンスライム (毒)</option>
+          <option value="sleep">スリープバット (睡眠)</option>
+          <option value="stone">コカトリス (石化)</option>
+          <option value="blind">ブラインドゴースト (暗闇)</option>
+          <option value="silence">サイレントモス (沈黙)</option>
+          <option value="confuse">コンフューズアイ (混乱)</option>
+          <option value="nausea">ゲロゲロガエル (吐き気)</option>
+          <option value="all">状態異常オールスター</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>乱入:</label>
+        <input type="checkbox" id="debugIntrusion"> ON
+      </div>
+      <div class="form-group">
+        <label style="vertical-align:top;">習得魔法:</label>
+        <div id="debugMagicList" style="display:inline-block; max-width:500px; padding:8px; background:#1a1a2a; border:1px solid #444; font-size:14px; max-height:150px; overflow-y:auto; line-height:1.6;">
+          <!-- JSで自動生成 -->
+        </div>
+      </div>
+      <div style="text-align:center; margin-top:20px;">
+        <button class="gen-btn" onclick="startDebugBattle()">戦闘開始</button>
+      </div>
+    </div>
+
+    <div id="battleView" style="display:none; margin-top:24px;">
+      <div id="battleLogTerminal">
+        <!-- ログが流れる -->
+      </div>
+    </div>
+  </div>
+
+  <script src="js/engine-utils.js"></script>
+  <script src="js/data-biomes.js"></script>
+  <script src="js/data-world.js"></script>
+  <script src="js/data-architecture.js"></script>
+  <script src="js/data-events.js"></script>
+  <script src="js/data-skills.js"></script>
+  <script src="js/engine-battle.js"></script>
+  <script src="js/engine-save.js"></script>
+  <script src="js/engine-dungeon.js"></script>
+  <script src="js/main.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const container = document.getElementById("debugMagicList");
+      if (typeof SKILLS_DATA !== "undefined") {
+        let html = "";
+        const magicCategories = ["white", "white ", "black", "time", "blue", "magic"];
+        const magics = SKILLS_DATA.filter(s => {
+           if (!s.skillId) return false;
+           return magicCategories.includes(s.category) || 
+                  s.skillId.includes("heal") || 
+                  s.skillId.includes("fire") ||
+                  s.skillId.includes("cure");
+        });
+        
+        // とりあえず初期からチェック入れておく魔法
+        const defaults = ["fire_01", "heal_01", "heal_02"];
+        
+        magics.forEach(m => {
+          if (!m.skillId) return;
+          const isChecked = defaults.includes(m.skillId) ? "checked" : "";
+          html += `<label style="display:inline-block; width:150px; margin:2px; cursor:pointer;"><input type="checkbox" class="debug-magic-cb" value="${m.skillId}" ${isChecked}> ${m.name}</label>`;
+        });
+        if (html === "") html = "魔法データなし";
+        container.innerHTML = html;
+      }
+    });
+
+    function startDebugBattle() {
+      // Get settings
+      const brotherLevel = parseInt(document.getElementById('debugBrotherLevel').value) || 1;
+      const sisterLevel = parseInt(document.getElementById('debugSisterLevel').value) || 1;
+      const enemyLevel = parseInt(document.getElementById('debugEnemyLevel').value) || 1;
+      const darkSun = document.getElementById('debugDarkSun').checked;
+      const terrain = document.getElementById('debugTerrain').value;
+      const intrusion = document.getElementById('debugIntrusion').checked;
+      const formation = document.getElementById('debugEnemyFormation').value;
+
+      // Apply settings to a global debug config object so engine-battle.js can read it
+      window.DEBUG_BATTLE_CONFIG = {
+        active: true,
+        darkSun: darkSun,
+        terrain: terrain,
+        intrusion: intrusion
+      };
+
+      // Set up party
+      gameState.brother.level = brotherLevel;
+      gameState.sister.level = sisterLevel;
+      gameState.brother.status = [];
+      gameState.sister.status = [];
+      gameState.brother.limit = 0;
+      gameState.sister.limit = 0;
+      refreshUnitStats(gameState.brother);
+      refreshUnitStats(gameState.sister);
+
+      // 選んだ魔法を上書きセット
+      const selectedMagics = Array.from(document.querySelectorAll(".debug-magic-cb:checked")).map(cb => cb.value);
+      gameState.brother.magic = [...selectedMagics];
+      gameState.sister.magic = [...selectedMagics];
+
+      gameState.brother.genki = gameState.brother.maxGenki;
+      gameState.sister.genki = gameState.sister.maxGenki;
+      gameState.brother.hp = gameState.brother.maxGenki;
+      gameState.sister.hp = gameState.sister.maxGenki;
+      
+      let monsters = [];
+      if (formation === "poison") monsters = [{ name: "ポイズンスライム" }, { name: "ポイズンスライム" }];
+      else if (formation === "sleep") monsters = [{ name: "スリープバット" }, { name: "スリープバット" }];
+      else if (formation === "stone") monsters = [{ name: "コカトリス" }];
+      else if (formation === "blind") monsters = [{ name: "ブラインドゴースト" }, { name: "ブラインドゴースト" }];
+      else if (formation === "silence") monsters = [{ name: "サイレントモス" }, { name: "サイレントモス" }];
+      else if (formation === "confuse") monsters = [{ name: "コンフューズアイ" }, { name: "コンフューズアイ" }];
+      else if (formation === "nausea") monsters = [{ name: "ゲロゲロガエル" }, { name: "ゲロゲロガエル" }];
+      else if (formation === "all") monsters = [
+        { name: "ポイズンスライム" }, { name: "スリープバット" }, { name: "コカトリス" },
+        { name: "ブラインドゴースト" }, { name: "ゲロゲロガエル" }
+      ];
+      else monsters = [{ name: "テストスライム" }, { name: "テストゴブリン" }];
+
+      // Set up a mock map
+      const mockMap = {
+        level: enemyLevel,
+        biomeName: "デバッグルーム",
+        biomeIcon: "⚙️",
+        tierInfo: { label: "【デバッグ】" },
+        chaosLevel: 0,
+        monsters: monsters
+      };
+
+      const { enemies, peacefulText } = createEnemies(mockMap);
+      
+      document.getElementById('battleView').style.display = 'block';
+      
+      startVisualBattle(
+        mockMap,
+        gameState.brother,
+        gameState.sister,
+        enemies,
+        () => { console.log("Debug Battle Won"); },
+        () => { console.log("Debug Battle Lost"); }
+      );
+    }
+  </script>
+</body>
+</html>

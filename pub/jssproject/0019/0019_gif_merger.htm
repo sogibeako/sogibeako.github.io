@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>2本のアニメーションGIF統合ツール</title>
+  <style>
+    :root {
+      --bg-color: #f7f9fc;
+      --panel-bg: #ffffff;
+      --text-color: #333333;
+      --border-color: #d1d5db;
+      --accent-color: #3b82f6;
+      --hover-color: #2563eb;
+      --warning-color: #ef4444;
+      --success-color: #10b981;
+    }
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 15px;
+      flex: 1 1 300px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .panel h2 {
+      font-size: 18px;
+      margin-top: 0;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+    .control-group {
+      margin-bottom: 12px;
+    }
+    .control-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+    .control-group input[type="file"],
+    .control-group select,
+    .control-group input[type="number"] {
+      width: 100%;
+      padding: 6px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    .control-group input[type="checkbox"] {
+      margin-right: 6px;
+    }
+    button {
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      width: 100%;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: var(--hover-color);
+    }
+    .warning {
+      color: var(--warning-color);
+      font-size: 14px;
+      font-weight: bold;
+      margin-top: 10px;
+      display: none;
+    }
+    .preview-area {
+      flex: 1 1 100%;
+      text-align: center;
+    }
+    .canvas-container {
+      background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="10" height="10" fill="%23ccc"/><rect x="10" y="10" width="10" height="10" fill="%23ccc"/><rect x="10" width="10" height="10" fill="%23fff"/><rect y="10" width="10" height="10" fill="%23fff"/></svg>');
+      border: 1px solid var(--border-color);
+      display: inline-block;
+      margin-top: 10px;
+      max-width: 100%;
+      overflow: auto;
+    }
+    canvas {
+      display: block;
+    }
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .info-table th, .info-table td {
+      border: 1px solid var(--border-color);
+      padding: 4px;
+      text-align: center;
+    }
+    .info-table th {
+      background-color: #f3f4f6;
+    }
+  </style>
+</head>
+<body>
+
+<h1>2本のアニメーションGIF統合ツール</h1>
+
+<div class="container">
+  <!-- 入力パネル -->
+  <div class="panel">
+    <h2>入力・基本情報</h2>
+    <div class="control-group">
+      <label>GIF A 読み込み</label>
+      <input type="file" id="file-a" accept="image/gif">
+      <div id="info-a" style="margin-top: 5px; font-size: 12px;"></div>
+    </div>
+    <div class="control-group">
+      <label>GIF B 読み込み</label>
+      <input type="file" id="file-b" accept="image/gif">
+      <div id="info-b" style="margin-top: 5px; font-size: 12px;"></div>
+    </div>
+  </div>
+
+  <!-- 合成設定パネル -->
+  <div class="panel">
+    <h2>合成設定</h2>
+    <div class="control-group">
+      <label>レイヤー順</label>
+      <select id="layer-order">
+        <option value="a-front">Aを前面 / Bを背面</option>
+        <option value="b-front">Bを前面 / Aを背面</option>
+      </select>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <div class="control-group" style="flex:1;">
+        <label>A Xオフセット</label>
+        <input type="number" id="offset-a-x" value="0">
+      </div>
+      <div class="control-group" style="flex:1;">
+        <label>A Yオフセット</label>
+        <input type="number" id="offset-a-y" value="0">
+      </div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <div class="control-group" style="flex:1;">
+        <label>B Xオフセット</label>
+        <input type="number" id="offset-b-x" value="0">
+      </div>
+      <div class="control-group" style="flex:1;">
+        <label>B Yオフセット</label>
+        <input type="number" id="offset-b-y" value="0">
+      </div>
+    </div>
+    <div class="control-group">
+      <label>キャンバスサイズ</label>
+      <select id="canvas-size-mode">
+        <option value="max">最大サイズに合わせる</option>
+        <option value="a">A基準</option>
+        <option value="b">B基準</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label><input type="checkbox" id="transparent-bg" checked> 背景透明維持</label>
+    </div>
+  </div>
+
+  <!-- 周期・色設定パネル -->
+  <div class="panel">
+    <h2>出力最適化</h2>
+    <div class="control-group">
+      <label>周期モード</label>
+      <select id="sync-mode">
+        <option value="strict">厳密同期 (正確だが重い)</option>
+        <option value="approx">近似同期 (周期短縮優先)</option>
+        <option value="retime">速度微調整 (コマ落ち・ズレ許容)</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>色数上限 (出力品質)</label>
+      <select id="color-limit">
+        <option value="256">256色 (標準)</option>
+        <option value="128">128色 (軽量化)</option>
+        <option value="64">64色 (さらに軽量)</option>
+        <option value="32">32色 (極小)</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>出力解像度</label>
+      <select id="scale-mode">
+        <option value="1">100% (等倍)</option>
+        <option value="0.5">50% (1/2縮小)</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>ディザリング</label>
+      <select id="dithering">
+        <option value="none">OFF (くっきり・ファイル小)</option>
+        <option value="floyd">ON (滑らか・ファイル大)</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>最大FPS (なめらか軽量化)</label>
+      <select id="fps-limit">
+        <option value="0">無制限 (正確・重い)</option>
+        <option value="4" selected>25 FPS (標準・サクサク)</option>
+        <option value="8">12 FPS (軽量・カクつく)</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>フレーム単純間引き</label>
+      <select id="frame-skip">
+        <option value="1">なし (そのまま)</option>
+        <option value="2">1/2間引き</option>
+        <option value="3">1/3間引き</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- プレビューと出力パネル -->
+  <div class="panel preview-area">
+    <h2>合成プレビュー</h2>
+    <div class="canvas-container">
+      <canvas id="preview-canvas" width="400" height="300"></canvas>
+    </div>
+    <div style="margin-top: 15px; display: flex; gap: 10px; justify-content: center;">
+      <button id="btn-play-pause" style="width: auto;">▶ 再生</button>
+      <button id="btn-export" style="width: auto; background-color: var(--success-color);">合成GIFを書き出す</button>
+    </div>
+    <div id="size-warning" class="warning">⚠️ 出力サイズが3MBを超える可能性があります。周期短縮や間引きを検討してください。</div>
+    <div id="export-info" style="margin-top: 10px; font-size: 14px;"></div>
+  </div>
+
+</div>
+
+<!-- ライブラリの読み込み -->
+<script src="js/omggif.js"></script>
+
+<script>
+// Data structures
+let gifA = null; // ParsedGif
+let gifB = null; // ParsedGif
+
+// Elements
+const elFileA = document.getElementById('file-a');
+const elFileB = document.getElementById('file-b');
+const elInfoA = document.getElementById('info-a');
+const elInfoB = document.getElementById('info-b');
+const elPreviewCanvas = document.getElementById('preview-canvas');
+
+/**
+ * Loads and parses a GIF from a File object
+ */
+async function loadGif(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const reader = new GifReader(new Uint8Array(arrayBuffer));
+    const width = reader.width;
+    const height = reader.height;
+    
+    const decodedFrames = [];
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d', {willReadFrequently: true});
+    
+    let totalDurationCs = 0;
+    let savedState = null;
+
+    for (let i = 0; i < reader.numFrames(); i++) {
+        const info = reader.frameInfo(i);
+        
+        // Save state for disposal === 3
+        if (info.disposal === 3 && !savedState) {
+            savedState = ctx.getImageData(0, 0, width, height);
+        }
+        
+        // Create a blank patch buffer (transparent)
+        const patchBuffer = new Uint8ClampedArray(width * height * 4);
+        // decodeAndBlitFrameRGBA only writes to the patch bounds [info.x, info.x+info.width], [info.y, info.y+info.height]
+        reader.decodeAndBlitFrameRGBA(i, patchBuffer);
+        
+        const imgData = new ImageData(patchBuffer, width, height);
+        
+        // Use offscreen canvas to draw patch over the accumulated frame
+        const patchCanvas = document.createElement('canvas');
+        patchCanvas.width = width;
+        patchCanvas.height = height;
+        patchCanvas.getContext('2d').putImageData(imgData, 0, 0);
+        
+        ctx.drawImage(patchCanvas, 0, 0);
+        
+        const fullImageData = ctx.getImageData(0, 0, width, height);
+        
+        let delayCs = info.delay || 10;
+        if(delayCs <= 1) delayCs = 10; // Fix standard viewer behavior for extremely fast frames
+        
+        decodedFrames.push({
+            index: i,
+            delayCs: delayCs,
+            fullCanvas: fullImageData
+        });
+        
+        totalDurationCs += delayCs;
+        
+        // Apply disposal method for next frame
+        if (info.disposal === 2) {
+            ctx.clearRect(info.x, info.y, info.width, info.height);
+        } else if (info.disposal === 3) {
+            if (savedState) {
+                ctx.putImageData(savedState, 0, 0);
+            }
+        } else {
+            // For 0 or 1, we do not clear. Remove savedState if not 3 to reset the save point.
+            if (info.disposal !== 3) {
+                savedState = null;
+            }
+        }
+    }
+    
+    return {
+        width: width,
+        height: height,
+        totalDurationCs,
+        frames: decodedFrames
+    };
+}
+
+function displayGifInfo(gif, el) {
+    if (!gif) {
+        el.innerHTML = '';
+        return;
+    }
+    const durationSec = (gif.totalDurationCs / 100).toFixed(2);
+    el.innerHTML = `
+        <table class="info-table">
+            <tr>
+                <th>サイズ (WxH)</th><td>${gif.width} x ${gif.height}</td>
+                <th>総尺</th><td>${gif.totalDurationCs}cs (${durationSec}秒)</td>
+            </tr>
+            <tr>
+                <th>フレーム数</th><td colspan="3">${gif.frames.length}</td>
+            </tr>
+        </table>
+    `;
+}
+
+async function handleFileSelect(event, isA) {
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+        const parsed = await loadGif(file);
+        if (isA) {
+            gifA = parsed;
+            displayGifInfo(gifA, elInfoA);
+        } else {
+            gifB = parsed;
+            displayGifInfo(gifB, elInfoB);
+        }
+        updatePreview();
+    } catch (err) {
+        console.error(err);
+        alert('GIFの読み込みに失敗しました。');
+    }
+}
+
+// Timeline Builder and Compositor
+let currentSegments = [];
+let currentCanvasWidth = 400;
+let currentCanvasHeight = 300;
+let previewCtx = elPreviewCanvas.getContext('2d', {willReadFrequently: true});
+
+// Math utils
+function gcd(a, b) {
+    while (b !== 0) {
+        let temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+function lcm(a, b) {
+    if (a === 0 || b === 0) return 0;
+    return Math.abs(a * b) / gcd(a, b);
+}
+
+function buildTimeline(gA, gB, mode) {
+    if (!gA && !gB) return [];
+    if (!gA || !gB) {
+        const g = gA || gB;
+        let t = 0;
+        return g.frames.map(f => {
+            const start = t;
+            t += f.delayCs;
+            return {
+                startCs: start,
+                endCs: t,
+                delayCs: f.delayCs,
+                indexA: gA ? f.index : -1,
+                indexB: gB ? f.index : -1
+            };
+        });
+    }
+    
+    let durA = gA.totalDurationCs;
+    let durB = gB.totalDurationCs;
+    let retimeRatioB = 1;
+    
+    if (mode === 'retime') {
+        // Adjust B to match A exactly
+        retimeRatioB = durA / durB;
+        durB = durA;
+    } else if (mode === 'approx') {
+        // Example approx: if they are within 10% of each other, just force them equal
+        if (Math.abs(durA - durB) / Math.max(durA, durB) < 0.1) {
+            retimeRatioB = durA / durB;
+            durB = durA;
+        } else {
+            // Alternatively, round down delays to GCD of total duration? That's complex.
+            // Let's just use strict LCM logic here, but cap it harshly later.
+        }
+    }
+    
+    let totalDur = lcm(durA, durB);
+    if (totalDur > 10000) totalDur = 10000; // Cap at 100s to avoid freezing
+    
+    const boundaries = new Set();
+    boundaries.add(0);
+    boundaries.add(totalDur);
+    
+    // Add boundaries for A
+    let tA = 0;
+    while (tA < totalDur) {
+        boundaries.add(Math.round(tA));
+        let rem = tA % durA;
+        let delay = getFrameDelay(gA, rem, 1);
+        tA += delay;
+        if(delay <= 0) break;
+    }
+    // Add boundaries for B
+    let tB = 0;
+    while (tB < totalDur) {
+        boundaries.add(Math.round(tB));
+        let rem = tB % durB;
+        let delay = getFrameDelay(gB, rem, retimeRatioB);
+        tB += delay;
+        if(delay <= 0) break;
+    }
+    
+    const sorted = Array.from(boundaries).sort((a,b)=>a-b);
+    let segments = [];
+    
+    for (let i = 0; i < sorted.length - 1; i++) {
+        const start = sorted[i];
+        const end = sorted[i+1];
+        if (start >= end) continue;
+        
+        let fA = getFrameIndexAtTime(gA, start, durA, 1);
+        let fB = getFrameIndexAtTime(gB, start, durB, retimeRatioB);
+        
+        segments.push({
+            startCs: start,
+            endCs: end,
+            delayCs: end - start,
+            indexA: fA,
+            indexB: fB
+        });
+    }
+    
+    // Apply FPS limit (merge short segments smoothly)
+    const minDelayCs = parseInt(document.getElementById('fps-limit')?.value) || 0;
+    if (minDelayCs > 0 && segments.length > 0) {
+        const merged = [];
+        let accDelay = 0;
+        let lastSeg = segments[0];
+        for (let i = 0; i < segments.length; i++) {
+            accDelay += segments[i].delayCs;
+            lastSeg = segments[i]; // Take latest state
+            if (accDelay >= minDelayCs || i === segments.length - 1) {
+                const newSeg = Object.assign({}, lastSeg);
+                newSeg.delayCs = accDelay;
+                merged.push(newSeg);
+                accDelay = 0;
+            }
+        }
+        segments = merged;
+    }
+    
+    return segments;
+}
+
+function getFrameDelay(g, rem, ratio) {
+    let originalRem = rem / ratio;
+    let c = 0;
+    for (let f of g.frames) {
+        c += f.delayCs;
+        if (c > originalRem - 0.001) return f.delayCs * ratio;
+    }
+    return g.frames[0].delayCs * ratio;
+}
+
+function getFrameIndexAtTime(g, time, cycleDur, ratio) {
+    const rem = (time % cycleDur) / ratio;
+    let c = 0;
+    for (let f of g.frames) {
+        c += f.delayCs;
+        if (c > rem - 0.001) return f.index;
+    }
+    return g.frames[g.frames.length - 1].index;
+}
+
+function updatePreview() {
+    if (!gifA && !gifB) return;
+    
+    const mode = document.getElementById('sync-mode').value;
+    currentSegments = buildTimeline(gifA, gifB, mode);
+    
+    const sizeMode = document.getElementById('canvas-size-mode').value;
+    const scale = parseFloat(document.getElementById('scale-mode').value) || 1;
+    
+    const wA = gifA ? gifA.width : 0;
+    const hA = gifA ? gifA.height : 0;
+    const wB = gifB ? gifB.width : 0;
+    const hB = gifB ? gifB.height : 0;
+    
+    let baseWidth = 400;
+    let baseHeight = 300;
+    
+    if (sizeMode === 'a' && gifA) {
+        baseWidth = wA; baseHeight = hA;
+    } else if (sizeMode === 'b' && gifB) {
+        baseWidth = wB; baseHeight = hB;
+    } else {
+        baseWidth = Math.max(wA, wB); baseHeight = Math.max(hA, hB);
+        if(baseWidth === 0) baseWidth = 400;
+        if(baseHeight === 0) baseHeight = 300;
+    }
+    
+    currentCanvasWidth = Math.floor(baseWidth * scale);
+    currentCanvasHeight = Math.floor(baseHeight * scale);
+    
+    elPreviewCanvas.width = currentCanvasWidth;
+    elPreviewCanvas.height = currentCanvasHeight;
+    
+    checkSizeWarning();
+    renderPreviewFrame(0);
+}
+
+function checkSizeWarning() {
+    const warningEl = document.getElementById('size-warning');
+    const skip = parseInt(document.getElementById('frame-skip').value);
+    const numFrames = Math.ceil(currentSegments.length / skip);
+    // Rough estimate: width * height * frames * 1 byte + headers
+    const estimatedBytes = currentCanvasWidth * currentCanvasHeight * numFrames;
+    if (estimatedBytes > 3 * 1024 * 1024) { // 3MB threshold
+        warningEl.style.display = 'block';
+    } else {
+        warningEl.style.display = 'none';
+    }
+}
+
+function drawComposedFrame(ctx, seg, bgTransparent) {
+    const scale = parseFloat(document.getElementById('scale-mode').value) || 1;
+    
+    ctx.clearRect(0, 0, currentCanvasWidth, currentCanvasHeight);
+    if (!bgTransparent) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, currentCanvasWidth, currentCanvasHeight);
+    }
+    
+    ctx.save();
+    ctx.scale(scale, scale);
+    
+    const layerMode = document.getElementById('layer-order').value;
+    const offAX = parseInt(document.getElementById('offset-a-x').value) || 0;
+    const offAY = parseInt(document.getElementById('offset-a-y').value) || 0;
+    const offBX = parseInt(document.getElementById('offset-b-x').value) || 0;
+    const offBY = parseInt(document.getElementById('offset-b-y').value) || 0;
+    
+    const drawA = () => {
+        if (gifA && seg.indexA >= 0) {
+            const fCanvas = document.createElement('canvas');
+            fCanvas.width = gifA.width; fCanvas.height = gifA.height;
+            fCanvas.getContext('2d').putImageData(gifA.frames[seg.indexA].fullCanvas, 0, 0);
+            ctx.drawImage(fCanvas, offAX, offAY);
+        }
+    };
+    
+    const drawB = () => {
+        if (gifB && seg.indexB >= 0) {
+            const fCanvas = document.createElement('canvas');
+            fCanvas.width = gifB.width; fCanvas.height = gifB.height;
+            fCanvas.getContext('2d').putImageData(gifB.frames[seg.indexB].fullCanvas, 0, 0);
+            ctx.drawImage(fCanvas, offBX, offBY);
+        }
+    };
+    
+    if (layerMode === 'a-front') { drawB(); drawA(); }
+    else { drawA(); drawB(); }
+    
+    ctx.restore();
+}
+
+let previewInterval = null;
+let currentPreviewIndex = 0;
+
+function renderPreviewFrame(idx) {
+    if (currentSegments.length === 0) return;
+    currentPreviewIndex = idx % currentSegments.length;
+    const seg = currentSegments[currentPreviewIndex];
+    const bgTrans = document.getElementById('transparent-bg').checked;
+    drawComposedFrame(previewCtx, seg, bgTrans);
+}
+
+function togglePlay() {
+    const btn = document.getElementById('btn-play-pause');
+    if (previewInterval) {
+        clearTimeout(previewInterval);
+        previewInterval = null;
+        btn.textContent = '▶ 再生';
+    } else {
+        btn.textContent = '⏸ 停止';
+        playNextFrame();
+    }
+}
+
+function playNextFrame() {
+    if (currentSegments.length === 0) {
+        previewInterval = null;
+        return;
+    }
+    renderPreviewFrame(currentPreviewIndex);
+    const seg = currentSegments[currentPreviewIndex];
+    const delayMs = seg.delayCs * 10;
+    
+    currentPreviewIndex = (currentPreviewIndex + 1) % currentSegments.length;
+    previewInterval = setTimeout(playNextFrame, delayMs);
+}
+
+// Event Listeners for controls
+const triggers = ['layer-order', 'offset-a-x', 'offset-a-y', 'offset-b-x', 'offset-b-y', 'canvas-size-mode', 'transparent-bg', 'sync-mode', 'frame-skip', 'scale-mode', 'fps-limit'];
+triggers.forEach(id => {
+    document.getElementById(id).addEventListener('change', updatePreview);
+});
+document.getElementById('btn-play-pause').addEventListener('click', togglePlay);
+document.getElementById('btn-export').addEventListener('click', exportGif);
+
+// --- Custom Quantizer & Encoder ---
+function colorDist(r1,g1,b1, r2,g2,b2) {
+    return (r1-r2)**2 + (g1-g2)**2 + (b1-b2)**2;
+}
+
+function generatePalette(imageDataArray, maxColors) {
+    // Combine all pixel data to find most popular colors
+    const colorCounts = new Map();
+    for(let img of imageDataArray) {
+        const data = img.data;
+        for(let i=0; i<data.length; i+=4) {
+            // Treat high transparency as a single transparent color
+            if (data[i+3] < 128) continue; 
+            const rgb = (data[i]<<16) | (data[i+1]<<8) | data[i+2];
+            colorCounts.set(rgb, (colorCounts.get(rgb)||0) + 1);
+        }
+    }
+    
+    // Sort by frequency
+    const sorted = Array.from(colorCounts.entries()).sort((a,b)=>b[1]-a[1]);
+    const paletteCount = Math.min(maxColors - 1, sorted.length); // Reserve index 0 for transparent
+    const palette = [[0,0,0,0]]; // Index 0 is transparent
+    
+    for(let i=0; i<paletteCount; i++) {
+        const c = sorted[i][0];
+        palette.push([(c>>16)&255, (c>>8)&255, c&255, 255]);
+    }
+    return palette;
+}
+
+function mapToPalette(imgData, palette, ditherMode) {
+    const data = new Uint8ClampedArray(imgData.data);
+    const width = imgData.width;
+    const height = imgData.height;
+    const indexed = new Uint8Array(width * height);
+    
+    // palette format: [r,g,b,a]
+    const findClosest = (r,g,b) => {
+        let minDist = Infinity;
+        let minIdx = 1; // default to first solid color (skip 0=trans)
+        for(let j=1; j<palette.length; j++) {
+            const d = colorDist(r,g,b, palette[j][0], palette[j][1], palette[j][2]);
+            if(d < minDist) { minDist = d; minIdx = j; }
+        }
+        return minIdx;
+    };
+
+    for(let y=0; y<height; y++) {
+        for(let x=0; x<width; x++) {
+            const idx = (y * width + x) * 4;
+            let a = data[idx+3];
+            if(a < 128) {
+                indexed[y * width + x] = 0; // transparent index
+                continue;
+            }
+            
+            let r = data[idx], g = data[idx+1], b = data[idx+2];
+            let bestPalIdx = findClosest(r,g,b);
+            indexed[y * width + x] = bestPalIdx;
+            
+            if(ditherMode === 'floyd') {
+                let p = palette[bestPalIdx];
+                let errR = r - p[0], errG = g - p[1], errB = b - p[2];
+                
+                const distribute = (dx, dy, factor) => {
+                    if(x+dx >= 0 && x+dx < width && y+dy < height) {
+                        const i = ((y+dy)*width + (x+dx)) * 4;
+                        if(data[i+3] >= 128) { // Only dither solid pixels
+                            data[i] = Math.max(0, Math.min(255, data[i] + errR * factor));
+                            data[i+1] = Math.max(0, Math.min(255, data[i+1] + errG * factor));
+                            data[i+2] = Math.max(0, Math.min(255, data[i+2] + errB * factor));
+                        }
+                    }
+                };
+                
+                distribute(1, 0, 7/16);
+                distribute(-1, 1, 3/16);
+                distribute(0, 1, 5/16);
+                distribute(1, 1, 1/16);
+            }
+        }
+    }
+    return indexed;
+}
+
+async function exportGif() {
+    if (currentSegments.length === 0) return alert('GIFがロードされていません。');
+    
+    const btn = document.getElementById('btn-export');
+    btn.textContent = '処理中...お待ちください';
+    btn.disabled = true;
+    
+    try {
+        // Prepare segments based on frame skip
+        const skip = parseInt(document.getElementById('frame-skip').value);
+        const exportTimeline = [];
+        let accumulatedDelay = 0;
+        
+        for (let i = 0; i < currentSegments.length; i++) {
+            accumulatedDelay += currentSegments[i].delayCs;
+            if ((i + 1) % skip === 0 || i === currentSegments.length - 1) {
+                if (accumulatedDelay > 0) {
+                    const seg = Object.assign({}, currentSegments[i]);
+                    seg.delayCs = accumulatedDelay;
+                    exportTimeline.push(seg);
+                    accumulatedDelay = 0;
+                }
+            }
+        }
+
+        const bgTrans = document.getElementById('transparent-bg').checked;
+        const width = currentCanvasWidth;
+        const height = currentCanvasHeight;
+        
+        // Render all frames
+        const framesImageData = [];
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = width; offCanvas.height = height;
+        const offCtx = offCanvas.getContext('2d', {willReadFrequently: true});
+        
+        for (let seg of exportTimeline) {
+            drawComposedFrame(offCtx, seg, bgTrans);
+            framesImageData.push(offCtx.getImageData(0, 0, width, height));
+        }
+
+        // Generate Palette (Global for stable appearance)
+        const maxColors = parseInt(document.getElementById('color-limit').value);
+        const palette = generatePalette(framesImageData, maxColors);
+        const ditherMode = document.getElementById('dithering').value;
+        
+        let pow2 = 2;
+        while (pow2 < palette.length) {
+            pow2 *= 2;
+        }
+        if (pow2 > 256) pow2 = 256;
+        
+        const outputPalette = new Array(pow2).fill(0);
+        let pi = 0;
+        for(let p of palette) {
+            outputPalette[pi++] = (p[0] << 16) | (p[1] << 8) | p[2];
+        }
+
+        // Encode with omggif
+        const buf = new Uint8Array(width * height * exportTimeline.length + 1024); 
+        const gifWriter = new GifWriter(buf, width, height, { loop: 0, palette: outputPalette });
+        
+        let prevIndexed = null;
+        
+        for (let i = 0; i < exportTimeline.length; i++) {
+            const indexed = mapToPalette(framesImageData[i], palette, ditherMode);
+            const delayCs = exportTimeline[i].delayCs;
+            
+            let x0 = width, y0 = height, x1 = -1, y1 = -1;
+            const originalIndexed = new Uint8Array(indexed);
+            
+            if (!bgTrans && prevIndexed) {
+                // DIFFERENTIAL ENCODING for Solid Background: 
+                // Compare with previous frame, find changed bounding box, set identical pixels to transparent (index 0).
+                let hasChange = false;
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        const idx = y * width + x;
+                        if (indexed[idx] !== prevIndexed[idx]) {
+                            if (x < x0) x0 = x;
+                            if (x > x1) x1 = x;
+                            if (y < y0) y0 = y;
+                            if (y > y1) y1 = y;
+                            hasChange = true;
+                        } else {
+                            indexed[idx] = 0; // Transparent
+                        }
+                    }
+                }
+                if (!hasChange) { x0=0; y0=0; x1=0; y1=0; indexed[0]=0; }
+            } else {
+                // OPACITY BOUNDING BOX for Transparent Background (Or first frame with Solid Background)
+                // Find bounding box of all non-transparent pixels (index != 0).
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        if (indexed[y * width + x] !== 0) {
+                            if (x < x0) x0 = x;
+                            if (x > x1) x1 = x;
+                            if (y < y0) y0 = y;
+                            if (y > y1) y1 = y;
+                        }
+                    }
+                }
+                if (x1 < 0) { x0=0; y0=0; x1=0; y1=0; indexed[0]=0; }
+            }
+            
+            prevIndexed = originalIndexed; // Save unmodified for next frame's comparison
+            
+            const w = x1 - x0 + 1;
+            const h = y1 - y0 + 1;
+            const cropped = new Uint8Array(w * h);
+            for (let cy = 0; cy < h; cy++) {
+                for (let cx = 0; cx < w; cx++) {
+                    cropped[cy * w + cx] = indexed[(y0 + cy) * width + (x0 + cx)];
+                }
+            }
+
+            gifWriter.addFrame(x0, y0, w, h, cropped, { 
+                delay: delayCs, 
+                transparent: 0,
+                disposal: bgTrans || i === 0 ? 2 : 1 // 1: Do not dispose (for diffs), 2: Restore to bg (for transparent bg trails)
+            });
+        }
+
+        const outBuf = buf.slice(0, gifWriter.end());
+        const blob = new Blob([outBuf], { type: 'image/gif' });
+        
+        // Download
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'merged.gif';
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        const sizeMb = (blob.size / (1024*1024)).toFixed(2);
+        document.getElementById('export-info').innerText = `✅ 出力完了: ${sizeMb} MB`;
+        
+    } catch(err) {
+        console.error(err);
+        alert('出力中にエラーが発生しました。\n' + err.message);
+    } finally {
+        btn.textContent = '合成GIFを書き出す';
+        btn.disabled = false;
+    }
+}
+
+// Main Logic Initialization
+document.addEventListener('DOMContentLoaded', () => {
+    elFileA.addEventListener('change', (e) => handleFileSelect(e, true));
+    elFileB.addEventListener('change', (e) => handleFileSelect(e, false));
+});
+</script>
+
+</body>
+</html>

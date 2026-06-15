@@ -1,0 +1,4 @@
+targetRuleId,preferWeakness,preferLowHpEnemy,preferLowDefEnemy,preferLowHpAlly,randomWeight,note
+normal_enemy,0,10,0,0,40,ややランダム
+weakpoint_enemy,40,15,0,0,20,弱点を狙う
+brute_force,0,30,20,0,30,倒しやすい相手を狙う
