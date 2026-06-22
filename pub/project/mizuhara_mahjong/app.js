@@ -9,11 +9,12 @@ const tileNames = {
 const suitColor = { m: "#bf2638", p: "#1b1f26", s: "#158057", z: "#202420", f: "#b98517" };
 const suitMark = { m: "萬", p: "●", s: "♣", z: "", f: "✿" };
 
+const INITIAL_SCORE = 25000;
 const players = [
-  { name: "水原一彌", wind: "東", img: "p0", score: 25000, quote: "標準形から崩さず、勝ち筋だけ拾う。" },
-  { name: "水原一埜", wind: "南", img: "p1", score: 25000, quote: "白が多いなら、白に聞けばいいじゃない。" },
-  { name: "夕畑目ななよ", wind: "西", img: "p2", score: 25000, quote: "花牌の気配、卓の外側まで見えています。" },
-  { name: "沖中真宵", wind: "北", img: "p3", score: 25000, quote: "九一二？ それ、もう一本道ですね。" }
+  { name: "水原一彌", wind: "東", img: "p0", score: INITIAL_SCORE, quote: "標準形から崩さず、勝ち筋だけ拾う。" },
+  { name: "水原一埜", wind: "南", img: "p1", score: INITIAL_SCORE, quote: "白が多いなら、白に聞けばいいじゃない。" },
+  { name: "夕畑目ななよ", wind: "西", img: "p2", score: INITIAL_SCORE, quote: "花牌の気配、卓の外側まで見えています。" },
+  { name: "沖中真宵", wind: "北", img: "p3", score: INITIAL_SCORE, quote: "九一二？ それ、もう一本道ですね。" }
 ];
 
 const presets = [
@@ -270,8 +271,17 @@ const implementedChineseFanIds = new Set([
 
 let state = {};
 let autoTimer = null;
-const roundNames = ["東一局", "東二局", "東三局", "東四局", "南一局", "南二局", "南三局", "南四局"];
+const roundNames = [
+  "東一局", "東二局", "東三局", "東四局",
+  "南一局", "南二局", "南三局", "南四局",
+  "西一局", "西二局", "西三局", "西四局",
+  "北一局", "北二局", "北三局", "北四局"
+];
 const matchState = { honba: 0, riichiPot: 0 };
+
+function roundName(roundIndex = state?.roundIndex || 0) {
+  return roundNames[Math.max(0, Math.min(roundNames.length - 1, roundIndex))] || "北四局";
+}
 
 const el = {
   seats: [0, 1, 2, 3].map((i) => document.getElementById(`seat${i}`)),
@@ -435,6 +445,7 @@ function startRound(settings = state.settings || presets[0].settings, presetId =
     pendingCall: null,
     pendingWin: null,
     pendingKan: null,
+    pendingAddedKan: null,
     scoreResult: null,
     autoPlay: keepAutoPlay,
     debug: keepDebug,
@@ -449,7 +460,7 @@ function startRound(settings = state.settings || presets[0].settings, presetId =
   for (let i = 0; i < 13; i += 1) {
     for (let player = 0; player < 4; player += 1) drawIntoHand(player, false);
   }
-  addLog(`${roundNames[state.roundIndex % roundNames.length]}、配牌完了。あなたのツモまで自動で進めます。`);
+  addLog(`${roundName()}、配牌完了。あなたのツモまで自動で進めます。`);
   drawHumanAuto();
 }
 
@@ -555,8 +566,9 @@ function autoHumanDecision() {
     return;
   }
   if (state.pendingKan) {
-    if (state.pendingKan.options.length && state.riichi[0]) {
-      chooseHumanKan(0);
+    const addedKanIndex = state.pendingKan.options.findIndex((option) => option.type === "小明カン");
+    if (addedKanIndex >= 0 || (state.pendingKan.options.length && state.riichi[0])) {
+      chooseHumanKan(addedKanIndex >= 0 ? addedKanIndex : 0);
     } else {
       state.pendingKan = null;
       state.phase = "discard";
@@ -566,10 +578,12 @@ function autoHumanDecision() {
     return;
   }
   if (state.turn !== 0 || state.phase !== "discard" || state.hands[0].length % 3 !== 2) return;
-  if (!state.riichi[0] && canRiichi(0) && Math.random() < 0.12) declareRiichi(0);
-  const discardIndex = state.riichi[0]
-    ? state.hands[0].findIndex((tile) => tile.id === state.drawnTileId)
-    : chooseCpuDiscard(state.hands[0], 0);
+  const declaredNow = !state.riichi[0] && canRiichi(0) && Math.random() < 0.12 && declareRiichi(0);
+  const discardIndex = declaredNow
+    ? chooseRiichiDiscardIndex(0)
+    : state.riichi[0]
+      ? state.hands[0].findIndex((tile) => tile.id === state.drawnTileId)
+      : chooseCpuDiscard(state.hands[0], 0);
   const discard = state.hands[0][discardIndex >= 0 ? discardIndex : chooseCpuDiscard(state.hands[0], 0)];
   addLog(`オート進行: ${label(discard)}を選択。`);
   discardHuman(discard.id);
@@ -588,13 +602,20 @@ function autoAdvance() {
     completeWin(cpuTsumoWin);
     return;
   }
-  if (!state.riichi[playerIndex] && canRiichi(playerIndex) && Math.random() < 0.16) {
-    declareRiichi(playerIndex);
+  const addedKan = addedKanOptions(playerIndex)[0];
+  if (addedKan) {
+    beginAddedKan(playerIndex, addedKan);
+    return;
   }
+  const declaredNow = !state.riichi[playerIndex] && canRiichi(playerIndex) && Math.random() < 0.16 && declareRiichi(playerIndex);
   if (state.riichi[playerIndex]) {
-    const discardIndex = state.hands[playerIndex].findIndex((tile) => tile.id === state.drawnTileId);
+    const discardIndex = declaredNow
+      ? chooseRiichiDiscardIndex(playerIndex)
+      : state.hands[playerIndex].findIndex((tile) => tile.id === state.drawnTileId);
     const discard = discardFrom(playerIndex, discardIndex >= 0 ? discardIndex : chooseCpuDiscard(state.hands[playerIndex], playerIndex));
-    addLog(`${players[playerIndex].name}はリーチ中。${label(discard)}をツモ切り。`);
+    addLog(declaredNow
+      ? `${players[playerIndex].name}が${label(discard)}をリーチ宣言牌として打牌。`
+      : `${players[playerIndex].name}はリーチ中。${label(discard)}をツモ切り。`);
     render();
     handleAfterDiscard(playerIndex, discard);
     return;
@@ -622,6 +643,11 @@ function discardFrom(playerIndex, tileIndex) {
 
 function discardHuman(tileId) {
   if (state.turn !== 0 || state.phase !== "discard" || state.hands[0].length % 3 !== 2) return;
+  if (state.riichiPendingDiscard[0] && !isTenpaiAfterDiscard(0, tileId)) {
+    addLog("リーチ後もテンパイを維持する牌を選んでください。");
+    render();
+    return;
+  }
   const index = state.hands[0].findIndex((tile) => tile.id === tileId);
   if (index < 0) return;
   state.pendingWin = null;
@@ -652,12 +678,7 @@ function handleAfterDiscard(discarder, tile) {
 
   const cpuCall = findCpuCall(discarder, tile);
   if (cpuCall) {
-    applyCall(cpuCall.player, discarder, tile, cpuCall.option);
-    addLog(`${players[cpuCall.player].name}が${label(tile)}を${cpuCall.option.type}。`);
-    state.turn = cpuCall.player;
-    state.phase = "auto";
-    render();
-    autoTimer = setTimeout(() => cpuDiscardAfterCall(cpuCall.player), 420);
+    resolveCpuCall(cpuCall.player, discarder, tile, cpuCall.option);
     return;
   }
 
@@ -689,6 +710,9 @@ function callOptionsFor(playerIndex, discarder, tile) {
   const hand = state.hands[playerIndex];
   const options = [];
   const same = hand.filter((item) => keyOf(item) === keyOf(tile));
+  if (same.length >= 3) {
+    options.push({ type: "大明カン", consume: same.slice(0, 3).map((item) => item.id), tiles: [tile, ...same.slice(0, 3)] });
+  }
   if (same.length >= 2) {
     options.push({ type: "ポン", consume: [same[0].id, same[1].id], tiles: [tile, same[0], same[1]] });
   }
@@ -730,7 +754,10 @@ function findCpuCall(discarder, tile) {
   for (let offset = 1; offset < 4; offset += 1) {
     const player = (discarder + offset) % 4;
     if (player === 0) continue;
-    const pon = callOptionsFor(player, discarder, tile).find((option) => option.type === "ポン");
+    const options = callOptionsFor(player, discarder, tile);
+    const openKan = options.find((option) => option.type === "大明カン");
+    if (openKan && shouldCpuCall(player, openKan)) return { player, option: openKan };
+    const pon = options.find((option) => option.type === "ポン");
     if (pon && shouldCpuCall(player, pon)) return { player, option: pon };
   }
   const chiPlayer = (discarder + 3) % 4;
@@ -750,14 +777,15 @@ function isValueHonorTile(tile, playerIndex) {
 }
 
 function cpuCallProbability(playerIndex, option) {
-  const base = option.type === "ポン" ? 0.28 : 0.18;
+  const isTripletCall = option.type === "ポン" || option.type === "大明カン";
+  const base = option.type === "ポン" ? 0.28 : option.type === "大明カン" ? 0.22 : 0.18;
   const calledTile = option.tiles[0];
   const handCounts = countMap(state.hands[playerIndex]);
   const specialPlan = cpuSpecialPlanProfile(state.hands[playerIndex], playerIndex);
   if (specialPlan.shanten <= 1) return 0;
   const closedReadiness = cpuClosedReadiness(playerIndex);
   if (closedReadiness === 0) return 0;
-  const valueHonorCall = option.type === "ポン" && isValueHonorTile(calledTile, playerIndex);
+  const valueHonorCall = isTripletCall && isValueHonorTile(calledTile, playerIndex);
 
   let probability = valueHonorCall ? 0.98 : base;
   const pairCandidates = Object.values(handCounts).filter((count) => count >= 2).length;
@@ -803,10 +831,22 @@ function cpuClosedReadiness(playerIndex) {
 }
 
 function cpuCallCreatesTenpai(playerIndex, option) {
-  const previousMelds = state.melds;
+  const previousMelds = state.melds[playerIndex];
   const remaining = state.hands[playerIndex].filter((tile) => !option.consume.includes(tile.id));
   try {
     state.melds[playerIndex] = [...previousMelds, { type: option.type, tiles: option.tiles }];
+    if (option.type === "大明カン") {
+      return allPrototypeTiles().some((draw) => {
+        const expanded = [...remaining, draw];
+        const checkedDiscards = new Set();
+        return expanded.some((tile, index) => {
+          const discardKey = keyOf(tile);
+          if (checkedDiscards.has(discardKey)) return false;
+          checkedDiscards.add(discardKey);
+          return isTenpaiTileSetForPlayer(playerIndex, expanded.filter((_, tileIndex) => tileIndex !== index));
+        });
+      });
+    }
     const checkedDiscards = new Set();
     return remaining.some((tile, index) => {
       const discardKey = keyOf(tile);
@@ -836,33 +876,81 @@ function applyCall(playerIndex, discarder, tile, option) {
     type: option.type,
     from: discarder,
     calledTileId: tile.id,
-    tiles: meldDisplayTiles(playerIndex, discarder, tile, option.tiles)
+    tiles: meldDisplayTiles(playerIndex, discarder, tile, option.tiles, option.type)
   });
   state.drawnTileId = null;
   state.riichiIppatsu = state.riichiIppatsu.map(() => false);
+  if (option.type === "大明カン") {
+    revealDoraPair();
+    return drawRinshanIntoHand(playerIndex, true);
+  }
+  return null;
 }
 
-function meldDisplayTiles(playerIndex, discarder, calledTile, tiles) {
-  const owned = sortTiles(tiles.filter((item) => item.id !== calledTile.id));
-  const relative = (discarder - playerIndex + 4) % 4;
-  if (relative === 3) return [calledTile, ...owned];
-  if (relative === 2) {
-    const copy = [...owned];
-    copy.splice(Math.min(1, copy.length), 0, calledTile);
-    return copy;
+function resolveCpuCall(playerIndex, discarder, tile, option) {
+  const drawn = applyCall(playerIndex, discarder, tile, option);
+  state.turn = playerIndex;
+  state.phase = "auto";
+  if (option.type === "大明カン") {
+    addLog(`${players[playerIndex].name}が${label(tile)}を大明カン。補充牌${drawn ? label(drawn) : "なし"}。`);
+    if (!drawn) {
+      endRoundByDraw();
+      return;
+    }
+    const win = { type: "ツモ", player: playerIndex, tile: drawn, rinshan: true, auto: true };
+    if (canWinNow(playerIndex, win)) {
+      completeWin(win);
+      return;
+    }
+  } else {
+    addLog(`${players[playerIndex].name}が${label(tile)}を${option.type}。`);
   }
-  return [...owned, calledTile];
+  render();
+  autoTimer = setTimeout(() => cpuDiscardAfterCall(playerIndex), 420);
+}
+
+function calledTileDisplayIndex(playerIndex, discarder, tileCount, randomValue = Math.random()) {
+  const relative = (discarder - playerIndex + 4) % 4;
+  if (relative === 3) return 0;
+  if (relative === 2) return tileCount === 4 && randomValue >= 0.5 ? 2 : 1;
+  return tileCount - 1;
+}
+
+function meldDisplayTiles(playerIndex, discarder, calledTile, tiles, type = "") {
+  const owned = sortTiles(tiles.filter((item) => item.id !== calledTile.id));
+  const tileCount = owned.length + 1;
+  const calledIndex = calledTileDisplayIndex(playerIndex, discarder, tileCount, type === "大明カン" ? Math.random() : 0);
+  const display = [...owned];
+  display.splice(calledIndex, 0, calledTile);
+  return display;
 }
 
 function chooseHumanCall(index) {
   if (!state.pendingCall) return;
   const option = state.pendingCall.options[Number(index)];
   if (!option) return;
-  applyCall(0, state.pendingCall.discarder, state.pendingCall.tile, option);
-  addLog(`あなたが${label(state.pendingCall.tile)}を${option.type}。捨てる牌を選んでください。`);
+  const calledTile = state.pendingCall.tile;
+  const drawn = applyCall(0, state.pendingCall.discarder, calledTile, option);
   state.pendingCall = null;
   state.turn = 0;
   state.phase = "discard";
+  if (option.type === "大明カン") {
+    addLog(`あなたが${label(calledTile)}を大明カン。補充牌${drawn ? label(drawn) : "なし"}。`);
+    if (!drawn) {
+      endRoundByDraw();
+      return;
+    }
+    const win = { type: "ツモ", player: 0, tile: drawn, rinshan: true };
+    if (canWinNow(0, win)) {
+      state.pendingWin = win;
+    } else {
+      queueHumanClosedKan("嶺上牌の後も暗カン可能です。候補を選んでください。");
+    }
+    render();
+    scheduleHumanAuto();
+    return;
+  }
+  addLog(`あなたが${label(calledTile)}を${option.type}。捨てる牌を選んでください。`);
   render();
 }
 
@@ -892,8 +980,23 @@ function closedKanOptions(playerIndex) {
     .map((tiles) => ({ type: "暗カン", consume: tiles.slice(0, 4).map((tile) => tile.id), tiles: tiles.slice(0, 4) }));
 }
 
+function addedKanOptions(playerIndex) {
+  const hand = state.hands[playerIndex];
+  return state.melds[playerIndex].flatMap((meld, meldIndex) => {
+    if (meld.type !== "ポン") return [];
+    const key = keyOf(meld.tiles[0]);
+    const tile = hand.find((item) => keyOf(item) === key);
+    if (!tile) return [];
+    return [{ type: "小明カン", consume: [tile.id], tiles: [...meld.tiles, tile], tile, meldIndex }];
+  });
+}
+
+function kanOptions(playerIndex) {
+  return [...closedKanOptions(playerIndex), ...addedKanOptions(playerIndex)];
+}
+
 function queueHumanClosedKan(message) {
-  const options = closedKanOptions(0);
+  const options = kanOptions(0);
   if (!options.length) return false;
   state.pendingKan = { player: 0, options };
   state.phase = "kan";
@@ -905,6 +1008,11 @@ function chooseHumanKan(index) {
   if (!state.pendingKan) return;
   const option = state.pendingKan.options[Number(index)];
   if (!option) return;
+  if (option.type === "小明カン") {
+    state.pendingKan = null;
+    beginAddedKan(0, option);
+    return;
+  }
   for (const tileId of option.consume) {
     const handIndex = state.hands[0].findIndex((tile) => tile.id === tileId);
     if (handIndex >= 0) state.hands[0].splice(handIndex, 1);
@@ -925,6 +1033,91 @@ function chooseHumanKan(index) {
   }
   render();
   scheduleHumanAuto();
+}
+
+function beginAddedKan(playerIndex, option) {
+  state.pendingKan = null;
+  state.pendingAddedKan = { player: playerIndex, option, nextOffset: 1 };
+  state.riichiIppatsu = state.riichiIppatsu.map(() => false);
+  continueAddedKanRobCheck();
+}
+
+function continueAddedKanRobCheck() {
+  const pending = state.pendingAddedKan;
+  if (!pending) return;
+  while (pending.nextOffset < 4) {
+    const robber = (pending.player + pending.nextOffset) % 4;
+    pending.nextOffset += 1;
+    const win = { type: "ロン", player: robber, discarder: pending.player, tile: pending.option.tile, chankan: true, auto: robber !== 0 };
+    if (!canWinNow(robber, win)) continue;
+    if (robber === 0) {
+      state.pendingWin = win;
+      state.phase = "win";
+      addLog(`${players[pending.player].name}の${label(pending.option.tile)}の小明カンを槍槓できます。`);
+      render();
+      scheduleHumanAuto();
+    } else {
+      state.pendingAddedKan = null;
+      completeWin(win);
+    }
+    return;
+  }
+  finalizeAddedKan();
+}
+
+function finalizeAddedKan() {
+  const pending = state.pendingAddedKan;
+  if (!pending) return;
+  const { player: playerIndex, option } = pending;
+  const meld = state.melds[playerIndex][option.meldIndex];
+  const handIndex = state.hands[playerIndex].findIndex((tile) => tile.id === option.tile.id);
+  if (!meld || meld.type !== "ポン" || handIndex < 0 || keyOf(meld.tiles[0]) !== keyOf(option.tile)) {
+    state.pendingAddedKan = null;
+    state.phase = playerIndex === 0 ? "discard" : "auto";
+    render();
+    return;
+  }
+  const [addedTile] = state.hands[playerIndex].splice(handIndex, 1);
+  meld.type = "小明カン";
+  meld.tiles.push(addedTile);
+  meld.addedTileId = addedTile.id;
+  state.pendingAddedKan = null;
+  state.callMade = true;
+  state.turn = playerIndex;
+  revealDoraPair();
+  const drawn = drawRinshanIntoHand(playerIndex, true);
+  addLog(`${players[playerIndex].name}が${label(addedTile)}を小明カン。補充牌${drawn ? label(drawn) : "なし"}。`);
+  if (!drawn) {
+    endRoundByDraw();
+    return;
+  }
+  const win = { type: "ツモ", player: playerIndex, tile: drawn, rinshan: true, auto: playerIndex !== 0 };
+  if (canWinNow(playerIndex, win)) {
+    if (playerIndex === 0) {
+      state.pendingWin = win;
+      state.phase = "discard";
+      render();
+      scheduleHumanAuto();
+    } else {
+      completeWin(win);
+    }
+    return;
+  }
+  if (playerIndex === 0) {
+    state.phase = "discard";
+    queueHumanClosedKan("嶺上牌の後もカン可能です。候補を選んでください。");
+    render();
+    scheduleHumanAuto();
+    return;
+  }
+  state.phase = "auto";
+  const nextAddedKan = addedKanOptions(playerIndex)[0];
+  if (nextAddedKan) {
+    beginAddedKan(playerIndex, nextAddedKan);
+    return;
+  }
+  render();
+  autoTimer = setTimeout(() => cpuDiscardAfterCall(playerIndex), 420);
 }
 
 function allPrototypeTiles() {
@@ -969,14 +1162,102 @@ function makeDebugTiles(keys, serialBase = Date.now()) {
   return keys.map((key, index) => makeTile(key[0], Number(key.slice(1)), serialBase + index));
 }
 
+function makeDebugCalledMeld(playerIndex, meldIndex, definition) {
+  const tiles = makeDebugTiles(definition.codes, 860000 + playerIndex * 1000 + meldIndex * 10);
+  const calledTile = tiles[0];
+  const discarder = (playerIndex + definition.relative) % 4;
+  const isAddedKan = definition.type === "小明カン";
+  const baseTiles = isAddedKan ? tiles.slice(0, 3) : tiles;
+  const addedTile = isAddedKan ? tiles[3] : null;
+  return {
+    type: definition.type,
+    from: discarder,
+    calledTileId: calledTile.id,
+    addedTileId: addedTile?.id,
+    tiles: [...meldDisplayTiles(playerIndex, discarder, calledTile, baseTiles, definition.type), ...(addedTile ? [addedTile] : [])]
+  };
+}
+
+function setupFullMeldDisplayScenario() {
+  clearTimeout(autoTimer);
+  const definitions = [
+    { type: "チー", relative: 1, codes: ["m1", "m2", "m3"] },
+    { type: "ポン", relative: 3, codes: ["p5", "p5", "p5"] },
+    { type: "ポン", relative: 2, codes: ["s7", "s7", "s7"] },
+    { type: "大明カン", relative: 2, codes: ["z5", "z5", "z5", "z5"] }
+  ];
+  state.autoPlay = false;
+  state.hands = [0, 1, 2, 3].map((seat) => makeDebugTiles(["z1", "z1"], 870000 + seat * 100));
+  state.melds = [0, 1, 2, 3].map((playerIndex) => definitions.map((definition, meldIndex) => (
+    makeDebugCalledMeld(playerIndex, meldIndex, definition)
+  )));
+  state.rivers = [[], [], [], []];
+  state.flowers = [[], [], [], []];
+  state.riichi = [false, false, false, false];
+  state.riichiIppatsu = [false, false, false, false];
+  state.riichiPendingDiscard = [false, false, false, false];
+  state.pendingCall = null;
+  state.pendingKan = null;
+  state.pendingAddedKan = null;
+  state.pendingWin = null;
+  state.scoreResult = null;
+  state.drawnTileId = null;
+  state.turn = 0;
+  state.phase = "display";
+  state.debugMode = "view";
+  state.selectedDebugSeat = null;
+  state.selectedDebugTile = null;
+  addLog("表示確認: 4人全員を4副露にしました。通常牌と横牌の基準辺を確認できます。");
+  render();
+}
+
+function setupAddedKanDisplayScenario() {
+  clearTimeout(autoTimer);
+  const definitions = [
+    { type: "小明カン", relative: 1, codes: ["p4", "p4", "p4", "p4"] },
+    { type: "ポン", relative: 3, codes: ["p7", "p7", "p7"] },
+    { type: "小明カン", relative: 2, codes: ["s5", "s5", "s5", "s5"] },
+    { type: "チー", relative: 1, codes: ["m1", "m2", "m3"] }
+  ];
+  state.autoPlay = false;
+  state.hands = [0, 1, 2, 3].map((seat) => makeDebugTiles(["z1", "z1"], 875000 + seat * 100));
+  state.melds = [0, 1, 2, 3].map((playerIndex) => definitions.map((definition, meldIndex) => (
+    makeDebugCalledMeld(playerIndex, meldIndex, definition)
+  )));
+  state.rivers = [[], [], [], []];
+  state.flowers = [[], [], [], []];
+  state.riichi = [false, false, false, false];
+  state.riichiIppatsu = [false, false, false, false];
+  state.riichiPendingDiscard = [false, false, false, false];
+  state.pendingCall = null;
+  state.pendingKan = null;
+  state.pendingAddedKan = null;
+  state.pendingWin = null;
+  state.scoreResult = null;
+  state.drawnTileId = null;
+  state.turn = 0;
+  state.phase = "display";
+  state.debugMode = "view";
+  state.selectedDebugSeat = null;
+  state.selectedDebugTile = null;
+  addLog("表示確認: 4人全員の一列目と二列目に小明カンを配置しました。");
+  render();
+}
+
 function setupChankanScenario() {
   clearTimeout(autoTimer);
+  const generated = makeWallState({ ...state.settings, flowers: false });
+  state.wall = generated.liveWall;
+  state.deadWall = generated.deadWall;
+  state.dora = [];
+  state.uraDora = [];
+  revealDoraPair();
   state.hands[0] = makeDebugTiles(["m2", "m3", "m5", "m6", "m7", "p2", "p3", "p4", "s3", "s4", "s5", "z5", "z5"], 81000);
   state.hands[1] = makeDebugTiles(["m4", "p1", "p9", "s1", "s9", "z1", "z2", "z3", "z4", "z5", "z6"], 82000);
   state.hands[2] = makeDebugTiles(["m1", "m9", "p1", "p9", "s1", "s9", "z1", "z2", "z3", "z4", "z5", "z6", "z7"], 83000);
   state.hands[3] = makeDebugTiles(["m1", "m9", "p1", "p9", "s1", "s9", "z1", "z2", "z3", "z4", "z5", "z6", "z7"], 84000);
   const ponTiles = makeDebugTiles(["m4", "m4", "m4"], 85000);
-  const addedTile = makeTile("m", 4, 86000);
+  const addedTile = state.hands[1].find((tile) => keyOf(tile) === "m4");
   state.melds = [[], [{ type: "ポン", from: 0, calledTileId: ponTiles[0].id, tiles: ponTiles }], [], []];
   state.rivers = [[], [], [], []];
   state.flowers = [[], [], [], []];
@@ -985,12 +1266,60 @@ function setupChankanScenario() {
   state.riichiPendingDiscard = [false, false, false, false];
   state.pendingCall = null;
   state.pendingKan = null;
+  state.pendingAddedKan = null;
   state.scoreResult = null;
   state.drawnTileId = null;
   state.turn = 1;
-  state.phase = "win";
-  state.pendingWin = { type: "ロン", player: 0, discarder: 1, tile: addedTile, chankan: true };
-  addLog(`${players[1].name}が${label(addedTile)}を加カンしようとしています。槍槓でロンできます。`);
+  state.phase = "auto";
+  state.pendingWin = null;
+  beginAddedKan(1, { type: "小明カン", consume: [addedTile.id], tiles: [...ponTiles, addedTile], tile: addedTile, meldIndex: 0 });
+}
+
+function setupAddedKanFlowScenario() {
+  clearTimeout(autoTimer);
+  const generated = makeWallState({ ...state.settings, flowers: false });
+  const ponTiles = makeDebugTiles(["p5", "p5", "p5"], 880000);
+  const hand = makeDebugTiles(["m1", "m2", "m3", "m4", "m5", "m6", "s2", "s3", "s4", "z1", "p5"], 881000);
+  state.wall = generated.liveWall;
+  state.deadWall = generated.deadWall;
+  state.dora = [];
+  state.uraDora = [];
+  revealDoraPair();
+  state.autoPlay = false;
+  state.hands = [hand, makeDebugTiles(["m1", "m9", "p1", "p9", "s1", "s9", "z1", "z2", "z3", "z4", "z5", "z6", "z7"], 882000), [], []];
+  state.melds = [[{ type: "ポン", from: 1, calledTileId: ponTiles[0].id, tiles: meldDisplayTiles(0, 1, ponTiles[0], ponTiles, "ポン") }], [], [], []];
+  state.rivers = [[], [], [], []];
+  state.flowers = [[], [], [], []];
+  state.riichi = [false, false, false, false];
+  state.riichiIppatsu = [false, false, false, false];
+  state.riichiPendingDiscard = [false, false, false, false];
+  state.pendingCall = null;
+  state.pendingKan = null;
+  state.pendingAddedKan = null;
+  state.pendingWin = null;
+  state.scoreResult = null;
+  state.drawnTileId = hand[hand.length - 1].id;
+  state.turn = 0;
+  state.phase = "discard";
+  queueHumanClosedKan("五筒をポン済みです。小明カンを選んで進行を確認できます。");
+  addLog("状況再現: 小明カン成立後、カンドラ追加・嶺上ツモ・打牌選択へ進みます。");
+  render();
+}
+
+function setupMatchEndDisplayScenario() {
+  clearTimeout(autoTimer);
+  state.autoPlay = false;
+  state.roundIndex = 7;
+  matchState.honba = 2;
+  matchState.riichiPot = 1;
+  [30500, 27000, 23000, 18500].forEach((score, index) => { players[index].score = score; });
+  state.pendingCall = null;
+  state.pendingKan = null;
+  state.pendingAddedKan = null;
+  state.pendingWin = null;
+  state.phase = "ended";
+  state.scoreResult = matchEndResult("南四局終了時に首位が30,000点以上");
+  addLog("状況再現: 南四局終了後の最終得点と順位を表示しました。");
   render();
 }
 
@@ -1305,12 +1634,22 @@ function isTenpaiNow(playerIndex) {
   return allPrototypeTiles().some((draw) => isWinningHandWithTiles(playerIndex, [...state.hands[playerIndex], draw]));
 }
 
+function riichiDiscardCandidates(playerIndex) {
+  return state.hands[playerIndex].filter((tile) => isTenpaiAfterDiscard(playerIndex, tile.id));
+}
+
+function chooseRiichiDiscardIndex(playerIndex) {
+  const candidates = riichiDiscardCandidates(playerIndex);
+  if (!candidates.length) return -1;
+  return chooseCpuDiscard(state.hands[playerIndex], playerIndex, new Set(candidates.map((tile) => tile.id)));
+}
+
 function canRiichi(playerIndex) {
   return !state.riichi[playerIndex] &&
     players[playerIndex].score >= 1000 &&
     state.melds[playerIndex].length === 0 &&
     state.hands[playerIndex].length % 3 === 2 &&
-    state.hands[playerIndex].some((tile) => isTenpaiAfterDiscard(playerIndex, tile.id));
+    riichiDiscardCandidates(playerIndex).length > 0;
 }
 
 function declareRiichi(playerIndex) {
@@ -1333,6 +1672,7 @@ function completeWin(win) {
     render();
     return;
   }
+  if (win.chankan) state.pendingAddedKan = null;
   state.pendingWin = null;
   state.phase = "scoring";
   state.scoreResult = calculateScore(win);
@@ -1355,6 +1695,10 @@ function skipPendingWin() {
     return;
   }
   addLog(`${label(skipped.tile)}のロンを見逃しました。`);
+  if (skipped.chankan && state.pendingAddedKan) {
+    continueAddedKanRobCheck();
+    return;
+  }
   continueAfterRonSkip(skipped.discarder, skipped.tile);
 }
 
@@ -1369,12 +1713,7 @@ function continueAfterRonSkip(discarder, tile) {
   }
   const cpuCall = findCpuCall(discarder, tile);
   if (cpuCall) {
-    applyCall(cpuCall.player, discarder, tile, cpuCall.option);
-    addLog(`${players[cpuCall.player].name}が${label(tile)}を${cpuCall.option.type}。`);
-    state.turn = cpuCall.player;
-    state.phase = "auto";
-    render();
-    autoTimer = setTimeout(() => cpuDiscardAfterCall(cpuCall.player), 420);
+    resolveCpuCall(cpuCall.player, discarder, tile, cpuCall.option);
     return;
   }
   advanceToNextDraw(discarder);
@@ -1512,6 +1851,7 @@ function calculateHybridScore(win, displayType, yaku, breakdown, doraBreakdown) 
     rows,
     movements,
     nextHonba: winner === dealer ? matchState.honba + 1 : 0,
+    dealerContinues: winner === dealer,
     clearRiichiPot: true
   };
 }
@@ -1560,6 +1900,7 @@ function calculateScore(win) {
       rows,
       movements,
       nextHonba: winner === dealer ? matchState.honba + 1 : 0,
+      dealerContinues: winner === dealer,
       clearRiichiPot: true
     };
   }
@@ -1597,6 +1938,7 @@ function calculateScore(win) {
     rows,
     movements,
     nextHonba: winner === dealer ? matchState.honba + 1 : 0,
+    dealerContinues: winner === dealer,
     clearRiichiPot: true
   };
 }
@@ -1669,11 +2011,16 @@ function openAwareHan(playerIndex, closedHan, openHan = closedHan) {
 }
 
 function roundWindValue() {
-  return Math.floor((state.roundIndex || 0) / 4) === 0 ? 1 : 2;
+  return Math.min(4, Math.floor((state.roundIndex || 0) / 4) + 1);
 }
 
 function seatWindValue(playerIndex) {
-  return { 東: 1, 南: 2, 西: 3, 北: 4 }[players[playerIndex]?.wind] || 1;
+  const dealer = (state.roundIndex || 0) % 4;
+  return ((playerIndex - dealer + 4) % 4) + 1;
+}
+
+function seatWindName(playerIndex) {
+  return ["東", "南", "西", "北"][seatWindValue(playerIndex) - 1];
 }
 
 function isValuePair(key, playerIndex = 0) {
@@ -1713,6 +2060,8 @@ function limitBase(base, han) {
 function calculateDrawScore() {
   const tenpai = [0, 1, 2, 3].map((player) => isTenpaiNow(player));
   const tenpaiCount = tenpai.filter(Boolean).length;
+  const dealer = state.roundIndex % 4;
+  const dealerContinues = tenpai[dealer];
   const movements = [0, 0, 0, 0];
   const rows = [];
   if (tenpaiCount > 0 && tenpaiCount < 4) {
@@ -1725,6 +2074,9 @@ function calculateDrawScore() {
   } else {
     rows.push(tenpaiCount === 4 ? "全員聴牌: 点数移動なし" : "全員ノーテン: 点数移動なし");
   }
+  rows.push(dealerContinues
+    ? `親 ${players[dealer].name}が聴牌: ${roundName()}のまま連荘します`
+    : `親 ${players[dealer].name}がノーテン: 親番を次へ送ります`);
   return {
     type: "流局",
     tenpai,
@@ -1735,27 +2087,97 @@ function calculateDrawScore() {
     rows,
     movements,
     nextHonba: matchState.honba + 1,
+    dealerContinues,
     clearRiichiPot: false
   };
 }
 
+function roundProgressionDecision(roundIndex, dealerContinues, scores = players.map((player) => player.score)) {
+  const nextRound = dealerContinues ? roundIndex : roundIndex + 1;
+  const topScore = Math.max(...scores);
+  const matchEnds = !dealerContinues && (nextRound >= roundNames.length || (nextRound >= 8 && topScore >= 30000));
+  return {
+    nextRound,
+    matchEnds,
+    entersWest: !matchEnds && roundIndex === 7 && nextRound === 8,
+    entersNorth: !matchEnds && roundIndex === 11 && nextRound === 12
+  };
+}
+
+function matchEndResult(reason) {
+  const leader = players.reduce((best, player, index) => player.score > players[best].score ? index : best, 0);
+  const rows = [];
+  if (matchState.riichiPot > 0) {
+    const pot = matchState.riichiPot * 1000;
+    players[leader].score += pot;
+    rows.push(`残った供託リーチ棒 ${pot.toLocaleString()}点を首位の${players[leader].name}へ加算`);
+    matchState.riichiPot = 0;
+  }
+  const ranking = players
+    .map((player, index) => ({ index, score: player.score }))
+    .sort((a, b) => b.score - a.score || a.index - b.index);
+  return {
+    type: "終局",
+    matchEnd: true,
+    reason,
+    han: 0,
+    fu: 0,
+    honba: matchState.honba,
+    riichiPot: 0,
+    finalRanking: ranking.map((entry, index) => ({
+      rank: index + 1,
+      player: entry.index,
+      score: entry.score,
+      delta: entry.score - INITIAL_SCORE
+    })),
+    rows,
+    movements: [0, 0, 0, 0],
+    limitName: "半荘終了"
+  };
+}
+
+function resetMatch() {
+  players.forEach((player) => { player.score = INITIAL_SCORE; });
+  matchState.honba = 0;
+  matchState.riichiPot = 0;
+  state.scoreResult = null;
+  startRound(state.settings, state.presetId, 0);
+}
+
 function confirmScore() {
   if (!state.scoreResult) return;
+  if (state.scoreResult.matchEnd) {
+    resetMatch();
+    return;
+  }
   state.scoreResult.movements.forEach((delta, player) => {
     players[player].score += delta;
   });
   matchState.honba = state.scoreResult.nextHonba;
   if (state.scoreResult.clearRiichiPot) matchState.riichiPot = 0;
-  const nextRound = state.roundIndex + 1;
+  const progression = roundProgressionDecision(state.roundIndex, !!state.scoreResult.dealerContinues);
+  if (progression.matchEnds) {
+    const reason = progression.nextRound >= roundNames.length
+      ? "北四局終了"
+      : `${roundName(state.roundIndex)}終了時に首位が30,000点以上`;
+    state.scoreResult = matchEndResult(reason);
+    state.phase = "ended";
+    addLog(`${reason}のため終局しました。`);
+    render();
+    return;
+  }
+  if (progression.entersWest) addLog("南四局終了時に30,000点到達者がいないため、西入します。");
+  if (progression.entersNorth) addLog("西四局終了時に30,000点到達者がいないため、北入します。");
   state.scoreResult = null;
-  startRound(state.settings, state.presetId, nextRound);
+  startRound(state.settings, state.presetId, progression.nextRound);
 }
 
-function chooseCpuDiscard(hand, playerIndex = state.turn) {
+function chooseCpuDiscard(hand, playerIndex = state.turn, eligibleIds = null) {
   let bestIndex = 0;
   let bestScore = -Infinity;
   const meldPenaltyWeight = completedMeldPenaltyWeight(hand);
   hand.forEach((tile, index) => {
+    if (eligibleIds && !eligibleIds.has(tile.id)) return;
     const remaining = hand.filter((_, tileIndex) => tileIndex !== index);
     let score = cpuHandPlanScore(remaining, tile, playerIndex);
     score -= completedMeldLoss(hand, tile) * meldPenaltyWeight;
@@ -2573,9 +2995,14 @@ function yakuList(tiles, settings, flowers, playerIndex = 0, context = {}) {
     { key: "z7", name: "中" }
   ].map((dragon) => ({ ...dragon, count: interpretedTripletCount(playerIndex, interpretedShape, dragon.key) }))
     .filter((dragon) => dragon.count > 0);
+  const dragonKeys = ["z5", "z6", "z7"];
+  const dragonTripletKeys = new Set(dragonTriplets.map((dragon) => dragon.key));
   const windTripletKeys = ["z1", "z2", "z3", "z4"].filter((key) => hasInterpretedTriplet(playerIndex, interpretedShape, key));
   const windPair = ["z1", "z2", "z3", "z4"].includes(interpretedShape?.pair) ? interpretedShape.pair : null;
-  const dragonPair = ["z5", "z6", "z7"].includes(interpretedShape?.pair) ? interpretedShape.pair : null;
+  const dragonPair = dragonKeys.includes(interpretedShape?.pair) ? interpretedShape.pair : null;
+  const daisangen = dragonKeys.every((key) => dragonTripletKeys.has(key));
+  const shousangen = dragonTripletKeys.size === 2 && !!dragonPair && !dragonTripletKeys.has(dragonPair) &&
+    dragonKeys.every((key) => dragonTripletKeys.has(key) || key === dragonPair);
   const daichisei = isDaichisei(playerIndex, tiles);
   const suuankou = standardShape && isSuuankou(playerIndex, standardShape, context.win);
   const pureChuuren = isPureChuuren(playerIndex, allTiles, context.win);
@@ -2603,7 +3030,7 @@ function yakuList(tiles, settings, flowers, playerIndex = 0, context = {}) {
   else if (standardShape && isChantaShape(playerIndex, standardShape, false)) yaku.push({ id: "chanta", name: "混全帯么九", point: openAwareHan(playerIndex, 2, 1), note: "全ての面子と雀頭に么九牌を含む。" });
   if (suuankou && isTankiCompletion(standardShape, context.win)) yaku.push({ id: "suuankou_tanki", name: "四暗刻単騎", point: 26, note: "4暗刻を完成させ、雀頭の単騎待ちで和了。" });
   else if (suuankou) yaku.push({ id: "suuankou", name: "四暗刻", point: 13, note: "暗刻または暗カンが4組。シャボ待ちロンの和了牌側は明刻扱い。" });
-  if (dragonTriplets.length === 3) yaku.push({ id: "daisangen", name: "大三元", point: 13, note: "白・發・中をすべて刻子でそろえた役満。" });
+  if (daisangen) yaku.push({ id: "daisangen", name: "大三元", point: 13, note: "白・發・中をすべて刻子でそろえた役満。" });
   if (windTripletKeys.length === 4) yaku.push({ id: "daisuushii", name: "大四喜", point: 26, note: "東・南・西・北すべてを刻子でそろえたダブル役満。" });
   else if (windTripletKeys.length === 3 && windPair) yaku.push({ id: "shousuushii", name: "小四喜", point: 13, note: "風牌3刻子と風牌雀頭。" });
   if (daichisei) yaku.push({ id: "daichisei", name: "大七星", point: 26, note: "7種の字牌をすべて対子にしたダブル役満。" });
@@ -2614,7 +3041,7 @@ function yakuList(tiles, settings, flowers, playerIndex = 0, context = {}) {
   else if (kanCount(playerIndex) >= 3) yaku.push({ id: "sankantsu", name: "三槓子", point: 2, note: "カンが3組。" });
   if (pureChuuren) yaku.push({ id: "junsei_chuuren", name: "純正九蓮宝燈", point: 26, note: "1112345678999の9面待ちから和了。" });
   else if (isChuuren(playerIndex, allTiles)) yaku.push({ id: "chuuren", name: "九蓮宝燈", point: 13, note: "門前清一色で1112345678999+同色1枚。" });
-  if (dragonTriplets.length === 2 && dragonPair) yaku.push({ id: "shousangen", name: "小三元", point: 2, note: "三元牌2刻子と三元牌の雀頭。" });
+  if (shousangen) yaku.push({ id: "shousangen", name: "小三元", point: 2, note: "白・發・中のうち2種類を刻子、残る1種類を雀頭にする。" });
   if (!standardShape && isChiitoiForPlayer(playerIndex, tiles) && !daichisei) yaku.push({ id: "chiitoi", name: "七対子", point: 2, note: "7組の対子。" });
   if (pureKokushi) yaku.push({ id: "kokushi_13men", name: "国士無双十三面待ち", point: 26, note: "么九牌13種を1枚ずつ持つ13面待ちから和了。" });
   else if (isKokushiForPlayer(playerIndex, tiles)) yaku.push({ id: "kokushi", name: "国士無双", point: 13, note: "么九牌13種。" });
@@ -2628,8 +3055,8 @@ function yakuList(tiles, settings, flowers, playerIndex = 0, context = {}) {
       yaku.push({ id: `yakuhai_${dragon.key}`, name: `役牌 ${dragon.name}`, point: 1, note: roleCount > 1 ? `${dragon.name}の刻子${index + 1}組目。` : `${dragon.name}${allCounts[dragon.key]}枚。` });
     }
   });
-  if (hasInterpretedTriplet(playerIndex, standardShape, roundWindKey)) yaku.push({ id: "yakuhai_bakaze", name: `役牌 場風${tileNames.z[roundWindValue()]}`, point: 1, note: `${roundNames[state.roundIndex % roundNames.length]}の場風牌。` });
-  if (hasInterpretedTriplet(playerIndex, standardShape, seatWindKey)) yaku.push({ id: "yakuhai_jikaze", name: `役牌 自風${players[playerIndex].wind}`, point: 1, note: `${players[playerIndex].name}の自風牌。` });
+  if (hasInterpretedTriplet(playerIndex, standardShape, roundWindKey)) yaku.push({ id: "yakuhai_bakaze", name: `役牌 場風${tileNames.z[roundWindValue()]}`, point: 1, note: `${roundName()}の場風牌。` });
+  if (hasInterpretedTriplet(playerIndex, standardShape, seatWindKey)) yaku.push({ id: "yakuhai_jikaze", name: `役牌 自風${seatWindName(playerIndex)}`, point: 1, note: `${players[playerIndex].name}の自風牌。` });
   if (settings.whiteStorm && whiteCount >= 8) yaku.push({ id: "white_horizon", source: "china", name: "白色地平線", point: 88, note: "白が8枚以上ある88点役。白刻子の役牌翻は別途加算。" });
   if (flowers.length > 0) yaku.push({ name: "花牌", point: flowers.length, note: `${flowers.length}枚抜き。` });
   if (winningShape) {
@@ -3262,6 +3689,32 @@ function debugCpuDiscard(codes, options = {}) {
   }
 }
 
+function debugRiichiDiscard(codes, options = {}) {
+  const previousSettings = state.settings;
+  const previousHand = state.hands[0];
+  const previousMelds = state.melds[0];
+  const previousDrawnTileId = state.drawnTileId;
+  try {
+    state.settings = { ...state.settings, cosmic: !!options.cosmic, china: !!options.china };
+    state.hands[0] = codes.map((code, index) => makeTile(code[0], Number(code.slice(1)), 965000 + index));
+    state.melds[0] = [];
+    state.drawnTileId = state.hands[0][options.drawnIndex ?? state.hands[0].length - 1]?.id || null;
+    const candidates = riichiDiscardCandidates(0);
+    const selectedIndex = chooseRiichiDiscardIndex(0);
+    const selected = state.hands[0][selectedIndex] || null;
+    return {
+      candidates: [...new Set(candidates.map(tileCode))],
+      selected: selected ? tileCode(selected) : null,
+      tenpaiAfterSelected: !!selected && isTenpaiAfterDiscard(0, selected.id)
+    };
+  } finally {
+    state.settings = previousSettings;
+    state.hands[0] = previousHand;
+    state.melds[0] = previousMelds;
+    state.drawnTileId = previousDrawnTileId;
+  }
+}
+
 function debugCpuCallProbability(handCodes, optionCodes, type, options = {}) {
   const previousSettings = state.settings;
   const previousHand = state.hands[0];
@@ -3303,7 +3756,73 @@ function debugClosedKanOptions(codes) {
   }
 }
 
-window.mizuharaMahjongDebug = { debugChinesePattern, debugCpuDiscard, debugCpuCallProbability, debugClosedKanOptions };
+function debugOpenKanRules() {
+  const layouts = [0, 1, 2, 3].map((playerIndex) => ({
+    playerIndex,
+    ownFace: meldFaceFor(playerIndex, false),
+    calledFace: meldFaceFor(playerIndex, true),
+    kamicha: calledTileDisplayIndex(playerIndex, (playerIndex + 1) % 4, 4, 0),
+    oppositeLow: calledTileDisplayIndex(playerIndex, (playerIndex + 2) % 4, 4, 0),
+    oppositeHigh: calledTileDisplayIndex(playerIndex, (playerIndex + 2) % 4, 4, 1),
+    shimocha: calledTileDisplayIndex(playerIndex, (playerIndex + 3) % 4, 4, 0)
+  }));
+  const previous = {
+    hands: state.hands,
+    melds: state.melds,
+    rivers: state.rivers,
+    wall: state.wall,
+    deadWall: state.deadWall,
+    dora: state.dora,
+    uraDora: state.uraDora,
+    riichiPendingDiscard: state.riichiPendingDiscard,
+    riichiIppatsu: state.riichiIppatsu,
+    drawnTileId: state.drawnTileId,
+    callMade: state.callMade
+  };
+  try {
+    const generated = makeWallState({ ...state.settings, flowers: false, whiteStorm: false, whiteCount: 4 });
+    const calledTile = makeTile("m", 5, 991000);
+    state.hands = [
+      makeDebugTiles(["m5", "m5", "m5", "m1", "m2", "m3", "p1", "p2", "p3", "s1", "s2", "s3", "z1"], 992000),
+      [], [], []
+    ];
+    state.melds = [[], [], [], []];
+    state.rivers = [[], [calledTile], [], []];
+    state.wall = generated.liveWall;
+    state.deadWall = generated.deadWall;
+    state.dora = [];
+    state.uraDora = [];
+    state.riichiPendingDiscard = [false, false, false, false];
+    state.riichiIppatsu = [false, false, false, false];
+    state.drawnTileId = null;
+    state.callMade = false;
+    revealDoraPair();
+    const doraBefore = state.dora.length;
+    const wallBefore = state.wall.length;
+    const rinshanBefore = state.deadWall.rinshan.length;
+    const options = callOptionsFor(0, 1, calledTile);
+    const openKan = options.find((option) => option.type === "大明カン");
+    const drawn = openKan ? applyCall(0, 1, calledTile, openKan) : null;
+    const meld = state.melds[0][0];
+    return {
+      layouts,
+      optionTypes: options.map((option) => ({ type: option.type, consume: option.consume.length, tiles: option.tiles.length })),
+      handAfter: state.hands[0].length,
+      meldTiles: meld?.tiles.length || 0,
+      calledIndex: meld?.tiles.findIndex((tile) => tile.id === calledTile.id) ?? -1,
+      calledFace: meldFaceFor(0, true),
+      doraAdded: state.dora.length - doraBefore,
+      rinshanConsumed: rinshanBefore - state.deadWall.rinshan.length,
+      liveWallConsumed: wallBefore - state.wall.length,
+      drawnMarked: !!drawn && state.drawnTileId === drawn.id,
+      discardRemoved: state.rivers[1].length === 0
+    };
+  } finally {
+    Object.assign(state, previous);
+  }
+}
+
+window.mizuharaMahjongDebug = { debugChinesePattern, debugCpuDiscard, debugRiichiDiscard, debugCpuCallProbability, debugClosedKanOptions, debugOpenKanRules, roundProgressionDecision };
 
 function tileSvgData(tile) {
   const color = suitColor[tile.suit];
@@ -3442,7 +3961,7 @@ function renderPlayerStatus() {
     <article class="status-card ${player.img} ${index === state.turn ? "active" : ""}">
       <div class="portrait"></div>
       <div>
-        <p class="status-name">${player.wind} ${player.name}</p>
+        <p class="status-name">${seatWindName(index)} ${player.name}</p>
         <p class="status-meta">${player.score.toLocaleString()}点 / 手牌${state.hands[index].length} / 副露${state.melds[index].length} / 花${state.flowers[index].length}</p>
         <p class="status-quote">${player.quote}</p>
       </div>
@@ -3454,9 +3973,13 @@ function renderTableMelds() {
   state.melds.forEach((melds, playerIndex) => {
     el.tableMelds[playerIndex].innerHTML = melds.map((meld, meldIndex) => `
       <div class="meld-set meld-${meldIndex + 1} ${meld.type === "暗カン" ? "closed-kan" : ""}">
-        ${meld.tiles.map((tile) => {
+        ${meld.tiles.filter((tile) => tile.id !== meld.addedTileId).map((tile) => {
           const isCalled = tile.id === meld.calledTileId;
           const face = meldFaceFor(playerIndex, isCalled);
+          if (isCalled && meld.addedTileId) {
+            const addedTile = meld.tiles.find((item) => item.id === meld.addedTileId);
+            return `<span class="kakan-stack">${tileImg(tile, true, "kakan-called", `field-face-${face}`)}${tileImg(addedTile, true, "kakan-added", `field-face-${face}`)}</span>`;
+          }
           return tileImg(tile, true, "", `field-face-${face}`);
         }).join("")}
       </div>
@@ -3482,19 +4005,23 @@ function renderRivers() {
 
 function renderCenter() {
   const rule = presets.find((preset) => preset.id === state.presetId);
-  el.roundName.textContent = roundNames[state.roundIndex % roundNames.length];
-  el.wallCount.textContent = `山 ${state.wall.length}`;
+  el.roundName.textContent = roundName();
+  el.wallCount.textContent = `山 ${state.wall.length} / ${matchState.honba}本場 / 供託${matchState.riichiPot}本`;
   el.ruleName.textContent = rule ? rule.name : "カスタム";
   el.doraTiles.innerHTML = state.dora.map((tile) => tileImg(tile, true)).join("");
 }
 
 function renderHand() {
   el.flowers.innerHTML = state.flowers[0].length ? state.flowers[0].map((tile) => tileImg(tile, true)).join("") : `<span class="label">なし</span>`;
-  el.hand.innerHTML = sortTiles(state.hands[0]).map((tile) => `
-    <button class="tilebutton ${tile.id === state.drawnTileId ? "drawn" : ""} ${state.pendingWin?.tile?.id === tile.id ? "winning" : ""} ${state.selectedDebugSeat === 0 && state.selectedDebugTile === tile.id ? "selected-debug" : ""}" data-discard="${tile.id}" data-debug-tile="${tile.id}" title="${label(tile)}を捨てる">
+  const riichiCandidateIds = state.riichiPendingDiscard[0] ? new Set(riichiDiscardCandidates(0).map((tile) => tile.id)) : null;
+  el.hand.innerHTML = sortTiles(state.hands[0]).map((tile) => {
+    const blockedByRiichi = riichiCandidateIds && !riichiCandidateIds.has(tile.id);
+    return `
+    <button class="tilebutton ${tile.id === state.drawnTileId ? "drawn" : ""} ${state.pendingWin?.tile?.id === tile.id ? "winning" : ""} ${state.selectedDebugSeat === 0 && state.selectedDebugTile === tile.id ? "selected-debug" : ""}" data-discard="${tile.id}" data-debug-tile="${tile.id}" title="${blockedByRiichi ? "リーチ後のテンパイを維持できません" : `${label(tile)}を捨てる`}" ${blockedByRiichi ? "disabled" : ""}>
       ${tileImg(tile, false, state.pendingWin?.tile?.id === tile.id ? "winning" : "")}
     </button>
-  `).join("");
+  `;
+  }).join("");
 }
 
 function renderCallPanel() {
@@ -3516,7 +4043,7 @@ function renderCallPanel() {
     parts.push(`<button data-reach="1">リーチ</button>`);
   }
   if (state.pendingKan) {
-    parts.push(`<strong>暗カンできます</strong>`);
+    parts.push(`<strong>カンできます</strong>`);
     parts.push(...state.pendingKan.options.map((option, index) => `
       <button class="call-choice" data-kan="${index}">
         <span>${option.type}</span>
@@ -3550,8 +4077,9 @@ function renderScoreOverlay() {
 }
 
 function cleanScorePanelHtml(result) {
-  const isDraw = result.type === "流局" || result.winner === undefined || result.winner === null;
-  const movementRows = result.movements.map((delta, index) => `
+  const isMatchEnd = !!result.matchEnd;
+  const isDraw = !isMatchEnd && (result.type === "流局" || result.winner === undefined || result.winner === null);
+  const movementRows = isMatchEnd ? "" : result.movements.map((delta, index) => `
     <div class="score-move ${delta >= 0 ? "plus" : "minus"}">
       <span>${players[index].name}</span>
       <strong>${delta >= 0 ? "+" : ""}${delta.toLocaleString()}点</strong>
@@ -3562,10 +4090,21 @@ function cleanScorePanelHtml(result) {
       const unit = result.hybrid && isChinaPointYaku(item) ? "点" : "翻";
       return `<span class="score-tag">${item.name} ${item.point}${unit}</span>`;
     }).join("")
-    : `<span class="score-tag">${isDraw ? "流局" : "役なし"}</span>`;
+    : `<span class="score-tag">${isMatchEnd ? "終局" : isDraw ? "流局" : "役なし"}</span>`;
   const doraRows = scoreDoraHtml(result);
   const agariShape = agariShapeHtml(result);
-  const title = isDraw ? "流局 点数計算" : `${players[result.winner].name} ${result.type} 和了`;
+  const finalRanking = isMatchEnd ? `
+    <div class="final-ranking">
+      ${result.finalRanking.map((entry) => `
+        <div class="final-rank-row rank-${entry.rank}">
+          <strong>${entry.rank}位</strong>
+          <span>${players[entry.player].name}</span>
+          <b>${entry.score.toLocaleString()}点</b>
+          <em class="${entry.delta >= 0 ? "plus" : "minus"}">${entry.delta >= 0 ? "+" : ""}${entry.delta.toLocaleString()}点</em>
+        </div>
+      `).join("")}
+    </div>` : "";
+  const title = isMatchEnd ? "終局 最終結果" : isDraw ? "流局 点数計算" : `${players[result.winner].name} ${result.type} 和了`;
   const firstLabel = result.hybrid ? "混合点" : "符";
   const firstValue = result.hybrid ? `${result.hybrid.totalPoint}点` : `${result.fu || "-"}${result.fu ? "符" : ""}`;
   const hanValue = result.hybrid ? `${result.hybrid.riichiHan || 0}翻` : `${result.han || "-"}${result.han ? "翻" : ""}`;
@@ -3573,7 +4112,7 @@ function cleanScorePanelHtml(result) {
     <section class="score-panel">
       <div class="score-head">
         <strong>${title}</strong>
-        <span>${roundNames[state.roundIndex % roundNames.length]}</span>
+        <span>${roundName()}</span>
       </div>
       <div class="score-breakdown">
         <div><span>${firstLabel}</span><strong>${firstValue}</strong></div>
@@ -3591,8 +4130,10 @@ function cleanScorePanelHtml(result) {
       ${doraRows}
       <div class="score-lines">${result.rows.map((row) => `<p>${row}</p>`).join("")}</div>
       <div class="score-moves">${movementRows}</div>
+      ${finalRanking}
       ${agariShape}
-      <button class="primary" data-score-confirm="1">点数を確定して次局へ</button>
+      ${result.reason ? `<p class="score-round-note">${result.reason}</p>` : ""}
+      <button class="primary" data-score-confirm="1">${result.matchEnd ? "全員を25,000点に戻して東一局へ" : result.dealerContinues ? `点数を確定して${roundName()}を続行` : "点数を確定して次局へ"}</button>
     </section>
   `;
 }
@@ -3611,7 +4152,7 @@ function scorePanelHtml(result) {
     <section class="score-panel">
       <div class="score-head">
         <strong>${result.type === "流局" ? "流局 点数計算" : `${players[result.winner].name} ${result.type} 和了`}</strong>
-        <span>${roundNames[state.roundIndex % roundNames.length]}</span>
+        <span>${roundName()}</span>
       </div>
       <div class="score-breakdown">
         <div><span>符</span><strong>${result.fu || "-"}${result.fu ? "符" : ""}</strong></div>
@@ -3683,7 +4224,7 @@ function debugHandPanelsHtml() {
       ${players.map((player, playerIndex) => `
         <section class="debug-hand-card ${state.turn === playerIndex ? "active-turn" : ""}">
           <div class="debug-hand-head">
-            <strong>${player.wind} ${player.name}</strong>
+            <strong>${seatWindName(index)} ${player.name}</strong>
             <span>${state.hands[playerIndex].length}枚 / 副露${state.melds[playerIndex].length}</span>
           </div>
           <div class="debug-hand-tiles">
@@ -3715,7 +4256,7 @@ function renderDebugPanel() {
   panel.innerHTML = `
     <div class="debug-head">
       <strong>デバッグ</strong>
-      <span>${state.debugMode === "view" ? "河・リーチ棒の表示確認" : state.selectedDebugTile && selectedHandSeat ? `${selectedHandSeat.name}の牌を置換できます` : "全員の手牌を観察できます"}</span>
+      <span>${state.debugMode === "view" ? "河・リーチ棒・副露の表示確認" : state.selectedDebugTile && selectedHandSeat ? `${selectedHandSeat.name}の牌を置換できます` : "全員の手牌を観察できます"}</span>
     </div>
     <div class="debug-tabs">
       <button class="${state.debugMode === "view" ? "active" : ""}" data-debug-mode="view">表示確認</button>
@@ -3726,7 +4267,7 @@ function renderDebugPanel() {
         <div>
           <span class="label">対象</span>
           <div class="debug-seat-buttons">
-            ${players.map((player, index) => `<button class="${state.debugSeat === index ? "active" : ""}" data-debug-seat="${index}">${player.wind} ${player.name}</button>`).join("")}
+            ${players.map((player, index) => `<button class="${state.debugSeat === index ? "active" : ""}" data-debug-seat="${index}">${seatWindName(index)} ${player.name}</button>`).join("")}
           </div>
         </div>
         <div>
@@ -3739,7 +4280,11 @@ function renderDebugPanel() {
             <button data-debug-river="normal">捨て牌を置く</button>
             <button data-debug-river="riichi">リーチ表示牌を置く</button>
             <button data-debug-riichi="toggle">${state.riichi[state.debugSeat] ? "リーチ棒を消す" : "リーチ棒を置く"}</button>
+            <button data-debug-meld-scenario="full">4人4副露表示</button>
+            <button data-debug-meld-scenario="kakan">4人小明カン表示</button>
+            <button data-debug-scenario="kakan-flow">小明カン進行テスト</button>
             <button data-debug-scenario="chankan">槍槓テスト</button>
+            <button data-debug-scenario="match-end">南四局 終局表示</button>
             <button data-debug-river="clear">河をクリア</button>
           </div>
         </div>
@@ -3762,13 +4307,13 @@ function renderDebugPanel() {
           return `<button class="${state.debugTileKey === key ? "active" : ""}" data-debug-view-tile="${key}" title="${label(tile)}">${tileImg(tile, true, "", "field")}</button>`;
         }).join("")}
       </div>
-      <p class="debug-note">${selectedSeat.wind} ${selectedSeat.name} / 河 ${state.rivers[state.debugSeat].length}枚 / リーチ棒 ${state.riichi[state.debugSeat] ? "表示中" : "なし"}</p>
+      <p class="debug-note">${seatWindName(state.debugSeat)} ${selectedSeat.name} / 河 ${state.rivers[state.debugSeat].length}枚 / リーチ棒 ${state.riichi[state.debugSeat] ? "表示中" : "なし"}</p>
     ` : `
       ${debugHandPanelsHtml()}
       <div class="debug-palette">
         ${palette.map((tile) => `<button data-debug-set="${tile.suit}${tile.value}" title="${label(tile)}">${tileImg(tile, true)}</button>`).join("")}
       </div>
-      <p class="debug-note">${state.selectedDebugTile && selectedHandSeat ? `${selectedHandSeat.wind} ${selectedHandSeat.name}の選択牌を置換します。` : "牌を選ぶと、下のパレットで任意の牌に置換できます。"}</p>
+      <p class="debug-note">${state.selectedDebugTile && selectedHandSeat ? `${seatWindName(state.selectedDebugSeat)} ${selectedHandSeat.name}の選択牌を置換します。` : "牌を選ぶと、下のパレットで任意の牌に置換できます。"}</p>
     `}
   `;
 }
@@ -3788,6 +4333,7 @@ function renderControls() {
 
 function statusText() {
   const auto = state.autoPlay ? " / オート観戦中" : "";
+  if (state.phase === "display") return "4人4副露 表示確認中";
   if (state.phase === "call") return "鳴き選択中";
   if (state.phase === "kan") return "暗カン選択中";
   if (state.pendingWin?.player === 0) return `${state.pendingWin.type}できます`;
@@ -3864,7 +4410,7 @@ function agariSnapshot(playerIndex = 0) {
   return {
     format: "mizuhara-mahjong-agari-v1",
     player: players[playerIndex].name,
-    round: roundNames[state.roundIndex % roundNames.length],
+    round: roundName(),
     honba: matchState.honba,
     riichiPot: matchState.riichiPot,
     ruleSet: {
@@ -4110,9 +4656,17 @@ document.getElementById("debugPanel").addEventListener("click", (event) => {
     toggleDebugRiichiStick();
     return;
   }
+  const meldScenarioButton = event.target.closest("[data-debug-meld-scenario]");
+  if (meldScenarioButton) {
+    if (meldScenarioButton.dataset.debugMeldScenario === "full") setupFullMeldDisplayScenario();
+    if (meldScenarioButton.dataset.debugMeldScenario === "kakan") setupAddedKanDisplayScenario();
+    return;
+  }
   const scenarioButton = event.target.closest("[data-debug-scenario]");
   if (scenarioButton) {
     if (scenarioButton.dataset.debugScenario === "chankan") setupChankanScenario();
+    if (scenarioButton.dataset.debugScenario === "kakan-flow") setupAddedKanFlowScenario();
+    if (scenarioButton.dataset.debugScenario === "match-end") setupMatchEndDisplayScenario();
     return;
   }
   const agariScenarioButton = event.target.closest("[data-debug-agari-scenario]");
@@ -4442,7 +4996,11 @@ const chineseRuleSelfTests = {
   junsei_chuuren: debugChinesePattern(["m1", "m1", "m1", "m2", "m3", "m4", "m5", "m5", "m6", "m7", "m8", "m9", "m9", "m9"], { china: false, win: { type: "ツモ", player: 0, tileCode: "m5" } }),
   kokushi_13men: debugChinesePattern(["m1", "m9", "p1", "p9", "s1", "s9", "z1", "z1", "z2", "z3", "z4", "z5", "z6", "z7"], { china: false, win: { type: "ツモ", player: 0, tileCode: "z1" } }),
   triple_yakuman_overlap: debugChinesePattern(["z5", "z5", "z5", "z6", "z6", "z6", "z7", "z7", "z7", "m1", "m1", "m1", "z1", "z1"], { china: false, win: { type: "ツモ", player: 0, tileCode: "z1" } }),
-  yakuman_with_han_china: debugChinesePattern(["z5", "z5", "z5", "z6", "z6", "z6", "z7", "z7", "z7", "m1", "m1", "m1", "z1", "z1"], { win: { type: "ツモ", player: 0, tileCode: "z1" } })
+  yakuman_with_han_china: debugChinesePattern(["z5", "z5", "z5", "z6", "z6", "z6", "z7", "z7", "z7", "m1", "m1", "m1", "z1", "z1"], { win: { type: "ツモ", player: 0, tileCode: "z1" } }),
+  shousangen_three_types: debugChinesePattern(["m1", "m2", "m3", "p1", "p2", "p3", "z5", "z5", "z5", "z6", "z6", "z6", "z7", "z7"], { china: false, win: { type: "ツモ", player: 0, tileCode: "z7" } }),
+  shousangen_missing_red_rejected: debugChinesePattern(["m1", "m2", "m3", "p1", "p2", "p3", "z5", "z5", "z5", "z5", "z5", "z6", "z6", "z6"], { china: false, whiteStorm: true, whiteCount: 12, win: { type: "ツモ", player: 0, tileCode: "z5" } }),
+  daisangen_three_types: debugChinesePattern(["m1", "m1", "m1", "m2", "m2", "z5", "z5", "z5", "z6", "z6", "z6", "z7", "z7", "z7"], { china: false, win: { type: "ツモ", player: 0, tileCode: "m2" } }),
+  daisangen_missing_red_rejected: debugChinesePattern(["m1", "m2", "m3", "p1", "p2", "p3", "z5", "z5", "z5", "z5", "z5", "z6", "z6", "z6"], { china: false, whiteStorm: true, whiteCount: 12, win: { type: "ツモ", player: 0, tileCode: "z5" } })
 };
 document.documentElement.dataset.chinaYakuSelfTests = JSON.stringify(chineseRuleSelfTests);
 document.documentElement.dataset.hybridYakumanSelfTests = JSON.stringify({
@@ -4471,11 +5029,13 @@ document.documentElement.dataset.cpuSelfTests = JSON.stringify({
   value_honor_pon: debugCpuCallProbability(["p1", "p2", "p3", "p4", "p5", "p6", "p7", "z5", "z5", "m2", "m3", "s7", "s8"], ["z5", "z5", "z5"], "ポン"),
   flush_ten_chi: debugCpuCallProbability(["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p9", "z5", "z5", "m2"], ["p3", "p4", "p5"], "チー"),
   flush_ten_offsuit_chi: debugCpuCallProbability(["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p9", "z5", "z5", "m2"], ["m2", "m3", "m4"], "チー"),
+  value_honor_open_kan: debugCpuCallProbability(["m1", "m4", "m7", "p2", "p5", "p8", "s1", "s4", "s7", "z1", "z5", "z5", "z5"], ["z5", "z5", "z5", "z5"], "大明カン"),
   closed_tenpai_value_honor_pon: debugCpuCallProbability(["m1", "m2", "m3", "p1", "p2", "p3", "s1", "s2", "s3", "m7", "m8", "z5", "z5"], ["z5", "z5", "z5"], "ポン"),
   closed_iishanten_value_honor_pon: debugCpuCallProbability(["m1", "m2", "m3", "p1", "p2", "p3", "s1", "s2", "s3", "z1", "m9", "z5", "z5"], ["z5", "z5", "z5"], "ポン"),
   closed_iishanten_unhelpful_pon: debugCpuCallProbability(["m1", "m2", "m3", "p1", "p2", "p3", "s1", "s2", "m4", "m5", "p7", "z5", "z5"], ["z5", "z5", "z5"], "ポン"),
   distant_value_honor_pon: debugCpuCallProbability(["m1", "m4", "m7", "p2", "p5", "p8", "s1", "s4", "s7", "z1", "z2", "z5", "z5"], ["z5", "z5", "z5"], "ポン"),
   cosmic_honor_flush: debugCpuDiscard(["p1", "p2", "p3", "p4", "p5", "z1", "z2", "z3", "z5", "z5", "m1", "m2", "m3", "s7"], { cosmic: true }),
+  riichi_keeps_tenpai: debugRiichiDiscard(["m1", "m2", "m4", "m5", "m6", "m7", "m8", "m9", "s5", "s6", "s7", "z1", "z1", "z2"]),
   white_supply_open: debugCpuDiscard(["m1", "m2", "m3", "p1", "p2", "p3", "s1", "s2", "s3", "m5", "m6", "p8", "s8", "z5"], { whiteStorm: true, whiteCount: 12 }),
   white_supply_blocked: debugCpuDiscard(["m1", "m2", "m3", "p1", "p2", "p3", "s1", "s2", "s3", "m5", "m6", "p8", "s8", "z5"], { whiteStorm: true, whiteCount: 12, visibleCodes: ["z5", "z5", "z5", "z5", "z5", "z5", "z5", "z5", "z5", "z5"] })
 });
@@ -4483,3 +5043,4 @@ document.documentElement.dataset.closedKanSelfTests = JSON.stringify({
   single: debugClosedKanOptions(["m1", "m1", "m1", "m1", "p2", "p3", "p4", "s2", "s3", "s4", "z1", "z1", "m7", "m8"]),
   multiple: debugClosedKanOptions(["m1", "m1", "m1", "m1", "p9", "p9", "p9", "p9", "s2", "s3", "s4", "z1", "z1", "m7"])
 });
+document.documentElement.dataset.openKanSelfTests = JSON.stringify(debugOpenKanRules());

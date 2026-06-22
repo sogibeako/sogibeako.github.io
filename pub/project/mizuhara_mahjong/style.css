@@ -306,27 +306,48 @@ h2 {
   flex-direction: column-reverse;
 }
 
+.table-meld-bottom .meld-set { align-items: flex-end; }
+.table-meld-left .meld-set { align-items: flex-start; }
+.table-meld-top .meld-set { align-items: flex-start; }
+.table-meld-right .meld-set { align-items: flex-end; }
+
+.kakan-stack {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0;
+}
+
+.table-meld-bottom .kakan-stack { flex-direction: column-reverse; }
+.table-meld-left .kakan-stack { flex-direction: row; }
+.table-meld-top .kakan-stack { flex-direction: column; }
+.table-meld-right .kakan-stack { flex-direction: row-reverse; }
+
+.kakan-stack .tile-img {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
 .meld-set .tile-img + .tile-img {
-  margin-left: -5px;
+  margin-left: 0;
 }
 
 .table-meld-left .meld-set .tile-img + .tile-img,
 .table-meld-right .meld-set .tile-img + .tile-img {
   margin-left: 0;
-  margin-top: -5px;
+  margin-top: 0;
 }
 
 .meld-set .tile-img.sideway {
   width: 45px;
   height: 32px;
-  margin-left: 2px;
-  margin-right: 2px;
+  margin-left: 0;
+  margin-right: 0;
   z-index: 1;
 }
 
 .table-meld-left .meld-set .tile-img.sideway,
 .table-meld-right .meld-set .tile-img.sideway {
-  margin: 2px 0;
+  margin: 0;
 }
 
 .meld-set .tile-img.face-1,
@@ -627,6 +648,40 @@ h2 {
   overflow: hidden;
   padding: 2px 0;
 }
+
+.score-round-note {
+  margin: 8px 0;
+  color: #ffe28a;
+  font-weight: 800;
+  text-align: center;
+}
+
+.final-ranking {
+  display: grid;
+  gap: 5px;
+  margin: 10px 0;
+}
+
+.final-rank-row {
+  display: grid;
+  grid-template-columns: 42px minmax(110px, 1fr) 92px 82px;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.07);
+}
+
+.final-rank-row.rank-1 {
+  border-color: #e4bd55;
+  background: rgba(228,189,85,.15);
+}
+
+.final-rank-row b,
+.final-rank-row em { text-align: right; }
+.final-rank-row em { font-style: normal; font-weight: 800; }
+.final-rank-row .plus { color: #ffe06a; }
+.final-rank-row .minus { color: #ff9aac; }
 
 .agari-concealed,
 .agari-meld,
