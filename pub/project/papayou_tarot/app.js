@@ -23,6 +23,64 @@ const PLAYERS = [
   { name: "沖中真宵", tag: "銀髪スポーティ。堅実で無駄な勝ちを避ける。", cpu: true }
 ];
 
+const DEFAULT_DEAL_COUNT = 6;
+const DEFAULT_PASS_COUNT = 1;
+
+const LINES = [
+  {
+    ready: ["まず場の構造を見よう。危険札は、だいたい向こうから来る。", "勝つより取らない。これは人生にも似ている。"],
+    deal: ["この配り方なら、まだ読み筋は残っている。", "親か……責任だけが重い。"],
+    pass: ["不要なものを手放す訓練、ということにしておこう。"],
+    play: ["ここは小さく通す。", "まだ結論を急ぐ局面ではない。"],
+    dangerPlay: ["悪いが、これは世界に返す。", "このクイーン、ぼくの手には余る。"],
+    win: ["取ったが、まだ喜ぶ場面ではないな。", "ふむ。被害は軽微……だと信じたい。"],
+    takeDanger: ["うっ、これは痛い。計算上も精神上も痛い。", "危険札を回収してしまった。反省文を書こう。"],
+    gameWin: ["最小の損失で済んだ。つまり勝利だ。"],
+    gameSecond: ["二位か。悪くないが、まだ改善の余地がある。"],
+    gameThird: ["三位。読みが一手遅れたな。次は調整する。"],
+    gameFourth: ["四位……これは研究対象として記録しておこう。"]
+  },
+  {
+    ready: ["お兄ちゃん、変なカード取らないでね？", "一埜、ちゃんと見てるから。"],
+    deal: ["この枚数なら、危ない札を覚えやすいかも。", "赤眼鏡センサー、起動だよ。"],
+    pass: ["えへへ、これは隣におすそわけ。"],
+    play: ["これなら出せるよね。", "うーん、こっちかな。"],
+    dangerPlay: ["ごめんね、危ないの置いていくね。", "クイーンさん、旅に出てください。"],
+    win: ["やった、でも中身は確認しないとね。", "ふふ、ちょっと上手くいった。"],
+    takeDanger: ["あっ、危ない札入ってる！ お兄ちゃんのせいでは？", "うわぁ……これは眼鏡が曇るやつ。"],
+    gameWin: ["一埜の勝ち！ お兄ちゃん、見てた？"],
+    gameSecond: ["二位だよ。あとちょっとだったのにー。"],
+    gameThird: ["三位かぁ。危ない札、もっと避けられたかも。"],
+    gameFourth: ["びり……お兄ちゃん、慰めてくれる？"]
+  },
+  {
+    ready: ["よーし、革命的に押し付けていこー！", "場を読む？ もちろん読むよ、空気ごとね。"],
+    deal: ["この手札、かわいくない札から処分だね。", "親の権限、なかなか悪くないじゃん。"],
+    pass: ["はい、友情のプレゼント！ 中身は見ないでね。"],
+    play: ["じゃーん、これでどう？", "ノリで出してるように見えて、わりと考えてます。"],
+    dangerPlay: ["危険札、バイバーイ！", "そのクイーン、うちの管轄外でーす。"],
+    win: ["取っちゃった。まあ映えるからヨシ！", "ふふん、場を制したね。"],
+    takeDanger: ["えっ、これ減点じゃん！ 革命失敗！", "やば、可愛い顔して重い札だった。"],
+    gameWin: ["勝利！ みんな、ななよ政権をよろしく！"],
+    gameSecond: ["二位！ ほぼ勝ちみたいなもんでしょ？"],
+    gameThird: ["三位かー。革命には準備期間が必要ってことで。"],
+    gameFourth: ["四位！？ ちょっと、再集計しよ再集計！"]
+  },
+  {
+    ready: ["焦らずいこう。無理な勝ちは怪我のもと。", "危険札は避ける。基本だけど大事。"],
+    deal: ["体力配分みたいなもの。最後まで崩れない手を作る。", "この枚数なら、守備寄りでいける。"],
+    pass: ["いらない札は早めに流す。判断は速く。"],
+    play: ["これで十分。", "無駄に勝ちに行かない。"],
+    dangerPlay: ["危険札、処理する。", "ここで手放せるなら悪くない。"],
+    win: ["取った。次も落ち着いていく。", "流れは悪くない。"],
+    takeDanger: ["しまった、重い。次で取り返す。", "これは反省。守備位置を直す。"],
+    gameWin: ["勝ち。最後まで姿勢を崩さなかった結果。"],
+    gameSecond: ["二位。判断は悪くなかった。次は詰める。"],
+    gameThird: ["三位。守り切れなかった場面があった。"],
+    gameFourth: ["四位。完敗。もう一戦、お願い。"]
+  }
+];
+
 const state = {
   players: [],
   deck: [],
@@ -33,12 +91,13 @@ const state = {
   leadSuit: null,
   trick: [],
   phase: "setup",
-  dealCount: 6,
-  passCount: 1,
+  dealCount: DEFAULT_DEAL_COUNT,
+  passCount: DEFAULT_PASS_COUNT,
   passSelection: new Set(),
   finalKitty: [],
   lastWinner: 0,
   autoHuman: false,
+  dialogue: [],
   log: []
 };
 
@@ -105,9 +164,17 @@ function startGame() {
   state.trick = [];
   state.leadSuit = null;
   state.phase = "deal_config";
+  state.dealCount = DEFAULT_DEAL_COUNT;
+  state.passCount = DEFAULT_PASS_COUNT;
+  state.passSelection = new Set();
+  state.cpuPasses = null;
   state.finalKitty = [];
   state.lastWinner = 0;
+  state.autoHuman = false;
+  state.dialogue = LINES.map((lines) => pick(lines.ready));
   state.log = [];
+  const autoBtn = $("autoBtn");
+  if (autoBtn) autoBtn.textContent = "CPUに任せる";
   addLog("新しい山札を用意しました。親が配る枚数と交換枚数を決めます。");
   render();
 }
@@ -136,6 +203,7 @@ function beginRound() {
   state.turn = state.leader;
   state.trick = [];
   state.leadSuit = null;
+  say(state.dealer, "deal");
   addLog(`第${state.round}ラウンド開始。各自${state.dealCount}枚、交換${state.passCount}枚。`);
   if (state.phase === "pass_cards") cpuPass();
   render();
@@ -172,6 +240,7 @@ function finishHumanPass() {
   state.passSelection = new Set();
   state.cpuPasses = null;
   state.phase = "trick_play";
+  say(0, "pass");
   addLog("全員が左隣へ同時にカードを渡しました。");
   render();
   maybeCpuTurn();
@@ -195,12 +264,14 @@ function playCard(playerIndex, cardIndex) {
   if (!canPlay(card, player.hand, state.leadSuit)) return;
   player.hand.splice(cardIndex, 1);
   state.trick.push({ playerIndex, card });
+  say(playerIndex, dangerValue(card) > 0 ? "dangerPlay" : "play");
   if (!state.leadSuit && card.type !== "fool") {
     state.leadSuit = card.type === "major" ? "trump" : card.suit;
   }
   addLog(`${player.name} が ${card.name} を出しました。`);
   if (state.trick.length === 4) {
-    setTimeout(resolveTrick, 450);
+    render();
+    setTimeout(resolveTrick, 1100);
   } else {
     state.turn = (state.turn + 1) % 4;
     render();
@@ -211,8 +282,10 @@ function playCard(playerIndex, cardIndex) {
 function resolveTrick() {
   const winner = determineWinner();
   const cards = state.trick.map((t) => t.card);
+  const risk = cards.reduce((sum, card) => sum + dangerValue(card), 0);
   state.players[winner].captured.push(...cards);
   state.lastWinner = winner;
+  say(winner, risk > 0 ? "takeDanger" : "win");
   addLog(`${state.players[winner].name} がトリックを取りました。`);
   state.trick = [];
   state.leadSuit = null;
@@ -249,9 +322,10 @@ function endRound() {
   updateScores();
   if (state.deck.length < 4) {
     state.phase = "game_end";
-    const best = Math.max(...state.players.map((p) => p.score));
-    const winners = state.players.filter((p) => p.score === best).map((p) => p.name).join("、");
-    addLog(`ゲーム終了。勝者は ${winners} です。`);
+    const ranked = getRankedPlayers();
+    const lineKeys = ["gameWin", "gameSecond", "gameThird", "gameFourth"];
+    ranked.forEach((p, index) => say(p.id, lineKeys[index]));
+    addLog(`ゲーム終了。1位は ${ranked[0].name} です。`);
   } else {
     state.phase = "deal_config";
     state.round += 1;
@@ -260,6 +334,19 @@ function endRound() {
     addLog(`ラウンド終了。次の親は ${state.players[state.dealer].name} です。`);
   }
   render();
+}
+
+function getRankedPlayers() {
+  return [...state.players].sort((a, b) => b.score - a.score || a.id - b.id);
+}
+
+function pick(lines) {
+  return lines[Math.floor(Math.random() * lines.length)];
+}
+
+function say(playerIndex, context) {
+  const options = LINES[playerIndex]?.[context] || LINES[playerIndex]?.ready || ["……"];
+  state.dialogue[playerIndex] = pick(options);
 }
 
 function updateScores() {
@@ -352,6 +439,7 @@ function renderPlayers() {
       <div>
         <p class="pname">${p.name}</p>
         <p class="ptag">${p.tag}</p>
+        <p class="quote">「${state.dialogue[p.id] || ""}」</p>
         <div class="scoreline">
           <span>手札 ${p.hand.length}</span>
           <span>獲得 ${p.captured.length}</span>
@@ -391,6 +479,10 @@ function togglePass(idx) {
   if (state.passSelection.has(idx)) {
     state.passSelection.delete(idx);
   } else if (state.passSelection.size < state.passCount) {
+    state.passSelection.add(idx);
+  } else if (state.passCount > 0) {
+    const oldest = state.passSelection.values().next().value;
+    state.passSelection.delete(oldest);
     state.passSelection.add(idx);
   }
   render();
@@ -446,14 +538,24 @@ function statusText() {
   if (state.phase === "deal_config") return `第${state.round}ラウンド準備。親は ${state.players[state.dealer]?.name || "水原一彌"} です。`;
   if (state.phase === "pass_cards") return `交換フェーズ。危険札を押し付けるか、手札を整えるか。`;
   if (state.phase === "game_end") {
-    const ranked = [...state.players].sort((a, b) => b.score - a.score);
-    return `<span class="toast">ゲーム終了。</span> 1位 ${ranked[0].name} (${ranked[0].score}点)`;
+    const ranking = getRankedPlayers()
+      .map((p, index) => `${index + 1}位 ${p.name} (${p.score}点)`)
+      .join(" / ");
+    return `<span class="toast">ゲーム終了。</span> ${ranking}`;
   }
   return `${state.players[state.turn].name} の手番。現在の場は ${state.trick.length}/4 枚です。`;
 }
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, Number.isFinite(value) ? value : min));
+}
+
+function setHelpOpen(open) {
+  const overlay = $("helpOverlay");
+  const button = $("helpBtn");
+  if (!overlay || !button) return;
+  overlay.hidden = !open;
+  button.setAttribute("aria-expanded", String(open));
 }
 
 document.addEventListener("click", (event) => {
@@ -463,6 +565,12 @@ document.addEventListener("click", (event) => {
     event.target.textContent = state.autoHuman ? "自分で遊ぶ" : "CPUに任せる";
     maybeCpuTurn();
   }
+  if (event.target.id === "helpBtn") setHelpOpen($("helpOverlay")?.hidden !== false);
+  if (event.target.id === "helpCloseBtn" || event.target.id === "helpOverlay") setHelpOpen(false);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") setHelpOpen(false);
 });
 
 startGame();

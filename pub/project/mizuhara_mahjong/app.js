@@ -271,6 +271,7 @@ const implementedChineseFanIds = new Set([
 
 let state = {};
 let autoTimer = null;
+const discardKeyLabels = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "^", "\\"];
 const roundNames = [
   "東一局", "東二局", "東三局", "東四局",
   "南一局", "南二局", "南三局", "南四局",
@@ -454,6 +455,8 @@ function startRound(settings = state.settings || presets[0].settings, presetId =
     debugTileKey: keepDebugTileKey,
     selectedDebugSeat: null,
     selectedDebugTile: null,
+    keyboardDiscardTileId: null,
+    keyboardActionSelection: null,
     log: []
   };
   revealDoraPair();
@@ -485,6 +488,7 @@ function addLog(message) {
 function drawHumanAuto() {
   state.turn = 0;
   state.phase = "discard";
+  state.keyboardDiscardTileId = null;
   const drawn = drawIntoHand(0, true);
   if (!drawn) {
     endRoundByDraw();
@@ -540,6 +544,7 @@ function drawRinshanIntoHand(playerIndex, markDrawn = true) {
   }
   state.hands[playerIndex].push(tile);
   if (markDrawn) state.drawnTileId = tile.id;
+  if (playerIndex === 0 && markDrawn) state.keyboardDiscardTileId = null;
   return tile;
 }
 
@@ -669,6 +674,7 @@ function handleAfterDiscard(discarder, tile) {
   const humanOptions = discarder !== 0 ? callOptionsFor(0, discarder, tile) : [];
   if (humanOptions.length) {
     state.pendingCall = { discarder, tile, options: humanOptions };
+    state.keyboardActionSelection = null;
     state.phase = "call";
     addLog(`${label(tile)}を鳴けます。鳴くか、スキップしてください。`);
     render();
@@ -879,6 +885,7 @@ function applyCall(playerIndex, discarder, tile, option) {
     tiles: meldDisplayTiles(playerIndex, discarder, tile, option.tiles, option.type)
   });
   state.drawnTileId = null;
+  if (playerIndex === 0) state.keyboardDiscardTileId = null;
   state.riichiIppatsu = state.riichiIppatsu.map(() => false);
   if (option.type === "大明カン") {
     revealDoraPair();
@@ -929,6 +936,7 @@ function chooseHumanCall(index) {
   if (!state.pendingCall) return;
   const option = state.pendingCall.options[Number(index)];
   if (!option) return;
+  state.keyboardActionSelection = null;
   const calledTile = state.pendingCall.tile;
   const drawn = applyCall(0, state.pendingCall.discarder, calledTile, option);
   state.pendingCall = null;
@@ -958,7 +966,20 @@ function skipHumanCall() {
   if (!state.pendingCall) return;
   const { discarder } = state.pendingCall;
   state.pendingCall = null;
+  state.keyboardActionSelection = null;
   advanceToNextDraw(discarder);
+}
+
+function skipHumanKan() {
+  if (!state.pendingKan) return;
+  state.pendingKan = null;
+  state.keyboardActionSelection = null;
+  if (state.riichi[0]) {
+    discardDrawnAfterRiichi();
+  } else {
+    state.phase = "discard";
+    render();
+  }
 }
 
 function discardDrawnAfterRiichi() {
@@ -999,6 +1020,7 @@ function queueHumanClosedKan(message) {
   const options = kanOptions(0);
   if (!options.length) return false;
   state.pendingKan = { player: 0, options };
+  state.keyboardActionSelection = null;
   state.phase = "kan";
   addLog(message);
   return true;
@@ -1008,6 +1030,7 @@ function chooseHumanKan(index) {
   if (!state.pendingKan) return;
   const option = state.pendingKan.options[Number(index)];
   if (!option) return;
+  state.keyboardActionSelection = null;
   if (option.type === "小明カン") {
     state.pendingKan = null;
     beginAddedKan(0, option);
@@ -1706,6 +1729,7 @@ function continueAfterRonSkip(discarder, tile) {
   const humanOptions = discarder !== 0 ? callOptionsFor(0, discarder, tile) : [];
   if (humanOptions.length) {
     state.pendingCall = { discarder, tile, options: humanOptions };
+    state.keyboardActionSelection = null;
     state.phase = "call";
     addLog(`${label(tile)}を鳴けます。鳴くか、スキップしてください。`);
     render();
@@ -2968,6 +2992,19 @@ function isTankiCompletion(shape, win) {
   return !!(shape?.pair && win?.tile && keyOf(win.tile) === shape.pair);
 }
 
+function whiteHorizonYaku(settings, whiteCount) {
+  if (!settings.whiteStorm || whiteCount < 8) return null;
+  return {
+    id: "white_horizon",
+    ...(settings.china ? { source: "china" } : {}),
+    name: "白色地平線",
+    point: settings.china ? 88 : 13,
+    note: settings.china
+      ? "白が8枚以上ある88点役。白刻子の役牌翻は別途加算。"
+      : "白が8枚以上ある役満。白刻子の役牌翻は別途加算。"
+  };
+}
+
 function yakuList(tiles, settings, flowers, playerIndex = 0, context = {}) {
   const counts = countMap(tiles);
   const yaku = [];
@@ -3057,7 +3094,8 @@ function yakuList(tiles, settings, flowers, playerIndex = 0, context = {}) {
   });
   if (hasInterpretedTriplet(playerIndex, standardShape, roundWindKey)) yaku.push({ id: "yakuhai_bakaze", name: `役牌 場風${tileNames.z[roundWindValue()]}`, point: 1, note: `${roundName()}の場風牌。` });
   if (hasInterpretedTriplet(playerIndex, standardShape, seatWindKey)) yaku.push({ id: "yakuhai_jikaze", name: `役牌 自風${seatWindName(playerIndex)}`, point: 1, note: `${players[playerIndex].name}の自風牌。` });
-  if (settings.whiteStorm && whiteCount >= 8) yaku.push({ id: "white_horizon", source: "china", name: "白色地平線", point: 88, note: "白が8枚以上ある88点役。白刻子の役牌翻は別途加算。" });
+  const whiteHorizon = whiteHorizonYaku(settings, whiteCount);
+  if (whiteHorizon) yaku.push(whiteHorizon);
   if (flowers.length > 0) yaku.push({ name: "花牌", point: flowers.length, note: `${flowers.length}枚抜き。` });
   if (winningShape) {
     const bonusDora = doraBreakdownForTiles(playerIndex, allTiles);
@@ -4014,11 +4052,17 @@ function renderCenter() {
 function renderHand() {
   el.flowers.innerHTML = state.flowers[0].length ? state.flowers[0].map((tile) => tileImg(tile, true)).join("") : `<span class="label">なし</span>`;
   const riichiCandidateIds = state.riichiPendingDiscard[0] ? new Set(riichiDiscardCandidates(0).map((tile) => tile.id)) : null;
-  el.hand.innerHTML = sortTiles(state.hands[0]).map((tile) => {
+  const drawnTile = state.hands[0].find((tile) => tile.id === state.drawnTileId) || null;
+  const concealedTiles = sortTiles(state.hands[0].filter((tile) => tile.id !== state.drawnTileId));
+  const displayTiles = drawnTile ? [...concealedTiles, drawnTile] : concealedTiles;
+  el.hand.innerHTML = displayTiles.map((tile, index) => {
     const blockedByRiichi = riichiCandidateIds && !riichiCandidateIds.has(tile.id);
+    const isDrawn = tile.id === state.drawnTileId;
+    const keyLabel = isDrawn ? "Enter" : discardKeyLabels[index] || "";
     return `
-    <button class="tilebutton ${tile.id === state.drawnTileId ? "drawn" : ""} ${state.pendingWin?.tile?.id === tile.id ? "winning" : ""} ${state.selectedDebugSeat === 0 && state.selectedDebugTile === tile.id ? "selected-debug" : ""}" data-discard="${tile.id}" data-debug-tile="${tile.id}" title="${blockedByRiichi ? "リーチ後のテンパイを維持できません" : `${label(tile)}を捨てる`}" ${blockedByRiichi ? "disabled" : ""}>
+    <button class="tilebutton ${isDrawn ? "drawn" : ""} ${state.keyboardDiscardTileId === tile.id ? "keyboard-selected" : ""} ${state.pendingWin?.tile?.id === tile.id ? "winning" : ""} ${state.selectedDebugSeat === 0 && state.selectedDebugTile === tile.id ? "selected-debug" : ""}" data-discard="${tile.id}" data-debug-tile="${tile.id}" data-key-slot="${keyLabel}" title="${blockedByRiichi ? "リーチ後のテンパイを維持できません" : `${label(tile)}を捨てる`}" ${blockedByRiichi ? "disabled" : ""}>
       ${tileImg(tile, false, state.pendingWin?.tile?.id === tile.id ? "winning" : "")}
+      ${keyLabel ? `<kbd class="discard-key-label">${keyLabel}</kbd>` : ""}
     </button>
   `;
   }).join("");
@@ -4045,22 +4089,24 @@ function renderCallPanel() {
   if (state.pendingKan) {
     parts.push(`<strong>カンできます</strong>`);
     parts.push(...state.pendingKan.options.map((option, index) => `
-      <button class="call-choice" data-kan="${index}">
+      <button class="call-choice ${state.keyboardActionSelection === `kan:${index}` ? "keyboard-selected" : ""}" data-kan="${index}">
+        <kbd class="choice-key">${index + 1}</kbd>
         <span>${option.type}</span>
         <span class="call-tiles">${option.tiles.map((tile) => tileImg(tile, true)).join("")}</span>
       </button>
     `));
-    parts.push(`<button data-kan="skip">スキップ</button>`);
+    parts.push(`<button data-kan="skip">スキップ <kbd class="choice-key">S / Enter</kbd></button>`);
   }
   if (state.pendingCall) {
     parts.push(`<strong>${label(state.pendingCall.tile)}を鳴けます</strong>`);
     parts.push(...state.pendingCall.options.map((option, index) => `
-      <button class="call-choice" data-call="${index}">
+      <button class="call-choice ${state.keyboardActionSelection === `call:${index}` ? "keyboard-selected" : ""}" data-call="${index}">
+        <kbd class="choice-key">${index + 1}</kbd>
         <span>${option.type}</span>
         <span class="call-tiles">${option.tiles.map((tile) => tileImg(tile, true)).join("")}</span>
       </button>
     `));
-    parts.push(`<button data-call="skip">スキップ</button>`);
+    parts.push(`<button data-call="skip">スキップ <kbd class="choice-key">S / Enter</kbd></button>`);
   }
   el.callPanel.innerHTML = parts.join("");
 }
@@ -4133,7 +4179,7 @@ function cleanScorePanelHtml(result) {
       ${finalRanking}
       ${agariShape}
       ${result.reason ? `<p class="score-round-note">${result.reason}</p>` : ""}
-      <button class="primary" data-score-confirm="1">${result.matchEnd ? "全員を25,000点に戻して東一局へ" : result.dealerContinues ? `点数を確定して${roundName()}を続行` : "点数を確定して次局へ"}</button>
+      <button class="primary" data-score-confirm="1">${result.matchEnd ? "全員を25,000点に戻して東一局へ" : result.dealerContinues ? `点数を確定して${roundName()}を続行` : "点数を確定して次局へ"} <kbd class="score-confirm-key">Enter</kbd></button>
     </section>
   `;
 }
@@ -4594,14 +4640,8 @@ el.callPanel.addEventListener("click", (event) => {
   }
   const kanButton = event.target.closest("[data-kan]");
   if (kanButton) {
-    if (kanButton.dataset.kan === "skip") {
-      state.pendingKan = null;
-      if (state.riichi[0]) discardDrawnAfterRiichi();
-      else {
-        state.phase = "discard";
-        render();
-      }
-    } else {
+    if (kanButton.dataset.kan === "skip") skipHumanKan();
+    else {
       chooseHumanKan(kanButton.dataset.kan);
     }
     return;
@@ -4610,6 +4650,75 @@ el.callPanel.addEventListener("click", (event) => {
   if (!button) return;
   if (button.dataset.call === "skip") skipHumanCall();
   else chooseHumanCall(button.dataset.call);
+});
+
+document.addEventListener("keydown", (event) => {
+  const target = event.target;
+  if (target instanceof HTMLElement && (target.matches("input, textarea, select") || target.isContentEditable)) return;
+  if (event.ctrlKey || event.altKey || event.metaKey) return;
+  if (event.key === "Enter" && state.scoreResult) {
+    event.preventDefault();
+    confirmScore();
+    return;
+  }
+  const pendingAction = state.pendingCall || state.pendingKan;
+  if (pendingAction) {
+    if (event.key.toLowerCase() === "s" || event.key === "Enter") {
+      event.preventDefault();
+      if (state.pendingCall) skipHumanCall();
+      else skipHumanKan();
+      return;
+    }
+    const actionIndex = /^Digit[1-9]$/.test(event.code)
+      ? Number(event.code.slice(-1)) - 1
+      : /^[1-9]$/.test(event.key) ? Number(event.key) - 1 : -1;
+    if (actionIndex < 0 || !pendingAction.options[actionIndex]) return;
+    event.preventDefault();
+    const actionType = state.pendingCall ? "call" : "kan";
+    const selection = `${actionType}:${actionIndex}`;
+    if (state.keyboardActionSelection === selection) {
+      if (actionType === "call") chooseHumanCall(actionIndex);
+      else chooseHumanKan(actionIndex);
+    } else {
+      state.keyboardActionSelection = selection;
+      renderCallPanel();
+    }
+    return;
+  }
+  const canDiscardByKey = state.turn === 0 &&
+    state.phase === "discard" &&
+    state.hands[0].length % 3 === 2 &&
+    !state.pendingWin &&
+    !state.pendingCall &&
+    !state.pendingKan &&
+    !(state.debug && state.debugMode === "hand");
+  if (!canDiscardByKey) return;
+  if (event.key === "Enter") {
+    const drawnTile = state.hands[0].find((tile) => tile.id === state.drawnTileId);
+    if (!drawnTile) return;
+    event.preventDefault();
+    if (state.keyboardDiscardTileId === drawnTile.id) {
+      discardHuman(drawnTile.id);
+    } else {
+      state.keyboardDiscardTileId = drawnTile.id;
+      renderHand();
+    }
+    return;
+  }
+  const codeIndex = ["Digit1", "Digit2", "Digit3", "Digit4", "Digit5", "Digit6", "Digit7", "Digit8", "Digit9", "Digit0", "Minus", "Equal", "Backslash"].indexOf(event.code);
+  const keyIndex = discardKeyLabels.indexOf(event.key === "¥" ? "\\" : event.key);
+  const slotIndex = codeIndex >= 0 ? codeIndex : keyIndex;
+  if (slotIndex < 0) return;
+  const concealedTiles = sortTiles(state.hands[0].filter((tile) => tile.id !== state.drawnTileId));
+  const tile = concealedTiles[slotIndex];
+  if (!tile) return;
+  event.preventDefault();
+  if (state.keyboardDiscardTileId === tile.id) {
+    discardHuman(tile.id);
+  } else {
+    state.keyboardDiscardTileId = tile.id;
+    renderHand();
+  }
 });
 
 el.scoreOverlay?.addEventListener("click", (event) => {

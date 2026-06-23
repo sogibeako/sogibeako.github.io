@@ -14,6 +14,7 @@
         <h1>パパユー</h1>
       </div>
       <div class="actions">
+        <button id="helpBtn" class="icon-button" aria-expanded="false" aria-controls="helpOverlay" title="ルールを見る">?</button>
         <button id="newGameBtn" class="primary">新しく遊ぶ</button>
         <button id="autoBtn">CPUに任せる</button>
       </div>
@@ -45,6 +46,37 @@
       </aside>
     </section>
   </main>
+
+  <section id="helpOverlay" class="help-overlay" hidden>
+    <article class="help-card" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <div class="help-head">
+        <h2 id="helpTitle">取り方とカードの強さ</h2>
+        <button id="helpCloseBtn" class="icon-button" title="閉じる">×</button>
+      </div>
+      <div class="help-grid">
+        <div>
+          <h3>いつ取ってしまう？</h3>
+          <p>4人が1枚ずつ出したあと、その場で一番強いカードを出した人が4枚全部を取ります。</p>
+          <p>取った札は手札に戻らず、最後の減点計算に使われます。</p>
+        </div>
+        <div>
+          <h3>基本の強さ</h3>
+          <p>同じスートなら <b>1 &lt; 2 &lt; ... &lt; 10 &lt; J &lt; N &lt; Q &lt; K</b> の順に強くなります。</p>
+          <p>リードされたスートを持っている時は、原則そのスートを出します。</p>
+        </div>
+        <div>
+          <h3>大アルカナ</h3>
+          <p>1〜21の大アルカナは切り札です。通常スートより強く、出ている大アルカナの中で番号が大きい札が勝ちます。</p>
+          <p>ただし取ると番号ぶん減点なので、勝てる札ほど危険です。</p>
+        </div>
+        <div>
+          <h3>愚者と危険札</h3>
+          <p>愚者0はいつでも出せて、必ず勝ちません。危ない場から逃げるための札です。</p>
+          <p>減点は大アルカナ1〜21と、4枚のクイーン各-50点。点数が一番高い、つまり減点が少ない人が勝ちです。</p>
+        </div>
+      </div>
+    </article>
+  </section>
 
   <script src="app.js"></script>
 </body>

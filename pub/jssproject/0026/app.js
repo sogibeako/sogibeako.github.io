@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const keyboardEl = document.getElementById('keyboard');
   const copyBtn = document.getElementById('copy-btn');
   const copyToast = document.getElementById('copy-toast');
+  const inputGuide = document.getElementById('input-guide');
 
   let currentMode = langSelector.value;
   const ime = new IME(currentMode);
@@ -13,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize
   renderKeyboard();
+  updateInputGuide();
   editor.focus();
 
   // Mode switching
@@ -20,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     currentMode = e.target.value;
     ime.setMode(currentMode);
     renderKeyboard();
+    updateInputGuide();
     editor.focus();
   });
 
@@ -56,15 +59,52 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const targetSpan = document.createElement('span');
         targetSpan.className = 'target-char';
-        targetSpan.textContent = isShiftPressed ? keyData.shift : keyData.normal;
+        targetSpan.textContent = isShiftPressed
+          ? (keyData.displayShift || keyData.shift)
+          : (keyData.display || keyData.normal);
         
         keyEl.appendChild(engSpan);
         keyEl.appendChild(targetSpan);
+        keyEl.setAttribute('role', 'button');
+        keyEl.setAttribute('aria-label', `${keyData.eng}: ${targetSpan.textContent}`);
+        keyEl.addEventListener('pointerdown', (event) => {
+          event.preventDefault();
+          insertMappedKey(keyData.code, keyData.clickShift ? true : isShiftPressed, '');
+          keyEl.classList.add('active');
+          setTimeout(() => keyEl.classList.remove('active'), 120);
+        });
         rowEl.appendChild(keyEl);
       });
       
       keyboardEl.appendChild(rowEl);
     });
+  }
+
+  function updateInputGuide() {
+    const guides = {
+      ko: '2ボル式。英字キーからハングルを音節単位で合成します。',
+      ru: 'ロシア語標準配列です。Shiftで大文字になります。',
+      el: '現代ギリシャ語配列です。; の後に母音でアクセントを入力できます。',
+      grc: '簡単入力：y^→ῦ、a-→ᾱ、i-→ῑ、y-→ῡ、e-→η、o-→ω（ωはVキーでも入力）／ [ ᾿、Shift+[ ῾、; ´、\' ͅ',
+      grcLatn: 'ラテン転写：u^→û、o-→ō（同様に â ê î ô ŷ ／ ā ē ī ū ȳ）。JIS配列の ^ キーにも対応します。',
+      vi: 'Telex式：aa→â, aw→ă, dd→đ, ee→ê, oo→ô, ow→ơ, uw→ư／声調 s f r x j／zで解除'
+    };
+    inputGuide.textContent = guides[currentMode] || '';
+  }
+
+  function insertMappedKey(code, shiftKey, eventKey) {
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const leftText = editor.value.substring(0, start);
+    const lastChar = start === end && start > 0 ? leftText.slice(-1) : '';
+    const result = ime.processKey(lastChar, code, shiftKey, eventKey, leftText);
+
+    if (!result) return false;
+    let replaceStart = start;
+    if (start === end) replaceStart = Math.max(0, start - result.replaceLength);
+    editor.setRangeText(result.insertText, replaceStart, end, 'end');
+    editor.focus({ preventScroll: true });
+    return true;
   }
 
   // Handle Key Events on Window (for Shift state and highlighting)
@@ -99,34 +139,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Ignore control keys to allow normal shortcuts (Ctrl+C, Ctrl+V, etc.)
     if (e.ctrlKey || e.altKey || e.metaKey) return;
     
-    // Process printable characters that might be mapped
-    // Include Space? Space is usually not mapped differently, but let's allow it to pass through
+    // Process printable characters that might be mapped.
     if (e.key.length === 1) {
-      const start = editor.selectionStart;
-      const end = editor.selectionEnd;
-      
-      let lastChar = "";
-      let replaceLength = 0;
-      
-      if (start === end && start > 0) {
-        lastChar = editor.value.substring(start - 1, start);
-      }
-
-      const result = ime.processKey(lastChar, e.code, e.shiftKey, e.key);
-      
-      if (result) {
+      if (insertMappedKey(e.code, e.shiftKey, e.key)) {
         e.preventDefault();
-        
-        let replaceStart = start;
-        if (start === end) {
-          replaceStart = start - result.replaceLength;
-        }
-        
-        editor.setRangeText(result.insertText, replaceStart, end, "end");
-        
-        // Scroll to cursor
-        editor.blur();
-        editor.focus();
       }
     }
   });

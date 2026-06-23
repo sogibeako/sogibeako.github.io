@@ -134,3 +134,64 @@ const KEYBOARD_LAYOUTS = {
     ]
   }
 };
+
+// Ancient Greek uses the familiar Greek letter positions, plus suffix diacritic keys.
+KEYBOARD_LAYOUTS.grc = {
+  name: "古代ギリシャ語 (Polytonic Greek)",
+  rows: [
+    [
+      { code: "Digit6", eng: "^", normal: "6", shift: "\u0342", display: "^ → ◌͂", displayShift: "^ → ◌͂", clickShift: true },
+      { code: "Minus", eng: "-", normal: "\u0304", shift: "_", display: "- → ◌̄", displayShift: "_" }
+    ],
+    ...KEYBOARD_LAYOUTS.el.rows.map(row => row.map(key => ({ ...key })))
+  ]
+};
+
+const GRC_DIACRITIC_KEYS = {
+  BracketLeft:  { normal: "\u0313", shift: "\u0314", display: "◌̓", displayShift: "◌̔" },
+  BracketRight: { normal: "\u0300", shift: "\u0342", display: "◌̀", displayShift: "◌͂" },
+  Semicolon:    { normal: "\u0301", shift: "\u0308", display: "◌́", displayShift: "◌̈" },
+  Quote:        { normal: "\u0345", shift: "'", display: "◌ͅ", displayShift: "'" }
+};
+
+for (const row of KEYBOARD_LAYOUTS.grc.rows) {
+  for (const key of row) {
+    if (GRC_DIACRITIC_KEYS[key.code]) Object.assign(key, GRC_DIACRITIC_KEYS[key.code]);
+  }
+}
+
+// Vietnamese Telex keeps the Latin QWERTY layout. Labels show the secondary Telex action.
+const VI_CODES = [
+  ["KeyQ", "KeyW", "KeyE", "KeyR", "KeyT", "KeyY", "KeyU", "KeyI", "KeyO", "KeyP", "BracketLeft", "BracketRight"],
+  ["KeyA", "KeyS", "KeyD", "KeyF", "KeyG", "KeyH", "KeyJ", "KeyK", "KeyL", "Semicolon", "Quote"],
+  ["KeyZ", "KeyX", "KeyC", "KeyV", "KeyB", "KeyN", "KeyM", "Comma", "Period", "Slash"]
+];
+const VI_CHARS = [
+  ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "[", "]"],
+  ["a", "s", "d", "f", "g", "h", "j", "k", "l", ";", "'"],
+  ["z", "x", "c", "v", "b", "n", "m", ",", ".", "/"]
+];
+const VI_HINTS = { a: "a / â", w: "w / ă ơ ư", e: "e / ê", o: "o / ô", d: "d / đ", s: "s / ´", f: "f / `", r: "r / ̉", x: "x / ~", j: "j / ̣", z: "z / 解除" };
+
+KEYBOARD_LAYOUTS.vi = {
+  name: "ベトナム語 (Vietnamese Telex)",
+  rows: VI_CODES.map((row, rowIndex) => row.map((code, keyIndex) => {
+    const normal = VI_CHARS[rowIndex][keyIndex];
+    const shift = normal.length === 1 && /[a-z]/.test(normal) ? normal.toUpperCase() : ({ "[": "{", "]": "}", ";": ":", "'": "\"", ",": "<", ".": ">", "/": "?" }[normal] || normal);
+    return { code, eng: normal.toUpperCase(), normal, shift, display: VI_HINTS[normal] || normal, displayShift: shift };
+  }))
+};
+
+KEYBOARD_LAYOUTS.grcLatn = {
+  name: "古代ギリシャ語・ラテン転写",
+  rows: [
+    [
+      { code: "Digit6", eng: "^", normal: "6", shift: "^", display: "^ → â ê î ô û", displayShift: "^ → â ê î ô û", clickShift: true },
+      { code: "Minus", eng: "-", normal: "-", shift: "_", display: "- → ā ē ī ō ū", displayShift: "_" }
+    ],
+    ...KEYBOARD_LAYOUTS.vi.rows.map(row => row.map(key => {
+      const hint = { a: "a / â ā", e: "e / ê ē", i: "i / î ī", o: "o / ô ō", u: "u / û ū", y: "y / ŷ ȳ" }[key.normal];
+      return { ...key, display: hint || key.normal, displayShift: key.shift };
+    }))
+  ]
+};

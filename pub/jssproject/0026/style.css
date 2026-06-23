@@ -150,6 +150,14 @@ textarea:focus {
   transform: translateY(0);
 }
 
+.input-guide {
+  min-height: 1.4em;
+  margin-top: -0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
 /* Keyboard Styles */
 .keyboard {
   display: flex;
@@ -176,10 +184,14 @@ textarea:focus {
   justify-content: center;
   align-items: center;
   box-shadow: var(--key-shadow);
-  cursor: default;
+  cursor: pointer;
   transition: all 0.1s;
   user-select: none;
   padding: 0 0.2rem;
+}
+
+.key:hover {
+  background: var(--key-hover);
 }
 
 .key.active {
