@@ -6,3 +6,4 @@ pub/nazo/booru_thumb_cache/
 pub/nazo/booru_cache.json
 pub/nazo/booru_test.php
 pub/nazo/rss_test.php
+local_tools/
