@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VoiceVox Text Splitter</title>
+  <style>
+    :root {
+      --bg: #101820;
+      --panel: #1d2936;
+      --panel-2: #0f1720;
+      --text: #e8eef5;
+      --muted: #9fb0c2;
+      --border: #314255;
+      --accent: #5d9c96;
+      --accent-hover: #4b8580;
+      --warn: #f0b35f;
+      --input: #111a24;
+      --output: #f7f3e8;
+      --output-text: #20242a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", "Yu Gothic UI", "Meiryo", sans-serif;
+      font-size: 14px;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      min-height: 58px;
+      padding: 10px 20px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .header-actions,
+    .options,
+    .stats {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .options {
+      padding: 9px 20px;
+      background: var(--panel-2);
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .options strong {
+      color: var(--text);
+      font-size: 0.86rem;
+    }
+
+    label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    input[type="checkbox"] {
+      accent-color: var(--accent);
+    }
+
+    button {
+      border: 0;
+      border-radius: 4px;
+      padding: 7px 12px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 32px;
+    }
+
+    button:hover {
+      background: var(--accent-hover);
+    }
+
+    button.secondary {
+      background: #36485a;
+    }
+
+    button.secondary:hover {
+      background: #40566b;
+    }
+
+    main {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    section {
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+    }
+
+    section:last-child {
+      border-right: 0;
+    }
+
+    .pane-title {
+      min-height: 34px;
+      padding: 6px 12px;
+      background: #0c121a;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+    }
+
+    textarea {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      resize: none;
+      outline: none;
+      border: 0;
+      padding: 16px;
+      line-height: 1.8;
+      font-family: "Yu Gothic UI", "Meiryo", sans-serif;
+      font-size: 1rem;
+    }
+
+    #inputText {
+      background: var(--input);
+      color: #dbe7f2;
+    }
+
+    #outputText {
+      background: var(--output);
+      color: var(--output-text);
+    }
+
+    .stats {
+      height: 42px;
+      padding: 8px 12px;
+      background: var(--panel);
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .warn {
+      color: var(--warn);
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      padding: 10px 16px;
+      border-radius: 4px;
+      background: #14936f;
+      color: #fff;
+      font-weight: 700;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 760px) {
+      body {
+        overflow: auto;
+      }
+
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      main {
+        grid-template-columns: 1fr;
+        min-height: 820px;
+      }
+
+      section {
+        min-height: 410px;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      section:last-child {
+        border-bottom: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>VoiceVox Text Splitter</h1>
+    <div class="header-actions">
+      <button id="copyButton" type="button">コピー</button>
+      <button id="sampleButton" class="secondary" type="button">サンプル</button>
+      <button id="clearButton" class="secondary" type="button">クリア</button>
+    </div>
+  </header>
+
+  <div class="options" aria-label="分割設定">
+    <strong>改行する文字</strong>
+    <label><input id="splitPeriod" type="checkbox" checked />。</label>
+    <label><input id="splitQuestion" type="checkbox" checked />？</label>
+    <label><input id="splitQuote" type="checkbox" checked />」</label>
+    <span>50文字を超えたら次の読点でも改行</span>
+    <label><input id="trimLines" type="checkbox" checked />行頭と行末の空白を削る</label>
+    <label><input id="dropBlankLines" type="checkbox" />空行を消す</label>
+  </div>
+
+  <main>
+    <section aria-labelledby="inputTitle">
+      <div class="pane-title">
+        <span id="inputTitle">入力</span>
+        <span>なろう本文など</span>
+      </div>
+      <textarea id="inputText" spellcheck="false" placeholder="ここに文章を貼り付けてください。"></textarea>
+      <div class="stats" id="inputStats">0文字</div>
+    </section>
+
+    <section aria-labelledby="outputTitle">
+      <div class="pane-title">
+        <span id="outputTitle">出力</span>
+        <span>VoiceVoxへ貼り付けやすい改行済みテキスト</span>
+      </div>
+      <textarea id="outputText" spellcheck="false" readonly></textarea>
+      <div class="stats" id="outputStats">0行 / 0文字</div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite">コピーしました</div>
+
+  <script>
+    const els = {
+      inputText: document.getElementById("inputText"),
+      outputText: document.getElementById("outputText"),
+      inputStats: document.getElementById("inputStats"),
+      outputStats: document.getElementById("outputStats"),
+      copyButton: document.getElementById("copyButton"),
+      sampleButton: document.getElementById("sampleButton"),
+      clearButton: document.getElementById("clearButton"),
+      splitPeriod: document.getElementById("splitPeriod"),
+      splitQuestion: document.getElementById("splitQuestion"),
+      splitQuote: document.getElementById("splitQuote"),
+      trimLines: document.getElementById("trimLines"),
+      dropBlankLines: document.getElementById("dropBlankLines"),
+      toast: document.getElementById("toast")
+    };
+
+    const sampleText = "私は作業用に小説を読み上げてもらうことにした。長い文章をそのまま入れると、少し扱いづらいらしい。「それなら、句読点で区切ればいいのでは？」と思いついた。そこで、貼り付けた文章を自動で改行する道具を作ることにした。」";
+
+    function shouldSplitAfter(char) {
+      return (
+        (char === "。" && els.splitPeriod.checked) ||
+        (char === "？" && els.splitQuestion.checked) ||
+        (char === "」" && els.splitQuote.checked)
+      );
+    }
+
+    function splitLongLineAtComma(line, maxLength) {
+      const pieces = [];
+      let current = "";
+      for (const char of line) {
+        current += char;
+        if (current.length > maxLength && char === "、") {
+          pieces.push(current);
+          current = "";
+        }
+      }
+      if (current.length > 0 || pieces.length === 0) {
+        pieces.push(current);
+      }
+      return pieces;
+    }
+
+    function splitForVoiceVox(text) {
+      const normalized = text
+        .replace(/\r\n?/g, "\n")
+        .replace(/([。？])\n+(\s*」)/g, "$1$2");
+
+      const lines = [];
+      let current = "";
+      for (let i = 0; i < normalized.length; i += 1) {
+        const char = normalized[i];
+        current += char;
+
+        if (char === "\n") {
+          lines.push(current.slice(0, -1));
+          current = "";
+          continue;
+        }
+
+        if ((char === "。" || char === "？") && normalized[i + 1] === "」") {
+          current += "」";
+          i += 1;
+          if (shouldSplitAfter(char) || shouldSplitAfter("」")) {
+            lines.push(current);
+            current = "";
+          }
+          continue;
+        }
+
+        if (shouldSplitAfter(char)) {
+          lines.push(current);
+          current = "";
+        }
+      }
+      if (current.length > 0) {
+        lines.push(current);
+      }
+
+      let processedLines = lines.flatMap((line) => splitLongLineAtComma(line, 50));
+      if (els.trimLines.checked) {
+        processedLines = processedLines.map((line) => line.trim());
+      }
+      if (els.dropBlankLines.checked) {
+        processedLines = processedLines.filter((line) => line.length > 0);
+      }
+
+      return processedLines.join("\n").replace(/\n{3,}/g, "\n\n");
+    }
+
+    function updateStats(input, output) {
+      const lines = output.length === 0 ? 0 : output.split("\n").length;
+      const maxLineLength = output
+        .split("\n")
+        .reduce((max, line) => Math.max(max, line.length), 0);
+      const warning = maxLineLength > 220
+        ? '<span class="warn">最長行が長めです: ' + maxLineLength + "文字</span>"
+        : "最長行: " + maxLineLength + "文字";
+
+      els.inputStats.textContent = input.length + "文字";
+      els.outputStats.innerHTML = lines + "行 / " + output.length + "文字 / " + warning;
+    }
+
+    function updateOutput() {
+      const input = els.inputText.value;
+      const output = splitForVoiceVox(input);
+      els.outputText.value = output;
+      updateStats(input, output);
+    }
+
+    function showToast(message) {
+      els.toast.textContent = message;
+      els.toast.classList.add("show");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => {
+        els.toast.classList.remove("show");
+      }, 1600);
+    }
+
+    els.inputText.addEventListener("input", updateOutput);
+    [
+      els.splitPeriod,
+      els.splitQuestion,
+      els.splitQuote,
+      els.trimLines,
+      els.dropBlankLines
+    ].forEach((option) => option.addEventListener("change", updateOutput));
+
+    els.copyButton.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(els.outputText.value);
+        showToast("コピーしました");
+      } catch (error) {
+        els.outputText.select();
+        document.execCommand("copy");
+        showToast("コピーしました");
+      }
+    });
+
+    els.sampleButton.addEventListener("click", () => {
+      els.inputText.value = sampleText;
+      updateOutput();
+      els.inputText.focus();
+    });
+
+    els.clearButton.addEventListener("click", () => {
+      els.inputText.value = "";
+      updateOutput();
+      els.inputText.focus();
+    });
+
+    updateOutput();
+  </script>
+</body>
+</html>

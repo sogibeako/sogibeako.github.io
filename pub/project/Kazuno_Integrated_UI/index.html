@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一埜 UI 統合ダッシュボード | Kazuno Integrated UI (Local)</title>
+    <meta name="description" content="一埜（Kazuno）と一緒に作業を楽しく進める、個人用の統合型作業ダッシュボードです。">
+    <!-- Google Fonts: Outfit & Noto Sans JP -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- ログイン画面 -->
+    <div class="login-wrapper" id="localLoginWrapper" style="display: none;">
+        <div class="login-card">
+            <div class="login-kazuno">
+                <img src="img_src/neutral.png" alt="Kazuno" class="login-avatar">
+            </div>
+            <div class="login-header">
+                <h1>Kazuno Dashboard</h1>
+                <p>「おかえり。パスワードを入力してね」</p>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="input-group">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="passwordInput" placeholder="Password" required autocomplete="current-password">
+                </div>
+                <div id="loginError" class="login-error-msg"></div>
+                <button type="submit" class="btn btn-primary login-btn">
+                    <span>ログイン</span> <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- メインダッシュボード画面 -->
+    <div class="app-container" id="localAppContainer" style="display: none;">
+        
+        <!-- ヘッダー -->
+        <header class="app-header">
+            <div class="header-logo">
+                <i class="fa-solid fa-shapes header-logo-icon"></i>
+                <div class="logo-text">
+                    <h1>Oneirotopia Terminal</h1>
+                    <span class="logo-sub">Kazuno Integrated UI</span>
+                </div>
+            </div>
+            <div class="header-status">
+                <div class="status-item timer-status-badge" id="headerTimerStatus">
+                    <span class="status-dot green"></span>
+                    <span class="status-label">Standby</span>
+                </div>
+                <!-- ヘッダータイマー（初期値は非表示） -->
+                <div class="status-item pomo-header-timer hide" id="headerPomoTimer" title="ポモドーロタイマー">
+                    <i class="fa-solid fa-stopwatch pomo-icon-glow"></i>
+                    <span id="headerPomoTimerText">25:00</span>
+                </div>
+                <div class="status-item clock-display">
+                    <i class="fa-regular fa-clock"></i>
+                    <span id="currentClock">00:00:00</span>
+                </div>
+                <button id="logoutBtn" class="btn btn-icon-text logout-btn" title="ログアウト">
+                    <i class="fa-solid fa-power-off"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- メイングリッドレイアウト -->
+        <main class="app-grid">
+            
+            <!-- 左ペイン：一埜エリア -->
+            <section class="pane pane-kazuno" aria-label="キャラクターエリア">
+                <div class="kazuno-visual-container">
+                    <div class="kazuno-bg-glow"></div>
+                    <img src="img_src/neutral.png" alt="Kazuno" id="kazunoAvatar" class="kazuno-avatar">
+                </div>
+                
+                <div class="kazuno-balloon-wrapper">
+                    <div class="kazuno-balloon">
+                        <div class="balloon-tip"></div>
+                        <div class="balloon-content">
+                            <p id="kazunoSpeech">読み込み中……</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="kazuno-info">
+                    <div class="info-row">
+                        <span class="info-label">Name</span>
+                        <span class="info-val font-mono">Kazuno / 一埜 (9)</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Status</span>
+                        <span class="info-val font-mono" id="kazunoStatusText">Idle</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 右ペイン：メイン機能エリア -->
+            <section class="pane pane-main" aria-label="メイン機能エリア">
+                
+                <!-- タブヘッダー -->
+                <nav class="tab-nav" role="tablist">
+                    <button class="tab-trigger active" data-tab="todo" role="tab" aria-selected="true">
+                        <i class="fa-solid fa-list-check"></i> <span>ToDo</span>
+                    </button>
+                    <button class="tab-trigger" data-tab="calendar" role="tab" aria-selected="false">
+                        <i class="fa-solid fa-calendar-days"></i> <span>Calendar</span>
+                    </button>
+                    <button class="tab-trigger" data-tab="pomodoro" role="tab" aria-selected="false">
+                        <i class="fa-solid fa-stopwatch"></i> <span>Pomodoro</span>
+                    </button>
+                    <button class="tab-trigger" data-tab="video" role="tab" aria-selected="false">
+                        <i class="fa-brands fa-youtube"></i> <span>Video</span>
+                    </button>
+                    <button class="tab-trigger" data-tab="oneirotopia" role="tab" aria-selected="false">
+                        <i class="fa-solid fa-compass"></i> <span>Oneirotopia</span>
+                    </button>
+                    <button class="tab-trigger" data-tab="cli" role="tab" aria-selected="false" id="tabTriggerCli">
+                        <i class="fa-solid fa-terminal"></i> <span>CLI</span>
+                    </button>
+                </nav>
+
+                <!-- タブコンテンツコンテナ -->
+                <div class="tab-content-container">
+                    
+                    <!-- 1. ToDoリスト -->
+                    <div class="tab-panel active" id="tab-todo" role="tabpanel">
+                        <div class="todo-layout">
+                            <form id="todoForm" class="todo-form">
+                                <div class="todo-inputs-row">
+                                    <input type="text" id="todoTitle" placeholder="新しいToDoを追加..." required class="input-text">
+                                    <select id="todoPriority" class="input-select" title="優先度">
+                                        <option value="0">優先度: 低</option>
+                                        <option value="1">優先度: 中</option>
+                                        <option value="2">優先度: 高</option>
+                                    </select>
+                                    <input type="date" id="todoDueDate" class="input-date" title="期限日">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fa-solid fa-plus"></i> <span>追加</span>
+                                    </button>
+                                </div>
+                                <div class="todo-memo-row">
+                                    <textarea id="todoMemo" placeholder="メモ・詳細（任意）" rows="1" class="input-textarea"></textarea>
+                                </div>
+                            </form>
+
+                            <div class="todo-toolbar">
+                                <span class="todo-count" id="todoCount">0 items</span>
+                                <div class="todo-filters">
+                                    <button class="btn btn-text active" data-filter="all">すべて</button>
+                                    <button class="btn btn-text" data-filter="active">未完了</button>
+                                    <button class="btn btn-text" data-filter="completed">完了済み</button>
+                                    <span class="toolbar-separator">|</span>
+                                    <button class="btn btn-text" id="btnSortTodo">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> 優先度順
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="todo-list-wrapper">
+                                <ul id="todoList" class="todo-list">
+                                    <!-- JSで挿入されます -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. カレンダー -->
+                    <div class="tab-panel" id="tab-calendar" role="tabpanel">
+                        <div class="calendar-layout">
+                            <div class="calendar-grid-container">
+                                <div class="calendar-header-controls">
+                                    <button id="calPrevMonth" class="btn btn-icon"><i class="fa-solid fa-chevron-left"></i></button>
+                                    <h2 id="calCurrentMonthYear" class="calendar-month-title">2026年 06月</h2>
+                                    <button id="calNextMonth" class="btn btn-icon"><i class="fa-solid fa-chevron-right"></i></button>
+                                </div>
+                                <div class="calendar-weekdays">
+                                    <div class="weekday sun">日</div>
+                                    <div class="weekday">月</div>
+                                    <div class="weekday">火</div>
+                                    <div class="weekday">水</div>
+                                    <div class="weekday">木</div>
+                                    <div class="weekday">金</div>
+                                    <div class="weekday sat">土</div>
+                                </div>
+                                <div id="calendarDays" class="calendar-days-grid">
+                                    <!-- JSで挿入されます -->
+                                </div>
+                            </div>
+
+                            <div class="calendar-details-panel">
+                                <h3 id="calSelectedDateText" class="details-title">日付が選択されていません</h3>
+                                <div id="calDayEventList" class="cal-day-event-list">
+                                    <p class="empty-state">この日の予定はありません</p>
+                                </div>
+                                <form id="calEventForm" class="cal-event-form">
+                                    <h4>予定の追加</h4>
+                                    <input type="text" id="calEventTitle" placeholder="予定タイトル" required class="input-text">
+                                    <div class="time-inputs">
+                                        <input type="time" id="calEventStart" class="input-time" title="開始時間">
+                                        <span>〜</span>
+                                        <input type="time" id="calEventEnd" class="input-time" title="終了時間">
+                                    </div>
+                                    <textarea id="calEventMemo" placeholder="メモ（任意）" rows="2" class="input-textarea"></textarea>
+                                    <button type="submit" class="btn btn-primary w-full">
+                                        <i class="fa-solid fa-calendar-plus"></i> 予定を保存
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. ポモドーロタイマー -->
+                    <div class="tab-panel" id="tab-pomodoro" role="tabpanel">
+                        <div class="pomodoro-layout">
+                            <div class="pomodoro-timer-box">
+                                <div class="timer-outer">
+                                    <svg class="timer-svg" viewBox="0 0 100 100">
+                                        <circle class="timer-bg-circle" cx="50" cy="50" r="45"></circle>
+                                        <circle id="timerProgressCircle" class="timer-progress-circle" cx="50" cy="50" r="45"></circle>
+                                    </svg>
+                                    <div class="timer-text-content">
+                                        <div id="pomodoroClock" class="pomodoro-digits">25:00</div>
+                                        <div id="pomodoroModeLabel" class="pomodoro-mode-label">作業セッション</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="pomodoro-presets">
+                                    <button class="btn btn-secondary active" data-type="work">作業 (25m)</button>
+                                    <button class="btn btn-secondary" data-type="short_break">小休憩 (5m)</button>
+                                    <button class="btn btn-secondary" data-type="long_break">長休憩 (15m)</button>
+                                </div>
+                                
+                                <div class="pomodoro-controls">
+                                    <button id="pomoStartBtn" class="btn btn-primary btn-large">
+                                        <i class="fa-solid fa-play"></i> <span>スタート</span>
+                                    </button>
+                                    <button id="pomoPauseBtn" class="btn btn-secondary btn-large" disabled>
+                                        <i class="fa-solid fa-pause"></i> <span>一時停止</span>
+                                    </button>
+                                    <button id="pomoResetBtn" class="btn btn-danger btn-large">
+                                        <i class="fa-solid fa-rotate-right"></i> <span>リセット</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="pomodoro-settings-panel">
+                                <div class="settings-card">
+                                    <h3><i class="fa-solid fa-gears"></i> タイマー時間設定 (分)</h3>
+                                    <div class="settings-grid">
+                                        <div class="setting-item">
+                                            <label for="pomoTimeWork">作業時間</label>
+                                            <input type="number" id="pomoTimeWork" min="1" max="120" value="25" class="input-number">
+                                        </div>
+                                        <div class="setting-item">
+                                            <label for="pomoTimeShort">小休憩</label>
+                                            <input type="number" id="pomoTimeShort" min="1" max="60" value="5" class="input-number">
+                                        </div>
+                                        <div class="setting-item">
+                                            <label for="pomoTimeLong">長休憩</label>
+                                            <input type="number" id="pomoTimeLong" min="1" max="60" value="15" class="input-number">
+                                        </div>
+                                        <div class="setting-item">
+                                            <label for="pomoSequenceInput" title="作業(w)/小休(r)/長休(R)の順序。例: wrwrwrR">シークエンス</label>
+                                            <input type="text" id="pomoSequenceInput" value="wrwrwrR" class="input-text" placeholder="例: wrwrwrR">
+                                        </div>
+                                    </div>
+                                    <button id="savePomoSettingsBtn" class="btn btn-primary w-full mt-10">設定を保存</button>
+                                </div>
+
+                                <div class="settings-card mt-10">
+                                    <h3><i class="fa-solid fa-comments"></i> 一埜おしゃべり設定</h3>
+                                    <div class="setting-item">
+                                        <label for="kazunoSpeechInterval">ランダム会話間隔 (秒)</label>
+                                        <input type="number" id="kazunoSpeechInterval" min="0" max="3600" value="30" class="input-number" title="0で停止">
+                                    </div>
+                                    <button id="saveSpeechIntervalBtn" class="btn btn-primary w-full mt-10">設定を保存</button>
+                                </div>
+
+                                <div class="pomodoro-log-card">
+                                    <h3><i class="fa-solid fa-receipt"></i> 今日の作業完了ログ</h3>
+                                    <ul id="pomodoroLogList" class="pomo-log-list">
+                                        <!-- JSで挿入されます -->
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. YouTube再生 -->
+                    <div class="tab-panel" id="tab-video" role="tabpanel">
+                        <div class="video-layout">
+                            <div class="video-form">
+                                <input type="text" id="videoUrlInput" placeholder="YouTube URLを入力 (https://www.youtube.com/watch?v=xxxx)" class="input-text">
+                                <button id="playVideoBtn" class="btn btn-primary"><i class="fa-solid fa-circle-play"></i> 再生</button>
+                            </div>
+                            
+                            <div class="video-body">
+                                <div class="video-player-container">
+                                    <div id="videoPlaceholder" class="video-placeholder">
+                                        <i class="fa-brands fa-youtube placeholder-icon"></i>
+                                        <p>YouTube URLを入力すると、ここで再生できます</p>
+                                    </div>
+                                    <div id="videoIframeWrapper" class="video-iframe-wrapper hide">
+                                        <!-- iframeが動的に挿入されます -->
+                                    </div>
+                                    <div id="videoLocalLink" class="video-local-link-helper hide">
+                                        <!-- ローカル用直リンクヘルパー -->
+                                    </div>
+                                </div>
+                                
+                                <div class="video-history-container">
+                                    <h3><i class="fa-solid fa-clock-rotate-left"></i> 再生履歴</h3>
+                                    <ul id="videoHistoryList" class="video-history-list">
+                                        <!-- JSで履歴が挿入されます -->
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Oneirotopia (工事中) -->
+                    <div class="tab-panel" id="tab-oneirotopia" role="tabpanel">
+                        <div class="oneirotopia-layout">
+                            <div class="under-construction-banner">
+                                <i class="fa-solid fa-person-digging animated-digging"></i>
+                                <h2>Oneirotopia</h2>
+                                <p class="sub">白いタイルとプールで構成された、無限迷宮の探索システム</p>
+                                <div class="badge badge-warning">UNDER CONSTRUCTION - 工事中</div>
+                            </div>
+                            
+                            <div class="oneirotopia-desc-card">
+                                <h3>仕様概要</h3>
+                                <p>20歳の兄「水原一彌（Kazuya）」と9歳の妹「一埜（Kazuno）」が、プール迷宮を自動探索するRPGパートです。トラップやパズル（数独、The Witness風等）を解きながら地下へ降ります。</p>
+                                <div class="oneirotopia-preview-visual">
+                                    <div class="tile-grid-effect"></div>
+                                    <div class="character-preview-row">
+                                        <div class="char-preview">
+                                            <span class="badge">Kazuya (20)</span>
+                                        </div>
+                                        <div class="char-preview">
+                                            <span class="badge">Kazuno (9)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="oneirotopia-log-box">
+                                <h3>ダミー探索ログ (シミュレーション)</h3>
+                                <div id="oneiroFakeLogs" class="fake-logs">
+                                    <div class="log-line text-muted">[2026-06-26 12:00:00] Lobbyにて探索準備中...</div>
+                                    <div class="log-line text-muted">[2026-06-26 12:05:00] 迷宮ゲートロック中。一彌「一埜、準備はいい？」</div>
+                                    <div class="log-line text-muted">[2026-06-26 12:06:00] 一埜「うん、お兄ちゃん。いつでもいけるよ」</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 6. CLIもどき (タブ化) -->
+                    <div class="tab-panel" id="tab-cli" role="tabpanel">
+                        <div class="cli-layout">
+                            <div class="cli-terminal">
+                                <div class="cli-main-area">
+                                    <div class="cli-output" id="cliOutput">
+                                        <div class="cli-line text-info">=== Oneirotopia Terminal v1.0.0 ===</div>
+                                        <div class="cli-line text-muted">コマンドを入力して操作できます。 "help" でコマンド一覧を表示します。</div>
+                                    </div>
+                                    <div id="cliCanvasWrapper" class="cli-canvas-wrapper hide">
+                                        <div class="canvas-header">
+                                            <span><i class="fa-solid fa-desktop"></i> BASIC Graphics Screen</span>
+                                            <button id="closeCanvasBtn"><i class="fa-solid fa-xmark"></i></button>
+                                        </div>
+                                        <canvas id="cliCanvas" width="400" height="400"></canvas>
+                                    </div>
+                                </div>
+                                <div class="cli-input-line">
+                                    <span class="cli-prompt">kazuno&gt;</span>
+                                    <input type="text" id="cliInput" class="cli-input" placeholder="ここにコマンドを入力..." autocomplete="off">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <!-- 音声通知用 -->
+    <audio id="notificationSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-84.wav" preload="auto"></audio>
+
+    <!-- JSチェック & 表示出し分け -->
+    <script>
+        (function() {
+            const isLocalLoggedIn = sessionStorage.getItem('kazuno_logged_in') === 'true';
+            
+            // API接続チェック (動的環境なら index.php がメインで、index.html は直接ファイルを開いたローカル確認用)
+            if (isLocalLoggedIn) {
+                document.getElementById('localAppContainer').style.display = 'flex';
+            } else {
+                document.getElementById('localLoginWrapper').style.display = 'flex';
+            }
+        })();
+    </script>
+
+    <!-- JSファイルのインポート -->
+    <script src="js/parser.js?v=2.0"></script>
+    <script src="js/app.js?v=2.0"></script>
+
+</body>
+</html>

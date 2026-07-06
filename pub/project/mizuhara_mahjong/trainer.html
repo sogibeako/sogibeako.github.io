@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>水原麻雀 CPU学習ラボ</title>
+  <link rel="stylesheet" href="style.css?v=20260628-ai-training-1">
+</head>
+<body>
+  <main class="app trainer-app">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Local Trainer</p>
+        <h1>CPU学習ラボ</h1>
+      </div>
+      <div class="top-actions">
+        <a class="button-link" href="index.html">本編へ戻る</a>
+      </div>
+    </header>
+
+    <section class="layout trainer-layout">
+      <section class="panel trainer-panel">
+        <h2>学習設定</h2>
+        <label class="stacked">
+          <span>キャラクター</span>
+          <select id="trainerCharacter">
+            <option value="kazuya">水原一彌</option>
+            <option value="ichino">水原一埜</option>
+            <option value="nanayo">夕畑目ななよ</option>
+            <option value="mayoi">沖中真宵</option>
+          </select>
+        </label>
+        <label class="stacked">
+          <span>強さ</span>
+          <input id="trainerStrength" type="range" min="1" max="5" value="3">
+        </label>
+        <label class="toggle"><input id="trainerFlowers" type="checkbox"> 花牌</label>
+        <label class="toggle"><input id="trainerWhiteStorm" type="checkbox"> 白だらけ</label>
+        <label class="toggle"><input id="trainerCosmic" type="checkbox"> 宇宙麻雀</label>
+        <label class="toggle"><input id="trainerChina" type="checkbox"> 中国麻将役</label>
+        <label class="toggle"><input id="trainerOracle" type="checkbox"> オラクル込みで別学習</label>
+        <div class="oracle-controls">
+          <label class="stacked">
+            <span>オラクル割り当て</span>
+            <select id="trainerOraclePreset">
+              <option value="default">各キャラ標準</option>
+              <option value="all_kazuya">全員: 一彌型</option>
+              <option value="all_ichino">全員: 一埜型</option>
+              <option value="all_nanayo">全員: ななよ型</option>
+              <option value="all_mayoi">全員: 真宵型</option>
+              <option value="custom">個別指定</option>
+            </select>
+          </label>
+          <div class="oracle-grid">
+            <label class="stacked"><span>一彌</span><select id="oracleKazuya"></select></label>
+            <label class="stacked"><span>一埜</span><select id="oracleIchino"></select></label>
+            <label class="stacked"><span>ななよ</span><select id="oracleNanayo"></select></label>
+            <label class="stacked"><span>真宵</span><select id="oracleMayoi"></select></label>
+          </div>
+        </div>
+        <label class="stacked">
+          <span>白の枚数</span>
+          <input id="trainerWhiteCount" type="number" min="4" max="24" value="4">
+        </label>
+        <label class="stacked">
+          <span>反復回数</span>
+          <input id="trainerIterations" type="number" min="100" max="200000" step="100" value="5000">
+        </label>
+        <div class="trainer-actions">
+          <button id="trainOnceBtn" class="primary">学習を回す</button>
+          <button id="trainAllBtn">全員まとめて学習</button>
+          <button id="exportLearningBtn">JSONを書き出し</button>
+          <label class="file-button">
+            JSONを読み込む
+            <input id="importLearningInput" type="file" accept="application/json">
+          </label>
+          <button id="resetLearningBtn">ローカル学習を初期化</button>
+        </div>
+      </section>
+
+      <section class="panel trainer-panel">
+        <h2>学習状況</h2>
+        <div id="trainerStatus" class="trainer-status"></div>
+        <pre id="trainerWeights" class="trainer-code"></pre>
+      </section>
+    </section>
+  </main>
+
+  <script src="ai_core.js?v=20260628-ai-training-1"></script>
+  <script src="trainer.js?v=20260628-ai-training-1"></script>
+</body>
+</html>

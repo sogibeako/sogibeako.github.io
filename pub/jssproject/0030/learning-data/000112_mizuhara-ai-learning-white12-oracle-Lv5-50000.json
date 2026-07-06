@@ -1,0 +1,156 @@
+{
+  "format": "mizuhara-mahjong-ai-learning-v1",
+  "version": 1,
+  "updatedAt": "2026-06-29T02:38:11.019Z",
+  "profiles": {
+    "trainer|noflowers|white12|normal|riichi|oracle(kazuya:kazuya_initial_hands,ichino:ichino_wall_and_hands,nanayo:nanayo_leader_hand,mayoi:mayoi_wall_order)": {
+      "kazuya": {
+        "games": 50000,
+        "updates": 6216,
+        "weights": {
+          "baseShape": -0.028199999999999864,
+          "keepsPair": 0.168,
+          "keepsTriplet": -0.09599999999999999,
+          "keepsDora": 0,
+          "keepsValueHonor": -0.08399999999999999,
+          "keepsWhite": 0,
+          "keepsTerminal": -0.04800000000000001,
+          "discardSafe": 0.016,
+          "discardOffSuitForFlush": 0.2880000000000001,
+          "keepsFlushSuit": 0,
+          "rareRoute": 0.12120000000000003,
+          "callAggression": 0,
+          "defense": 0,
+          "fastTenpai": -0.299424,
+          "flexibleYakuRoute": -0.13937519999999992,
+          "highValueRoute": 0.06777000000000001,
+          "dealInRisk": 0,
+          "oracleKeep": 0,
+          "oracleUkeire": 0,
+          "oracleTempo": 0,
+          "oracleDanger": 0
+        },
+        "stats": {
+          "wins": 0,
+          "averageReward": 0.00014135754999999997
+        }
+      },
+      "ichino": {
+        "games": 50000,
+        "updates": 1421,
+        "weights": {
+          "baseShape": 0.15479999999999933,
+          "keepsPair": 0.34800000000000014,
+          "keepsTriplet": -0.036000000000000004,
+          "keepsDora": 0.012,
+          "keepsValueHonor": -0.21600000000000005,
+          "keepsWhite": 0,
+          "keepsTerminal": -0.34800000000000025,
+          "discardSafe": 0.23200000000000015,
+          "discardOffSuitForFlush": 0.3000000000000001,
+          "keepsFlushSuit": 0.024,
+          "rareRoute": 0.10920000000000002,
+          "callAggression": 0,
+          "defense": 0,
+          "fastTenpai": -0.07166400000000007,
+          "flexibleYakuRoute": 0.07534799999999997,
+          "highValueRoute": 0.025140000000000027,
+          "dealInRisk": 0,
+          "oracleKeep": -1.2529528439369357,
+          "oracleUkeire": -0.18498726910062321,
+          "oracleTempo": -0.16045690443841548,
+          "oracleDanger": 0
+        },
+        "stats": {
+          "wins": 0,
+          "averageReward": 0.0005850193291644741
+        }
+      },
+      "nanayo": {
+        "games": 50000,
+        "updates": 1426,
+        "weights": {
+          "baseShape": 0.1445999999999994,
+          "keepsPair": 0.26400000000000007,
+          "keepsTriplet": 0.09599999999999999,
+          "keepsDora": 0,
+          "keepsValueHonor": 0.06,
+          "keepsWhite": 0.012,
+          "keepsTerminal": -0.5490000000000004,
+          "discardSafe": 0.0607272727272726,
+          "discardOffSuitForFlush": 0.09599999999999999,
+          "keepsFlushSuit": 0,
+          "rareRoute": -0.0816,
+          "callAggression": 0,
+          "defense": 0,
+          "fastTenpai": 0.10065600000000002,
+          "flexibleYakuRoute": -0.3248028000000001,
+          "highValueRoute": -0.12251999999999999,
+          "dealInRisk": 0,
+          "oracleKeep": -0.8019671497870856,
+          "oracleUkeire": -0.015017901218962407,
+          "oracleTempo": 0.042951095211388055,
+          "oracleDanger": 0
+        },
+        "stats": {
+          "wins": 0,
+          "averageReward": 0.00041857888325163976
+        }
+      },
+      "mayoi": {
+        "games": 50000,
+        "updates": 6292,
+        "weights": {
+          "baseShape": -0.07739999999999997,
+          "keepsPair": 0.37200000000000016,
+          "keepsTriplet": -0.036000000000000004,
+          "keepsDora": 0,
+          "keepsValueHonor": -0.024,
+          "keepsWhite": 0,
+          "keepsTerminal": 0.04800000000000001,
+          "discardSafe": -0.22000000000000014,
+          "discardOffSuitForFlush": 0.2760000000000001,
+          "keepsFlushSuit": 0,
+          "rareRoute": 0.09000000000000004,
+          "callAggression": 0,
+          "defense": 0,
+          "fastTenpai": -0.47786399999999984,
+          "flexibleYakuRoute": -0.13810680000000006,
+          "highValueRoute": -0.02730000000000001,
+          "dealInRisk": 0,
+          "oracleKeep": 0,
+          "oracleUkeire": 0,
+          "oracleTempo": 0,
+          "oracleDanger": 0
+        },
+        "stats": {
+          "wins": 0,
+          "averageReward": 0.00016719120000000006
+        }
+      }
+    }
+  },
+  "meta": {
+    "title": "白12 + オラクル / Lv5 / 50,000",
+    "ruleId": "white12-oracle",
+    "generatedAt": "2026-06-29T02:38:11.020Z",
+    "settings": {
+      "presetId": "trainer",
+      "flowers": false,
+      "whiteStorm": true,
+      "cosmic": false,
+      "china": false,
+      "whiteCount": 12
+    },
+    "oracleEnabled": true,
+    "oracleAssignments": {
+      "kazuya": "kazuya_initial_hands",
+      "ichino": "ichino_wall_and_hands",
+      "nanayo": "nanayo_leader_hand",
+      "mayoi": "mayoi_wall_order"
+    },
+    "iterationsPerCharacter": 50000,
+    "strength": 5,
+    "learningRate": 0.012
+  }
+}

@@ -10,36 +10,54 @@ const suitColor = { m: "#bf2638", p: "#1b1f26", s: "#158057", z: "#202420", f: "
 const suitMark = { m: "萬", p: "●", s: "♣", z: "", f: "✿" };
 
 const INITIAL_SCORE = 25000;
+const TURN_STEP = 3;
+
+function seatAfterSteps(seat, steps = 1) {
+  return (seat + TURN_STEP * steps + 40) % 4;
+}
+
+function nextSeat(seat) {
+  return seatAfterSteps(seat, 1);
+}
+
+function previousSeat(seat) {
+  return seatAfterSteps(seat, 3);
+}
+
+function dealerIndexForRound(roundIndex = state?.roundIndex || 0) {
+  return seatAfterSteps(0, roundIndex % 4);
+}
+
 const players = [
-  { name: "水原一彌", wind: "東", img: "p0", score: INITIAL_SCORE, quote: "ぼくの理論的打牌をお目にかけようではないか！" },
+  { name: "水原一彌", wind: "東", img: "p0", score: INITIAL_SCORE, quote: "ぼくの理論的打牌をお目に掛けようではないか！" },
   { name: "水原一埜", wind: "南", img: "p1", score: INITIAL_SCORE, quote: "白が多いなら、白を集めちゃえばいいじゃん！" },
-  { name: "夕畑目ななよ", wind: "西", img: "p2", score: INITIAL_SCORE, quote: "ん～？ ここに花牌の気配が！" },
-  { name: "沖中真宵", wind: "北", img: "p3", score: INITIAL_SCORE, quote: "宇宙麻雀？ 九一二が繋がるの？ 変なの。" }
+  { name: "夕畑目ななよ", wind: "西", img: "p2", score: INITIAL_SCORE, quote: "手牌を可愛くデコっちゃお～っと！" },
+  { name: "沖中真宵", wind: "北", img: "p3", score: INITIAL_SCORE, quote: "912とか東南西が順子になるの？ 変なの。" }
 ];
 
 const presets = [
   {
     id: "standard",
     name: "標準リーチ",
-    description: "4人日本式、花牌なし、白4枚。",
+    description: "4人日本式、花牌なし、白4枚です。",
     settings: { flowers: false, whiteStorm: false, cosmic: false, china: false, whiteCount: 4 }
   },
   {
     id: "white",
     name: "白だらけ",
-    description: "白12枚。白色地平線（白8枚遣い）を狙う実験卓。",
+    description: "白12枚。白色地平線（白8枚遣い、役満相当）を狙う実験卓。",
     settings: { flowers: false, whiteStorm: true, cosmic: false, china: false, whiteCount: 12 }
   },
   {
     id: "cosmic",
     name: "宇宙麻雀",
-    description: "891、912、白發中、東南西を順子扱い。",
+    description: "891、912は順子になります。三元牌、東南西北も循環して順子を形成。",
     settings: { flowers: false, whiteStorm: false, cosmic: true, china: false, whiteCount: 4 }
   },
   {
     id: "hybrid",
     name: "統合実験卓",
-    description: "花牌、白増量、宇宙順子、中国役を全部オン。",
+    description: "花牌、白増量、宇宙順子、中国役を全部オンにします。",
     settings: { flowers: true, whiteStorm: true, cosmic: true, china: true, whiteCount: 12 }
   }
 ];
@@ -289,6 +307,7 @@ const el = {
   rivers: [0, 1, 2, 3].map((i) => document.getElementById(`river${i}`)),
   riichiSticks: document.getElementById("riichiSticks"),
   tableMelds: [0, 1, 2, 3].map((i) => document.getElementById(`tableMeld${i}`)),
+  tableFlowers: [0, 1, 2, 3].map((i) => document.getElementById(`tableFlower${i}`)),
   wallTop: document.getElementById("wallTop"),
   wallRight: document.getElementById("wallRight"),
   wallBottom: document.getElementById("wallBottom"),
@@ -319,8 +338,29 @@ const el = {
   whiteStormToggle: document.getElementById("whiteStormToggle"),
   cosmicToggle: document.getElementById("cosmicToggle"),
   chinaToggle: document.getElementById("chinaToggle"),
-  whiteCountInput: document.getElementById("whiteCountInput")
+  whiteCountInput: document.getElementById("whiteCountInput"),
+  aiLearningToggle: document.getElementById("aiLearningToggle"),
+  aiOracleToggle: document.getElementById("aiOracleToggle"),
+  aiStrengthInput: document.getElementById("aiStrengthInput"),
+  aiLearningPresetSelect: document.getElementById("aiLearningPresetSelect"),
+  aiLoadPresetBtn: document.getElementById("aiLoadPresetBtn"),
+  aiReloadLearningBtn: document.getElementById("aiReloadLearningBtn"),
+  aiImportLearningInput: document.getElementById("aiImportLearningInput")
 };
+
+const cpuAiConfig = {
+  useLearning: false,
+  oracleEnabled: false,
+  strength: 3,
+  learningData: window.MizuharaAI ? window.MizuharaAI.loadLearningData() : null,
+  oracleAssignments: window.MizuharaAI ? { ...window.MizuharaAI.DEFAULT_ORACLE_ASSIGNMENTS } : null
+};
+
+function isLocalAiDevMode() {
+  return ["127.0.0.1", "localhost", ""].includes(location.hostname) || new URLSearchParams(location.search).has("ai_dev");
+}
+
+document.body.classList.toggle("ai-dev-enabled", isLocalAiDevMode());
 
 function tileId(suit, value, serial = 0) {
   return `${suit}${value}-${serial}`;
@@ -457,19 +497,68 @@ function startRound(settings = state.settings || presets[0].settings, presetId =
     selectedDebugTile: null,
     keyboardDiscardTileId: null,
     keyboardActionSelection: null,
+    cpuThoughts: players.map((player) => player.quote),
+    oracleHints: [null, null, null, null],
+    oracleHistory: [[], [], [], []],
+    openUnitCounter: 0,
     log: []
   };
   revealDoraPair();
   for (let i = 0; i < 13; i += 1) {
     for (let player = 0; player < 4; player += 1) drawIntoHand(player, false);
   }
+  refreshOracleHints("round_start");
   addLog(`${roundName()}、配牌完了。あなたのツモまで自動で進めます。`);
-  drawHumanAuto();
+  beginTurn(dealerIndexForRound(roundIndex));
+}
+
+function refreshOracleHints(timing, playerIndex = null) {
+  const seats = playerIndex === null ? [0, 1, 2, 3] : [playerIndex];
+  if (!window.MizuharaAI || !cpuAiConfig.oracleEnabled) {
+    seats.forEach((seat) => {
+      state.oracleHints[seat] = null;
+      state.oracleHistory[seat] = [];
+    });
+    return;
+  }
+  seats.forEach((seat) => {
+    const hint = window.MizuharaAI.getOracleHint({
+      state: { ...state, players },
+      settings: state.settings,
+      playerIndex: seat,
+      characterId: window.MizuharaAI.CHARACTER_IDS[seat],
+      oracleEnabled: cpuAiConfig.oracleEnabled,
+      assignments: cpuAiConfig.oracleAssignments,
+      timing
+    });
+    state.oracleHints[seat] = hint;
+    if (hint?.active) {
+      state.oracleHistory[seat] = [...(state.oracleHistory[seat] || []), {
+        ...hint,
+        turn: state.turn,
+        wallCount: state.wall.length,
+        discardCount: state.discardCounts?.[seat] || 0
+      }].slice(-12);
+    }
+  });
+}
+
+function beginTurn(playerIndex) {
+  if (playerIndex === 0) {
+    drawHumanAuto();
+    return;
+  }
+  state.turn = playerIndex;
+  state.phase = "auto";
+  state.keyboardDiscardTileId = null;
+  render();
+  scheduleAutoAdvance();
 }
 
 function drawIntoHand(playerIndex, markDrawn = true) {
   let tile = state.wall.pop();
   while (tile && tile.suit === "f") {
+    tile.openOrder = nextOpenUnitOrder();
     state.flowers[playerIndex].push(tile);
     addLog(`${players[playerIndex].name}が${label(tile)}を抜いて補充。`);
     tile = state.wall.pop();
@@ -478,6 +567,11 @@ function drawIntoHand(playerIndex, markDrawn = true) {
   state.hands[playerIndex].push(tile);
   if (markDrawn) state.drawnTileId = tile.id;
   return tile;
+}
+
+function nextOpenUnitOrder() {
+  state.openUnitCounter = (state.openUnitCounter || 0) + 1;
+  return state.openUnitCounter;
 }
 
 function addLog(message) {
@@ -583,6 +677,7 @@ function autoHumanDecision() {
     return;
   }
   if (state.turn !== 0 || state.phase !== "discard" || state.hands[0].length % 3 !== 2) return;
+  refreshOracleHints("before_discard", 0);
   const declaredNow = !state.riichi[0] && canRiichi(0) && Math.random() < 0.12 && declareRiichi(0);
   const discardIndex = declaredNow
     ? chooseRiichiDiscardIndex(0)
@@ -602,6 +697,7 @@ function autoAdvance() {
     endRoundByDraw();
     return;
   }
+  refreshOracleHints("before_discard", playerIndex);
   const cpuTsumoWin = { type: "ツモ", player: playerIndex, tile: drawn, auto: true };
   if (canWinNow(playerIndex, cpuTsumoWin)) {
     completeWin(cpuTsumoWin);
@@ -692,15 +788,7 @@ function handleAfterDiscard(discarder, tile) {
 }
 
 function advanceToNextDraw(discarder) {
-  const next = (discarder + 1) % 4;
-  if (next === 0) {
-    drawHumanAuto();
-  } else {
-    state.turn = next;
-    state.phase = "auto";
-    render();
-    scheduleAutoAdvance();
-  }
+  beginTurn(nextSeat(discarder));
 }
 
 function cpuDiscardAfterCall(playerIndex) {
@@ -739,7 +827,7 @@ function callOptionsFor(playerIndex, discarder, tile) {
 }
 
 function isKamichaDiscardForChi(playerIndex, discarder) {
-  return discarder === (playerIndex + 1) % 4;
+  return playerIndex === nextSeat(discarder);
 }
 
 function chiSequences(tile) {
@@ -758,7 +846,7 @@ function chiSequences(tile) {
 
 function findCpuCall(discarder, tile) {
   for (let offset = 1; offset < 4; offset += 1) {
-    const player = (discarder + offset) % 4;
+    const player = seatAfterSteps(discarder, offset);
     if (player === 0) continue;
     const options = callOptionsFor(player, discarder, tile);
     const openKan = options.find((option) => option.type === "大明カン");
@@ -766,7 +854,7 @@ function findCpuCall(discarder, tile) {
     const pon = options.find((option) => option.type === "ポン");
     if (pon && shouldCpuCall(player, pon)) return { player, option: pon };
   }
-  const chiPlayer = (discarder + 3) % 4;
+  const chiPlayer = nextSeat(discarder);
   if (chiPlayer !== 0) {
     const chi = callOptionsFor(chiPlayer, discarder, tile).find((option) => option.type === "チー");
     if (chi && shouldCpuCall(chiPlayer, chi)) return { player: chiPlayer, option: chi };
@@ -882,6 +970,7 @@ function applyCall(playerIndex, discarder, tile, option) {
     type: option.type,
     from: discarder,
     calledTileId: tile.id,
+    openOrder: nextOpenUnitOrder(),
     tiles: meldDisplayTiles(playerIndex, discarder, tile, option.tiles, option.type)
   });
   state.drawnTileId = null;
@@ -996,9 +1085,10 @@ function closedKanOptions(playerIndex) {
     if (!counts[key]) counts[key] = [];
     counts[key].push(tile);
   }
-  return Object.values(counts)
+  const options = Object.values(counts)
     .filter((tiles) => tiles.length >= 4)
     .map((tiles) => ({ type: "暗カン", consume: tiles.slice(0, 4).map((tile) => tile.id), tiles: tiles.slice(0, 4) }));
+  return state.riichi[playerIndex] ? riichiSafeClosedKanOptions(playerIndex, options) : options;
 }
 
 function addedKanOptions(playerIndex) {
@@ -1013,7 +1103,43 @@ function addedKanOptions(playerIndex) {
 }
 
 function kanOptions(playerIndex) {
+  if (state.riichi[playerIndex]) return closedKanOptions(playerIndex);
   return [...closedKanOptions(playerIndex), ...addedKanOptions(playerIndex)];
+}
+
+function waitKeySetForReadyTiles(playerIndex, tiles) {
+  if (tiles.length % 3 !== 1) return new Set();
+  return new Set(
+    allPrototypeTiles()
+      .filter((draw) => isWinningHandWithTiles(playerIndex, [...tiles, draw]))
+      .map(keyOf)
+  );
+}
+
+function sameKeySet(left, right) {
+  if (left.size !== right.size) return false;
+  for (const key of left) if (!right.has(key)) return false;
+  return true;
+}
+
+function riichiSafeClosedKanOptions(playerIndex, options) {
+  const drawnTileId = state.drawnTileId;
+  if (!drawnTileId) return [];
+  const readyTiles = state.hands[playerIndex].filter((tile) => tile.id !== drawnTileId);
+  const beforeWaits = waitKeySetForReadyTiles(playerIndex, readyTiles);
+  if (!beforeWaits.size) return [];
+  const previousMelds = state.melds[playerIndex];
+  return options.filter((option) => {
+    if (!option.consume.includes(drawnTileId)) return false;
+    const consumed = new Set(option.consume);
+    const afterTiles = state.hands[playerIndex].filter((tile) => !consumed.has(tile.id));
+    state.melds[playerIndex] = [...previousMelds, { type: "暗カン", from: playerIndex, tiles: option.tiles }];
+    try {
+      return sameKeySet(beforeWaits, waitKeySetForReadyTiles(playerIndex, afterTiles));
+    } finally {
+      state.melds[playerIndex] = previousMelds;
+    }
+  });
 }
 
 function queueHumanClosedKan(message) {
@@ -1040,7 +1166,7 @@ function chooseHumanKan(index) {
     const handIndex = state.hands[0].findIndex((tile) => tile.id === tileId);
     if (handIndex >= 0) state.hands[0].splice(handIndex, 1);
   }
-  state.melds[0].push({ type: "暗カン", from: 0, tiles: option.tiles });
+  state.melds[0].push({ type: "暗カン", from: 0, openOrder: nextOpenUnitOrder(), tiles: option.tiles });
   state.pendingKan = null;
   revealDoraPair();
   const drawn = drawRinshanIntoHand(0, true);
@@ -1264,6 +1390,16 @@ function setupAddedKanDisplayScenario() {
   state.selectedDebugSeat = null;
   state.selectedDebugTile = null;
   addLog("表示確認: 4人全員の一列目と二列目に小明カンを配置しました。");
+  render();
+}
+
+function setupAddedKanFlowerDisplayScenario() {
+  setupAddedKanDisplayScenario();
+  state.settings = { ...state.settings, flowers: true };
+  state.flowers = [0, 1, 2, 3].map((seat) => (
+    makeDebugTiles(["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8"], 878000 + seat * 100)
+  ));
+  addLog("表示確認: 4人小明カン + 全家花牌8枚を卓上に配置しました。");
   render();
 }
 
@@ -1830,7 +1966,7 @@ function hybridLimitName(totalPoint) {
 
 function calculateHybridScore(win, displayType, yaku, breakdown, doraBreakdown) {
   const winner = win.player;
-  const dealer = state.roundIndex % 4;
+  const dealer = dealerIndexForRound(state.roundIndex);
   const isDealer = winner === dealer;
   const totalPoint = breakdown.totalPoint;
   const childRon = hybridChildRonPayment(totalPoint);
@@ -1884,7 +2020,7 @@ function calculateScore(win) {
   const displayType = win.type;
   if (win.discarder !== undefined) win = { ...win, type: "繝ｭ繝ｳ" };
   const winner = win.player;
-  const dealer = state.roundIndex % 4;
+  const dealer = dealerIndexForRound(state.roundIndex);
   const isDealer = winner === dealer;
   const scoringHand = scoringTilesForWin(win);
   const scoringAllTiles = [...scoringHand, ...state.melds[winner].flatMap((meld) => meld.tiles)];
@@ -2039,8 +2175,8 @@ function roundWindValue() {
 }
 
 function seatWindValue(playerIndex) {
-  const dealer = (state.roundIndex || 0) % 4;
-  return ((playerIndex - dealer + 4) % 4) + 1;
+  const dealer = dealerIndexForRound(state.roundIndex || 0);
+  return ((dealer - playerIndex + 4) % 4) + 1;
 }
 
 function seatWindName(playerIndex) {
@@ -2084,7 +2220,7 @@ function limitBase(base, han) {
 function calculateDrawScore() {
   const tenpai = [0, 1, 2, 3].map((player) => isTenpaiNow(player));
   const tenpaiCount = tenpai.filter(Boolean).length;
-  const dealer = state.roundIndex % 4;
+  const dealer = dealerIndexForRound(state.roundIndex);
   const dealerContinues = tenpai[dealer];
   const movements = [0, 0, 0, 0];
   const rows = [];
@@ -2199,19 +2335,56 @@ function confirmScore() {
 function chooseCpuDiscard(hand, playerIndex = state.turn, eligibleIds = null) {
   let bestIndex = 0;
   let bestScore = -Infinity;
+  let bestAi = null;
   const meldPenaltyWeight = completedMeldPenaltyWeight(hand);
   hand.forEach((tile, index) => {
     if (eligibleIds && !eligibleIds.has(tile.id)) return;
     const remaining = hand.filter((_, tileIndex) => tileIndex !== index);
     let score = cpuHandPlanScore(remaining, tile, playerIndex);
     score -= completedMeldLoss(hand, tile) * meldPenaltyWeight;
+    const aiScore = cpuAiDiscardScore(hand, remaining, tile, playerIndex);
+    score += aiScore.score;
     if (tile.id === state.drawnTileId) score += 0.35;
     if (score > bestScore) {
       bestScore = score;
       bestIndex = index;
+      bestAi = aiScore;
     }
   });
+  updateCpuThought(playerIndex, bestAi);
   return bestIndex;
+}
+
+function cpuAiDiscardScore(hand, remaining, discardedTile, playerIndex) {
+  if (!window.MizuharaAI) return { score: 0, tags: [] };
+  const ruleKey = window.MizuharaAI.ruleKey({ ...state.settings, presetId: state.presetId }, cpuAiConfig.oracleEnabled, cpuAiConfig.oracleAssignments);
+  return window.MizuharaAI.scoreDiscard({
+    state: { ...state, players },
+    settings: state.settings,
+    hand,
+    remainingTiles: remaining,
+    discardedTile,
+    playerIndex,
+    ruleKey,
+    learningData: cpuAiConfig.learningData,
+    useLearning: cpuAiConfig.useLearning,
+    oracleEnabled: cpuAiConfig.oracleEnabled,
+    oracleAssignments: cpuAiConfig.oracleAssignments,
+    oracleHint: state.oracleHints?.[playerIndex],
+    oracleHistory: state.oracleHistory?.[playerIndex],
+    oracleTiming: "before_discard",
+    strength: cpuAiConfig.strength,
+    roundWind: roundWindValue(),
+    seatWind: seatWindValue(playerIndex)
+  });
+}
+
+function updateCpuThought(playerIndex, aiScore) {
+  if (!state.cpuThoughts) state.cpuThoughts = players.map((player) => player.quote);
+  if (!window.MizuharaAI || !aiScore) return;
+  const characterId = window.MizuharaAI.CHARACTER_IDS[playerIndex] || "kazuya";
+  const line = window.MizuharaAI.thoughtLine(characterId, aiScore.tags || []);
+  if (line) state.cpuThoughts[playerIndex] = line;
 }
 
 function completedMeldPenaltyWeight(hand) {
@@ -3799,10 +3972,10 @@ function debugOpenKanRules() {
     playerIndex,
     ownFace: meldFaceFor(playerIndex, false),
     calledFace: meldFaceFor(playerIndex, true),
-    kamicha: calledTileDisplayIndex(playerIndex, (playerIndex + 1) % 4, 4, 0),
-    oppositeLow: calledTileDisplayIndex(playerIndex, (playerIndex + 2) % 4, 4, 0),
-    oppositeHigh: calledTileDisplayIndex(playerIndex, (playerIndex + 2) % 4, 4, 1),
-    shimocha: calledTileDisplayIndex(playerIndex, (playerIndex + 3) % 4, 4, 0)
+    kamicha: calledTileDisplayIndex(playerIndex, previousSeat(playerIndex), 4, 0),
+    oppositeLow: calledTileDisplayIndex(playerIndex, seatAfterSteps(playerIndex, 2), 4, 0),
+    oppositeHigh: calledTileDisplayIndex(playerIndex, seatAfterSteps(playerIndex, 2), 4, 1),
+    shimocha: calledTileDisplayIndex(playerIndex, nextSeat(playerIndex), 4, 0)
   }));
   const previous = {
     hands: state.hands,
@@ -3915,6 +4088,7 @@ function bambooPattern(value) {
 function tileImageSrc(tile, variant = "hand") {
   if (variant === "field-sideway") return fieldTileImageSrc(tile, 3);
   if (variant.startsWith("field-face-")) return fieldTileImageSrc(tile, Number(variant.slice("field-face-".length)) || 2);
+  if (variant.startsWith("flower-face-")) return flowerTileImageSrc(tile, Number(variant.slice("flower-face-".length)) || 1);
   if (variant === "field") return fieldTileImageSrc(tile);
   if (tile.suit === "m") return `assets/card_src/manzu_all/p_ms${tile.value}_0.gif`;
   if (tile.suit === "p") return `assets/card_src/pinzu_all/p_ps${tile.value}_0.gif`;
@@ -3939,13 +4113,21 @@ function fieldTileImageSrc(tile, face = 2) {
   return tileImageSrc(tile, "hand");
 }
 
+function flowerTileImageSrc(tile, face = 1) {
+  const code = { 1: "c", 2: "x", 3: "q", 4: "d", 5: "m", 6: "l", 7: "j", 8: "z" }[tile.value];
+  if (tile.suit === "f" && code) return `assets/card3_src/p_hua_${code}_${face}.png`;
+  return fieldTileImageSrc(tile, face);
+}
+
 function tileImg(tile, small = false, extraClass = "", variant = "hand") {
   const src = tileImageSrc(tile, variant);
   const fallback = tileImageSrc(tile, "hand");
   const faceMatch = variant.match(/^field-face-(\d)$/);
+  const flowerFaceMatch = variant.match(/^flower-face-(\d)$/);
   const fieldClass = variant === "field" || variant === "field-sideway" || faceMatch ? `field ${faceMatch ? `face-${faceMatch[1]}` : ""}` : "";
+  const flowerClass = flowerFaceMatch ? `flower face-${flowerFaceMatch[1]}` : "";
   const onerror = src !== fallback ? ` onerror="this.onerror=null;this.src='${fallback}'"` : "";
-  return `<img class="tile-img ${small ? "small" : ""} ${fieldClass} ${extraClass}" src="${src}"${onerror} alt="${label(tile)}" title="${label(tile)}">`;
+  return `<img class="tile-img ${small ? "small" : ""} ${fieldClass} ${flowerClass} ${extraClass}" src="${src}"${onerror} alt="${label(tile)}" title="${label(tile)}">`;
 }
 
 function meldFaceFor(playerIndex, isCalled) {
@@ -3958,10 +4140,15 @@ function meldFaceFor(playerIndex, isCalled) {
   return isCalled ? faces.called : faces.own;
 }
 
+function flowerFaceFor(playerIndex) {
+  return [1, 4, 2, 3][playerIndex] || 1;
+}
+
 function render() {
   renderSeats();
   renderPlayerStatus();
   renderTableMelds();
+  renderTableFlowers();
   renderRiichiSticks();
   renderWalls();
   renderRivers();
@@ -3973,6 +4160,7 @@ function render() {
   renderControls();
   renderAnalysis();
   renderYakuLab();
+  renderAiPanel();
   renderLog();
 }
 
@@ -4001,7 +4189,7 @@ function renderPlayerStatus() {
       <div>
         <p class="status-name">${seatWindName(index)} ${player.name}</p>
         <p class="status-meta">${player.score.toLocaleString()}点 / 手牌${state.hands[index].length} / 副露${state.melds[index].length} / 花${state.flowers[index].length}</p>
-        <p class="status-quote">${player.quote}</p>
+        <p class="status-quote">${state.cpuThoughts?.[index] || player.quote}</p>
       </div>
     </article>
   `).join("");
@@ -4025,6 +4213,116 @@ function renderTableMelds() {
   });
 }
 
+function renderTableFlowers() {
+  state.flowers.forEach((flowers, playerIndex) => {
+    if (!el.tableFlowers[playerIndex]) return;
+    const face = flowerFaceFor(playerIndex);
+    const displayFlowers = flowers.slice().sort((a, b) => flowerSortValue(a) - flowerSortValue(b));
+    el.tableFlowers[playerIndex].classList.toggle("has-added-kan", state.melds[playerIndex].some((meld) => meld.addedTileId));
+    el.tableFlowers[playerIndex].innerHTML = displayFlowers.map((tile, flowerIndex) => `
+      <div class="flower-set" style="${flowerCellStyle(playerIndex, flowerIndex)}">
+        ${tileImg(tile, true, "", `flower-face-${face}`)}
+      </div>
+    `).join("");
+  });
+}
+
+function flowerSortValue(tile) {
+  return tile.suit === "f" ? tile.value : 99;
+}
+
+function flowerCellStyle(playerIndex, flowerIndex) {
+  const perLine = 8;
+  const line = Math.floor(flowerIndex / perLine);
+  const offset = flowerIndex % perLine;
+  const positions = [
+    { col: perLine - offset, row: line + 1 },
+    { col: line + 1, row: perLine - offset },
+    { col: offset + 1, row: line + 1 },
+    { col: line + 1, row: offset + 1 }
+  ];
+  const position = positions[playerIndex] || positions[0];
+  return `--flower-col:${position.col};--flower-row:${position.row};`;
+}
+
+function renderTableMelds() {
+  state.melds.forEach((_, playerIndex) => {
+    el.tableMelds[playerIndex].innerHTML = packedOpenUnits(playerIndex).map(({ unit, placement }) => `
+      <div class="${unit.kind === "flower" ? "flower-set meld-flower-set" : `meld-set ${unit.meld.type === "證励き繝ｳ" ? "closed-kan" : ""}`}" style="${openUnitStyle(placement)}">
+        ${unit.kind === "flower" ? renderFlowerUnit(unit.tile, playerIndex) : renderMeldUnit(unit.meld, playerIndex)}
+      </div>
+    `).join("");
+  });
+}
+
+function renderTableFlowers() {
+  el.tableFlowers.forEach((container) => {
+    if (container) container.innerHTML = "";
+  });
+}
+
+function renderMeldUnit(meld, playerIndex) {
+  return meld.tiles.filter((tile) => tile.id !== meld.addedTileId).map((tile) => {
+    const isCalled = tile.id === meld.calledTileId;
+    const face = meldFaceFor(playerIndex, isCalled);
+    if (isCalled && meld.addedTileId) {
+      const addedTile = meld.tiles.find((item) => item.id === meld.addedTileId);
+      return `<span class="kakan-stack">${tileImg(tile, true, "kakan-called", `field-face-${face}`)}${tileImg(addedTile, true, "kakan-added", `field-face-${face}`)}</span>`;
+    }
+    return tileImg(tile, true, "", `field-face-${face}`);
+  }).join("");
+}
+
+function renderFlowerUnit(tile, playerIndex) {
+  return tileImg(tile, true, "", `flower-face-${flowerFaceFor(playerIndex)}`);
+}
+
+function packedOpenUnits(playerIndex) {
+  const meldUnits = state.melds[playerIndex].map((meld, index) => ({
+    kind: "meld",
+    meld,
+    weight: meldWeight(meld),
+    order: meld.openOrder ?? (index + 1) * 100
+  }));
+  const flowerUnits = state.flowers[playerIndex]
+    .slice()
+    .sort((a, b) => flowerSortValue(a) - flowerSortValue(b))
+    .map((tile, index) => ({
+      kind: "flower",
+      tile,
+      weight: 1,
+      order: tile.openOrder ?? 10000 + index
+    }));
+  const units = [...meldUnits, ...flowerUnits].sort((a, b) => a.order - b.order);
+  const lines = [{ used: 0 }];
+  return units.map((unit) => {
+    let lineIndex = lines.findIndex((line) => line.used + unit.weight <= 8);
+    if (lineIndex < 0) {
+      lineIndex = lines.length;
+      lines.push({ used: 0 });
+    }
+    const offset = lines[lineIndex].used;
+    lines[lineIndex].used += unit.weight;
+    return { unit, placement: openUnitPlacement(playerIndex, lineIndex, offset, unit.weight) };
+  });
+}
+
+function meldWeight(meld) {
+  if (meld.addedTileId) return 3;
+  return meld.type.includes("カン") ? 4 : 3;
+}
+
+function openUnitPlacement(playerIndex, lineIndex, offset, span) {
+  if (playerIndex === 0) return { col: 9 - offset - span, row: lineIndex + 1, span };
+  if (playerIndex === 1) return { col: lineIndex + 1, row: 9 - offset - span, span };
+  if (playerIndex === 2) return { col: offset + 1, row: lineIndex + 1, span };
+  return { col: 4 - lineIndex, row: offset + 1, span };
+}
+
+function openUnitStyle(placement) {
+  return `--open-col:${placement.col};--open-row:${placement.row};--open-span:${placement.span};`;
+}
+
 function renderWalls() {
   const count = Math.max(0, Math.min(14, Math.ceil(state.wall.length / 4)));
   const wallHtml = Array.from({ length: count }, () => `<img class="wall-tile" src="assets/card_src/ms_all/p_bk_0.gif" alt="">`).join("");
@@ -4033,10 +4331,15 @@ function renderWalls() {
 
 function renderRivers() {
   state.rivers.forEach((river, index) => {
-    el.rivers[index].innerHTML = river.map((tile) => {
+    const riichiCountsByRow = new Map();
+    el.rivers[index].innerHTML = river.map((tile, tileIndex) => {
+      const row = Math.floor(tileIndex / 6);
+      const column = tileIndex % 6;
+      const riichiBefore = riichiCountsByRow.get(row) || 0;
       const winning = state.pendingWin?.tile?.id === tile.id ? "winning" : "";
       const riichi = tile.riichiDiscard ? "riichi-discard" : "";
-      return tileImg(tile, true, `river-tile ${riichi} ${winning}`, tile.riichiDiscard ? "field-sideway" : "field");
+      if (tile.riichiDiscard) riichiCountsByRow.set(row, riichiBefore + 1);
+      return `<span class="river-slot ${tile.riichiDiscard ? "riichi-slot" : ""}" style="--river-col:${column};--river-row:${row};--river-shift:${riichiBefore};">${tileImg(tile, true, `river-tile ${riichi} ${winning}`, tile.riichiDiscard ? "field-sideway" : "field")}</span>`;
     }).join("");
   });
 }
@@ -4046,7 +4349,9 @@ function renderCenter() {
   el.roundName.textContent = roundName();
   el.wallCount.textContent = `山 ${state.wall.length} / ${matchState.honba}本場 / 供託${matchState.riichiPot}本`;
   el.ruleName.textContent = rule ? rule.name : "カスタム";
-  el.doraTiles.innerHTML = state.dora.map((tile) => tileImg(tile, true)).join("");
+  el.doraTiles.innerHTML = state.dora.length
+    ? state.dora.map((tile) => tileImg(tile, true)).join("")
+    : `<span class="center-dora-empty">なし</span>`;
 }
 
 function renderHand() {
@@ -4270,7 +4575,7 @@ function debugHandPanelsHtml() {
       ${players.map((player, playerIndex) => `
         <section class="debug-hand-card ${state.turn === playerIndex ? "active-turn" : ""}">
           <div class="debug-hand-head">
-            <strong>${seatWindName(index)} ${player.name}</strong>
+            <strong>${seatWindName(playerIndex)} ${player.name}</strong>
             <span>${state.hands[playerIndex].length}枚 / 副露${state.melds[playerIndex].length}</span>
           </div>
           <div class="debug-hand-tiles">
@@ -4282,6 +4587,83 @@ function debugHandPanelsHtml() {
           </div>
         </section>
       `).join("")}
+    </div>
+  `;
+}
+
+function oracleTileName(key) {
+  if (!key || key.length < 2) return key || "";
+  const suit = key[0];
+  const value = Number(key.slice(1));
+  return tileNames[suit]?.[value] || key;
+}
+
+function escapeDebugHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function oracleRawJson(hint) {
+  if (!hint) return "{}";
+  return escapeDebugHtml(JSON.stringify(hint, null, 2));
+}
+
+function oracleHintRows(hint) {
+  if (!hint?.active) return `<span class="oracle-muted">発生なし</span>`;
+  return Object.entries(hint.scoreByKey || {})
+    .filter(([, value]) => Math.abs(Number(value) || 0) > 0.001)
+    .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+    .slice(0, 8)
+    .map(([key, value]) => {
+      const obs = hint.observations?.[key];
+      const valueText = Number(value).toFixed(2).replace(/\.00$/, "");
+      return `<span class="oracle-chip ${value >= 0 ? "positive" : "negative"}" title="${obs?.symptom || "unknown"}">${oracleTileName(key)} ${valueText} <small>${obs?.symptom || ""}</small></span>`;
+    })
+    .join("") || `<span class="oracle-muted">有効スコアなし</span>`;
+}
+
+function debugOraclePanelHtml() {
+  if (!window.MizuharaAI) return "";
+  return `
+    <div class="debug-oracle-panel">
+      <div class="debug-oracle-head">
+        <strong>オラクル覗き見</strong>
+        <button data-debug-oracle-refresh="before_discard" type="button">現在手番として再抽選</button>
+      </div>
+      <p class="debug-note">CPU判断には、ここに出る牌スコアが ${cpuAiConfig.oracleEnabled ? "反映されています" : "反映されていません（オラクルOFF）"}。</p>
+      <div class="debug-oracle-grid">
+        ${players.map((player, playerIndex) => {
+          const hint = state.oracleHints?.[playerIndex];
+          const ability = hint?.abilityId || cpuAiConfig.oracleAssignments?.[window.MizuharaAI.CHARACTER_IDS[playerIndex]] || "-";
+          return `
+            <section class="debug-oracle-card ${hint?.active ? "active" : ""}">
+              <div class="debug-oracle-title">
+                <strong>${seatWindName(playerIndex)} ${player.name}</strong>
+                <span>${hint?.active ? "active" : "inactive"}</span>
+              </div>
+              <div class="debug-oracle-meta">
+                <span>ability: ${ability}</span>
+                <span>timing: ${hint?.timing || "-"}</span>
+                <span>reliability: ${hint?.reliability !== undefined ? Math.round(hint.reliability * 100) + "%" : "-"}</span>
+                <span>history: ${(state.oracleHistory?.[playerIndex] || []).length}件</span>
+              </div>
+              <div class="debug-oracle-signals">${oracleHintRows(hint)}</div>
+              <details class="debug-oracle-raw">
+                <summary>oracleHint JSON</summary>
+                <pre>${oracleRawJson(hint)}</pre>
+              </details>
+              <details class="debug-oracle-raw">
+                <summary>oracleHistory JSON</summary>
+                <pre>${escapeDebugHtml(JSON.stringify(state.oracleHistory?.[playerIndex] || [], null, 2))}</pre>
+              </details>
+            </section>
+          `;
+        }).join("")}
+      </div>
     </div>
   `;
 }
@@ -4328,6 +4710,7 @@ function renderDebugPanel() {
             <button data-debug-riichi="toggle">${state.riichi[state.debugSeat] ? "リーチ棒を消す" : "リーチ棒を置く"}</button>
             <button data-debug-meld-scenario="full">4人4副露表示</button>
             <button data-debug-meld-scenario="kakan">4人小明カン表示</button>
+            <button data-debug-meld-scenario="kakan-flowers">4人小明カン+花牌</button>
             <button data-debug-scenario="kakan-flow">小明カン進行テスト</button>
             <button data-debug-scenario="chankan">槍槓テスト</button>
             <button data-debug-scenario="match-end">南四局 終局表示</button>
@@ -4361,6 +4744,7 @@ function renderDebugPanel() {
       </div>
       <p class="debug-note">${state.selectedDebugTile && selectedHandSeat ? `${seatWindName(state.selectedDebugSeat)} ${selectedHandSeat.name}の選択牌を置換します。` : "牌を選ぶと、下のパレットで任意の牌に置換できます。"}</p>
     `}
+    ${debugOraclePanelHtml()}
   `;
 }
 
@@ -4593,6 +4977,113 @@ function renderLog() {
   el.log.innerHTML = state.log.map((message) => `<div class="log-entry">${message}</div>`).join("");
 }
 
+function renderAiPanel() {
+  if (!el.aiLearningToggle || !window.MizuharaAI) return;
+  el.aiLearningToggle.checked = cpuAiConfig.useLearning;
+  el.aiOracleToggle.checked = cpuAiConfig.oracleEnabled;
+  el.aiStrengthInput.value = String(cpuAiConfig.strength);
+  const key = window.MizuharaAI.ruleKey({ ...state.settings, presetId: state.presetId }, cpuAiConfig.oracleEnabled, cpuAiConfig.oracleAssignments);
+  const learnedProfiles = Object.keys(cpuAiConfig.learningData?.profiles?.[key] || {}).length;
+  const note = document.querySelector(".ai-panel-note");
+  if (note) {
+    note.textContent = `現在の学習キー: ${key} / 学習済みキャラ ${learnedProfiles}件。学習ラボはローカル用です。`;
+  }
+}
+
+function totalLearningGamesForRule(profilesForRule = {}) {
+  return Object.values(profilesForRule).reduce((sum, profile) => sum + Number(profile?.games || 0), 0);
+}
+
+function preferredLearningRuleKey(data) {
+  const entries = Object.entries(data?.profiles || {});
+  if (!entries.length) return "";
+  return entries
+    .slice()
+    .sort((a, b) => totalLearningGamesForRule(b[1]) - totalLearningGamesForRule(a[1]))[0][0];
+}
+
+function settingsFromLearningRuleKey(key) {
+  if (!key) return null;
+  const parts = key.split("|");
+  const whitePart = parts.find((part) => /^white\d+$/.test(part));
+  const whiteCount = whitePart ? Number(whitePart.replace("white", "")) : 4;
+  const oraclePart = parts.find((part) => part.startsWith("oracle("));
+  const assignments = window.MizuharaAI ? { ...window.MizuharaAI.DEFAULT_ORACLE_ASSIGNMENTS } : {};
+  if (oraclePart) {
+    oraclePart
+      .replace(/^oracle\(|\)$/g, "")
+      .split(",")
+      .forEach((pair) => {
+        const [characterId, abilityId] = pair.split(":");
+        if (characterId && abilityId) assignments[characterId] = abilityId;
+      });
+  }
+  return {
+    settings: {
+      flowers: parts.includes("flowers"),
+      whiteStorm: whiteCount > 4,
+      cosmic: parts.includes("cosmic"),
+      china: parts.includes("china"),
+      whiteCount
+    },
+    oracleEnabled: !!oraclePart,
+    oracleAssignments: assignments
+  };
+}
+
+function learningRuleKeyFromCatalogItem(item) {
+  if (!item || !window.MizuharaAI) return "";
+  const title = item.title || "";
+  const settings = {
+    presetId: "trainer",
+    flowers: title.includes("花牌"),
+    whiteStorm: title.includes("白12") || title.includes("白24"),
+    cosmic: title.includes("宇宙"),
+    china: title.includes("中国"),
+    whiteCount: title.includes("白24") ? 24 : title.includes("白12") ? 12 : 4
+  };
+  return window.MizuharaAI.ruleKey(settings, title.includes("オラクル"), window.MizuharaAI.DEFAULT_ORACLE_ASSIGNMENTS);
+}
+
+function applyLearningRuleFromData(data, preferredKey = "") {
+  const key = preferredKey && data?.profiles?.[preferredKey] ? preferredKey : preferredLearningRuleKey(data);
+  const parsed = settingsFromLearningRuleKey(key);
+  if (!parsed) return false;
+  cpuAiConfig.oracleEnabled = parsed.oracleEnabled;
+  cpuAiConfig.oracleAssignments = parsed.oracleAssignments;
+  startRound(parsed.settings, "custom");
+  addLog(isLocalAiDevMode() ? `学習データの設定を卓へ反映しました: ${key}` : "学習データの卓設定を反映しました。");
+  return true;
+}
+
+function applyLearningData(data, sourceLabel = "JSON", preferredKey = "") {
+  cpuAiConfig.learningData = window.MizuharaAI.saveLearningData(data);
+  cpuAiConfig.useLearning = true;
+  const applied = applyLearningRuleFromData(data, preferredKey);
+  const label = String(sourceLabel || "JSON");
+  addLog(`CPU学習データを読み込みました: ${label.length > 30 ? `${label.slice(0, 30)}...` : label}`);
+  if (!applied) render();
+}
+
+function populateLearningPresetSelect() {
+  if (!el.aiLearningPresetSelect) return;
+  const catalog = window.MizuharaLearningCatalog || [];
+  el.aiLearningPresetSelect.innerHTML = [
+    `<option value="">プリセットを選択</option>`,
+    ...catalog.map((item, index) => `<option value="${index}">${item.title}</option>`)
+  ].join("");
+}
+
+async function loadLearningPreset(index) {
+  const item = (window.MizuharaLearningCatalog || [])[Number(index)];
+  if (!item) return;
+  const response = await fetch(item.file, { cache: "no-store" });
+  if (!response.ok) throw new Error(`Learning preset load failed: ${response.status} ${item.file}`);
+  const parsed = await response.json();
+  if (parsed.format !== "mizuhara-mahjong-ai-learning-v1") throw new Error("Invalid learning data format");
+  applyLearningData(parsed, item.title, learningRuleKeyFromCatalogItem(item));
+}
+
 function checkWin() {
   const hand = state.hands[0];
   const win = { type: "ツモ", player: 0, tile: state.hands[0].find((tile) => tile.id === state.drawnTileId) };
@@ -4765,10 +5256,17 @@ document.getElementById("debugPanel").addEventListener("click", (event) => {
     toggleDebugRiichiStick();
     return;
   }
+  const oracleRefreshButton = event.target.closest("[data-debug-oracle-refresh]");
+  if (oracleRefreshButton) {
+    refreshOracleHints(oracleRefreshButton.dataset.debugOracleRefresh || "before_discard");
+    renderDebugPanel();
+    return;
+  }
   const meldScenarioButton = event.target.closest("[data-debug-meld-scenario]");
   if (meldScenarioButton) {
     if (meldScenarioButton.dataset.debugMeldScenario === "full") setupFullMeldDisplayScenario();
     if (meldScenarioButton.dataset.debugMeldScenario === "kakan") setupAddedKanDisplayScenario();
+    if (meldScenarioButton.dataset.debugMeldScenario === "kakan-flowers") setupAddedKanFlowerDisplayScenario();
     return;
   }
   const scenarioButton = event.target.closest("[data-debug-scenario]");
@@ -4857,6 +5355,70 @@ function commitWhiteCountInput(event) {
 }
 el.whiteCountInput.addEventListener("change", commitWhiteCountInput);
 el.whiteCountInput.addEventListener("blur", commitWhiteCountInput);
+if (el.aiLearningToggle) {
+  el.aiLearningToggle.addEventListener("change", (event) => {
+    cpuAiConfig.useLearning = event.target.checked;
+    addLog(cpuAiConfig.useLearning ? "CPUがローカル学習データを参照します。" : "CPUのローカル学習データ参照を停止しました。");
+    render();
+  });
+}
+if (el.aiOracleToggle) {
+  el.aiOracleToggle.addEventListener("change", (event) => {
+    cpuAiConfig.oracleEnabled = event.target.checked;
+    refreshOracleHints("round_start");
+    addLog(cpuAiConfig.oracleEnabled ? "CPUオラクル情報をONにしました。学習キーも別扱いになります。" : "CPUオラクル情報をOFFにしました。");
+    render();
+  });
+}
+if (el.aiStrengthInput) {
+  el.aiStrengthInput.addEventListener("input", (event) => {
+    cpuAiConfig.strength = Math.max(1, Math.min(5, Number(event.target.value) || 3));
+    renderAiPanel();
+  });
+}
+if (el.aiReloadLearningBtn) {
+  el.aiReloadLearningBtn.addEventListener("click", () => {
+    cpuAiConfig.learningData = window.MizuharaAI ? window.MizuharaAI.loadLearningData() : null;
+    addLog("CPU学習データをlocalStorageから再読込しました。");
+    render();
+  });
+}
+
+if (el.aiLoadPresetBtn) {
+  el.aiLoadPresetBtn.addEventListener("click", async () => {
+    if (!el.aiLearningPresetSelect?.value) return;
+    el.aiLoadPresetBtn.disabled = true;
+    try {
+      await loadLearningPreset(el.aiLearningPresetSelect.value);
+    } catch (error) {
+      console.error(error);
+      alert("学習データプリセットの読み込みに失敗しました。ローカルサーバー経由で開いているか確認してください。");
+    } finally {
+      el.aiLoadPresetBtn.disabled = false;
+    }
+  });
+}
+
+if (el.aiImportLearningInput) {
+  el.aiImportLearningInput.addEventListener("change", async () => {
+    const file = el.aiImportLearningInput.files?.[0];
+    if (!file || !window.MizuharaAI) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      if (parsed.format !== "mizuhara-mahjong-ai-learning-v1") {
+        alert("水原麻雀AI学習データではありません。");
+        return;
+      }
+      applyLearningData(parsed, file.name);
+      addLog("CPU学習データJSONを読み込みました。");
+    } catch (error) {
+      console.error(error);
+      alert("JSONの読み込みに失敗しました。");
+    } finally {
+      el.aiImportLearningInput.value = "";
+    }
+  });
+}
 
 function updateTableScale() {
   if (!el.tableViewport) return;
@@ -4955,7 +5517,16 @@ function debugDoraRules() {
   }
 }
 
+populateLearningPresetSelect();
 startRound(presets[0].settings, "standard");
+
+document.documentElement.dataset.turnOrderSelfTests = JSON.stringify({
+  sequenceFromPlayer: [0, nextSeat(0), seatAfterSteps(0, 2), seatAfterSteps(0, 3)],
+  dealersByRound: [0, 1, 2, 3, 4, 5, 6, 7].map((round) => dealerIndexForRound(round)),
+  chiPlayerAfterDiscard: [0, 1, 2, 3].map((discarder) => (
+    [0, 1, 2, 3].find((playerIndex) => isKamichaDiscardForChi(playerIndex, discarder))
+  ))
+});
 
 const repeatDebugPairs = (suit, values) => values.flatMap((value) => [`${suit}${value}`, `${suit}${value}`]);
 const chineseRuleSelfTests = {

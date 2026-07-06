@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>水原麻雀 - 統合麻雀システム</title>
-  <link rel="stylesheet" href="style.css?v=20260623-keyboard-actions-1">
+  <link rel="stylesheet" href="style.css?v=20260627-open-unit-pack-5">
 </head>
 <body>
   <main class="app">
@@ -47,6 +47,10 @@
             <div class="table-meld table-meld-left" id="tableMeld1"></div>
             <div class="table-meld table-meld-top" id="tableMeld2"></div>
             <div class="table-meld table-meld-right" id="tableMeld3"></div>
+            <div class="table-flower table-flower-bottom" id="tableFlower0"></div>
+            <div class="table-flower table-flower-left" id="tableFlower1"></div>
+            <div class="table-flower table-flower-top" id="tableFlower2"></div>
+            <div class="table-flower table-flower-right" id="tableFlower3"></div>
 
             <div class="center-console">
               <div class="round-name" id="roundName">東一局</div>
@@ -54,6 +58,14 @@
                 <span id="wallCount">山 0</span>
                 <span id="ruleName">標準リーチ</span>
               </div>
+              <div class="center-dora">
+                <span class="center-dora-label">ドラ</span>
+                <div class="dora-row" id="doraTiles"></div>
+              </div>
+            </div>
+
+            <div class="bottom-hand-lane">
+              <div class="hand" id="hand"></div>
             </div>
 
             <div class="call-panel" id="callPanel" hidden></div>
@@ -68,7 +80,6 @@
           <div class="console-info">
             <div>
               <span class="label">ドラ表示牌</span>
-              <div class="dora-row" id="doraTiles"></div>
             </div>
             <div>
               <span class="label">状況</span>
@@ -79,7 +90,6 @@
               <div class="flower-row" id="flowers"></div>
             </div>
           </div>
-          <div class="hand" id="hand"></div>
           <div class="debug-panel" id="debugPanel" hidden></div>
         </div>
       </section>
@@ -107,6 +117,33 @@
           <div class="analysis" id="analysis"></div>
         </section>
 
+        <section class="panel ai-panel">
+          <h2>CPU思考</h2>
+          <label class="toggle ai-dev-only"><input id="aiLearningToggle" type="checkbox"> 学習データを使う</label>
+          <label class="toggle"><input id="aiOracleToggle" type="checkbox"> オラクル情報を許可する</label>
+          <label class="stacked ai-dev-only">
+            <span>CPU強さ</span>
+            <input id="aiStrengthInput" type="range" min="1" max="5" value="3">
+          </label>
+          <label class="stacked">
+            <span>学習データプリセット</span>
+            <select id="aiLearningPresetSelect">
+              <option value="">プリセットを選択</option>
+            </select>
+          </label>
+          <div class="ai-panel-actions">
+            <a class="button-link compact ai-dev-only" href="trainer.html">学習ラボ</a>
+            <button class="ai-dev-only" id="aiReloadLearningBtn" type="button">学習データ再読込</button>
+            <button id="aiLoadPresetBtn" type="button">プリセット読込</button>
+            <label class="file-button compact ai-dev-only">
+              JSON読み込み
+              <input id="aiImportLearningInput" type="file" accept="application/json">
+            </label>
+          </div>
+          <p class="ai-panel-note ai-dev-only">学習ラボはローカル用です。公開版では学習実行なしで遊べます。</p>
+
+        </section>
+
         <section class="panel yaku-lab">
           <h2>役判定ラボ</h2>
           <div class="lab-actions">
@@ -125,6 +162,8 @@
     </section>
   </main>
 
-  <script src="app.js?v=20260623-keyboard-actions-1"></script>
+  <script src="ai_core.js?v=20260628-ai-training-1"></script>
+  <script src="learning-data/catalog.js?v=20260628-ai-training-1"></script>
+  <script src="app.js?v=20260628-ai-training-1"></script>
 </body>
 </html>

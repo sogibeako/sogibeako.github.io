@@ -24,6 +24,14 @@ body {
     font-size: 1rem;
     background-color: #111822;
     /* 青っぽい背景色 */
+    font-family:
+        "Noto Serif",
+        "Noto Sans",
+        "Segoe UI",
+        "Helvetica Neue",
+        Arial,
+        "IPAexゴシック",
+        "BIZ UDPゴシック";
     margin: 0;
     padding: 0;
     text-align: left;

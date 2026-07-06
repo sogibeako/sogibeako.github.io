@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>τの庭 / Modular Garden</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Modular Garden</p>
+        <h1>τの庭</h1>
+      </div>
+      <div class="tau-readout" id="tauReadout">τ = 0.32 + 1.18i</div>
+    </header>
+
+    <div class="workspace-shell">
+      <aside class="sidebar" aria-label="controls and readouts">
+        <section class="controls" aria-label="tau controls">
+          <div class="control-pair">
+            <label for="xSlider">Re(τ)</label>
+            <input id="xSlider" type="range" min="-5" max="5" step="0.01" value="0.32">
+            <input id="xInput" type="number" min="-5" max="5" step="0.01" value="0.32">
+          </div>
+          <div class="control-pair">
+            <label for="ySlider">Im(τ)</label>
+            <input id="ySlider" type="range" min="0.05" max="3" step="0.01" value="1.18">
+            <input id="yInput" type="number" min="0.05" max="3" step="0.01" value="1.18">
+          </div>
+          <div class="button-row" aria-label="modular transforms">
+            <button id="tMinusBtn" type="button">T^-1</button>
+            <button id="tBtn" type="button">T: τ → τ + 1</button>
+            <button id="sBtn" type="button">S: τ → -1/τ</button>
+            <button id="reduceBtn" type="button">基本領域へ</button>
+          </div>
+        </section>
+
+        <section class="details">
+          <article class="series-panel">
+            <div class="panel-head">
+              <h2>q展開</h2>
+              <span id="accuracyNote">20 terms</span>
+            </div>
+            <div class="series-grid" id="seriesGrid"></div>
+          </article>
+
+          <article class="explain-panel">
+            <div class="panel-head">
+              <h2>観察メモ</h2>
+              <span id="modeNote">intuition</span>
+            </div>
+            <div class="tabs" role="tablist" aria-label="explanation depth">
+              <button class="active" type="button" data-tab="intuition">直感</button>
+              <button type="button" data-tab="detail">もう少し詳しく</button>
+              <button type="button" data-tab="formula">数式</button>
+            </div>
+            <p id="explanationText"></p>
+          </article>
+
+          <article class="mode-panel">
+            <div class="panel-head">
+              <h2>拡張モード</h2>
+              <span id="modePanelMeta">modular form</span>
+            </div>
+            <div class="mode-tabs" role="tablist" aria-label="extended modes">
+              <button class="active" type="button" data-mode="modform">形式</button>
+              <button type="button" data-mode="level">レベルN</button>
+              <button type="button" data-mode="matrix">行列</button>
+              <button type="button" data-mode="elliptic">楕円曲線</button>
+              <button type="button" data-mode="atlas">図鑑</button>
+            </div>
+            <div class="mode-body active" data-mode-body="modform">
+              <label class="stacked">f
+                <select id="modFormSelect">
+                  <option value="E4">E4, weight 4</option>
+                  <option value="E6">E6, weight 6</option>
+                  <option value="Delta">Δ, weight 12</option>
+                </select>
+              </label>
+              <label class="stacked">γ
+                <select id="gammaSelect">
+                  <option value="S">S: τ -> -1/τ</option>
+                  <option value="T">T: τ -> τ+1</option>
+                  <option value="ST">ST: τ -> -1/(τ+1)</option>
+                </select>
+              </label>
+              <canvas id="modFormCanvas" class="small-canvas"></canvas>
+              <div class="mode-readout" id="modFormReadout"></div>
+            </div>
+            <div class="mode-body" data-mode-body="level">
+              <label class="control-pair compact" for="levelInput">
+                <span>N</span>
+                <input id="levelInput" type="range" min="1" max="30" step="1" value="5">
+                <input id="levelNumberInput" type="number" min="1" max="99" step="1" value="5">
+              </label>
+              <canvas id="levelCanvas" class="small-canvas"></canvas>
+              <div class="mode-readout" id="levelReadout"></div>
+            </div>
+            <div class="mode-body" data-mode-body="matrix">
+              <div class="matrix-grid" aria-label="matrix input">
+                <input id="matrixA" type="number" step="1" value="1" aria-label="a">
+                <input id="matrixB" type="number" step="1" value="1" aria-label="b">
+                <input id="matrixC" type="number" step="1" value="0" aria-label="c">
+                <input id="matrixD" type="number" step="1" value="1" aria-label="d">
+              </div>
+              <button id="applyMatrixBtn" type="button">τへ適用</button>
+              <div class="mode-readout" id="matrixReadout"></div>
+            </div>
+            <div class="mode-body" data-mode-body="elliptic">
+              <div class="coefficient-row preset-row">
+                <label>preset
+                  <select id="ellipticPresetSelect">
+                    <option value="custom">custom</option>
+                    <option value="default">default: y^2 = x^3 - x + 1</option>
+                    <option value="cm1728">CM j=1728: y^2 = x^3 - x</option>
+                    <option value="cm0">CM j=0: y^2 = x^3 + 1</option>
+                    <option value="congruent24">congruent-style: y^2 = x^3 - 4x</option>
+                    <option value="twist2">quadratic twist sample: y^2 = x^3 - 2</option>
+                  </select>
+                </label>
+              </div>
+              <div class="coefficient-row">
+                <label>a <input id="ellipticA" type="number" step="0.1" value="-1"></label>
+                <label>b <input id="ellipticB" type="number" step="0.1" value="1"></label>
+              </div>
+              <div class="coefficient-row">
+                <label class="toggle-line"><input id="finiteFieldToggle" type="checkbox"> 有限体</label>
+                <label>p <input id="finitePrime" type="number" min="3" max="97" step="1" value="17"></label>
+              </div>
+              <div class="coefficient-row">
+                <label>maxN
+                  <select id="ellipticMaxN">
+                    <option value="20">20</option>
+                    <option value="30" selected>30</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                  </select>
+                </label>
+                <label>表示
+                  <select id="ellipticCoeffMode">
+                    <option value="prime">prime only</option>
+                    <option value="completed">completed</option>
+                  </select>
+                </label>
+              </div>
+              <canvas id="ellipticCanvas" class="small-canvas"></canvas>
+              <canvas id="ellipticApCanvas" class="small-canvas"></canvas>
+              <button id="roughLevelBtn" type="button">rough level candidate を Γ0(N) ビューで見る</button>
+              <div class="mode-readout" id="ellipticReadout"></div>
+            </div>
+            <div class="mode-body" data-mode-body="atlas">
+              <label class="control-pair compact" for="atlasWeightInput">
+                <span>k</span>
+                <input id="atlasWeightInput" type="range" min="0" max="40" step="2" value="12">
+                <input id="atlasWeightNumberInput" type="number" min="0" max="80" step="2" value="12">
+              </label>
+              <div class="mode-readout" id="atlasSummary"></div>
+              <div class="atlas-list" id="atlasList"></div>
+            </div>
+          </article>
+        </section>
+      </aside>
+
+      <section class="view-grid" aria-label="visualizations">
+      <article class="view-panel primary">
+        <div class="panel-head">
+          <h2>上半平面 H</h2>
+          <span id="upperMeta">drag τ</span>
+        </div>
+        <div class="stage-label" id="upperStageLabel">SL2(Z) / fundamental domain / upper half-plane</div>
+        <canvas id="upperCanvas"></canvas>
+      </article>
+      <article class="view-panel">
+        <div class="panel-head">
+          <h2>格子 Z + Zτ</h2>
+          <span id="latticeMeta">basis</span>
+        </div>
+        <canvas id="latticeCanvas"></canvas>
+      </article>
+      <article class="view-panel">
+        <div class="panel-head">
+          <h2>トーラス C/Λ</h2>
+          <span>edge pairing</span>
+        </div>
+        <canvas id="torusCanvas"></canvas>
+      </article>
+      <article class="view-panel">
+        <div class="panel-head">
+          <h2>q = exp(2πiτ)</h2>
+          <span id="qMeta">unit disk</span>
+        </div>
+        <canvas id="qCanvas"></canvas>
+      </article>
+      <article class="view-panel pattern-panel">
+        <div class="panel-head">
+          <h2>モジュラー模様</h2>
+          <span id="patternMeta">disk tessellation</span>
+        </div>
+        <div class="mini-toolbar" aria-label="pattern controls">
+          <button class="active" id="patternDiskBtn" type="button">円板</button>
+          <button id="patternHalfBtn" type="button">上半平面</button>
+          <label class="select-control" for="patternFunctionSelect">
+            <span>関数</span>
+            <select id="patternFunctionSelect">
+              <option value="domain">基本領域</option>
+              <option value="e4">E4</option>
+              <option value="e6">E6</option>
+              <option value="delta">Δ</option>
+              <option value="j">j</option>
+            </select>
+          </label>
+          <label class="select-control" for="patternColorModeSelect">
+            <span>color</span>
+            <select id="patternColorModeSelect">
+              <option value="tile">tile</option>
+              <option value="representative">representative</option>
+              <option value="function">function</option>
+            </select>
+          </label>
+          <button id="patternPaletteBtn" type="button">色替え</button>
+          <button id="savePatternBtn" type="button">PNG</button>
+        </div>
+        <div class="stage-label" id="patternStageLabel">domain / tile color / Poincare disk</div>
+        <canvas id="patternCanvas"></canvas>
+      </article>
+      </section>
+    </div>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>

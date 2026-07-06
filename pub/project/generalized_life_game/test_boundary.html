@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Topology Boundary Test</title>
+</head>
+<body>
+  <h1>Topology Boundary Test Results</h1>
+  <pre id="output">Running tests...</pre>
+
+  <script type="module">
+    import { CellComplex } from './js/complex.js?v=fresh';
+    import { applyTopology } from './js/topology.js?v=fresh';
+    import { getFaceNeighbors } from './js/neighborhood.js?v=fresh';
+    import { RuleEvaluator } from './js/rules.js';
+
+    function testNeighbors(complex) {
+      let selfNeighbors = 0;
+      let duplicates = 0;
+      let counts = {};
+      complex.faces.forEach(face => {
+        const neighbors = getFaceNeighbors(complex, face.id, 'vertex-sharing');
+        const ids = neighbors.map(n => n.id);
+        if (ids.includes(face.id)) selfNeighbors++;
+        const uniqueIds = new Set(ids);
+        if (uniqueIds.size !== ids.length) duplicates++;
+        const count = ids.length;
+        counts[count] = (counts[count] || 0) + 1;
+      });
+      return {
+        faces: complex.faces.length,
+        vertices: complex.vertices.length,
+        edges: complex.edges.length,
+        selfNeighbors,
+        duplicates,
+        counts
+      };
+    }
+
+    const results = {};
+
+    try {
+      // Test 1: Square Torus (30x30)
+      const c1 = new CellComplex();
+      applyTopology(c1, 'torus', 'square', 30, 30);
+      results.squareTorus = testNeighbors(c1);
+
+      // Test 2: Double Torus (30x30)
+      const c2 = new CellComplex();
+      applyTopology(c2, 'double-torus', 'square', 30, 30, { doubleTorusHoleRadius: 1.2 });
+      results.doubleTorus = testNeighbors(c2);
+
+      // Test 3: Triangle Torus (30x30)
+      const c3 = new CellComplex();
+      applyTopology(c3, 'torus', 'triangle', 30, 30);
+      results.triangleTorus = testNeighbors(c3);
+
+      // Test 4: Hex Torus (30x30)
+      const c4 = new CellComplex();
+      applyTopology(c4, 'torus', 'hex', 30, 30);
+      results.hexTorus = testNeighbors(c4);
+
+      // Test 5: Day & Night Simulation on 30x30 Square Torus (10 trials to check for bias)
+      const rule = new RuleEvaluator();
+      rule.parseRuleString('B3678/S34678');
+      
+      const trials = [];
+      let totalFinalDensity = 0;
+
+      for (let t = 0; t < 10; t++) {
+        const c5 = new CellComplex();
+        applyTopology(c5, 'torus', 'square', 30, 30);
+        
+        // Initialize with 50% random density
+        c5.faces.forEach(f => f.state = Math.random() < 0.5 ? 1 : 0);
+        
+        const initialDensity = c5.faces.filter(f => f.state === 1).length / c5.faces.length;
+
+        for (let step = 0; step < 100; step++) {
+          c5.faces.forEach(face => {
+            const neighbors = getFaceNeighbors(c5, face.id, 'vertex-sharing');
+            face.nextState = rule.evaluateNextState(face, neighbors, c5.faceMap);
+          });
+          c5.faces.forEach(face => face.state = face.nextState);
+        }
+        
+        const finalDensity = c5.faces.filter(f => f.state === 1).length / c5.faces.length;
+        trials.push({ trial: t + 1, initialDensity, finalDensity });
+        totalFinalDensity += finalDensity;
+      }
+      
+      results.dayNightSimulation = {
+        trials,
+        averageFinalDensity: totalFinalDensity / 10
+      };
+
+      document.getElementById('output').textContent = JSON.stringify(results, null, 2);
+    } catch (e) {
+      document.getElementById('output').textContent = 'Error: ' + e.message + '\n' + e.stack;
+    }
+  </script>
+</body>
+</html>

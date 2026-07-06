@@ -1,0 +1,151 @@
+{
+  "format": "mizuhara-mahjong-ai-learning-v1",
+  "version": 1,
+  "updatedAt": "2026-06-29T03:42:18.754Z",
+  "profiles": {
+    "trainer|flowers|white4|normal|riichi|fair": {
+      "kazuya": {
+        "games": 50000,
+        "updates": 5929,
+        "weights": {
+          "baseShape": -0.00959999999999984,
+          "keepsPair": 0.18000000000000002,
+          "keepsTriplet": -0.048,
+          "keepsDora": -0.012,
+          "keepsValueHonor": -0.11999999999999998,
+          "keepsWhite": 0,
+          "keepsTerminal": -0.04800000000000001,
+          "discardSafe": 0.027999999999999987,
+          "discardOffSuitForFlush": 0.2880000000000001,
+          "keepsFlushSuit": 0.024,
+          "rareRoute": 0.11460000000000004,
+          "callAggression": 0,
+          "defense": 0,
+          "fastTenpai": -0.27096000000000003,
+          "flexibleYakuRoute": -0.15914040000000004,
+          "highValueRoute": 0.03075000000000003,
+          "dealInRisk": 0,
+          "oracleKeep": 0,
+          "oracleUkeire": 0,
+          "oracleTempo": 0,
+          "oracleDanger": 0
+        },
+        "stats": {
+          "wins": 0,
+          "averageReward": 0.0001621643500000002
+        }
+      },
+      "ichino": {
+        "games": 50000,
+        "updates": 5953,
+        "weights": {
+          "baseShape": 0.08220000000000025,
+          "keepsPair": 0.20400000000000004,
+          "keepsTriplet": -0.048,
+          "keepsDora": 0,
+          "keepsValueHonor": -0.3120000000000001,
+          "keepsWhite": 0,
+          "keepsTerminal": -0.34800000000000025,
+          "discardSafe": 0.16400000000000006,
+          "discardOffSuitForFlush": 0.2880000000000001,
+          "keepsFlushSuit": 0,
+          "rareRoute": 0.03300000000000001,
+          "callAggression": 0,
+          "defense": 0,
+          "fastTenpai": -0.14570400000000025,
+          "flexibleYakuRoute": 0.02778599999999999,
+          "highValueRoute": 0.010050000000000028,
+          "dealInRisk": 0,
+          "oracleKeep": 0,
+          "oracleUkeire": 0,
+          "oracleTempo": 0,
+          "oracleDanger": 0
+        },
+        "stats": {
+          "wins": 0,
+          "averageReward": 0.00019465325000000017
+        }
+      },
+      "nanayo": {
+        "games": 50000,
+        "updates": 6043,
+        "weights": {
+          "baseShape": 0.0978000000000001,
+          "keepsPair": 0.21600000000000005,
+          "keepsTriplet": 0.144,
+          "keepsDora": 0,
+          "keepsValueHonor": 0.048,
+          "keepsWhite": 0,
+          "keepsTerminal": -0.5490000000000004,
+          "discardSafe": 0.028,
+          "discardOffSuitForFlush": 0.09599999999999999,
+          "keepsFlushSuit": 0,
+          "rareRoute": -0.11460000000000001,
+          "callAggression": 0,
+          "defense": 0,
+          "fastTenpai": 0.07308000000000006,
+          "flexibleYakuRoute": -0.3501767999999997,
+          "highValueRoute": -0.15957000000000005,
+          "dealInRisk": 0,
+          "oracleKeep": 0,
+          "oracleUkeire": 0,
+          "oracleTempo": 0,
+          "oracleDanger": 0
+        },
+        "stats": {
+          "wins": 0,
+          "averageReward": 0.00027588145000000016
+        }
+      },
+      "mayoi": {
+        "games": 50000,
+        "updates": 5996,
+        "weights": {
+          "baseShape": -0.07259999999999972,
+          "keepsPair": 0.3840000000000002,
+          "keepsTriplet": -0.024000000000000004,
+          "keepsDora": 0,
+          "keepsValueHonor": -0.036,
+          "keepsWhite": 0,
+          "keepsTerminal": 0.05100000000000001,
+          "discardSafe": -0.22400000000000014,
+          "discardOffSuitForFlush": 0.3000000000000001,
+          "keepsFlushSuit": 0,
+          "rareRoute": 0.0684,
+          "callAggression": 0,
+          "defense": 0,
+          "fastTenpai": -0.47435999999999984,
+          "flexibleYakuRoute": -0.1437312,
+          "highValueRoute": -0.04781999999999999,
+          "dealInRisk": 0,
+          "oracleKeep": 0,
+          "oracleUkeire": 0,
+          "oracleTempo": 0,
+          "oracleDanger": 0
+        },
+        "stats": {
+          "wins": 0,
+          "averageReward": 0.0001803493000000001
+        }
+      }
+    }
+  },
+  "meta": {
+    "title": "花牌 / Lv5 / 50,000",
+    "ruleId": "flower",
+    "generatedAt": "2026-06-29T03:42:18.755Z",
+    "settings": {
+      "presetId": "trainer",
+      "flowers": true,
+      "whiteStorm": false,
+      "cosmic": false,
+      "china": false,
+      "whiteCount": 4
+    },
+    "oracleEnabled": false,
+    "oracleAssignments": null,
+    "iterationsPerCharacter": 50000,
+    "strength": 5,
+    "learningRate": 0.012
+  }
+}
