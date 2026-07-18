@@ -99,6 +99,9 @@ export class CliConsole {
       case 'randomize':
         this.cmdRandomize(args);
         break;
+      case 'screensaver':
+        this.cmdScreensaver(args);
+        break;
       case 'set':
         this.cmdSet(args);
         break;
@@ -132,10 +135,11 @@ export class CliConsole {
     this.log('  step                         - Advance simulation 1 generation');
     this.log('  reset                        - Reset cells to initial state');
     this.log('  randomize [percent]          - Randomize cell states at current or specified alive rate');
+    this.log('  screensaver [on|off|toggle]  - Auto-randomize when a board repeats within 60 steps');
     this.log('  set rule <notation>          - Set rule (e.g. B3/S23, B2/S/C3)');
     this.log('  set topology <type>          - Set topology (plane, torus, klein, projective, mobius, double-torus, two-sheet)');
     this.log('  set neighborhood <type>      - Set neighborhood mode (edge-sharing, vertex-sharing, weighted-incidence)');
-    this.log('  generate <type> [args]       - Rebuild grid (square [W] [H], triangle [W] [H], hex [W] [H], voronoi [seeds], cube, octahedron, octa-chain [len])');
+    this.log('  generate <type> [args]       - Rebuild grid, substitution patch, hyperbolic patch, or solid');
     this.log('  inspect face <id>            - Details of specific cell face');
     this.log('  show neighbors <id>          - Highlight neighbors of face');
     this.log('  merge vertex <id1> <id2>     - Topologically merge two vertices');
@@ -152,6 +156,7 @@ export class CliConsole {
     this.log(`  Correction: ${this.app.ruleEvaluator.correctionMode}`);
     this.log(`  Simulation Speed: ${this.app.intervalSpeed}ms`);
     this.log(`  Randomize Alive Rate: ${Math.round(this.app.randomizeDensity * 100)}%`);
+    this.log(`  Screensaver Auto-Randomize: ${this.app.screensaverMode ? 'on' : 'off'} (${this.app.loopDetectionWindow} step loop window)`);
   }
 
   cmdRandomize(args) {
@@ -165,6 +170,28 @@ export class CliConsole {
       this.app.updateUIFromState();
     } else {
       this.app.randomize();
+    }
+  }
+
+  cmdScreensaver(args) {
+    const value = (args[0] || 'toggle').toLowerCase();
+    if (!['on', 'off', 'toggle'].includes(value)) {
+      this.log('Usage: screensaver [on|off|toggle]', 'error-line');
+      return;
+    }
+
+    if (value === 'toggle') {
+      this.app.screensaverMode = !this.app.screensaverMode;
+    } else {
+      this.app.screensaverMode = value === 'on';
+    }
+
+    this.app.resetLoopWatch();
+    this.app.updateUIFromState();
+    this.log(`Screensaver auto-randomize ${this.app.screensaverMode ? 'enabled' : 'disabled'}.`, 'system-line');
+
+    if (this.app.screensaverMode && !this.app.isPlaying) {
+      this.app.play();
     }
   }
 
@@ -222,7 +249,7 @@ export class CliConsole {
 
   cmdGenerate(args) {
     if (args.length < 1) {
-      this.log('Usage: generate [square | triangle | hex | voronoi | tetrahedron | cube | octahedron | dodecahedron | icosahedron | octa-chain] [args]', 'error-line');
+      this.log('Usage: generate [square | triangle | hex | voronoi | hyperbolic-square | hyperbolic-triangle | hyperbolic-heptagon | hyperbolic-regular-heptagon | substitution-chair | substitution-fibonacci | substitution-penrose | substitution-penrose-rhomb | substitution-ammann-beenker | substitution-danzer-7fold | substitution-danzer-7fold-rule | substitution-custom | tetrahedron | cube | octahedron | dodecahedron | icosahedron | truncated-tetrahedron | cuboctahedron | truncated-cube | truncated-octahedron | rhombicuboctahedron | truncated-cuboctahedron | snub-cube | icosidodecahedron | truncated-dodecahedron | truncated-icosahedron | rhombicosidodecahedron | truncated-icosidodecahedron | snub-dodecahedron | octa-chain] [args]', 'error-line');
       return;
     }
 
@@ -242,10 +269,32 @@ export class CliConsole {
       this.app.jitterCount = count;
       this.app.rebuildGrid();
       this.log(`Generated Voronoi irregular grid with ${count} seeds.`, 'success-line');
-    } else if (['tetrahedron', 'cube', 'octahedron', 'dodecahedron', 'icosahedron'].includes(type)) {
+    } else if (['hyperbolic-square', 'hyperbolic-triangle', 'hyperbolic-heptagon'].includes(type)) {
+      const layers = parseInt(args[1], 10) || 5;
+      this.app.gridType = type;
+      this.app.jitterCount = layers;
+      this.app.rebuildGrid();
+      this.log(`Generated ${type} with ${layers} layers.`, 'success-line');
+    } else if (type === 'hyperbolic-regular-heptagon') {
+      const layers = parseInt(args[1], 10);
+      this.app.gridType = type;
+      this.app.jitterCount = Number.isNaN(layers) ? 3 : layers;
+      this.app.rebuildGrid();
+      this.app.updateUIFromState();
+      this.log(`Generated ${type} with ${this.app.jitterCount} layers.`, 'success-line');
+    } else if (['substitution-chair', 'substitution-fibonacci', 'substitution-penrose', 'substitution-penrose-rhomb', 'substitution-ammann-beenker', 'substitution-danzer-7fold', 'substitution-danzer-7fold-rule', 'substitution-custom'].includes(type)) {
+      const iterations = parseInt(args[1], 10);
+      const defaultIterations = type === 'substitution-fibonacci' ? 6 : ((type === 'substitution-danzer-7fold' || type === 'substitution-danzer-7fold-rule') ? 3 : ((type === 'substitution-penrose' || type === 'substitution-penrose-rhomb' || type === 'substitution-ammann-beenker') ? 5 : 4));
+      this.app.gridType = type;
+      this.app.jitterCount = Number.isNaN(iterations) ? defaultIterations : iterations;
+      this.app.rebuildGrid();
+      this.app.updateUIFromState();
+      const parameterLabel = type === 'substitution-ammann-beenker' ? 'projection range' : ((type === 'substitution-danzer-7fold' || type === 'substitution-danzer-7fold-rule') ? 'Danzer iterations' : 'substitution iterations');
+      this.log(`Generated ${type} with ${this.app.jitterCount} ${parameterLabel}.`, 'success-line');
+    } else if (['tetrahedron', 'cube', 'octahedron', 'dodecahedron', 'icosahedron', 'truncated-tetrahedron', 'cuboctahedron', 'truncated-cube', 'truncated-octahedron', 'rhombicuboctahedron', 'truncated-cuboctahedron', 'snub-cube', 'icosidodecahedron', 'truncated-dodecahedron', 'truncated-icosahedron', 'rhombicosidodecahedron', 'truncated-icosidodecahedron', 'snub-dodecahedron'].includes(type)) {
       this.app.gridType = type;
       this.app.rebuildGrid();
-      this.log(`Generated Platonic Solid: ${type}.`, 'success-line');
+      this.log(`Generated 3D solid: ${type}.`, 'success-line');
     } else if (type === 'octa-chain') {
       const len = parseInt(args[1], 10) || 4;
       this.app.gridType = 'octa-chain';
@@ -349,21 +398,24 @@ export class CliConsole {
       this.log(`  - Living (state 1) neighbors weight sum: ${aliveSum.toFixed(1)}`);
       
       const correction = this.app.ruleEvaluator.correctionMode;
-      let evaluated = aliveSum;
+      const activeRule = this.app.ruleEvaluator.getActiveRuleContext(aliveSum, totalWeight);
+      const evaluated = activeRule.evaluatedCount;
       
       if (correction === 'ratio' && totalWeight > 0) {
-        const ratio = aliveSum / totalWeight;
-        evaluated = Math.round(ratio * 8);
-        this.log(`  - Correction Mode [Ratio]: (${aliveSum.toFixed(1)} / ${totalWeight.toFixed(1)}) * 8 = ${evaluated}`);
+        if (activeRule.source === 'ratio-override') {
+          this.log(`  - Correction Mode [Ratio N override]: actual alive count ${evaluated} for N=${totalWeight.toFixed(1)}`);
+        } else {
+          this.log(`  - Correction Mode [Ratio]: (${aliveSum.toFixed(1)} / ${totalWeight.toFixed(1)}) * 8 = ${evaluated}`);
+        }
       } else {
         this.log(`  - Correction Mode [Absolute]: Floor(${aliveSum.toFixed(1)}) = ${evaluated}`);
       }
 
-      const isBirth = this.app.ruleEvaluator.birthSet.has(evaluated);
-      const isSurv = this.app.ruleEvaluator.survivalSet.has(evaluated);
+      const isBirth = activeRule.birthSet.has(evaluated);
+      const isSurv = activeRule.survivalSet.has(evaluated);
 
-      this.log(`  - Active birth counts: ${Array.from(this.app.ruleEvaluator.birthSet).join(',')}`);
-      this.log(`  - Active survival counts: ${Array.from(this.app.ruleEvaluator.survivalSet).join(',')}`);
+      this.log(`  - Active birth counts: ${Array.from(activeRule.birthSet).join(',')}`);
+      this.log(`  - Active survival counts: ${Array.from(activeRule.survivalSet).join(',')}`);
 
       if (face.state === 0) {
         this.log(`  - Result (Dead->Next): ${isBirth ? '1 (Birth matched)' : '0 (No birth)'}`);

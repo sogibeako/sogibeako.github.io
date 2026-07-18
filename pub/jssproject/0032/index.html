@@ -70,6 +70,13 @@
               <span id="val-random-density" class="range-val">25%</span>
             </div>
           </div>
+          <div class="checkbox-group screensaver-control">
+            <label class="checkbox-label">
+              <input type="checkbox" id="chk-screensaver-mode">
+              <span>Screensaver Auto-Randomize</span>
+            </label>
+            <div class="setting-note">Repeats Randomize when a board repeats within 20 steps.</div>
+          </div>
         </div>
       </section>
 
@@ -84,13 +91,35 @@
               <option value="triangle">Triangle Grid (三角格子)</option>
               <option value="hex">Hex Grid (六角格子)</option>
               <option value="voronoi">Voronoi / Irregular (ボロノイ格子)</option>
+              <option value="hyperbolic-square">Hyperbolic Square Patch (双曲風 四角パッチ)</option>
+              <option value="hyperbolic-triangle">Hyperbolic Triangle Patch (双曲風 三角パッチ)</option>
+              <option value="hyperbolic-heptagon">Hyperbolic Heptagon Patch (双曲風 七角パッチ)</option>
+              <option value="hyperbolic-regular-heptagon">Hyperbolic {7,3} Heptagon Tiling</option>
+              <option value="substitution-chair">Substitution Chair Patch</option>
+              <option value="substitution-fibonacci">Substitution Fibonacci Strip</option>
+              <option value="substitution-penrose">Substitution Penrose Triangles</option>
+              <option value="substitution-penrose-rhomb">Substitution Penrose Rhombs</option>
+              <option value="substitution-ammann-beenker">Ammann-Beenker Octagonal Tiling</option>
+              <option value="substitution-custom">Custom Pattern JSON</option>
               <option value="tetrahedron">Tetrahedron (正四面体)</option>
               <option value="cube">Cube (正六面体)</option>
               <option value="octahedron">Octahedron (正八面体)</option>
               <option value="dodecahedron">Dodecahedron (正十二面体)</option>
               <option value="icosahedron">Icosahedron (正二十面体)</option>
-              <option value="prism">Prism (五角柱)</option>
+              <option value="truncated-tetrahedron">Truncated Tetrahedron (切頂四面体)</option>
+              <option value="cuboctahedron">Cuboctahedron (立方八面体)</option>
+              <option value="truncated-cube">Truncated Cube (切頂立方体)</option>
               <option value="truncated-octahedron">Truncated Octahedron (切頂八面体)</option>
+              <option value="rhombicuboctahedron">Rhombicuboctahedron (斜方立方八面体)</option>
+              <option value="truncated-cuboctahedron">Truncated Cuboctahedron (切頂立方八面体)</option>
+              <option value="snub-cube">Snub Cube (変形立方体)</option>
+              <option value="icosidodecahedron">Icosidodecahedron (二十十二面体)</option>
+              <option value="truncated-dodecahedron">Truncated Dodecahedron (切頂十二面体)</option>
+              <option value="truncated-icosahedron">Truncated Icosahedron (切頂二十面体)</option>
+              <option value="rhombicosidodecahedron">Rhombicosidodecahedron (斜方二十・十二面体)</option>
+              <option value="truncated-icosidodecahedron">Truncated Icosidodecahedron (切頂二十・十二面体)</option>
+              <option value="snub-dodecahedron">Snub Dodecahedron (変形十二面体)</option>
+              <option value="prism">Prism (五角柱)</option>
               <option value="octa-chain">Octahedron Chain (八面体鎖)</option>
               <option value="octa-grid">Octahedron 2D Grid (八面体2D格子)</option>
               <option value="cube-grid">Cube 3D Grid (立方体3D格子)</option>
@@ -117,6 +146,17 @@
               <input type="range" id="slider-jitter" min="20" max="400" step="10" value="150">
               <span id="val-jitter" class="range-val">150</span>
             </div>
+          </div>
+
+          <div class="setting-group" id="substitution-editor-group" style="display: none;">
+            <label for="textarea-substitution-json">Custom Pattern JSON</label>
+            <div class="preset-button-row">
+              <button class="btn btn-small" data-substitution-preset="chair">Chair JSON</button>
+              <button class="btn btn-small" data-substitution-preset="fibonacci-strip">Fibonacci JSON</button>
+              <button class="btn btn-small" data-substitution-preset="ammann-beenker">Ammann-Beenker JSON</button>
+            </div>
+            <textarea id="textarea-substitution-json" class="code-textarea" rows="12" spellcheck="false"></textarea>
+            <div class="setting-note">JSON supports affine substitution rules and projection-4d multigrid patterns.</div>
           </div>
 
           <div class="setting-group">
@@ -224,6 +264,12 @@ return 0;</textarea>
               <option value="absolute" selected>Absolute Count (絶対数)</option>
               <option value="ratio">Ratio-Based (次数比率補正)</option>
             </select>
+          </div>
+
+          <div class="setting-group ratio-rule-map" id="ratio-rule-map-group" style="display: none;">
+            <label>Ratio Rule Map</label>
+            <div class="ratio-rule-note" id="ratio-rule-note">Ratio-Based uses round(alive / neighbors * 8).</div>
+            <div class="ratio-rule-table" id="ratio-rule-table"></div>
           </div>
         </div>
       </section>

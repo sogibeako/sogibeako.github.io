@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chladni Plate Lab</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <h1>Chladni Plate Lab</h1>
+        <p>MathSynth style tuning meets Kirchhoff-Love modal plates.</p>
+      </div>
+      <div class="readout">
+        <span id="materialBadge">ALUMINUM</span>
+        <span id="frequencyBadge">440.00 Hz</span>
+        <span id="resonanceBadge">Res 0.00</span>
+      </div>
+    </header>
+
+    <section class="workspace">
+      <aside class="panel left-panel">
+        <section class="group">
+          <h2>Excitation</h2>
+          <div class="button-row">
+            <button id="playPause" class="primary">Pause</button>
+            <button id="stepOnce">Step</button>
+            <button id="resetSand">Reset Sand</button>
+            <button id="scatterSand">Scatter</button>
+          </div>
+          <label>Base Frequency <input id="baseHz" type="number" min="1" max="5000" step="0.01" value="440"></label>
+          <label>Ratio Expression <input id="ratioExpr" type="text" value="1"></label>
+          <div class="metric"><span>Actual Frequency</span><strong id="actualHz">440.000 Hz</strong></div>
+          <label>Amplitude <input id="amplitude" type="range" min="0" max="1.5" step="0.01" value="0.8"></label>
+          <label>Damping <input id="damping" type="range" min="0.002" max="0.09" step="0.001" value="0.018"></label>
+          <label>Exciter X <input id="exciterX" type="range" min="0.02" max="0.98" step="0.01" value="0.5"></label>
+          <label>Exciter Y <input id="exciterY" type="range" min="0.02" max="0.98" step="0.01" value="0.5"></label>
+        </section>
+
+        <section class="group">
+          <h2>Plate & Material</h2>
+          <label>Shape
+            <select id="shape">
+              <option value="rectangle">Rectangle</option>
+              <option value="ellipse">Ellipse mask</option>
+              <option value="diamond">Diamond mask</option>
+            </select>
+          </label>
+          <label>Material <select id="material"></select></label>
+          <div class="grid-3">
+            <label>Width mm <input id="widthMm" type="number" min="40" max="1200" step="1" value="300"></label>
+            <label>Height mm <input id="heightMm" type="number" min="40" max="1200" step="1" value="300"></label>
+            <label>Thick mm <input id="thicknessMm" type="number" min="0.1" max="20" step="0.1" value="1.0"></label>
+          </div>
+          <label>Boundary
+            <select id="boundary">
+              <option value="simply">Simply supported</option>
+              <option value="clamped">Clamped edge approx.</option>
+              <option value="center">Center clamp approx.</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="group">
+          <h2>Sand</h2>
+          <label>Particle Count <input id="particleCount" type="range" min="1200" max="24000" step="200" value="9000"></label>
+          <label>Mobility <input id="mobility" type="range" min="0.02" max="1.2" step="0.01" value="0.42"></label>
+          <label>Friction <input id="friction" type="range" min="0.55" max="0.98" step="0.01" value="0.88"></label>
+          <label>Random Motion <input id="noise" type="range" min="0" max="0.12" step="0.002" value="0.025"></label>
+          <label>Quality
+            <select id="quality">
+              <option value="eco">Economy</option>
+              <option value="normal" selected>Normal</option>
+              <option value="fine">Fine field</option>
+            </select>
+          </label>
+        </section>
+      </aside>
+
+      <section class="stage-panel">
+        <div class="stage-toolbar">
+          <div class="tabs" id="viewTabs">
+            <button data-view="combined" class="active">Combined</button>
+            <button data-view="sand">Sand</button>
+            <button data-view="rms">RMS</button>
+            <button data-view="displacement">Displacement</button>
+            <button data-view="nodes">Nodal Lines</button>
+          </div>
+          <div class="button-row compact">
+            <button id="sweepToggle">Sweep</button>
+            <button id="findResonances">Find</button>
+            <button id="exportPng">PNG</button>
+          </div>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="plateCanvas" width="920" height="720"></canvas>
+          <canvas id="sandCanvas" width="920" height="720"></canvas>
+          <div id="exciterHandle" title="Exciter position"></div>
+        </div>
+        <footer class="statusline">
+          <span id="modelStatus">Plate Model: Kirchhoff-Love modal approximation</span>
+          <span id="particleStatus">Particles: 9000</span>
+          <span id="fpsStatus">FPS: --</span>
+        </footer>
+      </section>
+
+      <aside class="panel right-panel">
+        <section class="group">
+          <h2>Mode Analyzer</h2>
+          <label class="check"><input id="lockMode" type="checkbox"> Lock selected mode</label>
+          <div id="modeList" class="mode-list"></div>
+        </section>
+
+        <section class="group">
+          <h2>Mode Atlas</h2>
+          <div class="atlas-controls">
+            <label>Rows <input id="atlasRows" type="number" min="3" max="10" step="1" value="6"></label>
+            <label>Cols <input id="atlasCols" type="number" min="3" max="10" step="1" value="6"></label>
+          </div>
+          <label>Symmetric Pair Mix <input id="pairMix" type="range" min="-1" max="1" step="0.01" value="0.62"></label>
+          <div id="modeAtlas" class="mode-atlas"></div>
+          <p class="note">Click a cell to lock that rectangular mode and tune to its estimated resonance.</p>
+        </section>
+
+        <section class="group">
+          <h2>Scale Keyboard</h2>
+          <textarea id="scaleText" spellcheck="false">1/1
+16/15
+9/8
+6/5
+5/4
+4/3
+45/32
+3/2
+8/5
+5/3
+9/5
+15/8
+2/1</textarea>
+          <div class="button-row">
+            <button id="parseScale">Parse Scale</button>
+            <button id="latchMode">Gate</button>
+            <button id="panic">Stop</button>
+          </div>
+          <div id="keyboard" class="keyboard"></div>
+        </section>
+
+        <section class="group">
+          <h2>Interactive CLI</h2>
+          <div id="cliLog" class="cli-log"></div>
+          <input id="cliInput" type="text" placeholder="help / set ratio 3/2 / sweep 100 1200 20">
+        </section>
+
+        <section class="group">
+          <h2>Export</h2>
+          <div class="button-row">
+            <button id="shareUrl">Share URL</button>
+            <button id="exportJson">JSON</button>
+            <button id="exportCsv">CSV</button>
+          </div>
+          <p class="note">Representative material values vary by alloy, heat treatment, and support condition.</p>
+        </section>
+      </aside>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

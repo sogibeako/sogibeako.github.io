@@ -416,6 +416,10 @@ body {
     animation: float 5s ease-in-out infinite;
 }
 
+.kazuno-avatar.float-disabled {
+    animation: none;
+}
+
 .kazuno-avatar:hover {
     transform: translateX(-50%) scale(1.03);
 }

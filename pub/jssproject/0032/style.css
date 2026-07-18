@@ -296,10 +296,63 @@ input[type="range"] {
   border-radius: 8px;
   resize: vertical;
   outline: none;
+  width: 100%;
+  min-height: 180px;
+  box-sizing: border-box;
 }
 
 .code-textarea:focus {
   border-color: var(--color-success);
+}
+
+.ratio-rule-map {
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.ratio-rule-note,
+.ratio-rule-empty,
+.setting-note {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.ratio-rule-table {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;
+  overflow: auto;
+}
+
+.ratio-rule-row {
+  display: grid;
+  grid-template-columns: 52px 1fr 1fr;
+  gap: 6px;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  line-height: 1.35;
+  padding: 5px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.ratio-rule-degree {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.ratio-rule-birth {
+  color: var(--color-success);
+}
+
+.ratio-rule-survive {
+  color: var(--text-main);
 }
 
 /* Checkbox Styling */
@@ -325,6 +378,16 @@ input[type="range"] {
   cursor: pointer;
 }
 
+.screensaver-control {
+  padding-top: 2px;
+}
+
+.preset-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 /* Buttons */
 .btn {
   background: var(--bg-control);
@@ -345,6 +408,11 @@ input[type="range"] {
 .btn:hover {
   background: var(--bg-control-active);
   border-color: var(--text-muted);
+}
+
+.btn-small {
+  padding: 5px 9px;
+  font-size: 0.72rem;
 }
 
 .btn-primary {

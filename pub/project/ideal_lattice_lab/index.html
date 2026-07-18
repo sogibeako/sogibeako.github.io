@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ideal Lattice Lab</title>
+  <meta name="description" content="環とイデアルを定義し、包含格子、和、積、根基、素イデアル分解を観察する実験室">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-logo">
+      <span class="logo-pulse"></span>
+      <h1>IDEAL LATTICE LAB</h1>
+      <span class="logo-subtitle">Commutative Ring Explorer</span>
+    </div>
+    <div class="header-controls">
+      <div class="mode-tabs" role="tablist" aria-label="表示モード">
+        <button class="mode-tab active" data-mode="lattice">格子</button>
+        <button class="mode-tab" data-mode="elements">元</button>
+        <button class="mode-tab" data-mode="ops">演算</button>
+        <button class="mode-tab" data-mode="primes">素分解</button>
+        <button class="mode-tab" data-mode="basis">基底投影</button>
+      </div>
+      <select id="preset-select" class="preset-select" title="環プリセット">
+        <option value="zn12">Z/12Z</option>
+        <option value="zn60">Z/60Z</option>
+        <option value="z">Z</option>
+        <option value="dual">k[x]/(x^4)</option>
+        <option value="qsqrt5">Z[√-5]</option>
+        <option value="mono3">k[x,y,z] 単項式</option>
+        <option value="mono4">k[x,y,z,w] 単項式</option>
+      </select>
+    </div>
+  </header>
+
+  <main class="app-body">
+    <aside class="space-panel">
+      <section class="panel-section">
+        <h2 class="section-title">環 R <span class="badge badge-info" id="ring-kind">preset</span></h2>
+        <div class="section-content">
+          <div class="setting-group">
+            <label for="ring-type">環の種類</label>
+            <select id="ring-type">
+              <option value="zmod">剰余環 Z/nZ</option>
+              <option value="z">整数環 Z</option>
+              <option value="truncated">切断多項式環 k[x]/(x^m)</option>
+              <option value="quadratic">二次環 Z[√d]</option>
+              <option value="monomial">単項式環 k[x1,...,xr]</option>
+            </select>
+          </div>
+          <div class="param-grid">
+            <label>n <input id="param-n" type="number" min="2" value="12"></label>
+            <label>m <input id="param-m" type="number" min="2" value="4"></label>
+            <label>d <input id="param-d" type="number" value="-5"></label>
+            <label>変数数 <input id="param-vars" type="number" min="2" max="5" value="3"></label>
+            <label>次数上限 <input id="param-bound" type="number" min="2" max="9" value="5"></label>
+          </div>
+          <button class="btn btn-accent" id="btn-apply-ring">環を再構成</button>
+          <div class="ring-card" id="ring-summary"></div>
+        </div>
+      </section>
+
+      <section class="panel-section">
+        <h2 class="section-title">イデアル <span class="badge badge-info" id="ideal-count">0</span></h2>
+        <div class="section-content">
+          <div class="ideal-list" id="ideal-list"></div>
+          <div class="setting-group">
+            <label for="ideal-input">追加する生成元</label>
+            <input id="ideal-input" type="text" placeholder="例: 4 / x^2 / x^2,yz / 2,1+s">
+          </div>
+          <button class="btn" id="btn-add-ideal">イデアルを追加</button>
+          <p class="hint">Z/nZ と k[x]/(x^m) は主イデアルを自動で正規化します。単項式環ではカンマ区切りの単項式生成元を使います。</p>
+        </div>
+      </section>
+
+      <section class="panel-section">
+        <h2 class="section-title">表示</h2>
+        <div class="section-content">
+          <div class="axis-grid">
+            <label>X軸 <select id="axis-x"></select></label>
+            <label>Y軸 <select id="axis-y"></select></label>
+            <label>色 <select id="axis-color"></select></label>
+          </div>
+          <label class="toggle-line"><input id="toggle-transitive" type="checkbox"> 推移的な辺も表示</label>
+          <label class="toggle-line"><input id="toggle-grid" type="checkbox" checked> 背景格子を表示</label>
+          <button class="btn btn-accent" id="btn-analyze-ops">演算関係を分析</button>
+        </div>
+      </section>
+    </aside>
+
+    <section class="canvas-area">
+      <div class="canvas-header">
+        <h2 id="view-title">イデアル包含格子</h2>
+        <span class="header-meta" id="view-meta">I subset J means I is below J</span>
+      </div>
+      <div class="canvas-wrap">
+        <svg id="main-svg" xmlns="http://www.w3.org/2000/svg" aria-label="イデアル格子図"></svg>
+        <div id="basis-plane" class="basis-plane hidden"></div>
+        <div id="element-plane" class="element-plane hidden"></div>
+      </div>
+    </section>
+
+    <aside class="property-panel">
+      <section class="panel-section">
+        <h2 class="section-title">選択中 <span class="badge" id="selected-badge">none</span></h2>
+        <div class="section-content" id="selected-panel"></div>
+      </section>
+
+      <section class="panel-section">
+        <h2 class="section-title">演算</h2>
+        <div class="section-content">
+          <div class="op-row">
+            <select id="op-a"></select>
+            <select id="op-b"></select>
+          </div>
+          <div class="op-buttons">
+            <button class="btn btn-sm" data-op="sum">I + J</button>
+            <button class="btn btn-sm" data-op="intersection">I ∩ J</button>
+            <button class="btn btn-sm" data-op="product">I · J</button>
+            <button class="btn btn-sm" data-op="radical">rad(I)</button>
+          </div>
+          <div class="result-card" id="operation-result">演算を選ぶと、格子上で結果を点滅表示します。</div>
+        </div>
+      </section>
+
+      <section class="panel-section">
+        <h2 class="section-title">演算関係ツリー</h2>
+        <div class="section-content" id="operation-analysis">
+          <p class="hint">「演算関係を分析」で、現在のイデアル集合が +, ∩, ·, rad にどれだけ閉じているかを検査します。</p>
+        </div>
+      </section>
+
+      <section class="panel-section">
+        <h2 class="section-title">素イデアル解析</h2>
+        <div class="section-content" id="prime-panel"></div>
+      </section>
+
+      <section class="panel-section">
+        <h2 class="section-title">読み方</h2>
+        <div class="section-content compact">
+          <p>下にあるほど小さいイデアル、上にあるほど大きいイデアルです。</p>
+          <p>Z/nZ では divisor d がイデアル (d) を表し、p | n の (p) が素イデアルです。</p>
+          <p>単項式環では指数ベクトルの格子点を塗り、3変数以上は選んだ2軸へ投影します。</p>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+window.DANZER_PDF_PATCH = {"source":"https://tilings.math.uni-bielefeld.de/img/substitution/danzers-7-fold/patch.pdf","page":{"width":2666.3,"height":1969.95},"colors":{"orange":"#fc912b","yellow":"#fccf63","navy":"#140a63"},"lengthClusters":[{"count":3477,"mean":12.298,"min":12.197,"max":12.354},{"count":35278,"mean":27.635,"min":27.519,"max":27.703},{"count":7871,"mean":34.46,"min":34.373,"max":34.524},{"count":6291,"mean":49.797,"min":49.699,"max":49.853}],"vertexCount":10016,"triangles":[]};
+window.DANZER_PATCH_CHUNK_COUNT = 51;

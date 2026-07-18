@@ -1,0 +1,14 @@
+# Secrets
+api/db_config.php
+
+# Local/server database files
+api/*.sqlite
+api/*.db
+
+# Temporary diagnostic scripts
+api/db_check.php
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/

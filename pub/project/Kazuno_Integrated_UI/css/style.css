@@ -52,6 +52,11 @@ body {
     overflow-x: hidden;
 }
 
+body.is-resizing-calendar {
+    cursor: col-resize;
+    user-select: none;
+}
+
 /* スクロールバーカスタマイズ */
 ::-webkit-scrollbar {
     width: 8px;
@@ -416,6 +421,10 @@ body {
     animation: float 5s ease-in-out infinite;
 }
 
+.kazuno-avatar.float-disabled {
+    animation: none;
+}
+
 .kazuno-avatar:hover {
     transform: translateX(-50%) scale(1.03);
 }
@@ -497,6 +506,10 @@ body {
     border-bottom: 1px solid rgba(14, 165, 233, 0.15);
     padding: 10px 15px 0;
     gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    scroll-behavior: smooth;
 }
 
 .tab-trigger {
@@ -795,8 +808,8 @@ body {
 /* 8. カレンダー内のスタイル */
 .calendar-layout {
     display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 20px;
+    grid-template-columns: minmax(320px, 1fr) 10px minmax(300px, var(--calendar-details-width, 380px));
+    gap: 12px;
     height: 100%;
     min-height: 380px;
 }
@@ -808,6 +821,30 @@ body {
     border: 1px solid rgba(14, 165, 233, 0.15);
     display: flex;
     flex-direction: column;
+    min-width: 0;
+}
+
+.calendar-resize-handle {
+    width: 10px;
+    min-width: 10px;
+    border-radius: 999px;
+    cursor: col-resize;
+    background: linear-gradient(
+        90deg,
+        transparent 0,
+        transparent 3px,
+        rgba(14, 165, 233, 0.24) 3px,
+        rgba(14, 165, 233, 0.24) 7px,
+        transparent 7px
+    );
+    transition: background-color 0.2s, box-shadow 0.2s;
+    touch-action: none;
+}
+
+.calendar-resize-handle:hover,
+.calendar-resize-handle.dragging {
+    background-color: rgba(14, 165, 233, 0.08);
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.08);
 }
 
 .calendar-header-controls {
@@ -908,6 +945,7 @@ body {
 
 .indicator-dot.event { background-color: var(--primary-color); }
 .indicator-dot.todo { background-color: var(--priority-medium); }
+.indicator-dot.done { background-color: var(--priority-low); }
 
 /* 選択日詳細パネル */
 .calendar-details-panel {
@@ -919,6 +957,7 @@ body {
     flex-direction: column;
     gap: 15px;
     overflow-y: auto;
+    min-width: 0;
 }
 
 .details-title {
@@ -926,6 +965,119 @@ body {
     font-weight: 700;
     border-bottom: 2px solid rgba(14, 165, 233, 0.15);
     padding-bottom: 6px;
+}
+
+.done-summary-box {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.done-summary-box > div {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.18);
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+.done-summary-label {
+    display: block;
+    color: var(--text-sub);
+    font-size: 0.72rem;
+    margin-bottom: 2px;
+}
+
+.done-summary-box strong {
+    color: #047857;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+}
+
+.done-today-panel {
+    background: rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(16, 185, 129, 0.16);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.done-today-panel h4 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #047857;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.done-template-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.done-template-chip {
+    border: 1px solid rgba(16, 185, 129, 0.22);
+    background: rgba(255, 255, 255, 0.78);
+    color: #047857;
+    border-radius: 999px;
+    padding: 5px 9px;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+.done-template-chip:hover {
+    background: rgba(16, 185, 129, 0.12);
+}
+
+.done-today-form {
+    display: grid;
+    grid-template-columns: 1fr 78px auto;
+    gap: 8px;
+    align-items: center;
+}
+
+.done-today-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.done-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.74);
+    border: 1px solid rgba(16, 185, 129, 0.12);
+    border-left: 3px solid var(--priority-low);
+    border-radius: 8px;
+    padding: 7px 9px;
+}
+
+.done-item-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.done-item-meta {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+}
+
+.btn-done-delete {
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 0.75rem;
+}
+
+.btn-done-delete:hover {
+    color: var(--priority-high);
 }
 
 .cal-day-event-list {
@@ -1313,6 +1465,82 @@ body {
     border-color: rgba(14, 165, 233, 0.2);
 }
 
+.location-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: 100%;
+}
+
+.location-action-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.location-result-panel {
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(14, 165, 233, 0.16);
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.location-status {
+    color: var(--text-sub);
+    font-size: 0.9rem;
+}
+
+.location-address {
+    min-height: 72px;
+    padding: 16px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(14, 165, 233, 0.14);
+    color: var(--text-main);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.55;
+    word-break: break-word;
+}
+
+.location-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.location-detail-grid > div {
+    background: rgba(255, 255, 255, 0.58);
+    border: 1px solid rgba(14, 165, 233, 0.1);
+    border-radius: 8px;
+    padding: 10px;
+    min-width: 0;
+}
+
+.location-label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    margin-bottom: 4px;
+}
+
+.location-value {
+    color: var(--text-main);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+}
+
+.location-privacy-note {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
 .hide {
     display: none !important;
 }
@@ -1630,6 +1858,10 @@ body {
     
     .calendar-layout {
         grid-template-columns: 1fr;
+    }
+
+    .calendar-resize-handle {
+        display: none;
     }
     
     .pomodoro-layout {

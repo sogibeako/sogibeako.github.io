@@ -13,13 +13,17 @@ if (empty($path)) {
 
 $db = get_db_connection();
 try {
-    $stmt = $db->prepare("REPLACE INTO vfs_files (path, content, is_dir) VALUES (:path, :content, :is_dir)");
+    $stmt = $db->prepare("REPLACE INTO vfs_files (path, content, is_dir, updated_at) VALUES (:path, :content, :is_dir, CURRENT_TIMESTAMP)");
     $stmt->execute([
         ':path' => $path,
         ':content' => $content,
         ':is_dir' => $is_dir
     ]);
-    send_json(['success' => true]);
+
+    $stmt = $db->prepare("SELECT path, is_dir, updated_at, LENGTH(content) AS size FROM vfs_files WHERE path = :path");
+    $stmt->execute([':path' => $path]);
+    $item = $stmt->fetch();
+    send_json(['success' => true, 'item' => $item]);
 } catch (PDOException $e) {
     send_json(['error' => $e->getMessage()], 500);
 }

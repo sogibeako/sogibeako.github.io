@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
             pomo_sequence: 'wrwrwrR',
             last_tab: 'todo',
             default_video_url: '',
+            kazuno_float_enabled: true,
             speech_interval: 30 // おしゃべり間隔（秒、デフォルト30秒）
         },
         pomoSequenceIndex: 0,
@@ -29,6 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let activeBasicInterpreter = null;
     let cliInputResolver = null;
+    let vfsReadyPromise = Promise.resolve();
+    const CLI_MAX_LINES = 600;
 
     // ランダムおしゃべりセリフリスト (2026sib.htm から抽出)
     const RANDOM_SPEECHES = [
@@ -230,8 +233,8 @@ document.addEventListener('DOMContentLoaded', () => {
             initCalendar();
             initPomodoro();
             initVideo();
-            await initVfs();
             initCLI();
+            vfsReadyPromise = initVfs();
             startRandomSpeechTimer(); // ランダムおしゃべりタイマー始動
         });
 
@@ -369,6 +372,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 switchTab(data.last_tab);
             }
             if (data.default_video_url) AppState.settings.default_video_url = data.default_video_url;
+            if (data.kazuno_float_enabled !== undefined) {
+                AppState.settings.kazuno_float_enabled = String(data.kazuno_float_enabled) !== 'false' && String(data.kazuno_float_enabled) !== '0';
+            }
             if (data.speech_interval) AppState.settings.speech_interval = parseInt(data.speech_interval);
         } else {
             const localSettings = JSON.parse(localStorage.getItem('kazuno_settings') || '{}');
@@ -383,6 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (intervalInput) {
             intervalInput.value = AppState.settings.speech_interval;
         }
+        applyKazunoFloatSetting();
     }
 
     async function saveSetting(key, value) {
@@ -396,6 +403,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data && !data.fallback) return;
         }
         localStorage.setItem('kazuno_settings', JSON.stringify(AppState.settings));
+    }
+
+    function applyKazunoFloatSetting() {
+        const avatar = document.getElementById('kazunoAvatar');
+        if (avatar) {
+            avatar.classList.toggle('float-disabled', !AppState.settings.kazuno_float_enabled);
+        }
     }
 
     /* ==========================================================================
@@ -1750,6 +1764,9 @@ document.addEventListener('DOMContentLoaded', () => {
         line.textContent = text;
         
         output.appendChild(line);
+        while (output.children.length > CLI_MAX_LINES) {
+            output.removeChild(output.firstElementChild);
+        }
         output.scrollTop = output.scrollHeight;
     }
     window.printCli = printCli;
@@ -1762,6 +1779,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const args = parseCommandArgs(cmdLine);
         const baseCmd = args[0].toLowerCase();
+        const vfsCommands = new Set(['ls', 'files', 'cd', 'mkdir', 'mv', 'cp', 'head', 'tail', 'cat', 'rm', 'del', 'export', 'import', 'nano', 'run']);
+        if (vfsCommands.has(baseCmd)) {
+            await ensureVfsReady();
+        }
 
         switch (baseCmd) {
             case 'help':
@@ -1787,7 +1808,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 await handleCalCommand(args.slice(1));
                 break;
             case 'play':
-                handlePlayCommand(args.slice(1));
+                await handlePlayCommand(args.slice(1));
                 break;
             case 'open':
                 handleOpenCommand(args.slice(1));
@@ -1797,6 +1818,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'hcalc':
                 handleHcalcCommand();
+                break;
+            case 'tab':
+            case 'goto':
+                handleTabCommand(args.slice(1));
+                break;
+            case 'tabs':
+                handleTabCommand([]);
                 break;
             case 'ls':
             case 'files':
@@ -1809,32 +1837,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 handleMkdirCommand(args.slice(1));
                 break;
             case 'mv':
-                handleMvCommand(args.slice(1));
+                await handleMvCommand(args.slice(1));
                 break;
             case 'cp':
-                handleCpCommand(args.slice(1));
+                await handleCpCommand(args.slice(1));
                 break;
             case 'head':
-                handleHeadCommand(args.slice(1));
+                await handleHeadCommand(args.slice(1));
                 break;
             case 'tail':
-                handleTailCommand(args.slice(1));
+                await handleTailCommand(args.slice(1));
                 break;
             case 'cat':
-                handleCatCommand(args.slice(1));
+                await handleCatCommand(args.slice(1));
                 break;
             case 'rm':
             case 'del':
                 handleRmCommand(args.slice(1));
                 break;
             case 'export':
-                handleExportCommand(args.slice(1));
+                await handleExportCommand(args.slice(1));
                 break;
             case 'import':
                 handleImportCommand();
                 break;
             case 'nano':
-                handleNanoCommand(args.slice(1));
+                await handleNanoCommand(args.slice(1));
                 break;
             case 'run':
                 await handleRunCommand(args.slice(1));
@@ -1858,6 +1886,42 @@ document.addEventListener('DOMContentLoaded', () => {
         return matches.map(m => m.replace(/^"|"$/g, ''));
     }
 
+    function handleTabCommand(subArgs) {
+        const aliases = {
+            todo: 'todo',
+            todos: 'todo',
+            task: 'todo',
+            tasks: 'todo',
+            calendar: 'calendar',
+            cal: 'calendar',
+            pomodoro: 'pomodoro',
+            pomo: 'pomodoro',
+            timer: 'pomodoro',
+            video: 'video',
+            youtube: 'video',
+            cli: 'cli',
+            terminal: 'cli',
+            oneiro: 'oneirotopia',
+            oneirotopia: 'oneirotopia'
+        };
+        const input = (subArgs[0] || '').toLowerCase();
+        if (!input) {
+            printCli('Tabs: todo, calendar, pomodoro, video, cli, oneirotopia', 'info');
+            printCli('Use: tab <name>  or  goto <name>', 'muted');
+            return;
+        }
+
+        const tabId = aliases[input];
+        if (!tabId) {
+            printCli(`Unknown tab: ${input}`, 'danger');
+            return;
+        }
+
+        switchTab(tabId);
+        saveSetting('last_tab', tabId);
+        printCli(`Switched to tab: ${tabId}`, 'success');
+    }
+
     function showHelp() {
         printCli('=== コマンド一覧 ===', 'info');
         printCli('help                      - コマンド一覧を表示します。', 'muted');
@@ -1878,6 +1942,8 @@ document.addEventListener('DOMContentLoaded', () => {
         printCli('open <URL>                - 指定したURLをブラウザ別タブで開きます。', 'muted');
         printCli('calc [数式]               - 数式を評価して計算します (引数なしで履歴を表示)。', 'muted');
         printCli('hcalc                     - 計算機能(calc)の利用可能演算子・定数・関数のヘルプを表示します。', 'muted');
+        printCli('tab <name> / goto <name>  - 指定タブへ移動します。todo, calendar, pomodoro, video, cli, oneirotopia', 'muted');
+        printCli('tabs                      - 移動できるタブ名を表示します。', 'muted');
         printCli('ls                        - 仮想ファイル・フォルダの一覧を表示します。', 'muted');
         printCli('cd [フォルダ]             - フォルダを移動します (指定なしでルートへ)。', 'muted');
         printCli('mkdir <フォルダ名>        - 新規フォルダを作成します。', 'muted');
@@ -1893,6 +1959,8 @@ document.addEventListener('DOMContentLoaded', () => {
         printCli('run <ファイル>            - BASICプログラムファイルを実行します。', 'muted');
         printCli('kazuno <表情>             - 一埜の表情を手動で切り替えます。', 'muted');
         printCli('kazuno interval <秒>      - おしゃべり間隔(秒)を変更します。(0で停止)', 'muted');
+        printCli('kazuno float on|off|toggle - 一埜のフワフワ動作を切り替えます。', 'muted');
+        printCli('nano keys                 - F2保存 / F3終了 / F4保存して終了 / Esc終了', 'muted');
         printCli('oneiro <サブコマンド>     - Oneirotopiaの将来用コマンドを実行します。', 'muted');
     }
 
@@ -2113,7 +2181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function handlePlayCommand(subArgs) {
+    async function handlePlayCommand(subArgs) {
         const input = subArgs[0];
         if (!input) {
             printCli('エラー: 再生するYouTube URL、動画ID、またはプレイリストファイルを指定してください。 (例: play dQw4w9WgXcQ, play playlist.txt)', 'danger');
@@ -2123,7 +2191,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const absPath = resolvePath(input);
         const files = getVfsFiles();
         if (files[absPath]) {
-            const content = files[absPath];
+            const content = await getVfsFileContent(absPath);
+            if (content === null) {
+                printCli(`Error: Could not read playlist file "${input}".`, 'danger');
+                return;
+            }
             const lines = content.split(/\r?\n/);
             const videoIds = [];
             
@@ -2281,6 +2353,22 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const intervalInput = document.getElementById('kazunoSpeechInterval');
             if (intervalInput) intervalInput.value = sec;
+        } else if (sub === 'float') {
+            const mode = (subArgs[1] || 'toggle').toLowerCase();
+            let enabled = AppState.settings.kazuno_float_enabled;
+            if (mode === 'on' || mode === 'true' || mode === '1') {
+                enabled = true;
+            } else if (mode === 'off' || mode === 'false' || mode === '0') {
+                enabled = false;
+            } else if (mode === 'toggle') {
+                enabled = !enabled;
+            } else {
+                printCli('Usage: kazuno float on|off|toggle', 'danger');
+                return;
+            }
+            saveSetting('kazuno_float_enabled', enabled);
+            applyKazunoFloatSetting();
+            printCli(`Kazuno float animation: ${enabled ? 'on' : 'off'}`, 'success');
         } else {
             const allowedEmotions = ['neutral', 'happy', 'angry', 'sad', 'fun', 'thinking', 'present'];
             if (allowedEmotions.includes(sub)) {
@@ -2308,9 +2396,45 @@ document.addEventListener('DOMContentLoaded', () => {
         return { files: {}, dirs: ['/'] };
     }
 
-    function cloneVfs(vfs) {
+    function createVfsFileEntry(path, content, meta = {}) {
+        const hasContent = content !== undefined;
+        const text = hasContent ? String(content ?? '') : undefined;
         return {
-            files: { ...(vfs && vfs.files ? vfs.files : {}) },
+            path,
+            is_dir: 0,
+            size: meta.size !== undefined ? parseInt(meta.size) || 0 : (hasContent ? text.length : 0),
+            updated_at: meta.updated_at || null,
+            content: text,
+            contentLoaded: hasContent
+        };
+    }
+
+    function normalizeVfsFileEntry(path, value) {
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+            if (Object.prototype.hasOwnProperty.call(value, 'content')) {
+                return createVfsFileEntry(path, value.content, value);
+            }
+            return {
+                path,
+                is_dir: 0,
+                size: parseInt(value.size) || 0,
+                updated_at: value.updated_at || null,
+                content: undefined,
+                contentLoaded: false
+            };
+        }
+        return createVfsFileEntry(path, value || '');
+    }
+
+    function cloneVfs(vfs) {
+        const files = {};
+        if (vfs && vfs.files) {
+            for (const path in vfs.files) {
+                files[path] = { ...normalizeVfsFileEntry(path, vfs.files[path]) };
+            }
+        }
+        return {
+            files,
             dirs: Array.isArray(vfs && vfs.dirs) ? [...vfs.dirs] : ['/']
         };
     }
@@ -2322,12 +2446,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (parsed.files && parsed.dirs) {
-            vfs.files = { ...parsed.files };
+            for (const path in parsed.files) {
+                vfs.files[path] = normalizeVfsFileEntry(path, parsed.files[path]);
+            }
             vfs.dirs = Array.isArray(parsed.dirs) ? [...parsed.dirs] : ['/'];
         } else {
             for (const name in parsed) {
                 const path = name.startsWith('/') ? name : '/' + name;
-                vfs.files[path] = parsed[name];
+                vfs.files[path] = normalizeVfsFileEntry(path, parsed[name]);
             }
         }
 
@@ -2365,6 +2491,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 250);
     }
 
+    async function ensureVfsReady() {
+        if (vfsReadyPromise) {
+            await vfsReadyPromise;
+        }
+    }
+
     async function syncVfsToDb(vfs) {
         if (AppState.useLocalStorage) return;
         if (!lastSyncedVfs) {
@@ -2374,13 +2506,28 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Diff and save/replace new/modified files
             for (const path in vfs.files) {
-                const content = vfs.files[path];
-                if (lastSyncedVfs.files[path] !== content) {
-                    await apiRequest('api/vfs_save.php', {
+                const file = normalizeVfsFileEntry(path, vfs.files[path]);
+                vfs.files[path] = file;
+                const previous = lastSyncedVfs.files[path] ? normalizeVfsFileEntry(path, lastSyncedVfs.files[path]) : null;
+                const contentChanged = file.contentLoaded && (!previous || previous.content !== file.content);
+                const metaChanged = !previous || previous.size !== file.size || previous.updated_at !== file.updated_at;
+                if (contentChanged || (!previous && file.contentLoaded)) {
+                    const data = await apiRequest('api/vfs_save.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ path, content, is_dir: 0 })
+                        body: JSON.stringify({ path, content: file.content || '', is_dir: 0 })
                     });
+                    if (data && !data.fallback && data.item) {
+                        file.size = parseInt(data.item.size) || (file.content || '').length;
+                        file.updated_at = data.item.updated_at || file.updated_at;
+                        if (AppState.vfs && AppState.vfs.files && AppState.vfs.files[path]) {
+                            AppState.vfs.files[path].size = file.size;
+                            AppState.vfs.files[path].updated_at = file.updated_at;
+                        }
+                    }
+                } else if (metaChanged && previous) {
+                    file.size = previous.size;
+                    file.updated_at = previous.updated_at;
                 }
             }
             // Diff and delete removed files
@@ -2416,6 +2563,7 @@ document.addEventListener('DOMContentLoaded', () => {
             lastSyncedVfs = cloneVfs(vfs);
         } catch (e) {
             console.error('Failed to sync VFS to database', e);
+            scheduleVfsCacheWrite(vfs);
         }
     }
 
@@ -2433,7 +2581,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             vfs.dirs.push(path);
                         }
                     } else {
-                        vfs.files[path] = item.content || '';
+                        vfs.files[path] = normalizeVfsFileEntry(path, {
+                            size: item.size,
+                            updated_at: item.updated_at
+                        });
                     }
                 }
                 AppState.vfs = vfs;
@@ -2457,17 +2608,69 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveVfs(vfs) {
         AppState.vfs = vfs;
         scheduleVfsDbSync(vfs);
-        scheduleVfsCacheWrite(vfs);
+        if (AppState.useLocalStorage) {
+            scheduleVfsCacheWrite(vfs);
+        }
     }
 
     function getVfsFiles() {
         return getVfs().files;
     }
 
+    function getVfsFileSize(entry) {
+        const file = normalizeVfsFileEntry('', entry);
+        return file.contentLoaded ? file.content.length : file.size;
+    }
+
+    async function getVfsFileContent(filename) {
+        const vfs = getVfs();
+        const absPath = resolvePath(filename);
+        const entry = vfs.files[absPath];
+        if (!entry) return null;
+
+        const file = normalizeVfsFileEntry(absPath, entry);
+        vfs.files[absPath] = file;
+        if (file.contentLoaded) {
+            return file.content || '';
+        }
+
+        if (!AppState.useLocalStorage) {
+            const data = await apiRequest('api/vfs_read.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path: absPath })
+            });
+            if (data && !data.fallback && data.content !== undefined) {
+                file.content = data.content || '';
+                file.contentLoaded = true;
+                file.size = parseInt(data.size) || file.content.length;
+                file.updated_at = data.updated_at || file.updated_at;
+                return file.content;
+            }
+        }
+
+        return file.contentLoaded ? (file.content || '') : null;
+    }
+
+    async function saveVfsEntryToDb(path, entry) {
+        if (AppState.useLocalStorage) return null;
+        return await apiRequest('api/vfs_save.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                path,
+                content: entry.is_dir ? null : (entry.content || ''),
+                is_dir: entry.is_dir ? 1 : 0
+            })
+        });
+    }
+
     function saveVfsFile(filename, content) {
         const vfs = getVfs();
         const absPath = resolvePath(filename);
-        vfs.files[absPath] = content;
+        vfs.files[absPath] = createVfsFileEntry(absPath, content, {
+            updated_at: new Date().toISOString()
+        });
         saveVfs(vfs);
     }
 
@@ -2588,7 +2791,7 @@ J_QGZopb1zU
             if (f.startsWith(currentDir)) {
                 const rel = f.slice(currentDir.length);
                 if (rel && !rel.includes('/')) {
-                    children.push({ name: rel, type: 'file', size: files[f].length });
+                    children.push({ name: rel, type: 'file', size: getVfsFileSize(files[f]) });
                 }
             }
         });
@@ -2609,7 +2812,7 @@ J_QGZopb1zU
         window.say('今いる場所のファイル一覧だよ！', 'happy');
     }
 
-    function handleCatCommand(subArgs) {
+    async function handleCatCommand(subArgs) {
         const filename = subArgs[0];
         if (!filename) {
             printCli('エラー: ファイル名を指定してください。 (例: cat guess.bas)', 'danger');
@@ -2621,8 +2824,13 @@ J_QGZopb1zU
             printCli(`エラー: ファイル "${filename}" が見つかりません。`, 'danger');
             return;
         }
+        const content = await getVfsFileContent(absPath);
+        if (content === null) {
+            printCli(`Error: Could not read file "${filename}".`, 'danger');
+            return;
+        }
         printCli(`=== ${filename} ===`, 'info');
-        printCli(files[absPath], '');
+        printCli(content, '');
     }
 
     function handleRmCommand(subArgs) {
@@ -2671,7 +2879,7 @@ J_QGZopb1zU
         }
     }
 
-    function handleExportCommand(subArgs) {
+    async function handleExportCommand(subArgs) {
         const filename = subArgs[0];
         if (!filename) {
             printCli('エラー: エクスポートするファイル名を指定してください。 (例: export guess.bas)', 'danger');
@@ -2683,7 +2891,11 @@ J_QGZopb1zU
             printCli(`エラー: ファイル "${filename}" が見つかりません。`, 'danger');
             return;
         }
-        const content = files[absPath];
+        const content = await getVfsFileContent(absPath);
+        if (content === null) {
+            printCli(`Error: Could not read file "${filename}".`, 'danger');
+            return;
+        }
         const basename = filename.substring(filename.lastIndexOf('/') + 1);
         
         let exportData, exportName, mimeType;
@@ -2750,14 +2962,15 @@ J_QGZopb1zU
         input.click();
     }
 
-    function handleNanoCommand(subArgs) {
+    async function handleNanoCommand(subArgs) {
         let filename = subArgs[0] || 'untitled.bas';
         if (!filename.includes('.')) {
             filename += '.bas';
         }
 
+        const absPath = resolvePath(filename);
         const files = getVfsFiles();
-        const initialContent = files[filename] || '';
+        const initialContent = files[absPath] ? (await getVfsFileContent(absPath) || '') : '';
         const initialLineCount = initialContent ? initialContent.split('\n').length : 0;
 
         const cliOutput = document.getElementById('cliOutput');
@@ -2785,12 +2998,13 @@ J_QGZopb1zU
             <div class="editor-status-bar" id="editorStatusBar"></div>
             <div class="editor-shortcuts">
                 <div class="shortcut-item" id="editorShortcutHelp"><span class="key">^G</span><span class="label">Get Help</span></div>
-                <div class="shortcut-item" id="editorShortcutSave"><span class="key">^O</span><span class="label">WriteOut</span></div>
+                <div class="shortcut-item" id="editorShortcutSave"><span class="key">F2</span><span class="label">Save</span></div>
                 <div class="shortcut-item" id="editorShortcutRead"><span class="key">^R</span><span class="label">Read File</span></div>
                 <div class="shortcut-item" id="editorShortcutPrev"><span class="key">^Y</span><span class="label">Prev Pg</span></div>
                 <div class="shortcut-item" id="editorShortcutCut"><span class="key">^K</span><span class="label">Cut Text</span></div>
                 <div class="shortcut-item" id="editorShortcutPos"><span class="key">^C</span><span class="label">Cur Pos</span></div>
-                <div class="shortcut-item" id="editorShortcutExit"><span class="key">^X</span><span class="label">Exit</span></div>
+                <div class="shortcut-item" id="editorShortcutExit"><span class="key">F3</span><span class="label">Exit</span></div>
+                <div class="shortcut-item" id="editorShortcutSaveExit"><span class="key">F4</span><span class="label">SaveExit</span></div>
                 <div class="shortcut-item" id="editorShortcutJustify"><span class="key">^J</span><span class="label">Justify</span></div>
                 <div class="shortcut-item" id="editorShortcutSearch"><span class="key">^W</span><span class="label">Where Is</span></div>
                 <div class="shortcut-item" id="editorShortcutNext"><span class="key">^V</span><span class="label">Next Pg</span></div>
@@ -2865,6 +3079,10 @@ J_QGZopb1zU
 
         // Add action triggers
         document.getElementById('editorShortcutSave').addEventListener('click', saveContent);
+        document.getElementById('editorShortcutSaveExit').addEventListener('click', () => {
+            saveContent();
+            exitEditor();
+        });
         document.getElementById('editorShortcutExit').addEventListener('click', () => {
             if (textarea.value !== savedContent) {
                 if (confirm('変更が保存されていません。保存せずに終了しますか？')) {
@@ -2894,7 +3112,16 @@ J_QGZopb1zU
         });
 
         textarea.addEventListener('keydown', e => {
-            if (e.ctrlKey && e.key === 's') {
+            if (e.key === 'F2') {
+                e.preventDefault();
+                saveContent();
+            } else if (e.key === 'F3' || e.key === 'Escape') {
+                e.preventDefault();
+                document.getElementById('editorShortcutExit').click();
+            } else if (e.key === 'F4') {
+                e.preventDefault();
+                document.getElementById('editorShortcutSaveExit').click();
+            } else if (e.ctrlKey && e.key === 's') {
                 e.preventDefault();
                 saveContent();
             } else if (e.ctrlKey && e.key === 'q') {
@@ -3445,12 +3672,17 @@ J_QGZopb1zU
             printCli(`エラー: ファイル "${filename}" が見つかりません。`, 'danger');
             return;
         }
+        const content = await getVfsFileContent(absPath);
+        if (content === null) {
+            printCli(`エラー: ファイル "${filename}" を読み込めませんでした。`, 'danger');
+            return;
+        }
 
         printCli(`>>> RUN ${filename} <<<`, 'info');
         window.say(`${filename} を実行するね！`, 'happy');
 
         activeBasicInterpreter = new BasicInterpreter(
-            files[absPath],
+            content,
             (msg, type) => printCli(msg, type),
             async () => {
                 const cliInput = document.getElementById('cliInput');
@@ -3551,7 +3783,7 @@ J_QGZopb1zU
         window.say(`フォルダ「${target}」を作ったよ！`, 'happy');
     }
 
-    function handleMvCommand(subArgs) {
+    async function handleMvCommand(subArgs) {
         const src = subArgs[0];
         const dest = subArgs[1];
         if (!src || !dest) {
@@ -3564,12 +3796,17 @@ J_QGZopb1zU
         const vfs = getVfs();
 
         if (vfs.files.hasOwnProperty(srcPath)) {
+            const content = await getVfsFileContent(srcPath);
+            if (content === null) {
+                printCli(`mv: '${src}': 読み込めませんでした。`, 'danger');
+                return;
+            }
             let finalDest = destPath;
             if (vfs.dirs.includes(destPath)) {
                 const filename = srcPath.substring(srcPath.lastIndexOf('/') + 1);
                 finalDest = destPath === '/' ? '/' + filename : destPath + '/' + filename;
             }
-            vfs.files[finalDest] = vfs.files[srcPath];
+            vfs.files[finalDest] = createVfsFileEntry(finalDest, content, vfs.files[srcPath]);
             delete vfs.files[srcPath];
             saveVfs(vfs);
             printCli(`'${srcPath}' を '${finalDest}' に移動しました。`, 'success');
@@ -3593,8 +3830,10 @@ J_QGZopb1zU
             });
             for (const f in vfs.files) {
                 if (f.startsWith(srcPath + '/')) {
+                    const content = await getVfsFileContent(f);
+                    if (content === null) continue;
                     const newF = finalDest + f.slice(srcPath.length);
-                    vfs.files[newF] = vfs.files[f];
+                    vfs.files[newF] = createVfsFileEntry(newF, content, vfs.files[f]);
                     delete vfs.files[f];
                 }
             }
@@ -3606,7 +3845,7 @@ J_QGZopb1zU
         }
     }
 
-    function handleCpCommand(subArgs) {
+    async function handleCpCommand(subArgs) {
         let recursive = false;
         let src = '';
         let dest = '';
@@ -3630,12 +3869,17 @@ J_QGZopb1zU
         const vfs = getVfs();
 
         if (vfs.files.hasOwnProperty(srcPath)) {
+            const content = await getVfsFileContent(srcPath);
+            if (content === null) {
+                printCli(`cp: '${src}': 読み込めませんでした。`, 'danger');
+                return;
+            }
             let finalDest = destPath;
             if (vfs.dirs.includes(destPath)) {
                 const filename = srcPath.substring(srcPath.lastIndexOf('/') + 1);
                 finalDest = destPath === '/' ? '/' + filename : destPath + '/' + filename;
             }
-            vfs.files[finalDest] = vfs.files[srcPath];
+            vfs.files[finalDest] = createVfsFileEntry(finalDest, content, vfs.files[srcPath]);
             saveVfs(vfs);
             printCli(`'${srcPath}' を '${finalDest}' にコピーしました。`, 'success');
             window.say('ファイルをコピーしたよ！', 'happy');
@@ -3666,8 +3910,10 @@ J_QGZopb1zU
 
             for (const f in vfs.files) {
                 if (f.startsWith(srcPath + '/')) {
+                    const content = await getVfsFileContent(f);
+                    if (content === null) continue;
                     const newF = finalDest + f.slice(srcPath.length);
-                    vfs.files[newF] = vfs.files[f];
+                    vfs.files[newF] = createVfsFileEntry(newF, content, vfs.files[f]);
                 }
             }
             saveVfs(vfs);
@@ -3678,7 +3924,7 @@ J_QGZopb1zU
         }
     }
 
-    function handleHeadCommand(subArgs) {
+    async function handleHeadCommand(subArgs) {
         let linesCount = 10;
         let filename = '';
 
@@ -3701,12 +3947,17 @@ J_QGZopb1zU
             return;
         }
 
-        const lines = files[absPath].split(/\r?\n/);
+        const content = await getVfsFileContent(absPath);
+        if (content === null) {
+            printCli(`head: '${filename}': 読み込めませんでした。`, 'danger');
+            return;
+        }
+        const lines = content.split(/\r?\n/);
         printCli(`=== ${filename} (最初の ${linesCount} 行) ===`, 'info');
         printCli(lines.slice(0, linesCount).join('\n'));
     }
 
-    function handleTailCommand(subArgs) {
+    async function handleTailCommand(subArgs) {
         let linesCount = 10;
         let filename = '';
 
@@ -3729,7 +3980,12 @@ J_QGZopb1zU
             return;
         }
 
-        const lines = files[absPath].split(/\r?\n/);
+        const content = await getVfsFileContent(absPath);
+        if (content === null) {
+            printCli(`tail: '${filename}': 読み込めませんでした。`, 'danger');
+            return;
+        }
+        const lines = content.split(/\r?\n/);
         printCli(`=== ${filename} (最後の ${linesCount} 行) ===`, 'info');
         const start = Math.max(0, lines.length - linesCount);
         printCli(lines.slice(start).join('\n'));

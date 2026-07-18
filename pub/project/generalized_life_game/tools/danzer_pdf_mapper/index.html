@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Triangle Patch Mapper</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="workspace">
+      <canvas id="patchCanvas" aria-label="Triangle patch mapping canvas"></canvas>
+      <div class="hud">
+        <span id="zoomLabel">100%</span>
+        <span id="hoverLabel">Hover a triangle</span>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <header>
+        <h1>Triangle Patch Mapper</h1>
+        <p>Pick parent tiles, trace child regions, and export substitution candidates.</p>
+      </header>
+
+      <section class="control-group">
+        <h2>View</h2>
+        <div class="button-row">
+          <button id="fitButton" type="button">Fit</button>
+          <button id="clearPolygonButton" type="button">Clear polygon</button>
+        </div>
+        <label class="check-row">
+          <input id="edgeToggle" type="checkbox">
+          <span>Show fine edges</span>
+        </label>
+        <label class="check-row">
+          <input id="dimToggle" type="checkbox" checked>
+          <span>Dim outside selection</span>
+        </label>
+      </section>
+
+      <section class="control-group">
+        <h2>Trace Parent</h2>
+        <label>
+          Mode
+          <select id="modeSelect">
+            <option value="inspect">Inspect / pan</option>
+            <option value="parent">Pick parent triangle</option>
+            <option value="polygon">Draw parent polygon</option>
+          </select>
+        </label>
+        <label>
+          Parent type
+          <select id="parentTypeSelect">
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+          </select>
+        </label>
+        <label>
+          Group name
+          <input id="groupNameInput" type="text" value="candidate-1">
+        </label>
+        <div class="button-row">
+          <button id="selectInsideButton" type="button">Select inside</button>
+          <button id="saveGroupButton" type="button">Save group</button>
+        </div>
+        <p class="hint">Pick parent triangle sets a parent from one colored cell. Draw mode includes every clicked triangle even when its centroid sits outside the polygon. Right click removes the last point.</p>
+        <div id="statusMessage" class="status-message">Pick a parent triangle, then trace child candidates.</div>
+      </section>
+
+      <section class="control-group">
+        <h2>Color To Child Type</h2>
+        <div id="colorMapControls"></div>
+      </section>
+
+      <section class="control-group stats">
+        <h2>Selection</h2>
+        <dl>
+          <div><dt>Triangles</dt><dd id="triangleCount">0</dd></div>
+          <div><dt>Selected</dt><dd id="selectedCount">0</dd></div>
+          <div><dt>Groups</dt><dd id="groupCount">0</dd></div>
+          <div><dt>Parent</dt><dd id="parentInfo">None</dd></div>
+          <div><dt>Child counts</dt><dd id="childCounts">A 0 / B 0 / C 0</dd></div>
+          <div><dt>Outer match</dt><dd id="matchInfo">No selection</dd></div>
+        </dl>
+      </section>
+
+      <section class="control-group">
+        <h2>Groups</h2>
+        <select id="groupList" size="5"></select>
+        <div class="button-row">
+          <button id="loadGroupButton" type="button">Load</button>
+          <button id="deleteGroupButton" type="button">Delete</button>
+        </div>
+      </section>
+
+      <section class="control-group export-group">
+        <h2>Export</h2>
+        <div class="button-row">
+          <button id="copyButton" type="button">Copy JSON</button>
+          <button id="downloadButton" type="button">Download</button>
+        </div>
+        <textarea id="exportText" spellcheck="false"></textarea>
+      </section>
+    </aside>
+  </main>
+
+  <script src="danzer_patch_data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

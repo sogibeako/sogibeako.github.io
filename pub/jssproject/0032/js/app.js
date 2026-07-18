@@ -11,11 +11,34 @@ import { CliConsole } from './console.js';
 
 import { 
   generateVoronoiGrid, 
+  generateHyperbolicSquarePatch,
+  generateHyperbolicTrianglePatch,
+  generateHyperbolicHeptagonPatch,
+  generateHyperbolicRegularHeptagonTiling,
+  cloneSubstitutionPreset,
+  generateSubstitutionTiling,
+  generateChairSubstitutionTiling,
+  generateFibonacciStripTiling,
+  generatePenroseTriangleTiling,
+  generatePenroseRhombTiling,
+  generateAmmannBeenkerTiling,
   generateTetrahedron, 
   generateCube, 
   generateOctahedron, 
   generateDodecahedron, 
   generateIcosahedron,
+  generateTruncatedTetrahedron,
+  generateCuboctahedron,
+  generateTruncatedCube,
+  generateRhombicuboctahedron,
+  generateTruncatedCuboctahedron,
+  generateSnubCube,
+  generateIcosidodecahedron,
+  generateTruncatedDodecahedron,
+  generateTruncatedIcosahedron,
+  generateRhombicosidodecahedron,
+  generateTruncatedIcosidodecahedron,
+  generateSnubDodecahedron,
   generateOctahedronChain,
   generatePrism,
   generateTruncatedOctahedron,
@@ -37,12 +60,17 @@ class App {
     this.historyLimit = 50;
     this.history = []; // Cache of previous face states: Array of arrays
     this.randomizeDensity = 0.25;
+    this.screensaverMode = false;
+    this.loopDetectionWindow = 20;
+    this.loopWatchHashes = [];
+    this.screensaverRandomizeCount = 0;
 
     // 3. Grid & Topology Parameters
     this.gridType = 'square';
     this.gridW = 30;
     this.gridH = 30;
     this.jitterCount = 150; // Jitter / seeds count for Voronoi
+    this.substitutionDefinitionText = JSON.stringify(cloneSubstitutionPreset('chair'), null, 2);
     this.topologyType = 'torus';
     this.doubleTorusHoleRadius = 1.2; // Hole radius for double torus boundary cutout
     this.neighborhoodMode = 'vertex-sharing';
@@ -82,7 +110,7 @@ class App {
     this.pause();
     this.complex.clear();
 
-    const is3D = ['tetrahedron', 'cube', 'octahedron', 'dodecahedron', 'icosahedron', 'prism', 'truncated-octahedron', 'octa-chain', 'octa-grid', 'cube-grid'].includes(this.gridType);
+    const is3D = ['tetrahedron', 'cube', 'octahedron', 'dodecahedron', 'icosahedron', 'truncated-tetrahedron', 'cuboctahedron', 'truncated-cube', 'truncated-octahedron', 'rhombicuboctahedron', 'truncated-cuboctahedron', 'snub-cube', 'icosidodecahedron', 'truncated-dodecahedron', 'truncated-icosahedron', 'rhombicosidodecahedron', 'truncated-icosidodecahedron', 'snub-dodecahedron', 'prism', 'octa-chain', 'octa-grid', 'cube-grid'].includes(this.gridType);
     this.visualizer.is3D = is3D;
 
     if (is3D) {
@@ -91,11 +119,23 @@ class App {
       else if (this.gridType === 'octahedron') generateOctahedron(this.complex);
       else if (this.gridType === 'dodecahedron') generateDodecahedron(this.complex);
       else if (this.gridType === 'icosahedron') generateIcosahedron(this.complex);
+      else if (this.gridType === 'truncated-tetrahedron') generateTruncatedTetrahedron(this.complex);
+      else if (this.gridType === 'cuboctahedron') generateCuboctahedron(this.complex);
+      else if (this.gridType === 'truncated-cube') generateTruncatedCube(this.complex);
+      else if (this.gridType === 'truncated-octahedron') generateTruncatedOctahedron(this.complex);
+      else if (this.gridType === 'rhombicuboctahedron') generateRhombicuboctahedron(this.complex);
+      else if (this.gridType === 'truncated-cuboctahedron') generateTruncatedCuboctahedron(this.complex);
+      else if (this.gridType === 'snub-cube') generateSnubCube(this.complex);
+      else if (this.gridType === 'icosidodecahedron') generateIcosidodecahedron(this.complex);
+      else if (this.gridType === 'truncated-dodecahedron') generateTruncatedDodecahedron(this.complex);
+      else if (this.gridType === 'truncated-icosahedron') generateTruncatedIcosahedron(this.complex);
+      else if (this.gridType === 'rhombicosidodecahedron') generateRhombicosidodecahedron(this.complex);
+      else if (this.gridType === 'truncated-icosidodecahedron') generateTruncatedIcosidodecahedron(this.complex);
+      else if (this.gridType === 'snub-dodecahedron') generateSnubDodecahedron(this.complex);
       else if (this.gridType === 'prism') {
         const sideCount = parseInt(this.jitterCount, 10) || 5;
         generatePrism(this.complex, sideCount);
       }
-      else if (this.gridType === 'truncated-octahedron') generateTruncatedOctahedron(this.complex);
       else if (this.gridType === 'octa-chain') {
         const chainLen = parseInt(this.jitterCount, 10) || 4;
         generateOctahedronChain(this.complex, chainLen);
@@ -110,6 +150,31 @@ class App {
       }
     } else if (this.gridType === 'voronoi') {
       generateVoronoiGrid(this.complex, this.jitterCount, 30);
+    } else if (this.gridType === 'hyperbolic-square') {
+      generateHyperbolicSquarePatch(this.complex, this.jitterCount);
+    } else if (this.gridType === 'hyperbolic-triangle') {
+      generateHyperbolicTrianglePatch(this.complex, this.jitterCount);
+    } else if (this.gridType === 'hyperbolic-heptagon') {
+      generateHyperbolicHeptagonPatch(this.complex, this.jitterCount);
+    } else if (this.gridType === 'hyperbolic-regular-heptagon') {
+      generateHyperbolicRegularHeptagonTiling(this.complex, this.jitterCount);
+    } else if (this.gridType === 'substitution-chair') {
+      generateChairSubstitutionTiling(this.complex, this.jitterCount);
+    } else if (this.gridType === 'substitution-fibonacci') {
+      generateFibonacciStripTiling(this.complex, this.jitterCount);
+    } else if (this.gridType === 'substitution-penrose') {
+      generatePenroseTriangleTiling(this.complex, this.jitterCount);
+    } else if (this.gridType === 'substitution-penrose-rhomb') {
+      generatePenroseRhombTiling(this.complex, this.jitterCount);
+    } else if (this.gridType === 'substitution-ammann-beenker') {
+      generateAmmannBeenkerTiling(this.complex, this.jitterCount);
+    } else if (this.gridType === 'substitution-custom') {
+      try {
+        generateSubstitutionTiling(this.complex, JSON.parse(this.substitutionDefinitionText), this.jitterCount);
+      } catch (err) {
+        this.cliConsole.log(`Substitution JSON error: ${err.message}`, 'error-line');
+        generateChairSubstitutionTiling(this.complex, 3);
+      }
     } else {
       // Square, Triangle, Hex: apply topology wrapping
       applyTopology(this.complex, this.topologyType, this.gridType, this.gridW, this.gridH, {
@@ -124,6 +189,7 @@ class App {
     this.stepCount = 0;
     this.history = [];
     this.saveStateToHistory();
+    this.resetLoopWatch();
     this.updateTimelineUI();
 
     // Redraw and Recenter
@@ -131,7 +197,9 @@ class App {
     this.visualizer.hoveredFaceId = null;
     this.visualizer.centerView();
     
-    this.cliConsole.log(`Generated complex: ${this.gridType} with topology: ${this.topologyType}. Cells count: ${this.complex.faces.length}`, 'system-line');
+    const topologyNote = this.isRegularGridType() ? ` with topology: ${this.topologyType}` : '';
+    this.cliConsole.log(`Generated complex: ${this.gridType}${topologyNote}. Cells count: ${this.complex.faces.length}`, 'system-line');
+    this.updateRatioRuleMap();
   }
 
   // --- Simulation Logic ---
@@ -150,7 +218,7 @@ class App {
 
     document.getElementById('btn-play').textContent = 'Pause';
     document.getElementById('btn-play').classList.add('btn-accent');
-    this.updateStatusInfo('Running');
+    this.updateStatusInfo(this.screensaverMode ? 'Screensaver' : 'Running');
   }
 
   pause() {
@@ -188,6 +256,7 @@ class App {
     // 5. Update UI stats
     this.updateStatistics();
     this.inspectLockedFace();
+    this.checkScreensaverLoop();
   }
 
   runSteps(steps) {
@@ -222,6 +291,7 @@ class App {
     }
     
     this.updateTimelineUI();
+    this.resetLoopWatch();
     this.visualizer.draw();
     this.updateStatistics();
     this.inspectLockedFace();
@@ -236,13 +306,14 @@ class App {
     this.stepCount = 0;
     this.history = [];
     this.saveStateToHistory();
+    this.resetLoopWatch();
     this.updateTimelineUI();
     this.visualizer.draw();
     this.updateStatistics();
     this.inspectLockedFace();
   }
 
-  randomize(density = this.randomizeDensity) {
+  randomize(density = this.randomizeDensity, options = {}) {
     const aliveRate = Math.max(0, Math.min(1, Number(density)));
     this.randomizeDensity = Number.isFinite(aliveRate) ? aliveRate : 0.25;
 
@@ -256,11 +327,48 @@ class App {
     this.stepCount = 0;
     this.history = [];
     this.saveStateToHistory();
+    this.resetLoopWatch();
     this.updateTimelineUI();
     this.visualizer.draw();
     this.updateStatistics();
     this.inspectLockedFace();
-    this.cliConsole.log(`Randomized cell states at ${Math.round(this.randomizeDensity * 100)}% alive rate.`, 'system-line');
+    if (this.screensaverMode) {
+      this.updateStatusInfo('Screensaver');
+    }
+    const prefix = options.source === 'screensaver' ? 'Screensaver randomized' : 'Randomized';
+    this.cliConsole.log(`${prefix} cell states at ${Math.round(this.randomizeDensity * 100)}% alive rate.`, 'system-line');
+  }
+
+  getStateHash() {
+    return this.complex.faces.map(face => face.state).join(',');
+  }
+
+  resetLoopWatch() {
+    this.loopWatchHashes = [];
+    if (this.complex.faces.length > 0) {
+      this.loopWatchHashes.push(this.getStateHash());
+    }
+  }
+
+  checkScreensaverLoop() {
+    if (!this.screensaverMode || this.complex.faces.length === 0) return false;
+
+    const hash = this.getStateHash();
+    if (this.loopWatchHashes.includes(hash)) {
+      this.screensaverRandomizeCount++;
+      this.cliConsole.log(
+        `Screensaver loop detected within ${this.loopDetectionWindow} steps. Randomizing again (#${this.screensaverRandomizeCount}).`,
+        'system-line'
+      );
+      this.randomize(this.randomizeDensity, { source: 'screensaver' });
+      return true;
+    }
+
+    this.loopWatchHashes.push(hash);
+    while (this.loopWatchHashes.length > this.loopDetectionWindow) {
+      this.loopWatchHashes.shift();
+    }
+    return false;
   }
 
   // --- Neighborhood retrieval wrapper ---
@@ -269,6 +377,173 @@ class App {
       weightEdge: this.weightEdge,
       weightVertex: this.weightVertex
     });
+  }
+
+  isRegularGridType(type = this.gridType) {
+    return ['square', 'triangle', 'hex'].includes(type);
+  }
+
+  hasParameterSlider(type = this.gridType) {
+    return [
+      'voronoi',
+      'hyperbolic-square',
+      'hyperbolic-triangle',
+      'hyperbolic-heptagon',
+      'hyperbolic-regular-heptagon',
+      'substitution-chair',
+      'substitution-fibonacci',
+      'substitution-penrose',
+      'substitution-penrose-rhomb',
+      'substitution-ammann-beenker',
+      'substitution-custom',
+      'octa-chain',
+      'prism',
+      'octa-grid',
+      'cube-grid'
+    ].includes(type);
+  }
+
+  isSubstitutionType(type = this.gridType) {
+    return ['substitution-chair', 'substitution-fibonacci', 'substitution-penrose', 'substitution-penrose-rhomb', 'substitution-ammann-beenker', 'substitution-custom'].includes(type);
+  }
+
+  getNeighborTotalWeight(neighbors) {
+    return neighbors.reduce((sum, neighbor) => sum + (Number(neighbor.weight) || 0), 0);
+  }
+
+  getAliveNeighborWeight(neighbors) {
+    return neighbors.reduce((sum, neighbor) => {
+      const neighborFace = this.complex.faceMap.get(neighbor.id);
+      return sum + (neighborFace && neighborFace.state === 1 ? (Number(neighbor.weight) || 0) : 0);
+    }, 0);
+  }
+
+  getEvaluatedNeighborCount(aliveWeight, totalWeight) {
+    if (this.ruleEvaluator.correctionMode === 'ratio' && totalWeight > 0) {
+      return Math.round((aliveWeight / totalWeight) * 8);
+    }
+    return Math.floor(aliveWeight);
+  }
+
+  formatActualCounts(counts, totalWeight) {
+    if (counts.length === 0) return '-';
+    const isIntegerWeight = Math.abs(totalWeight - Math.round(totalWeight)) < 1e-6;
+    return counts.map(value => isIntegerWeight ? String(Math.round(value)) : value.toFixed(1)).join(', ');
+  }
+
+  getRatioRuleRows() {
+    const totals = new Set();
+    this.complex.faces.forEach(face => {
+      const totalWeight = this.getNeighborTotalWeight(this.getNeighborsForFace(face.id));
+      if (totalWeight > 0) totals.add(Math.round(totalWeight * 1000) / 1000);
+    });
+
+    return Array.from(totals).sort((a, b) => a - b).map(totalWeight => {
+      const maxAlive = Math.max(0, Math.round(totalWeight));
+      const birthCounts = [];
+      const survivalCounts = [];
+      for (let alive = 0; alive <= maxAlive; alive++) {
+        const effective = Math.round((alive / totalWeight) * 8);
+        if (this.ruleEvaluator.birthSet.has(effective)) birthCounts.push(alive);
+        if (this.ruleEvaluator.survivalSet.has(effective)) survivalCounts.push(alive);
+      }
+      return { totalWeight, birthCounts, survivalCounts };
+    });
+  }
+
+  updateRatioRuleMap() {
+    const group = document.getElementById('ratio-rule-map-group');
+    const note = document.getElementById('ratio-rule-note');
+    const table = document.getElementById('ratio-rule-table');
+    if (!group || !note || !table) return;
+
+    const isRatio = this.ruleEvaluator.correctionMode === 'ratio';
+    group.style.display = isRatio ? 'flex' : 'none';
+    if (!isRatio) return;
+
+    if (this.ruleEvaluator.type === 'custom-js') {
+      note.textContent = 'Custom JS rules receive raw neighbors; Ratio-Based B/S mapping is not used.';
+      table.innerHTML = '';
+      return;
+    }
+
+    const birth = Array.from(this.ruleEvaluator.birthSet).sort((a, b) => a - b).join(',') || '-';
+    const survive = Array.from(this.ruleEvaluator.survivalSet).sort((a, b) => a - b).join(',') || '-';
+    note.textContent = `Effective count = round(alive / neighbors * 8). Rule ${this.ruleEvaluator.ruleString}: B${birth} / S${survive}.`;
+
+    const rows = this.getRatioRuleRows();
+    if (rows.length === 0) {
+      table.innerHTML = '<div class="ratio-rule-empty">No neighbor counts available.</div>';
+      return;
+    }
+
+    table.innerHTML = rows.map(row => `
+      <div class="ratio-rule-row">
+        <span class="ratio-rule-degree">N=${row.totalWeight}</span>
+        <span class="ratio-rule-birth">B: ${this.formatActualCounts(row.birthCounts, row.totalWeight)}</span>
+        <span class="ratio-rule-survive">S: ${this.formatActualCounts(row.survivalCounts, row.totalWeight)}</span>
+      </div>
+    `).join('');
+  }
+
+  configureParameterSlider(type, resetValue = false) {
+    const label = document.querySelector('#grid-jitter-group label');
+    const slider = document.getElementById('slider-jitter');
+    const value = document.getElementById('val-jitter');
+    if (!label || !slider || !value) return;
+
+    let nextValue = this.jitterCount;
+    if (type === 'voronoi') {
+      label.textContent = "Voronoi Seed Count";
+      slider.min = 20; slider.max = 400; slider.step = 10;
+      nextValue = 150;
+    } else if (['hyperbolic-square', 'hyperbolic-triangle', 'hyperbolic-heptagon'].includes(type)) {
+      label.textContent = "Hyperbolic Patch Layers";
+      slider.min = 2; slider.max = 7; slider.step = 1;
+      nextValue = 5;
+    } else if (type === 'hyperbolic-regular-heptagon') {
+      label.textContent = "Hyperbolic {7,3} Layers";
+      slider.min = 0; slider.max = 4; slider.step = 1;
+      nextValue = 3;
+    } else if (type === 'substitution-ammann-beenker') {
+      label.textContent = "Projection Range";
+      slider.min = 2; slider.max = 7; slider.step = 1;
+      nextValue = 5;
+    } else if (this.isSubstitutionType(type)) {
+      label.textContent = "Substitution Iterations";
+      slider.min = 0; slider.max = (type === 'substitution-penrose' || type === 'substitution-penrose-rhomb') ? 7 : (type === 'substitution-chair' ? 6 : 10); slider.step = 1;
+      nextValue = type === 'substitution-fibonacci' ? 6 : ((type === 'substitution-penrose' || type === 'substitution-penrose-rhomb') ? 5 : 4);
+    } else if (type === 'octa-chain') {
+      label.textContent = "Chain Length";
+      slider.min = 2; slider.max = 20; slider.step = 1;
+      nextValue = 5;
+    } else if (type === 'prism') {
+      label.textContent = "Prism Polygon Sides";
+      slider.min = 3; slider.max = 20; slider.step = 1;
+      nextValue = 5;
+    } else if (type === 'octa-grid') {
+      label.textContent = "Grid Side (N x N)";
+      slider.min = 2; slider.max = 10; slider.step = 1;
+      nextValue = 3;
+    } else if (type === 'cube-grid') {
+      label.textContent = "Grid Side (N x N x N)";
+      slider.min = 2; slider.max = 6; slider.step = 1;
+      nextValue = 3;
+    }
+
+    if (resetValue) this.jitterCount = nextValue;
+    slider.value = this.jitterCount;
+    value.textContent = this.jitterCount;
+  }
+
+  syncSubstitutionEditor() {
+    const group = document.getElementById('substitution-editor-group');
+    const textarea = document.getElementById('textarea-substitution-json');
+    if (!group || !textarea) return;
+    group.style.display = this.gridType === 'substitution-custom' ? 'flex' : 'none';
+    if (!textarea.value) {
+      textarea.value = this.substitutionDefinitionText;
+    }
   }
 
   // --- History/Timeline Cache ---
@@ -377,14 +652,39 @@ class App {
       document.getElementById('val-random-density').textContent = `${Math.round(this.randomizeDensity * 100)}%`;
     });
 
+    document.querySelectorAll('[data-substitution-preset]').forEach(button => {
+      button.addEventListener('click', () => {
+        const presetName = button.getAttribute('data-substitution-preset');
+        this.substitutionDefinitionText = JSON.stringify(cloneSubstitutionPreset(presetName), null, 2);
+        const editor = document.getElementById('textarea-substitution-json');
+        if (editor) editor.value = this.substitutionDefinitionText;
+        this.cliConsole.log(`Loaded ${presetName} JSON example into the custom pattern editor.`, 'system-line');
+      });
+    });
+
+    document.getElementById('chk-screensaver-mode').addEventListener('change', (e) => {
+      this.screensaverMode = e.target.checked;
+      this.resetLoopWatch();
+      this.updateStatusInfo(this.screensaverMode ? 'Screensaver' : (this.isPlaying ? 'Running' : 'Paused'));
+      this.cliConsole.log(`Screensaver auto-randomize ${this.screensaverMode ? 'enabled' : 'disabled'}.`, 'system-line');
+      if (this.screensaverMode && !this.isPlaying) {
+        this.play();
+      }
+    });
+
     // Grid Parameters Rebuild
     document.getElementById('btn-rebuild-grid').addEventListener('click', () => {
       this.gridType = document.getElementById('select-complex').value;
       this.gridW = parseInt(document.getElementById('input-grid-w').value, 10) || 30;
       this.gridH = parseInt(document.getElementById('input-grid-h').value, 10) || 30;
-      this.jitterCount = parseInt(document.getElementById('slider-jitter').value, 10) || 150;
+      const parsedJitter = parseInt(document.getElementById('slider-jitter').value, 10);
+      this.jitterCount = Number.isNaN(parsedJitter) ? 150 : parsedJitter;
       this.topologyType = document.getElementById('select-topology').value;
       this.doubleTorusHoleRadius = parseFloat(document.getElementById('slider-torus-hole').value) || 1.2;
+      const substitutionEditor = document.getElementById('textarea-substitution-json');
+      if (substitutionEditor) {
+        this.substitutionDefinitionText = substitutionEditor.value;
+      }
       
       this.rebuildGrid();
       this.updateUIFromState();
@@ -393,12 +693,14 @@ class App {
     // Adjust grid inputs availability depending on grid types
     document.getElementById('select-complex').addEventListener('change', (e) => {
       const type = e.target.value;
-      const isRegular = ['square', 'triangle', 'hex'].includes(type);
-      const hasSlider = ['voronoi', 'octa-chain', 'prism', 'octa-grid', 'cube-grid'].includes(type);
+      const isRegular = this.isRegularGridType(type);
+      const hasSlider = this.hasParameterSlider(type);
+      this.gridType = type;
 
       document.getElementById('grid-dimensions-group').style.display = isRegular ? 'flex' : 'none';
       document.getElementById('grid-jitter-group').style.display = hasSlider ? 'flex' : 'none';
       document.getElementById('select-topology').disabled = !isRegular;
+      this.syncSubstitutionEditor();
 
       // Force topology display update on grid change
       if (!isRegular) {
@@ -408,43 +710,7 @@ class App {
         document.getElementById('topology-hole-group').style.display = topo === 'double-torus' ? 'flex' : 'none';
       }
 
-      // Adjust slider labels dynamically
-      if (type === 'voronoi') {
-        document.querySelector('#grid-jitter-group label').textContent = "Voronoi Seed Count";
-        document.getElementById('slider-jitter').min = 20;
-        document.getElementById('slider-jitter').max = 400;
-        document.getElementById('slider-jitter').step = 10;
-        document.getElementById('slider-jitter').value = 150;
-        document.getElementById('val-jitter').textContent = 150;
-      } else if (type === 'octa-chain') {
-        document.querySelector('#grid-jitter-group label').textContent = "Chain Length";
-        document.getElementById('slider-jitter').min = 2;
-        document.getElementById('slider-jitter').max = 20;
-        document.getElementById('slider-jitter').step = 1;
-        document.getElementById('slider-jitter').value = 5;
-        document.getElementById('val-jitter').textContent = 5;
-      } else if (type === 'prism') {
-        document.querySelector('#grid-jitter-group label').textContent = "Prism Polygon Sides";
-        document.getElementById('slider-jitter').min = 3;
-        document.getElementById('slider-jitter').max = 20;
-        document.getElementById('slider-jitter').step = 1;
-        document.getElementById('slider-jitter').value = 5;
-        document.getElementById('val-jitter').textContent = 5;
-      } else if (type === 'octa-grid') {
-        document.querySelector('#grid-jitter-group label').textContent = "Grid Side (N x N)";
-        document.getElementById('slider-jitter').min = 2;
-        document.getElementById('slider-jitter').max = 10;
-        document.getElementById('slider-jitter').step = 1;
-        document.getElementById('slider-jitter').value = 3;
-        document.getElementById('val-jitter').textContent = 3;
-      } else if (type === 'cube-grid') {
-        document.querySelector('#grid-jitter-group label').textContent = "Grid Side (N x N x N)";
-        document.getElementById('slider-jitter').min = 2;
-        document.getElementById('slider-jitter').max = 6;
-        document.getElementById('slider-jitter').step = 1;
-        document.getElementById('slider-jitter').value = 3;
-        document.getElementById('val-jitter').textContent = 3;
-      }
+      this.configureParameterSlider(type, true);
     });
 
     document.getElementById('slider-jitter').addEventListener('input', (e) => {
@@ -471,6 +737,7 @@ class App {
       document.getElementById('weighted-neighborhood-controls').style.display = isWeighted ? 'block' : 'none';
       
       this.visualizer.draw();
+      this.updateRatioRuleMap();
       this.cliConsole.log(`Neighborhood mode set to: ${this.neighborhoodMode}`, 'system-line');
     });
 
@@ -478,12 +745,14 @@ class App {
       this.weightEdge = parseFloat(e.target.value);
       document.getElementById('val-weight-edge').textContent = this.weightEdge.toFixed(1);
       this.visualizer.draw();
+      this.updateRatioRuleMap();
     });
 
     document.getElementById('slider-weight-vertex').addEventListener('input', (e) => {
       this.weightVertex = parseFloat(e.target.value);
       document.getElementById('val-weight-vertex').textContent = this.weightVertex.toFixed(1);
       this.visualizer.draw();
+      this.updateRatioRuleMap();
     });
 
     // Rule Setup and Parsing
@@ -530,6 +799,8 @@ class App {
 
     document.getElementById('select-correction').addEventListener('change', (e) => {
       this.ruleEvaluator.correctionMode = e.target.value;
+      this.updateRatioRuleMap();
+      this.inspectLockedFace();
       this.cliConsole.log(`Correction mode set to: ${this.ruleEvaluator.correctionMode}`, 'system-line');
     });
 
@@ -689,11 +960,14 @@ class App {
     document.getElementById('weighted-neighborhood-controls').style.display = isWeighted ? 'block' : 'none';
 
     // Show/hide correct sliders depending on grid selection
-    const isRegular = ['square', 'triangle', 'hex'].includes(this.gridType);
-    const hasSlider = ['voronoi', 'octa-chain', 'prism', 'octa-grid', 'cube-grid'].includes(this.gridType);
+    const isRegular = this.isRegularGridType();
+    const hasSlider = this.hasParameterSlider();
     document.getElementById('grid-dimensions-group').style.display = isRegular ? 'flex' : 'none';
     document.getElementById('grid-jitter-group').style.display = hasSlider ? 'flex' : 'none';
     document.getElementById('select-topology').disabled = !isRegular;
+    const substitutionEditor = document.getElementById('textarea-substitution-json');
+    if (substitutionEditor) substitutionEditor.value = this.substitutionDefinitionText;
+    this.syncSubstitutionEditor();
 
     // Show/hide topology hole size control
     const isDoubleTorus = isRegular && this.topologyType === 'double-torus';
@@ -702,27 +976,7 @@ class App {
     document.getElementById('val-torus-hole').textContent = this.doubleTorusHoleRadius.toFixed(1);
 
     if (hasSlider) {
-      document.getElementById('slider-jitter').value = this.jitterCount;
-      document.getElementById('val-jitter').textContent = this.jitterCount;
-      
-      const label = document.querySelector('#grid-jitter-group label');
-      const slider = document.getElementById('slider-jitter');
-      if (this.gridType === 'voronoi') {
-        label.textContent = "Voronoi Seed Count";
-        slider.min = 20; slider.max = 400; slider.step = 10;
-      } else if (this.gridType === 'octa-chain') {
-        label.textContent = "Chain Length";
-        slider.min = 2; slider.max = 20; slider.step = 1;
-      } else if (this.gridType === 'prism') {
-        label.textContent = "Prism Polygon Sides";
-        slider.min = 3; slider.max = 20; slider.step = 1;
-      } else if (this.gridType === 'octa-grid') {
-        label.textContent = "Grid Side (N x N)";
-        slider.min = 2; slider.max = 10; slider.step = 1;
-      } else if (this.gridType === 'cube-grid') {
-        label.textContent = "Grid Side (N x N x N)";
-        slider.min = 2; slider.max = 6; slider.step = 1;
-      }
+      this.configureParameterSlider(this.gridType, false);
     }
 
     // Rule selectors
@@ -749,6 +1003,8 @@ class App {
     document.getElementById('select-correction').value = this.ruleEvaluator.correctionMode;
     document.getElementById('slider-random-density').value = Math.round(this.randomizeDensity * 100);
     document.getElementById('val-random-density').textContent = `${Math.round(this.randomizeDensity * 100)}%`;
+    document.getElementById('chk-screensaver-mode').checked = this.screensaverMode;
+    this.updateRatioRuleMap();
 
     // Draw Tool availability
     const draw2Btn = document.getElementById('tool-draw-2');
@@ -819,6 +1075,9 @@ class App {
     // Calculate next state explanation preview
     const neighbors = this.getNeighborsForFace(face.id);
     const next = this.ruleEvaluator.evaluateNextState(face, neighbors, this.complex.faceMap);
+    const totalWeight = this.getNeighborTotalWeight(neighbors);
+    const aliveWeight = this.getAliveNeighborWeight(neighbors);
+    const evaluatedCount = this.getEvaluatedNeighborCount(aliveWeight, totalWeight);
 
     document.getElementById('inspect-face-id').textContent = face.id;
     document.getElementById('inspect-face-state').textContent = `${face.state} (Sheet: ${face.sheet})`;
@@ -830,8 +1089,18 @@ class App {
     document.getElementById('inspect-face-neighbors').textContent = `${neighbors.length} cells (${nIds.join(',')})`;
     document.getElementById('inspect-face-next').textContent = next;
 
-    document.getElementById('inspect-explanation').textContent = 
-      `Click cell to toggle state. Alt+Click on cell to lock/unlock inspection.`;
+    if (this.ruleEvaluator.correctionMode === 'ratio' && totalWeight > 0 && this.ruleEvaluator.type !== 'custom-js') {
+      const birthMatch = this.ruleEvaluator.birthSet.has(evaluatedCount);
+      const survivalMatch = this.ruleEvaluator.survivalSet.has(evaluatedCount);
+      const totalLabel = Math.abs(totalWeight - Math.round(totalWeight)) < 1e-6 ? Math.round(totalWeight) : totalWeight.toFixed(1);
+      const aliveLabel = Math.abs(aliveWeight - Math.round(aliveWeight)) < 1e-6 ? Math.round(aliveWeight) : aliveWeight.toFixed(1);
+      document.getElementById('inspect-explanation').textContent =
+        `Ratio: ${aliveLabel}/${totalLabel} -> round(*8) = ${evaluatedCount}. ` +
+        `Birth ${birthMatch ? 'yes' : 'no'}, Survival ${survivalMatch ? 'yes' : 'no'}.`;
+    } else {
+      document.getElementById('inspect-explanation').textContent =
+        `Click cell to toggle state. Alt+Click on cell to lock/unlock inspection.`;
+    }
 
     document.getElementById('inspector-hud').style.display = 'block';
   }
@@ -868,12 +1137,15 @@ class App {
         gridW: this.gridW,
         gridH: this.gridH,
         jitterCount: this.jitterCount,
+        substitutionDefinitionText: this.substitutionDefinitionText,
         topologyType: this.topologyType,
         doubleTorusHoleRadius: this.doubleTorusHoleRadius,
         neighborhoodMode: this.neighborhoodMode,
         weightEdge: this.weightEdge,
         weightVertex: this.weightVertex,
         randomizeDensity: this.randomizeDensity,
+        screensaverMode: this.screensaverMode,
+        loopDetectionWindow: this.loopDetectionWindow,
         ruleString: this.ruleEvaluator.ruleString,
         ruleType: this.ruleEvaluator.type,
         stateCount: this.ruleEvaluator.stateCount,
@@ -914,12 +1186,15 @@ class App {
     this.gridW = conf.gridW;
     this.gridH = conf.gridH;
     this.jitterCount = conf.jitterCount || 150;
+    this.substitutionDefinitionText = conf.substitutionDefinitionText || JSON.stringify(cloneSubstitutionPreset('chair'), null, 2);
     this.topologyType = conf.topologyType;
     this.doubleTorusHoleRadius = conf.doubleTorusHoleRadius !== undefined ? conf.doubleTorusHoleRadius : 1.2;
     this.neighborhoodMode = conf.neighborhoodMode;
     this.weightEdge = conf.weightEdge !== undefined ? conf.weightEdge : 1.0;
     this.weightVertex = conf.weightVertex !== undefined ? conf.weightVertex : 0.5;
     this.randomizeDensity = conf.randomizeDensity !== undefined ? conf.randomizeDensity : 0.25;
+    this.screensaverMode = Boolean(conf.screensaverMode);
+    this.loopDetectionWindow = conf.loopDetectionWindow || 20;
     this.stepCount = conf.stepCount || 0;
 
     // Restore rules
@@ -931,7 +1206,7 @@ class App {
 
     // 2. Reconstruct Cell Complex
     this.complex.clear();
-    this.visualizer.is3D = ['tetrahedron', 'cube', 'octahedron', 'dodecahedron', 'icosahedron', 'prism', 'truncated-octahedron', 'octa-chain', 'octa-grid', 'cube-grid'].includes(this.gridType);
+    this.visualizer.is3D = ['tetrahedron', 'cube', 'octahedron', 'dodecahedron', 'icosahedron', 'truncated-tetrahedron', 'cuboctahedron', 'truncated-cube', 'truncated-octahedron', 'rhombicuboctahedron', 'truncated-cuboctahedron', 'snub-cube', 'icosidodecahedron', 'truncated-dodecahedron', 'truncated-icosahedron', 'rhombicosidodecahedron', 'truncated-icosidodecahedron', 'snub-dodecahedron', 'prism', 'octa-chain', 'octa-grid', 'cube-grid'].includes(this.gridType);
 
     // Load vertices
     data.complex.vertices.forEach(vData => {
@@ -969,6 +1244,7 @@ class App {
     // 3. Reset history cache to load point
     this.history = [];
     this.saveStateToHistory();
+    this.resetLoopWatch();
     this.updateTimelineUI();
 
     // 4. Update visuals and console logs

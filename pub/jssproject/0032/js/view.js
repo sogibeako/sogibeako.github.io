@@ -271,6 +271,11 @@ export class Visualizer {
     };
   }
 
+  screenPixelsToWorld(px) {
+    const z = Number.isFinite(this.zoom) && this.zoom > 0 ? this.zoom : 1;
+    return px / z;
+  }
+
   centerView() {
     this.offsetX = 0;
     this.offsetY = 0;
@@ -430,6 +435,14 @@ export class Visualizer {
     const cy = this.canvas.height / 2 + this.offsetY;
     this.ctx.translate(cx, cy);
     this.ctx.scale(this.zoom, this.zoom);
+    const edgeLineWidth = this.screenPixelsToWorld(this.is3D ? 1.1 : 0.85);
+    const aliveOutlineWidth = this.screenPixelsToWorld(1.1);
+    const vertexRadius = this.screenPixelsToWorld(this.is3D ? 2.3 : 1.9);
+    const dualLineWidth = this.screenPixelsToWorld(0.8);
+    const dualNodeRadius = this.screenPixelsToWorld(1.9);
+    const dualAliveNodeRadius = this.screenPixelsToWorld(2.4);
+    const inspectLineWidth = this.screenPixelsToWorld(1.5);
+    const neighborLineWidth = this.screenPixelsToWorld(1.0);
 
     // Setup cell renderer loop (handles 3D depth-sorting automatically)
     const renderList = this.is3D ? this.getDepthSortedFaces() : this.complex.faces.map(face => ({
@@ -469,7 +482,7 @@ export class Visualizer {
         // If face is active (state 1), add glowing border overlay
         if (face.state === 1 && this.viewMode !== 'curvature') {
           this.ctx.strokeStyle = this.colors.faceAliveGlow;
-          this.ctx.lineWidth = 0.15;
+          this.ctx.lineWidth = aliveOutlineWidth;
           this.ctx.stroke();
         }
       });
@@ -478,7 +491,7 @@ export class Visualizer {
     // --- STEP 2: Render Edges ---
     if (this.showEdges) {
       this.ctx.strokeStyle = this.colors.gridLine;
-      this.ctx.lineWidth = 0.04;
+      this.ctx.lineWidth = edgeLineWidth;
       
       if (this.is3D) {
         // Draw edges of projected 3D shape
@@ -512,7 +525,7 @@ export class Visualizer {
 
     // --- STEP 3: Render Vertices ---
     if (this.showVertices) {
-      const radius = 0.08;
+      const radius = vertexRadius;
       this.ctx.fillStyle = this.colors.vertex;
       
       if (this.is3D) {
@@ -526,7 +539,7 @@ export class Visualizer {
           
           this.ctx.fillStyle = isSharedByAlive ? this.colors.vertexActive : this.colors.vertex;
           this.ctx.beginPath();
-          this.ctx.arc(p.x, p.y, radius * (isSharedByAlive ? 1.4 : 1.0), 0, 2 * Math.PI);
+          this.ctx.arc(p.x, p.y, radius * (isSharedByAlive ? 1.15 : 1.0), 0, 2 * Math.PI);
           this.ctx.fill();
         });
       } else {
@@ -538,7 +551,7 @@ export class Visualizer {
           
           this.ctx.fillStyle = isSharedByAlive ? this.colors.vertexActive : this.colors.vertex;
           this.ctx.beginPath();
-          this.ctx.arc(v.position2D.x, v.position2D.y, radius * (isSharedByAlive ? 1.4 : 1.0), 0, 2 * Math.PI);
+          this.ctx.arc(v.position2D.x, v.position2D.y, radius * (isSharedByAlive ? 1.15 : 1.0), 0, 2 * Math.PI);
           this.ctx.fill();
         });
       }
@@ -547,7 +560,7 @@ export class Visualizer {
     // --- STEP 4: Render Dual Graph (Connections) ---
     if (this.viewMode === 'dual') {
       this.ctx.strokeStyle = 'rgba(59, 130, 246, 0.25)';
-      this.ctx.lineWidth = 0.03;
+      this.ctx.lineWidth = dualLineWidth;
       
       // Get centroid positions for neighbors drawing
       const centroids = new Map();
@@ -583,7 +596,7 @@ export class Visualizer {
         if (face) {
           this.ctx.fillStyle = face.state === 1 ? this.colors.faceAlive : '#334155';
           this.ctx.beginPath();
-          this.ctx.arc(pos.x, pos.y, face.state === 1 ? 0.12 : 0.06, 0, 2 * Math.PI);
+          this.ctx.arc(pos.x, pos.y, face.state === 1 ? dualAliveNodeRadius : dualNodeRadius, 0, 2 * Math.PI);
           this.ctx.fill();
         }
       });
@@ -617,7 +630,7 @@ export class Visualizer {
 
         // A. Draw Highlight Outline around inspected cell
         this.ctx.strokeStyle = this.colors.highlightBorder;
-        this.ctx.lineWidth = 0.12;
+        this.ctx.lineWidth = inspectLineWidth;
         this.ctx.beginPath();
         this.ctx.moveTo(poly[0].x, poly[0].y);
         for (let i = 1; i < poly.length; i++) {
@@ -651,7 +664,7 @@ export class Visualizer {
               if (c2 && nFace) {
                 // Glow lines matching neighbor type
                 this.ctx.strokeStyle = n.type === 'edge' ? this.colors.neighborLink : 'rgba(139, 92, 246, 0.7)'; // violet for vertex-only
-                this.ctx.lineWidth = 0.08;
+                this.ctx.lineWidth = neighborLineWidth;
                 
                 // Draw connecting link (handle wrapping over boundaries in 2D to avoid long screen-crossing lines)
                 let isWrapped = false;

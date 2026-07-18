@@ -14,13 +14,17 @@ document.addEventListener('DOMContentLoaded', () => {
             pomo_sequence: 'wrwrwrR',
             last_tab: 'todo',
             default_video_url: '',
+            kazuno_float_enabled: true,
             speech_interval: 30 // おしゃべり間隔（秒、デフォルト30秒）
         },
         pomoSequenceIndex: 0,
         todos: [],
         events: [],
         pomoLogs: [],
+        doneItems: [],
+        kazunoPoints: 0,
         vfs: { files: {}, dirs: ['/'] },
+        currentLocation: null,
         todoFilter: 'all',
         todoSort: 'prio-desc', // 'prio-desc' | 'due-asc' | 'date-desc'
         selectedDate: new Date(),
@@ -31,6 +35,22 @@ document.addEventListener('DOMContentLoaded', () => {
     let cliInputResolver = null;
     let vfsReadyPromise = Promise.resolve();
     const CLI_MAX_LINES = 600;
+    const DONE_TODAY_KEY = 'kazuno_done_today_items';
+    const KAZUNO_POINTS_KEY = 'kazuno_points_total';
+    const DONE_MIGRATION_KEY = 'kazuno_done_today_migrated_to_db';
+    const CALENDAR_DETAILS_WIDTH_KEY = 'kazuno_calendar_details_width';
+    const DONE_TEMPLATES = [
+        { title: '掃除をした', points: 3, icon: 'broom' },
+        { title: 'ペットボトルを片付けた', points: 3, icon: 'bottle-water' },
+        { title: '洗濯をした', points: 3, icon: 'shirt' },
+        { title: '料理をした', points: 4, icon: 'utensils' },
+        { title: '買い物に行った', points: 3, icon: 'basket-shopping' },
+        { title: '父の面会に行った', points: 5, icon: 'person' },
+        { title: 'ToDoをこなした', points: 5, icon: 'list-check' },
+        { title: '運動・散歩をした', points: 4, icon: 'person-walking' },
+        { title: '勉強・制作を進めた', points: 5, icon: 'book-open' },
+        { title: '休憩を取れた', points: 2, icon: 'mug-hot' }
+    ];
 
     // ランダムおしゃべりセリフリスト (2026sib.htm から抽出)
     const RANDOM_SPEECHES = [
@@ -232,6 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
             initCalendar();
             initPomodoro();
             initVideo();
+            initLocation();
             initCLI();
             vfsReadyPromise = initVfs();
             startRandomSpeechTimer(); // ランダムおしゃべりタイマー始動
@@ -314,12 +335,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initTabs() {
+        const tabNav = document.querySelector('.tab-nav');
         const tabTriggers = document.querySelectorAll('.tab-trigger');
+        if (tabNav) {
+            tabNav.tabIndex = 0;
+            tabNav.addEventListener('keydown', (e) => {
+                if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+                e.preventDefault();
+                const direction = e.key === 'ArrowRight' ? 1 : -1;
+                tabNav.scrollBy({ left: direction * Math.max(120, tabNav.clientWidth * 0.45), behavior: 'smooth' });
+            });
+        }
+
         tabTriggers.forEach(trigger => {
             trigger.addEventListener('click', () => {
                 const targetTab = trigger.getAttribute('data-tab');
                 switchTab(targetTab);
                 saveSetting('last_tab', targetTab);
+            });
+            trigger.addEventListener('keydown', (e) => {
+                if (!tabNav || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+                e.preventDefault();
+                const direction = e.key === 'ArrowRight' ? 1 : -1;
+                tabNav.scrollBy({ left: direction * Math.max(120, tabNav.clientWidth * 0.45), behavior: 'smooth' });
             });
         });
     }
@@ -371,6 +409,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 switchTab(data.last_tab);
             }
             if (data.default_video_url) AppState.settings.default_video_url = data.default_video_url;
+            if (data.kazuno_float_enabled !== undefined) {
+                AppState.settings.kazuno_float_enabled = String(data.kazuno_float_enabled) !== 'false' && String(data.kazuno_float_enabled) !== '0';
+            }
             if (data.speech_interval) AppState.settings.speech_interval = parseInt(data.speech_interval);
         } else {
             const localSettings = JSON.parse(localStorage.getItem('kazuno_settings') || '{}');
@@ -385,6 +426,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (intervalInput) {
             intervalInput.value = AppState.settings.speech_interval;
         }
+        applyKazunoFloatSetting();
     }
 
     async function saveSetting(key, value) {
@@ -398,6 +440,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data && !data.fallback) return;
         }
         localStorage.setItem('kazuno_settings', JSON.stringify(AppState.settings));
+    }
+
+    function applyKazunoFloatSetting() {
+        const avatar = document.getElementById('kazunoAvatar');
+        if (avatar) {
+            avatar.classList.toggle('float-disabled', !AppState.settings.kazuno_float_enabled);
+        }
     }
 
     /* ==========================================================================
@@ -673,6 +722,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function toggleTodoDone(id, done) {
+        const existingTodo = AppState.todos.find(t => String(t.id) === String(id));
         if (!AppState.useLocalStorage) {
             const data = await apiRequest('api/todos_update.php', {
                 method: 'POST',
@@ -681,16 +731,22 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (data && !data.fallback) {
                 await fetchTodos();
+                if (parseInt(done) === 1 && existingTodo) {
+                    await addDoneTodayItem(`[ToDo] ${existingTodo.title}`, 5, { source: 'todo', sourceId: id, date: getTodayDateString(), silent: true });
+                }
                 window.say(done ? '完了！ えらい、ちゃんと前に進んでる。' : 'あれ？ まだ終わってなかったかな？', done ? 'happy' : 'neutral');
                 renderCalendar();
                 return;
             }
         }
-        const todo = AppState.todos.find(t => String(t.id) === String(id));
+        const todo = existingTodo;
         if (todo) {
             todo.done = done;
             localStorage.setItem('kazuno_todos', JSON.stringify(AppState.todos));
             renderTodos();
+            if (parseInt(done) === 1) {
+                await addDoneTodayItem(`[ToDo] ${todo.title}`, 5, { source: 'todo', sourceId: id, date: getTodayDateString(), silent: true });
+            }
             window.say(done ? '完了！ えらい、ちゃんと前に進んでる。' : 'あれ？ まだ終わってなかったかな？', done ? 'happy' : 'neutral');
             renderCalendar();
         }
@@ -793,9 +849,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const prevBtn = document.getElementById('calPrevMonth');
         const nextBtn = document.getElementById('calNextMonth');
         const calEventForm = document.getElementById('calEventForm');
+        const doneTodayForm = document.getElementById('doneTodayForm');
 
         if (!prevBtn || !nextBtn) return;
 
+        await loadDoneTodayState();
+        renderDoneTemplates();
         await fetchEvents();
 
         prevBtn.addEventListener('click', () => {
@@ -855,6 +914,281 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('calEventEnd').value = '';
             document.getElementById('calEventMemo').value = '';
         }
+
+        if (doneTodayForm) {
+            doneTodayForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const titleInput = document.getElementById('doneTodayTitle');
+                const pointsInput = document.getElementById('doneTodayPoints');
+                const title = titleInput.value.trim();
+                const points = parseInt(pointsInput.value) || 3;
+                if (!title) return;
+                await addDoneTodayItem(title, points);
+                titleInput.value = '';
+                pointsInput.value = '3';
+            });
+        }
+
+        initCalendarResize();
+    }
+
+    function initCalendarResize() {
+        const layout = document.querySelector('.calendar-layout');
+        const handle = document.getElementById('calendarResizeHandle');
+        if (!layout || !handle) return;
+
+        const savedWidth = parseInt(localStorage.getItem(CALENDAR_DETAILS_WIDTH_KEY) || '0');
+        if (savedWidth > 0) {
+            applyCalendarDetailsWidth(savedWidth);
+        }
+
+        let dragging = false;
+        const stopDrag = () => {
+            if (!dragging) return;
+            dragging = false;
+            handle.classList.remove('dragging');
+            document.body.classList.remove('is-resizing-calendar');
+        };
+
+        handle.addEventListener('pointerdown', (e) => {
+            if (window.matchMedia('(max-width: 900px)').matches) return;
+            dragging = true;
+            handle.classList.add('dragging');
+            document.body.classList.add('is-resizing-calendar');
+            handle.setPointerCapture(e.pointerId);
+            e.preventDefault();
+        });
+
+        handle.addEventListener('pointermove', (e) => {
+            if (!dragging) return;
+            const rect = layout.getBoundingClientRect();
+            const width = rect.right - e.clientX;
+            applyCalendarDetailsWidth(width, true);
+        });
+
+        handle.addEventListener('pointerup', stopDrag);
+        handle.addEventListener('pointercancel', stopDrag);
+        window.addEventListener('resize', () => {
+            const current = parseInt(localStorage.getItem(CALENDAR_DETAILS_WIDTH_KEY) || '0');
+            if (current > 0) applyCalendarDetailsWidth(current);
+        });
+    }
+
+    function applyCalendarDetailsWidth(width, persist = false) {
+        const layout = document.querySelector('.calendar-layout');
+        if (!layout) return;
+        const maxWidth = Math.max(300, Math.min(620, layout.clientWidth - 360));
+        const clamped = Math.max(300, Math.min(maxWidth, Math.round(width)));
+        layout.style.setProperty('--calendar-details-width', `${clamped}px`);
+        if (persist) {
+            localStorage.setItem(CALENDAR_DETAILS_WIDTH_KEY, String(clamped));
+        }
+    }
+
+    function normalizeDoneItem(item) {
+        return {
+            ...item,
+            id: item.id,
+            date: item.date || item.done_date,
+            done_date: item.done_date || item.date,
+            points: parseInt(item.points) || 0,
+            source: item.source || 'manual',
+            sourceId: item.sourceId !== undefined ? item.sourceId : item.source_id,
+            source_id: item.source_id !== undefined ? item.source_id : item.sourceId
+        };
+    }
+
+    async function loadDoneTodayState() {
+        let localItems = [];
+        try {
+            localItems = JSON.parse(localStorage.getItem(DONE_TODAY_KEY) || '[]').map(normalizeDoneItem);
+        } catch (e) {
+            localItems = [];
+        }
+
+        if (!AppState.useLocalStorage) {
+            const data = await apiRequest('api/done_list.php');
+            if (data && !data.fallback) {
+                let dbItems = (data.items || []).map(normalizeDoneItem);
+
+                if (localItems.length > 0 && localStorage.getItem(DONE_MIGRATION_KEY) !== '1') {
+                    for (const item of localItems) {
+                        await apiRequest('api/done_add.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                title: item.title,
+                                points: parseInt(item.points) || 1,
+                                date: item.date || item.done_date,
+                                source: item.source && item.source !== 'manual' ? item.source : 'local_migration',
+                                source_id: item.sourceId || item.source_id || item.id
+                            })
+                        });
+                    }
+                    localStorage.setItem(DONE_MIGRATION_KEY, '1');
+
+                    const refreshed = await apiRequest('api/done_list.php');
+                    if (refreshed && !refreshed.fallback) {
+                        dbItems = (refreshed.items || []).map(normalizeDoneItem);
+                        AppState.kazunoPoints = parseInt(refreshed.total_points) || 0;
+                    }
+                } else {
+                    AppState.kazunoPoints = parseInt(data.total_points) || 0;
+                }
+
+                AppState.doneItems = dbItems;
+                localStorage.setItem(DONE_TODAY_KEY, JSON.stringify(AppState.doneItems));
+                localStorage.setItem(KAZUNO_POINTS_KEY, String(AppState.kazunoPoints));
+                return;
+            }
+        }
+
+        AppState.doneItems = localItems;
+        AppState.kazunoPoints = AppState.doneItems.reduce((sum, item) => sum + (parseInt(item.points) || 0), 0);
+        localStorage.setItem(KAZUNO_POINTS_KEY, String(AppState.kazunoPoints));
+    }
+
+    function saveDoneTodayState() {
+        localStorage.setItem(DONE_TODAY_KEY, JSON.stringify(AppState.doneItems));
+        localStorage.setItem(KAZUNO_POINTS_KEY, String(AppState.kazunoPoints));
+    }
+
+    function renderDoneTemplates() {
+        const grid = document.getElementById('doneTemplateGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        DONE_TEMPLATES.forEach(template => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'done-template-chip';
+            btn.innerHTML = `<i class="fa-solid fa-${template.icon}"></i> ${escapeHtml(template.title)} +${template.points}`;
+            btn.addEventListener('click', async () => {
+                await addDoneTodayItem(template.title, template.points, { source: 'template' });
+            });
+            grid.appendChild(btn);
+        });
+    }
+
+    async function addDoneTodayItem(title, points = 3, options = {}) {
+        const date = options.date || getSelectedDateString();
+        const source = options.source || 'manual';
+        const sourceId = options.sourceId !== undefined ? String(options.sourceId) : null;
+
+        if (sourceId && AppState.doneItems.some(item => item.date === date && item.source === source && String(item.sourceId) === sourceId)) {
+            return null;
+        }
+
+        if (!AppState.useLocalStorage) {
+            const data = await apiRequest('api/done_add.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    title,
+                    points: Math.max(1, parseInt(points) || 1),
+                    date,
+                    source,
+                    source_id: sourceId
+                })
+            });
+            if (data && !data.fallback) {
+                const item = normalizeDoneItem(data.item);
+                if (!AppState.doneItems.some(existing => String(existing.id) === String(item.id))) {
+                    AppState.doneItems.push(item);
+                }
+                AppState.kazunoPoints = parseInt(data.total_points) || 0;
+                saveDoneTodayState();
+                renderCalendar();
+                if (!options.silent && !data.duplicate) {
+                    window.say(`できたこと、記録したよ！ 一埜ポイント +${item.points}！`, 'happy');
+                }
+                return item;
+            }
+        }
+
+        const item = normalizeDoneItem({
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            date,
+            title,
+            points: Math.max(1, parseInt(points) || 1),
+            source,
+            sourceId,
+            created_at: new Date().toISOString()
+        });
+
+        AppState.doneItems.push(item);
+        AppState.kazunoPoints += item.points;
+        saveDoneTodayState();
+        renderCalendar();
+        if (!options.silent) {
+            window.say(`できたこと、記録したよ！ 一埜ポイント +${item.points}！`, 'happy');
+        }
+        return item;
+    }
+
+    async function deleteDoneTodayItem(id) {
+        const item = AppState.doneItems.find(d => String(d.id) === String(id));
+        if (!item) return;
+        if (!AppState.useLocalStorage) {
+            const data = await apiRequest('api/done_delete.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            });
+            if (data && !data.fallback) {
+                AppState.doneItems = AppState.doneItems.filter(d => String(d.id) !== String(id));
+                AppState.kazunoPoints = parseInt(data.total_points) || 0;
+                saveDoneTodayState();
+                renderCalendar();
+                window.say('できたこと記録を消したよ。ポイントも戻しておくね。', 'neutral');
+                return;
+            }
+        }
+        AppState.doneItems = AppState.doneItems.filter(d => String(d.id) !== String(id));
+        AppState.kazunoPoints = Math.max(0, AppState.kazunoPoints - (parseInt(item.points) || 0));
+        saveDoneTodayState();
+        renderCalendar();
+        window.say('できたこと記録を消したよ。ポイントも戻しておくね。', 'neutral');
+    }
+
+    function getDoneItemsForDate(dateStr) {
+        return AppState.doneItems.filter(item => (item.date || item.done_date) === dateStr);
+    }
+
+    function updateDoneTodayPanel(selectedStr) {
+        const totalEl = document.getElementById('kazunoPointTotal');
+        const dayEl = document.getElementById('kazunoPointDay');
+        const listEl = document.getElementById('doneTodayList');
+        if (!totalEl || !dayEl || !listEl) return;
+
+        const dayItems = getDoneItemsForDate(selectedStr);
+        const dayPoints = dayItems.reduce((sum, item) => sum + (parseInt(item.points) || 0), 0);
+        totalEl.textContent = `${AppState.kazunoPoints} pt`;
+        dayEl.textContent = `${dayPoints} pt`;
+
+        if (dayItems.length === 0) {
+            listEl.innerHTML = '<p class="empty-state">まだ記録はありません。</p>';
+            return;
+        }
+
+        listEl.innerHTML = '';
+        dayItems
+            .slice()
+            .sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))
+            .forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'done-item';
+                row.innerHTML = `
+                    <div>
+                        <div class="done-item-title">${escapeHtml(item.title)}</div>
+                        <div class="done-item-meta">+${parseInt(item.points) || 0} pt</div>
+                    </div>
+                    <button class="btn-done-delete" title="削除"><i class="fa-solid fa-xmark"></i></button>
+                `;
+                row.querySelector('.btn-done-delete').addEventListener('click', () => {
+                    deleteDoneTodayItem(item.id);
+                });
+                listEl.appendChild(row);
+            });
     }
 
     async function fetchEvents() {
@@ -871,6 +1205,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const year = AppState.selectedDate.getFullYear();
         const month = String(AppState.selectedDate.getMonth() + 1).padStart(2, '0');
         const day = String(AppState.selectedDate.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function getTodayDateString() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     }
 
@@ -938,9 +1280,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const indicators = cell.querySelector('.day-indicators');
         const hasEvent = AppState.events.some(e => e.event_date === dateStr);
         const hasTodo = AppState.todos.some(t => t.due_date === dateStr && parseInt(t.done) === 0);
+        const hasDone = getDoneItemsForDate(dateStr).length > 0;
 
         if (hasEvent) indicators.innerHTML += '<span class="indicator-dot event"></span>';
         if (hasTodo) indicators.innerHTML += '<span class="indicator-dot todo"></span>';
+        if (hasDone) indicators.innerHTML += '<span class="indicator-dot done"></span>';
 
         cell.addEventListener('click', () => {
             AppState.selectedDate = new Date(dateStr);
@@ -959,6 +1303,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         dateTextEl.textContent = `${AppState.selectedDate.getFullYear()}年 ${AppState.selectedDate.getMonth() + 1}月 ${AppState.selectedDate.getDate()}日の予定`;
         listEl.innerHTML = '';
+        updateDoneTodayPanel(selectedStr);
 
         const dayEvents = AppState.events.filter(e => e.event_date === selectedStr);
         const dayTodos = AppState.todos.filter(t => t.due_date === selectedStr && parseInt(t.done) === 0);
@@ -1516,6 +1861,14 @@ document.addEventListener('DOMContentLoaded', () => {
        5. YouTube再生
        ========================================================================== */
     const VIDEO_HISTORY_KEY = 'kazuno_video_history';
+    const VIDEO_QUEUE_DIR = '/queues';
+    const VIDEO_VOLUME_KEY = 'kazuno_video_volume';
+    let youtubePlayer = null;
+    let youtubeApiReadyPromise = null;
+    let youtubePlayerBuildId = 0;
+    let youtubeVolumePollTimer = null;
+    let videoPlaybackActive = false;
+    let activeAutoQueueName = null;
     
     function initVideo() {
         const playBtn = document.getElementById('playVideoBtn');
@@ -1559,11 +1912,146 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     }
 
-    function playYoutubeVideo(url, saveHistory = true) {
-        const videoId = extractYoutubeId(url);
-        const playlistId = extractYoutubePlaylistId(url);
+    function loadYoutubeIframeApi() {
+        if (window.YT && window.YT.Player) {
+            return Promise.resolve();
+        }
+        if (youtubeApiReadyPromise) {
+            return youtubeApiReadyPromise;
+        }
+
+        youtubeApiReadyPromise = new Promise((resolve, reject) => {
+            const previousReady = window.onYouTubeIframeAPIReady;
+            window.onYouTubeIframeAPIReady = () => {
+                if (typeof previousReady === 'function') previousReady();
+                resolve();
+            };
+
+            if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+                const script = document.createElement('script');
+                script.src = 'https://www.youtube.com/iframe_api';
+                script.async = true;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            }
+        });
+
+        return youtubeApiReadyPromise;
+    }
+
+    function getSavedYoutubeVolume() {
+        const saved = parseInt(localStorage.getItem(VIDEO_VOLUME_KEY) || '', 10);
+        return Number.isFinite(saved) ? Math.max(0, Math.min(100, saved)) : null;
+    }
+
+    function rememberCurrentYoutubeVolume() {
+        if (!youtubePlayer || typeof youtubePlayer.getVolume !== 'function') return;
+        try {
+            const volume = youtubePlayer.getVolume();
+            if (Number.isFinite(volume)) {
+                localStorage.setItem(VIDEO_VOLUME_KEY, String(Math.max(0, Math.min(100, Math.round(volume)))));
+            }
+        } catch (e) {
+            // The iframe can become unavailable during replacement; keeping the old volume is fine.
+        }
+    }
+
+    function applyYoutubeAudioPreference(player, options = {}) {
+        if (!player) return;
+        try {
+            if (options.mute) {
+                if (typeof player.mute === 'function') player.mute();
+                return;
+            }
+            if (typeof player.unMute === 'function') player.unMute();
+            const savedVolume = getSavedYoutubeVolume();
+            if (savedVolume !== null && typeof player.setVolume === 'function') {
+                player.setVolume(savedVolume);
+            }
+        } catch (e) {
+            // Some embedded players reject API calls until they are fully ready.
+        }
+    }
+
+    function startYoutubeVolumePolling(player, buildId) {
+        if (youtubeVolumePollTimer) {
+            clearInterval(youtubeVolumePollTimer);
+            youtubeVolumePollTimer = null;
+        }
+        youtubeVolumePollTimer = setInterval(() => {
+            if (buildId !== youtubePlayerBuildId || player !== youtubePlayer) {
+                clearInterval(youtubeVolumePollTimer);
+                youtubeVolumePollTimer = null;
+                return;
+            }
+            rememberCurrentYoutubeVolume();
+        }, 1500);
+    }
+
+    function renderYoutubeEmbed(embedUrl, options = {}) {
         const placeholder = document.getElementById('videoPlaceholder');
         const wrapper = document.getElementById('videoIframeWrapper');
+        if (!placeholder || !wrapper) return;
+
+        rememberCurrentYoutubeVolume();
+        const iframeId = `youtubePlayerFrame-${Date.now()}`;
+        placeholder.classList.add('hide');
+        wrapper.classList.remove('hide');
+        wrapper.innerHTML = `
+            <iframe id="${iframeId}" src="${embedUrl}" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+            </iframe>
+        `;
+
+        videoPlaybackActive = true;
+        if (options.autoAdvanceQueue) {
+            activeAutoQueueName = normalizeQueueName(options.autoAdvanceQueue);
+        } else if (options.loop || !options.keepAutoQueue) {
+            activeAutoQueueName = null;
+        }
+
+        const buildId = ++youtubePlayerBuildId;
+        loadYoutubeIframeApi()
+            .then(() => {
+                if (buildId !== youtubePlayerBuildId || !window.YT || !window.YT.Player) return;
+                if (youtubePlayer && typeof youtubePlayer.destroy === 'function') {
+                    try { youtubePlayer.destroy(); } catch (e) { /* ignore stale player cleanup */ }
+                }
+                youtubePlayer = new window.YT.Player(iframeId, {
+                    events: {
+                        onReady: (event) => {
+                            applyYoutubeAudioPreference(event.target, options);
+                            startYoutubeVolumePolling(event.target, buildId);
+                        },
+                        onStateChange: (event) => {
+                            if (event.data === window.YT.PlayerState.PLAYING || event.data === window.YT.PlayerState.PAUSED) {
+                                rememberCurrentYoutubeVolume();
+                            }
+                            if (event.data === window.YT.PlayerState.ENDED) {
+                                rememberCurrentYoutubeVolume();
+                                handleVideoEnded();
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(() => {
+                printCli('YouTube IFrame APIを読み込めませんでした。自動キュー送りは利用できない場合があります。', 'warning');
+            });
+    }
+
+    async function handleVideoEnded() {
+        if (!activeAutoQueueName) {
+            videoPlaybackActive = false;
+            return;
+        }
+        await playNextQueueItem(activeAutoQueueName, { fromAuto: true });
+    }
+
+    function playYoutubeVideo(url, saveHistory = true, options = {}) {
+        const videoId = extractYoutubeId(url);
+        const playlistId = extractYoutubePlaylistId(url);
         const localLinkHelper = document.getElementById('videoLocalLink');
 
         if (!videoId && !playlistId) {
@@ -1576,25 +2064,25 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let embedUrl = '';
         if (videoId && playlistId) {
-            embedUrl = `${domain}/embed/${videoId}?list=${playlistId}&autoplay=1&mute=1`;
+            embedUrl = `${domain}/embed/${videoId}?list=${playlistId}&autoplay=1`;
         } else if (playlistId) {
-            embedUrl = `${domain}/embed/videoseries?list=${playlistId}&autoplay=1&mute=1`;
+            embedUrl = `${domain}/embed/videoseries?list=${playlistId}&autoplay=1`;
         } else {
-            embedUrl = `${domain}/embed/${videoId}?autoplay=1&mute=1`;
+            embedUrl = `${domain}/embed/${videoId}?autoplay=1`;
+        }
+
+        if (options.loop) {
+            embedUrl += `&loop=1`;
+            if (videoId && !playlistId) {
+                embedUrl += `&playlist=${videoId}`;
+            }
         }
         
         if (!isLocalFile) {
             embedUrl += `&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
         }
 
-        placeholder.classList.add('hide');
-        wrapper.classList.remove('hide');
-        wrapper.innerHTML = `
-            <iframe src="${embedUrl}" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
-            </iframe>
-        `;
+        renderYoutubeEmbed(embedUrl, options);
 
         if (localLinkHelper) {
             if (isLocalFile) {
@@ -1607,12 +2095,53 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        window.say(playlistId ? '再生リストを読み込んだよ。連続再生できるね！' : '動画を開くね。作業用BGMかな？', 'present');
+        window.say(options.loop ? 'ループ再生で開くね。お気に入りを何周もしよう。' : (playlistId ? '再生リストを読み込んだよ。連続再生できるね！' : '動画を開くね。作業用BGMかな？'), 'present');
 
         if (saveHistory) {
             saveVideoToHistory(url);
             saveSetting('default_video_url', url);
         }
+    }
+
+    function playYoutubeVideoIds(videoIds, label = 'queue', saveHistory = true, options = {}) {
+        if (!Array.isArray(videoIds) || videoIds.length === 0) {
+            printCli('queue: 再生できる動画がありません。', 'danger');
+            return;
+        }
+
+        const firstId = videoIds[0];
+        const others = videoIds.slice(1).join(',');
+        const isLocalFile = window.location.protocol === 'file:';
+        const domain = isLocalFile ? 'https://www.youtube-nocookie.com' : 'https://www.youtube.com';
+        let embedUrl = `${domain}/embed/${firstId}?autoplay=1`;
+        if (others) {
+            embedUrl += `&playlist=${others}`;
+        }
+        if (options.loop) {
+            embedUrl += `&loop=1`;
+            if (!others) {
+                embedUrl += `&playlist=${firstId}`;
+            }
+        }
+        if (!isLocalFile) {
+            embedUrl += `&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
+        }
+
+        const localLinkHelper = document.getElementById('videoLocalLink');
+
+        renderYoutubeEmbed(embedUrl, options);
+
+        if (localLinkHelper) {
+            localLinkHelper.classList.add('hide');
+        }
+
+        switchTab('video');
+        saveSetting('last_tab', 'video');
+        if (saveHistory) {
+            saveVideoToHistory(label);
+            saveSetting('default_video_url', label);
+        }
+        window.say(`${label} から ${videoIds.length} 件の再生キューを読み込んだよ。`, 'present');
     }
 
     function saveVideoToHistory(url) {
@@ -1652,6 +2181,181 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ==========================================================================
        6. CLIもどき (コマンド端末)
        ========================================================================== */
+    function initLocation() {
+        const getBtn = document.getElementById('btnGetLocation');
+        const mapBtn = document.getElementById('btnOpenLocationMap');
+        const copyBtn = document.getElementById('btnCopyLocationAddress');
+        if (!getBtn) return;
+
+        getBtn.addEventListener('click', () => {
+            handleLocationLookup({ switchToTab: false, printToCli: false });
+        });
+
+        if (mapBtn) {
+            mapBtn.addEventListener('click', () => {
+                openCurrentLocationMap();
+            });
+        }
+
+        if (copyBtn) {
+            copyBtn.addEventListener('click', async () => {
+                if (!AppState.currentLocation || !AppState.currentLocation.addressText) return;
+                try {
+                    await navigator.clipboard.writeText(AppState.currentLocation.addressText);
+                    setLocationStatus('Address copied.');
+                } catch (e) {
+                    setLocationStatus('Copy failed. Please select the address text manually.');
+                }
+            });
+        }
+    }
+
+    function setLocationStatus(message, type = 'info') {
+        const status = document.getElementById('locationStatus');
+        if (!status) return;
+        status.textContent = message;
+        status.className = `location-status text-${type}`;
+    }
+
+    function setLocationButtonsEnabled(enabled) {
+        const mapBtn = document.getElementById('btnOpenLocationMap');
+        const copyBtn = document.getElementById('btnCopyLocationAddress');
+        if (mapBtn) mapBtn.disabled = !enabled;
+        if (copyBtn) copyBtn.disabled = !enabled;
+    }
+
+    function updateLocationView(locationData) {
+        const addressEl = document.getElementById('locationAddress');
+        const latEl = document.getElementById('locationLat');
+        const lonEl = document.getElementById('locationLon');
+        const accuracyEl = document.getElementById('locationAccuracy');
+        const updatedEl = document.getElementById('locationUpdated');
+
+        if (addressEl) addressEl.textContent = locationData.addressText || 'Address not found.';
+        if (latEl) latEl.textContent = locationData.lat.toFixed(6);
+        if (lonEl) lonEl.textContent = locationData.lon.toFixed(6);
+        if (accuracyEl) accuracyEl.textContent = `${Math.round(locationData.accuracy)} m`;
+        if (updatedEl) updatedEl.textContent = new Date(locationData.timestamp).toLocaleTimeString();
+        setLocationButtonsEnabled(true);
+    }
+
+    function getBrowserPosition() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error('Geolocation is not supported by this browser.'));
+                return;
+            }
+            if (!window.isSecureContext) {
+                reject(new Error('Geolocation requires HTTPS or localhost.'));
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                enableHighAccuracy: true,
+                timeout: 12000,
+                maximumAge: 0
+            });
+        });
+    }
+
+    async function reverseGeocode(lat, lon) {
+        const params = new URLSearchParams({
+            format: 'jsonv2',
+            lat: String(lat),
+            lon: String(lon),
+            zoom: '18',
+            addressdetails: '1',
+            'accept-language': 'ja'
+        });
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?${params.toString()}`, {
+            headers: { Accept: 'application/json' }
+        });
+        if (!res.ok) {
+            throw new Error(`Reverse geocoding failed: HTTP ${res.status}`);
+        }
+        return await res.json();
+    }
+
+    function formatAddressFromNominatim(data) {
+        if (!data) return '';
+        const address = data.address || {};
+        const parts = [
+            address.postcode,
+            address.province || address.state,
+            address.city || address.town || address.village || address.municipality,
+            address.ward || address.county,
+            address.suburb || address.neighbourhood || address.quarter,
+            address.road || address.pedestrian || address.footway,
+            address.house_number
+        ].filter(Boolean);
+        const compact = [...new Set(parts)].join(' ');
+        return compact || data.display_name || '';
+    }
+
+    async function handleLocationLookup(options = {}) {
+        const { switchToTab = true, printToCli = true } = options;
+        if (switchToTab) {
+            switchTab('location');
+            saveSetting('last_tab', 'location');
+        }
+
+        const getBtn = document.getElementById('btnGetLocation');
+        if (getBtn) getBtn.disabled = true;
+        setLocationButtonsEnabled(false);
+        setLocationStatus('Requesting browser location permission...');
+        if (printToCli) printCli('Requesting browser location permission...', 'info');
+
+        try {
+            const position = await getBrowserPosition();
+            const { latitude, longitude, accuracy } = position.coords;
+            setLocationStatus('Location received. Looking up address...');
+            if (printToCli) printCli(`Coordinates: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} (accuracy ${Math.round(accuracy)} m)`, 'muted');
+
+            let geocodeData = null;
+            let addressText = '';
+            try {
+                geocodeData = await reverseGeocode(latitude, longitude);
+                addressText = formatAddressFromNominatim(geocodeData);
+            } catch (e) {
+                console.warn(e);
+                addressText = 'Address lookup failed. Coordinates are shown below.';
+            }
+
+            AppState.currentLocation = {
+                lat: latitude,
+                lon: longitude,
+                accuracy,
+                timestamp: Date.now(),
+                addressText,
+                raw: geocodeData
+            };
+
+            updateLocationView(AppState.currentLocation);
+            setLocationStatus('Current address is ready.');
+            if (printToCli) {
+                printCli(`Address: ${addressText}`, 'success');
+                printCli('Use: whereami map  to open this point in OpenStreetMap.', 'muted');
+            }
+            window.say('今いる場所の住所を調べたよ。保存はしていないからね。', 'present');
+        } catch (e) {
+            const message = e && e.message ? e.message : String(e);
+            setLocationStatus(`Location failed: ${message}`, 'danger');
+            if (printToCli) printCli(`Location failed: ${message}`, 'danger');
+            window.say('位置情報が取れなかったみたい。ブラウザの許可を確認してみてね。', 'sad');
+        } finally {
+            if (getBtn) getBtn.disabled = false;
+        }
+    }
+
+    function openCurrentLocationMap() {
+        if (!AppState.currentLocation) {
+            printCli('No current location yet. Use whereami first.', 'warning');
+            return;
+        }
+        const { lat, lon } = AppState.currentLocation;
+        const url = `https://www.openstreetmap.org/?mlat=${encodeURIComponent(lat)}&mlon=${encodeURIComponent(lon)}#map=18/${encodeURIComponent(lat)}/${encodeURIComponent(lon)}`;
+        window.open(url, '_blank', 'noopener');
+    }
+
     const cliHistory = [];
     let cliHistoryIndex = -1;
 
@@ -1767,7 +2471,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const args = parseCommandArgs(cmdLine);
         const baseCmd = args[0].toLowerCase();
-        const vfsCommands = new Set(['ls', 'files', 'cd', 'mkdir', 'mv', 'cp', 'head', 'tail', 'cat', 'rm', 'del', 'export', 'import', 'nano', 'run']);
+        const vfsCommands = new Set(['ls', 'files', 'cd', 'mkdir', 'mv', 'cp', 'head', 'tail', 'cat', 'rm', 'del', 'export', 'import', 'nano', 'run', 'queue', 'qplay']);
         if (vfsCommands.has(baseCmd)) {
             await ensureVfsReady();
         }
@@ -1789,6 +2493,12 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'todo':
                 await handleTodoCommand(args.slice(1));
                 break;
+            case 'done':
+                await handleDoneCommand(args.slice(1));
+                break;
+            case 'points':
+                await handleDoneCommand(['points']);
+                break;
             case 'timer':
                 handleTimerCommand(args.slice(1));
                 break;
@@ -1798,14 +2508,32 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'play':
                 await handlePlayCommand(args.slice(1));
                 break;
+            case 'queue':
+                await handleQueueCommand(args.slice(1));
+                break;
+            case 'qplay':
+                await handleQueueCommand(['play', ...args.slice(1)]);
+                break;
             case 'open':
                 handleOpenCommand(args.slice(1));
+                break;
+            case 'whereami':
+            case 'address':
+            case 'location':
+                await handleLocationCommand(args.slice(1));
                 break;
             case 'calc':
                 handleCalcCommand(args.slice(1));
                 break;
             case 'hcalc':
                 handleHcalcCommand();
+                break;
+            case 'tab':
+            case 'goto':
+                handleTabCommand(args.slice(1));
+                break;
+            case 'tabs':
+                handleTabCommand([]);
                 break;
             case 'ls':
             case 'files':
@@ -1867,6 +2595,66 @@ document.addEventListener('DOMContentLoaded', () => {
         return matches.map(m => m.replace(/^"|"$/g, ''));
     }
 
+    function handleTabCommand(subArgs) {
+        const aliases = {
+            todo: 'todo',
+            todos: 'todo',
+            task: 'todo',
+            tasks: 'todo',
+            calendar: 'calendar',
+            cal: 'calendar',
+            pomodoro: 'pomodoro',
+            pomo: 'pomodoro',
+            timer: 'pomodoro',
+            video: 'video',
+            youtube: 'video',
+            location: 'location',
+            loc: 'location',
+            address: 'location',
+            whereami: 'location',
+            cli: 'cli',
+            terminal: 'cli',
+            oneiro: 'oneirotopia',
+            oneirotopia: 'oneirotopia'
+        };
+        const input = (subArgs[0] || '').toLowerCase();
+        if (!input) {
+            printCli('Tabs: todo, calendar, pomodoro, video, location, cli, oneirotopia', 'info');
+            printCli('Use: tab <name>  or  goto <name>', 'muted');
+            return;
+        }
+
+        const tabId = aliases[input];
+        if (!tabId) {
+            printCli(`Unknown tab: ${input}`, 'danger');
+            return;
+        }
+
+        switchTab(tabId);
+        saveSetting('last_tab', tabId);
+        printCli(`Switched to tab: ${tabId}`, 'success');
+    }
+
+    async function handleLocationCommand(subArgs) {
+        const sub = (subArgs[0] || '').toLowerCase();
+        if (sub === 'map') {
+            if (!AppState.currentLocation) {
+                printCli('No current location yet. Use: whereami', 'warning');
+                return;
+            }
+            openCurrentLocationMap();
+            printCli('Opened current location in OpenStreetMap.', 'success');
+            return;
+        }
+        if (sub === 'tab') {
+            switchTab('location');
+            saveSetting('last_tab', 'location');
+            printCli('Switched to tab: location', 'success');
+            return;
+        }
+        await handleLocationLookup({ switchToTab: true, printToCli: true });
+    }
+
     function showHelp() {
         printCli('=== コマンド一覧 ===', 'info');
         printCli('help                      - コマンド一覧を表示します。', 'muted');
@@ -1876,6 +2664,9 @@ document.addEventListener('DOMContentLoaded', () => {
         printCli('todo done <id>            - ToDoを完了します。', 'muted');
         printCli('todo delete <id>          - ToDoを削除します。', 'muted');
         printCli('todo today                - 期限が今日のToDoを表示します。', 'muted');
+        printCli('done add <内容> [pt]      - 今日できたことを記録し、一埜ポイントを追加します。', 'muted');
+        printCli('done today / done list    - 今日または選択日の「できたこと」を表示します。', 'muted');
+        printCli('points                    - 一埜ポイント合計を表示します。', 'muted');
         printCli('timer <分>                - 指定した時間(分)で作業タイマーを開始します。', 'muted');
         printCli('timer break               - 5分休憩タイマーを開始します。', 'muted');
         printCli('timer stop                - タイマーを停止・リセットします。', 'muted');
@@ -1883,10 +2674,19 @@ document.addEventListener('DOMContentLoaded', () => {
         printCli('cal today                 - 今日の予定を表示します。', 'muted');
         printCli('cal month                 - 当月の予定リストを表示します。', 'muted');
         printCli('cal add <日付> <予定>     - 予定を追加します。 (例: cal add 2026-06-28 請求確認)', 'muted');
-        printCli('play <URL>                - YouTubeの動画を再生します。', 'muted');
+        printCli('play <URL|file>           - YouTube動画、またはVFSプレイリストを連続再生します。', 'muted');
+        printCli('play loop <URL|file>      - お気に入り用に、動画またはプレイリストをループ再生します。', 'muted');
+        printCli('queue add <name> <URL>    - 名前付き再生キューへ動画を追加します。', 'muted');
+        printCli('qplay <name>              - キューの先頭未再生を再生し、その行をコメントアウトします。', 'muted');
+        printCli('queue list [name]         - キュー一覧、または指定キューの中身を表示します。', 'muted');
+        printCli('queue stop                - 現在のキュー自動送りを停止します。', 'muted');
         printCli('open <URL>                - 指定したURLをブラウザ別タブで開きます。', 'muted');
         printCli('calc [数式]               - 数式を評価して計算します (引数なしで履歴を表示)。', 'muted');
         printCli('hcalc                     - 計算機能(calc)の利用可能演算子・定数・関数のヘルプを表示します。', 'muted');
+        printCli('tab <name> / goto <name>  - 指定タブへ移動します。todo, calendar, pomodoro, video, location, cli, oneirotopia', 'muted');
+        printCli('tabs                      - 移動できるタブ名を表示します。', 'muted');
+        printCli('whereami / address        - 位置情報の許可を取り、現在地の住所を表示します。', 'muted');
+        printCli('whereami map              - 最後に取得した現在地をOpenStreetMapで開きます。', 'muted');
         printCli('ls                        - 仮想ファイル・フォルダの一覧を表示します。', 'muted');
         printCli('cd [フォルダ]             - フォルダを移動します (指定なしでルートへ)。', 'muted');
         printCli('mkdir <フォルダ名>        - 新規フォルダを作成します。', 'muted');
@@ -1902,6 +2702,8 @@ document.addEventListener('DOMContentLoaded', () => {
         printCli('run <ファイル>            - BASICプログラムファイルを実行します。', 'muted');
         printCli('kazuno <表情>             - 一埜の表情を手動で切り替えます。', 'muted');
         printCli('kazuno interval <秒>      - おしゃべり間隔(秒)を変更します。(0で停止)', 'muted');
+        printCli('kazuno float on|off|toggle - 一埜のフワフワ動作を切り替えます。', 'muted');
+        printCli('nano keys                 - F2保存 / F3終了 / F4保存して終了 / Esc終了', 'muted');
         printCli('oneiro <サブコマンド>     - Oneirotopiaの将来用コマンドを実行します。', 'muted');
     }
 
@@ -1990,6 +2792,49 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             printCli('エラー: 不正なtodoサブコマンドです。 list, add, done, delete, today が使えます。', 'danger');
         }
+    }
+
+    async function handleDoneCommand(subArgs) {
+        const sub = subArgs[0] ? subArgs[0].toLowerCase() : 'today';
+        if (sub === 'add') {
+            const maybePoints = parseInt(subArgs[subArgs.length - 1]);
+            const hasPointArg = !isNaN(maybePoints);
+            const titleParts = hasPointArg ? subArgs.slice(1, -1) : subArgs.slice(1);
+            const title = titleParts.join(' ').trim();
+            const points = hasPointArg ? maybePoints : 3;
+            if (!title) {
+                printCli('エラー: 記録する内容を指定してください。例: done add "洗濯をした" 3', 'danger');
+                return;
+            }
+            const item = await addDoneTodayItem(title, points, { date: getTodayDateString() });
+            if (item) {
+                printCli(`できたことを記録しました: ${item.title} (+${item.points} pt)`, 'success');
+            }
+        } else if (sub === 'today') {
+            printDoneItemsForDate(getTodayDateString(), '今日できたこと');
+        } else if (sub === 'list') {
+            printDoneItemsForDate(getSelectedDateString(), '選択日の「できたこと」');
+        } else if (sub === 'points') {
+            printCli(`一埜ポイント合計: ${AppState.kazunoPoints} pt`, 'success');
+        } else if (sub === 'templates') {
+            printCli('--- できたことテンプレート ---', 'info');
+            DONE_TEMPLATES.forEach(t => printCli(`${t.title} (+${t.points} pt)`));
+        } else {
+            printCli('Usage: done add <内容> [pt] / done today / done list / done templates / points', 'danger');
+        }
+    }
+
+    function printDoneItemsForDate(dateStr, label) {
+        const items = getDoneItemsForDate(dateStr);
+        const points = items.reduce((sum, item) => sum + (parseInt(item.points) || 0), 0);
+        printCli(`--- ${label}: ${dateStr} (${points} pt) ---`, 'info');
+        if (items.length === 0) {
+            printCli('まだ記録はありません。', 'muted');
+            return;
+        }
+        items.forEach(item => {
+            printCli(`+${item.points} ${item.title}`);
+        });
     }
 
     function handleTimerCommand(subArgs) {
@@ -2123,9 +2968,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handlePlayCommand(subArgs) {
-        const input = subArgs[0];
+        let loop = false;
+        let input = subArgs[0];
+        if (input === 'loop' || input === '--loop' || input === '-l') {
+            loop = true;
+            input = subArgs[1];
+        }
         if (!input) {
-            printCli('エラー: 再生するYouTube URL、動画ID、またはプレイリストファイルを指定してください。 (例: play dQw4w9WgXcQ, play playlist.txt)', 'danger');
+            printCli('エラー: 再生するYouTube URL、動画ID、またはプレイリストファイルを指定してください。 (例: play dQw4w9WgXcQ, play loop playlist.txt)', 'danger');
             return;
         }
 
@@ -2157,49 +3007,178 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            printCli(`内部プレイリスト "${input}" から ${videoIds.length} 個の動画を読み込みました。`, 'success');
-            
-            const firstId = videoIds[0];
-            const others = videoIds.slice(1).join(',');
-            
-            const isLocalFile = window.location.protocol === 'file:';
-            const domain = isLocalFile ? 'https://www.youtube-nocookie.com' : 'https://www.youtube.com';
-            
-            let embedUrl = `${domain}/embed/${firstId}?autoplay=1&mute=1`;
-            if (others) {
-                embedUrl += `&playlist=${others}`;
-            }
-            if (!isLocalFile) {
-                embedUrl += `&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
-            }
-
-            const placeholder = document.getElementById('videoPlaceholder');
-            const wrapper = document.getElementById('videoIframeWrapper');
-            const localLinkHelper = document.getElementById('videoLocalLink');
-
-            if (placeholder && wrapper) {
-                placeholder.classList.add('hide');
-                wrapper.classList.remove('hide');
-                wrapper.innerHTML = `
-                    <iframe src="${embedUrl}" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                            allowfullscreen>
-                    </iframe>
-                `;
-            }
-
-            switchTab('video');
-            saveSetting('last_tab', 'video');
-            window.say(`自作プレイリスト「${input}」から ${videoIds.length} 曲を読み込んで連続再生するね！`, 'happy');
+            printCli(`内部プレイリスト "${input}" から ${videoIds.length} 個の動画を読み込みました。${loop ? ' (loop)' : ''}`, 'success');
+            playYoutubeVideoIds(videoIds, input, true, { loop });
+            window.say(loop ? `自作プレイリスト「${input}」をループ再生するね！` : `自作プレイリスト「${input}」から ${videoIds.length} 曲を読み込んで連続再生するね！`, 'happy');
             
             saveVideoToHistory(input);
             saveSetting('default_video_url', input);
         } else {
             switchTab('video');
             saveSetting('last_tab', 'video');
-            playYoutubeVideo(input);
-            printCli(`動画の埋め込み再生を開始しました: ${input}`, 'success');
+            playYoutubeVideo(input, true, { loop });
+            printCli(`動画の埋め込み再生を開始しました: ${input}${loop ? ' (loop)' : ''}`, 'success');
         }
+    }
+
+    function normalizeQueueName(name) {
+        const raw = (name || 'default').trim().replace(/^\/+|\/+$/g, '');
+        return raw.replace(/[^a-zA-Z0-9._-]/g, '_') || 'default';
+    }
+
+    function getQueuePath(name) {
+        const cleanName = normalizeQueueName(name);
+        return `${VIDEO_QUEUE_DIR}/${cleanName}.txt`;
+    }
+
+    function ensureQueueDir() {
+        const vfs = getVfs();
+        if (!vfs.dirs.includes(VIDEO_QUEUE_DIR)) {
+            vfs.dirs.push(VIDEO_QUEUE_DIR);
+            saveVfs(vfs);
+        }
+    }
+
+    function parseQueueLines(content) {
+        const lines = content.split(/\r?\n/);
+        return lines.map((line, index) => {
+            const trimmed = line.trim();
+            const isComment = trimmed.startsWith('#');
+            const playableText = trimmed.split(/\s+#/)[0].trim().split(/\s+/)[0] || '';
+            const vid = !isComment ? extractYoutubeId(playableText) : null;
+            return { line, index, trimmed, playableText, isComment, videoId: vid };
+        });
+    }
+
+    async function readQueueContent(name) {
+        const path = getQueuePath(name);
+        const files = getVfsFiles();
+        if (!files[path]) return '';
+        const content = await getVfsFileContent(path);
+        return content === null ? '' : content;
+    }
+
+    function saveQueueContent(name, content) {
+        ensureQueueDir();
+        saveVfsFile(getQueuePath(name), content);
+    }
+
+    async function playNextQueueItem(name, options = {}) {
+        const queueName = normalizeQueueName(name);
+        const content = await readQueueContent(queueName);
+        const parsed = parseQueueLines(content);
+        const nextItem = parsed.find(item => item.videoId);
+        if (!nextItem) {
+            activeAutoQueueName = null;
+            videoPlaybackActive = false;
+            printCli(`queue "${queueName}" に未再生の動画はありません。`, options.fromAuto ? 'muted' : 'warning');
+            return false;
+        }
+
+        const updatedLines = content.split(/\r?\n/);
+        updatedLines[nextItem.index] = `# played ${new Date().toISOString()} ${nextItem.line}`;
+        saveQueueContent(queueName, updatedLines.join('\n').replace(/\s*$/g, '') + '\n');
+
+        activeAutoQueueName = queueName;
+        playYoutubeVideoIds([nextItem.videoId], `queue:${queueName}`, true, { autoAdvanceQueue: queueName });
+        printCli(`queue "${queueName}" から再生しました: ${nextItem.line}`, 'success');
+        printCli(`再生済みとしてコメントアウトしました: ${getQueuePath(queueName)}`, 'muted');
+        return true;
+    }
+
+    async function handleQueueCommand(subArgs) {
+        const sub = (subArgs[0] || 'list').toLowerCase();
+        const name = normalizeQueueName(subArgs[1] || 'default');
+
+        if (sub === 'add') {
+            const targetName = normalizeQueueName(subArgs[1] || 'default');
+            const item = subArgs[2];
+            if (!item) {
+                printCli('Usage: queue add <name> <YouTube URL or ID>', 'danger');
+                return;
+            }
+            const vid = extractYoutubeId(item);
+            if (!vid) {
+                printCli('queue add: 有効なYouTube URLまたは動画IDを指定してください。', 'danger');
+                return;
+            }
+            const comment = subArgs.slice(3).join(' ').trim();
+            const line = `${item}${comment ? ` # ${comment}` : ''}`;
+            const content = await readQueueContent(targetName);
+            const next = `${content.replace(/\s*$/g, '')}${content.trim() ? '\n' : ''}${line}`;
+            saveQueueContent(targetName, next + '\n');
+            printCli(`queue "${targetName}" に追加しました: ${line}`, 'success');
+            if (videoPlaybackActive) {
+                activeAutoQueueName = targetName;
+                printCli(`現在の再生後に queue "${targetName}" を自動再生します。`, 'muted');
+            }
+            window.say(`再生キュー「${targetName}」に追加したよ。`, 'happy');
+            return;
+        }
+
+        if (sub === 'play' || sub === 'next') {
+            await playNextQueueItem(name);
+            return;
+        }
+
+        if (sub === 'playall') {
+            const content = await readQueueContent(name);
+            const videoIds = parseQueueLines(content).filter(item => item.videoId).map(item => item.videoId);
+            if (videoIds.length === 0) {
+                printCli(`queue "${name}" に未再生の動画はありません。`, 'warning');
+                return;
+            }
+            playYoutubeVideoIds(videoIds, `queue:${name}:all`, true);
+            printCli(`queue "${name}" の未再生 ${videoIds.length} 件を連続再生します。`, 'success');
+            return;
+        }
+
+        if (sub === 'stop') {
+            activeAutoQueueName = null;
+            printCli('queue: 自動送りを停止しました。', 'success');
+            return;
+        }
+
+        if (sub === 'list') {
+            const target = subArgs[1];
+            if (!target) {
+                ensureQueueDir();
+                const vfs = getVfs();
+                const queueNames = Object.keys(vfs.files)
+                    .filter(path => path.startsWith(`${VIDEO_QUEUE_DIR}/`) && path.endsWith('.txt'))
+                    .map(path => path.slice(VIDEO_QUEUE_DIR.length + 1, -4));
+                if (queueNames.length === 0) {
+                    printCli('queue: まだキューはありません。queue add default <URL> で作れます。', 'muted');
+                    return;
+                }
+                printCli('--- queues ---', 'info');
+                queueNames.forEach(queueName => printCli(`${queueName} (${getQueuePath(queueName)})`));
+                return;
+            }
+
+            const content = await readQueueContent(name);
+            if (!content.trim()) {
+                printCli(`queue "${name}" は空です。`, 'muted');
+                return;
+            }
+            printCli(`--- queue: ${name} ---`, 'info');
+            content.split(/\r?\n/).forEach((line, index) => {
+                if (line.trim()) printCli(`${String(index + 1).padStart(2, '0')}: ${line}`);
+            });
+            return;
+        }
+
+        if (sub === 'edit') {
+            await handleNanoCommand([getQueuePath(name)]);
+            return;
+        }
+
+        if (sub === 'path') {
+            printCli(getQueuePath(name), 'info');
+            return;
+        }
+
+        printCli('Usage: queue add|play|playall|list|edit|path <name> ... / qplay <name>', 'danger');
     }
 
     function handleOpenCommand(subArgs) {
@@ -2294,6 +3273,22 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const intervalInput = document.getElementById('kazunoSpeechInterval');
             if (intervalInput) intervalInput.value = sec;
+        } else if (sub === 'float') {
+            const mode = (subArgs[1] || 'toggle').toLowerCase();
+            let enabled = AppState.settings.kazuno_float_enabled;
+            if (mode === 'on' || mode === 'true' || mode === '1') {
+                enabled = true;
+            } else if (mode === 'off' || mode === 'false' || mode === '0') {
+                enabled = false;
+            } else if (mode === 'toggle') {
+                enabled = !enabled;
+            } else {
+                printCli('Usage: kazuno float on|off|toggle', 'danger');
+                return;
+            }
+            saveSetting('kazuno_float_enabled', enabled);
+            applyKazunoFloatSetting();
+            printCli(`Kazuno float animation: ${enabled ? 'on' : 'off'}`, 'success');
         } else {
             const allowedEmotions = ['neutral', 'happy', 'angry', 'sad', 'fun', 'thinking', 'present'];
             if (allowedEmotions.includes(sub)) {
@@ -2923,12 +3918,13 @@ J_QGZopb1zU
             <div class="editor-status-bar" id="editorStatusBar"></div>
             <div class="editor-shortcuts">
                 <div class="shortcut-item" id="editorShortcutHelp"><span class="key">^G</span><span class="label">Get Help</span></div>
-                <div class="shortcut-item" id="editorShortcutSave"><span class="key">^O</span><span class="label">WriteOut</span></div>
+                <div class="shortcut-item" id="editorShortcutSave"><span class="key">F2</span><span class="label">Save</span></div>
                 <div class="shortcut-item" id="editorShortcutRead"><span class="key">^R</span><span class="label">Read File</span></div>
                 <div class="shortcut-item" id="editorShortcutPrev"><span class="key">^Y</span><span class="label">Prev Pg</span></div>
                 <div class="shortcut-item" id="editorShortcutCut"><span class="key">^K</span><span class="label">Cut Text</span></div>
                 <div class="shortcut-item" id="editorShortcutPos"><span class="key">^C</span><span class="label">Cur Pos</span></div>
-                <div class="shortcut-item" id="editorShortcutExit"><span class="key">^X</span><span class="label">Exit</span></div>
+                <div class="shortcut-item" id="editorShortcutExit"><span class="key">F3</span><span class="label">Exit</span></div>
+                <div class="shortcut-item" id="editorShortcutSaveExit"><span class="key">F4</span><span class="label">SaveExit</span></div>
                 <div class="shortcut-item" id="editorShortcutJustify"><span class="key">^J</span><span class="label">Justify</span></div>
                 <div class="shortcut-item" id="editorShortcutSearch"><span class="key">^W</span><span class="label">Where Is</span></div>
                 <div class="shortcut-item" id="editorShortcutNext"><span class="key">^V</span><span class="label">Next Pg</span></div>
@@ -3003,6 +3999,10 @@ J_QGZopb1zU
 
         // Add action triggers
         document.getElementById('editorShortcutSave').addEventListener('click', saveContent);
+        document.getElementById('editorShortcutSaveExit').addEventListener('click', () => {
+            saveContent();
+            exitEditor();
+        });
         document.getElementById('editorShortcutExit').addEventListener('click', () => {
             if (textarea.value !== savedContent) {
                 if (confirm('変更が保存されていません。保存せずに終了しますか？')) {
@@ -3032,7 +4032,16 @@ J_QGZopb1zU
         });
 
         textarea.addEventListener('keydown', e => {
-            if (e.ctrlKey && e.key === 's') {
+            if (e.key === 'F2') {
+                e.preventDefault();
+                saveContent();
+            } else if (e.key === 'F3' || e.key === 'Escape') {
+                e.preventDefault();
+                document.getElementById('editorShortcutExit').click();
+            } else if (e.key === 'F4') {
+                e.preventDefault();
+                document.getElementById('editorShortcutSaveExit').click();
+            } else if (e.ctrlKey && e.key === 's') {
                 e.preventDefault();
                 saveContent();
             } else if (e.ctrlKey && e.key === 'q') {

@@ -11,6 +11,14 @@
   <!-- Lightbox2 CSS -->
   <link href="./20251012_files/lightbox.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="../../style/diary_style.css">
+  <style>
+    h3 {
+      color: initial;
+      text-align: center;
+      background-color: initial;
+    }
+  </style>
+  </style>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 
@@ -297,7 +305,86 @@ wave = sin(T) + (sin(T*aa)) / aa + (sin(T*ab)) / ab + (sin(T*ac)) / ac + (sin(T*
 
 x = wave
 wave*0.15</code></pre>
-    ひとこと：変な形です（コメントがネタギレしましたｗ）この後、高調波になっていくとナイキストで折り返してヘンな音が入りつつも、サイン波に近づいていくのです。<br />
+    ひとこと：変な形です（コメントがネタ切れしましたｗ）この後、高調波になっていくとナイキストで折り返してヘンな音が入りつつも、サイン波に近づいていくのです。<br />
+    <br />
+    <hr />
+    <h2>標本系</h2>
+    <h3>位相を粗くサンプリングする階段波</h3>
+    <hr />
+    <a
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIAqACAvCgTAKigS1wAsAdAOzIHcBDANzHRSoCMBnAChb1LYAYA6AKzYkAShFkyEBtTqVaYbPwAcIADQgWVAGZgALgE8EGgPZbdakABMAxgh7qA5lS52+mAepbWqAGzBGARh5+MkxgvjIAZnCyABYY0gEEgDYEgHYEpQSATgSgvPyI0gCw-gsmKhYwAAkALwRY+PUaPBhdAGUAJQas4IBfIA">
+      <img src="waveform_museum_src/stairway.png" , class="yokonaga-image">
+    </a>
+    <pre class="codebox"><code>N = 12
+q = floor(ph*N)/N
+sin(2*pi*q)</code></pre>
+    　　ひとこと： <code>ph</code> を12段階に丸めてからサイン波に突っ込んでる形です。ビットクラッシャーの時間方向版です。<br />
+    <br />
+    <hr />
+    <h3>正弦波からサンプル点を線形補完する</h3>
+    <hr />
+    <a
+      href=../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIByACAvCgrAHQHYFd0UoALAKiTwEsiAzAGwHtGYAKfASjwEMiBnKrlYAmMlCplWVAPRIOXXACN+gkWImspAagCMHWfLy0ihALQoqPFFpStFp7hzK0QAGhB9utMABcAngggAMb0VFBuIAAmQQgADO4A5tyCcQB0wpjufEHc9GCBOrGxqXjCRSW4AMzleAAsNbiYDQBsDQDsDQAcDQCcDYX9AxU6ZcURitx8YAASAF4ItfXuAG5UMD4AygBKC91F7lDc61S5AOrcy-mIPtyKeRGHx7l8gQDEMNw+VIwo3AC2UDwOhQOjwr2EKGKmBQKEAp3KAaDlAM0MgEOGQDPDIAJhkARQyAMoZ0YBaOUAQAyASHNAJ1KgGsGQDqDIB9BkAIgyAFg1ABAqgHsGV6AJIZAFJKgBM0sGVSGpSqVMG1PkZMHQ4rCMHNPk6Npgtoy2pgzoyjIgAC+QA">
+      <img src="waveform_museum_src/linear_interpolation.png" , class="yokonaga-image">
+    </a>
+    <pre class="codebox"><code>N = 5
+u = ph*N
+i = floor(u)
+a = sin(2*pi*(i/N))
+b = sin(2*pi*((i+1)/N))
+f = u - i
+a + (b-a)*f</code></pre>
+    　　ひとこと： <code>ph</code> を5段階に丸めて、直線でつないで再構成します。<br />
+    <br />
+    <hr />
+    <h3>ホールドと線形補完の中間</h3>
+    <hr />
+    <a
+      href=../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIDmBDALmABAXkwZwygAo8BLAOyICYAqKUmgZjoAsBKTAWkwAYA6KgFY2AHXJlKteqw41MqDCAA0IPCgBmYNAE8EIAMYAbUlGUgAJvoQ8VqCtYGCVefSkNg9ARh78xVH3xijAFiACwh5IIRAGwRAOwRABwRAJwR3ukZgeSe-vxmAEYoeGAAEgBeCKHhKgBupDBoAMoASlXJPipQKI2kbgDqKLUeiGgoBe5m3b1ueHoAxDDopAD2mCgAtlBinpieYvNUvHyCmJiAp3KA0HKAzQyAhwyAzwyAEwyARQyAZQyPgLRygEAMgJDmgJ1KgGsGQDqDIB9BkAIgyAFg1ABAqgHsGeaAJIZAFJKgBM0g6MY6MRgHULHIQHU78KgHaLHTxxA5xUmhA6JUlCEAAXyAA">
+      <img src="waveform_museum_src/hold_linear_mix.png" , class="yokonaga-image">
+    </a>
+    <pre class="codebox"><code>N = 10
+u = ph*N
+i = floor(u)
+f = u - i
+a = sin(2*pi*(i/N))
+b = sin(2*pi*((i+1)/N))
+mix = 0.35
+hold = a
+lin = a + (b-a)*f
+hold*(1-mix) + lin*mix</code></pre>
+    　　ひとこと： <code>mix = 0</code> なら階段化、<code>mix = 1</code>なら線形補完です。
+    今回は <code>mix = 0.35</code> なので、どちらとも言えず溶けています。
+    見たところ、サンプリング数（今回は <code>N</code>）の一つ上と一つ下の倍音が顕在化しているみたいですね。<br />
+    <br />
+    <hr />
+    <h3>トリガー信号が一定以上のときだけ波を出す</h3>
+    <hr />
+    <a
+      href=../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIDmBDALmABAXkwZwygAo8BLAOyICYAqKUmgZjoAsBKTAWkwAYA6KgFY2AHXJlKteqw41MqDCAA0IPCgBmYNAE8EIAMYAbUlGUgAJvoQ8VqCtYGCVefSkNg9ARh78xVH3xijAFiACwh5IIRAGwRAOwRABwRAJwR3ukZgeSe-vxmAEYoeGAAEgBeCKHhKgBupDBoAMoASlXJPipQKI2kbgDqKLUeiGgoBe5m3b1ueHoAxDDopAD2mCgAtlBinpieYvNUvHyCmJiAp3KA0HKAzQyAhwyAzwyAEwyARQyAZQyPgLRygEAMgJDmgJ1KgGsGQDqDIB9BkAIgyAFg1ABAqgHsGeaAJIZAFJKgBM0g6MY6MRgHULHIQHU78KgHaLHTxxA5xUmhA6JUlCEAAXyAA">
+      <img src="waveform_museum_src/triple_phase_gate.png" , class="yokonaga-image">
+    </a>
+    <pre class="codebox"><code>N = 3
+gate = step(sin(2*pi*ph*N))
+sin(2*pi*ph) * gate</code></pre>
+    　　ひとこと： <code>N = 3</code> のゲート用の波形（0または1）を得て、それによって発音するかどうかを決めています。
+    <code>N</code> を自由に変えても色んな面白い形の波が出てきます。やはりNの前後の周波数が強くなる感じ？<br />
+    <br />
+    <hr />
+    <h3>トリガーでサンプリングしたような段階的変調</h3>
+    <hr />
+    <a
+      href=../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIDmBDALmABAXkwZwygAo8BLAOyICYAqKUmgZjoAsBKTAWkwAYA6KgFY2AHXJlKteqw41MqDCAA0IPCgBmYNAE8EIAMYAbUlGUgAJvoQ8VqCtYGCVefSkNg9ARh78xVH3xijAFiACwh5IIRAGwRAOwRABwRAJwR3ukZgeSe-vxmAEYoeGAAEgBeCKHhKgBupDBoAMoASlXJPipQKI2kbgDqKLUeiGgoBe5m3b1ueHoAxDDopAD2mCgAtlBinpieYvNUvHyCmJiAp3KA0HKAzQyAhwyAzwyAEwyARQyAZQyPgLRygEAMgJDmgJ1KgGsGQDqDIB9BkAIgyAFg1ABAqgHsGeaAJIZAFJKgBM0g6MY6MRgHULHIQHU78KgHaLHTxxA5xUmhA6JUlCEAAXyAA">
+      <img src="waveform_museum_src/trigger_stepwise_mod.png" , class="yokonaga-image">
+    </a>
+    <pre class="codebox"><code>N = 7
+k = floor(ph*N)
+held = sin(2*pi*(k/N)*3)
+sin(2*pi*ph) * (0.5 + 0.5*held)</code></pre>
+    　　ひとこと： <code>held</code> は<a
+      href="waveform_museum_src/trigger_stepwise_mod(lator).png">このような波形</a>で、それによって音量を変動させています。
+    ChatGPTいわく「モジュラーシンセによくある」ということなのですが、当の私が例によって無知なのであまりわからないです（苦笑）
+    ふしぎなことに、こちらは<code>N = 7</code>の前後である6,8で倍音が消えるようです。なんでなんだろう？<br />
     <br />
     <hr />
     <h2>部分音合成によるn平均律用波形</h2>

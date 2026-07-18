@@ -12,6 +12,100 @@ export class RuleEvaluator {
     
     this.correctionMode = 'absolute'; // 'absolute' | 'ratio'
     this.customJsFunction = null;
+    this.ratioRuleOverrides = new Map();
+  }
+
+  normalizeRuleCount(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return 0;
+    return Math.round(numeric * 1000) / 1000;
+  }
+
+  getRatioOverrideKey(totalWeight) {
+    return String(this.normalizeRuleCount(totalWeight));
+  }
+
+  parseActualCountList(text) {
+    const set = new Set();
+    String(text || '').split(/[,\s]+/).forEach(part => {
+      if (!part) return;
+      const value = Number(part);
+      if (Number.isFinite(value) && value >= 0) {
+        set.add(this.normalizeRuleCount(value));
+      }
+    });
+    return set;
+  }
+
+  formatActualCountList(set) {
+    return Array.from(set || []).sort((a, b) => a - b).join(',');
+  }
+
+  setRatioRuleOverride(totalWeight, birthText, survivalText) {
+    const key = this.getRatioOverrideKey(totalWeight);
+    const birthSet = this.parseActualCountList(birthText);
+    const survivalSet = this.parseActualCountList(survivalText);
+    if (birthSet.size === 0 && survivalSet.size === 0) {
+      this.ratioRuleOverrides.delete(key);
+      return;
+    }
+    this.ratioRuleOverrides.set(key, { birthSet, survivalSet });
+  }
+
+  clearRatioRuleOverride(totalWeight) {
+    this.ratioRuleOverrides.delete(this.getRatioOverrideKey(totalWeight));
+  }
+
+  clearRatioRuleOverrides() {
+    this.ratioRuleOverrides.clear();
+  }
+
+  getRatioRuleOverride(totalWeight) {
+    return this.ratioRuleOverrides.get(this.getRatioOverrideKey(totalWeight)) || null;
+  }
+
+  getActiveRuleContext(aliveSum, totalWeight) {
+    if (this.correctionMode === 'ratio' && totalWeight > 0) {
+      const override = this.getRatioRuleOverride(totalWeight);
+      if (override) {
+        return {
+          evaluatedCount: this.normalizeRuleCount(aliveSum),
+          birthSet: override.birthSet,
+          survivalSet: override.survivalSet,
+          source: 'ratio-override'
+        };
+      }
+
+      return {
+        evaluatedCount: Math.round((aliveSum / totalWeight) * 8),
+        birthSet: this.birthSet,
+        survivalSet: this.survivalSet,
+        source: 'ratio'
+      };
+    }
+
+    return {
+      evaluatedCount: Math.floor(aliveSum),
+      birthSet: this.birthSet,
+      survivalSet: this.survivalSet,
+      source: 'absolute'
+    };
+  }
+
+  serializeRatioRuleOverrides() {
+    return Array.from(this.ratioRuleOverrides.entries()).map(([degree, rule]) => ({
+      degree,
+      birth: this.formatActualCountList(rule.birthSet),
+      survival: this.formatActualCountList(rule.survivalSet)
+    }));
+  }
+
+  deserializeRatioRuleOverrides(items = []) {
+    this.ratioRuleOverrides.clear();
+    items.forEach(item => {
+      if (!item || item.degree === undefined) return;
+      this.setRatioRuleOverride(item.degree, item.birth || '', item.survival || '');
+    });
   }
 
   /**
@@ -141,15 +235,8 @@ export class RuleEvaluator {
     });
 
     // 2. Apply Neighborhood Count Correction
-    let evaluatedCount = aliveSum;
-    if (this.correctionMode === 'ratio' && maxPossibleNeighbors > 0) {
-      // Normalize to standard 8-neighbor equivalents
-      const ratio = aliveSum / maxPossibleNeighbors;
-      evaluatedCount = Math.round(ratio * 8);
-    } else {
-      // Absolute count: round down for fractional weights
-      evaluatedCount = Math.floor(aliveSum);
-    }
+    const activeRule = this.getActiveRuleContext(aliveSum, maxPossibleNeighbors);
+    const evaluatedCount = activeRule.evaluatedCount;
 
     // 3. Apply state transition rules
     const currentState = face.state;
@@ -158,11 +245,11 @@ export class RuleEvaluator {
       // Generations rules:
       // State 0 (Dead) -> State 1 (Alive) if Birth rule matched
       if (currentState === 0) {
-        return this.birthSet.has(evaluatedCount) ? 1 : 0;
+        return activeRule.birthSet.has(evaluatedCount) ? 1 : 0;
       }
       // State 1 (Alive) -> State 1 (Survive) if Survival matched, else State 2 (Dying)
       else if (currentState === 1) {
-        return this.survivalSet.has(evaluatedCount) ? 1 : 2;
+        return activeRule.survivalSet.has(evaluatedCount) ? 1 : 2;
       }
       // State s >= 2 (Dying / Fading) -> increments state, or wraps to 0
       else {
@@ -172,9 +259,9 @@ export class RuleEvaluator {
     } else {
       // Standard 2-state Conway-like rule
       if (currentState === 0) {
-        return this.birthSet.has(evaluatedCount) ? 1 : 0;
+        return activeRule.birthSet.has(evaluatedCount) ? 1 : 0;
       } else {
-        return this.survivalSet.has(evaluatedCount) ? 1 : 0;
+        return activeRule.survivalSet.has(evaluatedCount) ? 1 : 0;
       }
     }
   }
