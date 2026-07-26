@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#160f0d">
+  <meta name="description" content="画像をタイルROMに見立て、アドレス線・データ線の接触不良風グリッチを生成するブラウザツール">
+  <title>画像ROM 接触不良グリッチャー</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-copy">
+      <p class="eyebrow">CARTRIDGE IMAGE LAB</p>
+      <h1>画像ROM 接触不良グリッチャー</h1>
+      <p>好きな画像を仮想的なタイルROMとして読み込み、アドレス線やデータ線がうまく接触していないような崩れ方を作ります。</p>
+    </div>
+    <div class="header-actions" aria-label="画像の読み込み">
+      <label class="ig-file primary">主画像を開く<input type="file" id="ig-input" accept="image/*"></label>
+      <label class="ig-file">別タイル画像<input type="file" id="ig-alt-input" accept="image/*"></label>
+      <label class="ig-file">JSONを読み込む<input type="file" id="ig-json-input" accept=".json,application/json"></label>
+      <button class="ig-button" id="ig-load-default-json">default.jsonを読み込む</button>
+      <button class="ig-button" id="ig-load-default-subtile">subTile_default.pngを別タイルへ</button>
+    </div>
+  </header>
+
+  <main id="image-glitch-panel" class="show">
+    <section class="ig-shell" aria-labelledby="ig-title">
+      <div class="ig-head">
+        <div>
+          <p class="panel-kicker">IMAGE / TILE BUS FAULT</p>
+          <h2 id="ig-title">接触不良を調整する</h2>
+        </div>
+        <p>画像は外部へ送信されず、このブラウザ内だけで処理されます。</p>
+      </div>
+
+      <div class="ig-body">
+        <section class="ig-preview-wrap" aria-label="グリッチ画像プレビュー">
+          <div class="ig-preview" id="ig-preview">
+            <div id="ig-empty">
+              <span class="empty-icon" aria-hidden="true">▦</span>
+              <strong>画像を選んで実験を始める</strong>
+              <span>PNG / JPEG / WebP などに対応しています。</span>
+            </div>
+            <canvas id="ig-canvas" hidden tabindex="0" role="button" aria-label="画像プレビューを全画面表示"></canvas>
+            <canvas id="ig-fullscreen-canvas" hidden tabindex="0" role="button" aria-label="全画面表示を終了"></canvas>
+            <div id="ig-tile-selection" aria-hidden="true"></div>
+          </div>
+          <div class="preview-help">
+            <span>原寸最大 2048 px</span>
+            <span>プレビューはドット表示</span>
+            <span>画像クリックで全画面</span>
+            <span>PNG / 連番ZIP出力</span>
+          </div>
+        </section>
+
+        <aside class="ig-controls" aria-label="グリッチ設定">
+          <section class="control-group action-group">
+            <h3><span>05</span> 時間と出力</h3>
+            <label>フレームごとの揺らぎ <output id="ig-jitter-out">55%</output>
+              <input id="ig-jitter" type="range" min="0" max="100" value="55">
+            </label>
+            <label>自動変化の間隔 <output id="ig-auto-speed-out">350ms</output>
+              <input id="ig-auto-speed" type="range" min="80" max="1600" step="10" value="350">
+            </label>
+            <label>出力フレーム数
+              <input id="ig-count" type="number" min="1" max="24" value="6">
+            </label>
+            <label>全画面の表示
+              <select id="ig-fullscreen-mode">
+                <option value="cover" selected>画面全体へ拡大（端を切取）</option>
+                <option value="contain">画像全体を拡大</option>
+                <option value="tile">原寸で敷き詰め</option>
+              </select>
+            </label>
+            <div class="ig-row">
+              <button class="ig-button primary" id="ig-reroll" disabled>接触を再抽選</button>
+              <button class="ig-button" id="ig-auto" disabled>自動変化 ▶</button>
+              <button class="ig-button" id="ig-original" disabled>原画に戻す</button>
+            </div>
+            <div class="ig-row">
+              <button class="ig-button" id="ig-save" disabled>このフレームをPNG保存</button>
+              <button class="ig-button primary" id="ig-save-frames" disabled>複数フレームをZIP保存</button>
+              <button class="ig-button" id="ig-save-json" disabled>現在状態をJSON保存</button>
+            </div>
+          </section>
+
+          <section class="control-group">
+            <h3><span>01</span> タイルROM</h3>
+            <label>タイルサイズ
+              <select id="ig-tile">
+                <option value="8">8 × 8（ファミコン風）</option>
+                <option value="16" selected>16 × 16</option>
+                <option value="32">32 × 32</option>
+              </select>
+            </label>
+            <label>別タイルの混入率 <output id="ig-alt-rate-out">35%</output>
+              <input id="ig-alt-rate" type="range" min="0" max="100" value="35" disabled>
+            </label>
+            <label class="ig-check"><input id="ig-alt-palette" type="checkbox" disabled><span>別タイル混入時、元タイルの色を保持</span></label>
+            <label class="ig-check"><input id="ig-alt-shuffle" type="checkbox" disabled><span>サブタイルを常にシャッフル（01・03共通）</span></label>
+            <div class="ig-row split-row">
+              <span id="ig-alt-state" class="ig-note">別タイル: 未読込</span>
+              <button class="ig-button compact" id="ig-alt-clear" disabled>外す</button>
+            </div>
+            <p class="group-note event-order">別タイル画像は伸縮せず、元の縦横比と画素サイズのまま主画像全体を覆うまで繰り返します。シャッフル時は現在のタイルサイズで分割し、再抽選・自動変化の各フレームで配置を組み替えます。</p>
+          </section>
+
+          <section class="control-group">
+            <h3><span>02</span> 全画面イベント</h3>
+            <p class="group-note">再抽選ごとに、設定した確率で全タイルへ一括発生します。処理順はアドレス線の接触不良より後です。</p>
+            <label>上半分を下半分へコピー <output id="ig-half-rate-out">0%</output>
+              <input id="ig-half-rate" type="range" min="0" max="100" value="0">
+            </label>
+            <label>単一模様化（パレット保持） <output id="ig-collapse-rate-out">0%</output>
+              <input id="ig-collapse-rate" type="range" min="0" max="100" value="0">
+            </label>
+            <label class="ig-check"><input id="ig-collapse-alt" type="checkbox" checked><span>単一模様の元に「別タイル」を許可</span></label>
+            <div class="ig-row">
+              <button class="ig-button" id="ig-pick-tile" disabled>主画像／別画像から元タイルを選択</button>
+              <button class="ig-button" id="ig-pick-clear" disabled>ランダムへ戻す</button>
+            </div>
+            <label>偶数タイルを直前からコピー <output id="ig-pair-rate-out">0%</output>
+              <input id="ig-pair-rate" type="range" min="0" max="100" value="0">
+            </label>
+          </section>
+
+          <section class="control-group">
+            <h3><span>03</span> 近い色のタイル群</h3>
+            <p class="group-note">アドレス線の接触不良後に現れたタイルの平均色を調べ、選択色に近いものだけを再抽選時のイベント対象にします。RGBデータ線と縦縞はその後に適用されます。</p>
+            <div class="color-pick-row">
+              <label class="color-well">基準色<input id="ig-group-color" type="color" value="#808080"></label>
+              <button class="ig-button" id="ig-pick-color" disabled>画像から色を拾う</button>
+              <button class="ig-button" id="ig-add-group-color">候補に追加</button>
+            </div>
+            <div id="ig-group-colors" class="color-candidates" aria-label="基準色の候補"></div>
+            <p id="ig-active-group-color" class="active-color-note">再抽選色: #808080</p>
+            <label>色の近さ <output id="ig-color-tolerance-out">48</output>
+              <input id="ig-color-tolerance" type="range" min="0" max="255" value="48">
+            </label>
+            <p id="ig-color-match-count" class="match-count">対象: 主画像の読込後に計算</p>
+            <label>別画像の模様＋色へ置換 <output id="ig-color-alt-rate-out">0%</output>
+              <input id="ig-color-alt-rate" type="range" min="0" max="100" value="0" disabled>
+            </label>
+            <label>別画像の模様へ置換（色保持） <output id="ig-color-palette-rate-out">0%</output>
+              <input id="ig-color-palette-rate" type="range" min="0" max="100" value="0" disabled>
+            </label>
+            <div class="color-pick-row tint-row">
+              <label class="color-well">変更色<input id="ig-tint-color" type="color" value="#e14b3b"></label>
+            </div>
+            <label>指定色へ着色 <output id="ig-color-tint-rate-out">0%</output>
+              <input id="ig-color-tint-rate" type="range" min="0" max="100" value="0" disabled>
+            </label>
+            <p class="group-note event-order">同時発生時: 別画像の色 → 色保持 → 指定色。模様と明暗は可能な限り残します。</p>
+          </section>
+
+          <section class="control-group">
+            <h3><span>04</span> バス接触不良</h3>
+            <label>アドレス線の接触不良 <output id="ig-address-out">3 本</output>
+              <input id="ig-address" type="range" min="0" max="10" value="3">
+            </label>
+            <div class="fault-float">
+              <label class="ig-check"><input id="ig-address-float" type="checkbox"><span>本数を時間で浮動</span></label>
+              <div class="fault-range"><span>変動範囲</span><input id="ig-address-min" type="number" min="0" max="10" value="1" disabled><span>〜</span><input id="ig-address-max" type="number" min="0" max="10" value="5" disabled><span>本</span></div>
+            </div>
+            <label>RGBデータ線（全面） <output id="ig-data-out">1 本</output>
+              <input id="ig-data" type="range" min="0" max="8" value="1">
+            </label>
+            <div class="fault-float">
+              <label class="ig-check"><input id="ig-data-float" type="checkbox"><span>本数を時間で浮動</span></label>
+              <div class="fault-range"><span>変動範囲</span><input id="ig-data-min" type="number" min="0" max="8" value="0" disabled><span>〜</span><input id="ig-data-max" type="number" min="0" max="8" value="3" disabled><span>本</span></div>
+            </div>
+            <label>PPUデータ線（縦縞） <output id="ig-stripes-out">2 本</output>
+              <input id="ig-stripes" type="range" min="0" max="8" value="2">
+            </label>
+            <div class="fault-float">
+              <label class="ig-check"><input id="ig-stripes-float" type="checkbox"><span>本数を時間で浮動</span></label>
+              <div class="fault-range"><span>変動範囲</span><input id="ig-stripes-min" type="number" min="0" max="8" value="0" disabled><span>〜</span><input id="ig-stripes-max" type="number" min="0" max="8" value="5" disabled><span>本</span></div>
+            </div>
+            <label>縦縞の形
+              <select id="ig-stripe-style">
+                <option value="mixed" selected>実線＋破線（混在）</option>
+                <option value="solid">実線のみ</option>
+                <option value="dashed">破線のみ</option>
+              </select>
+            </label>
+            <button class="ig-button full" id="ig-stripe-preset" disabled>nes-picture 縦縞プリセット</button>
+          </section>
+
+          <div id="ig-status" role="status" aria-live="polite"></div>
+          <p class="ig-note detail-note">単一模様の元タイルと基準色は、主画像・別タイル画像を原画のまま開く選択画面から固定できます。複数の基準色は再抽選ごとに1色が選ばれます。接触不良本数の浮動は自動変化と連番出力の各フレームで指定範囲から変化します。選択枠は保存画像には入りません。</p>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="ig-source-picker" class="source-picker" aria-labelledby="ig-picker-title">
+    <div class="picker-shell">
+      <header class="picker-head">
+        <div>
+          <p class="panel-kicker">SOURCE IMAGE PICKER</p>
+          <h2 id="ig-picker-title">原画から元タイルを選択</h2>
+        </div>
+        <button class="ig-button" id="ig-picker-close">閉じる</button>
+      </header>
+      <p id="ig-picker-help" class="picker-help">主画像または別タイル画像のタイルをクリックしてください。</p>
+      <div class="picker-grid">
+        <section class="picker-bank">
+          <h3>主画像</h3>
+          <div class="picker-canvas-wrap">
+            <canvas id="ig-picker-main"></canvas>
+            <div id="ig-picker-main-selection" class="picker-selection" aria-hidden="true"></div>
+          </div>
+        </section>
+        <section class="picker-bank" id="ig-picker-alt-bank">
+          <h3>別タイル画像</h3>
+          <div class="picker-canvas-wrap">
+            <canvas id="ig-picker-alt"></canvas>
+            <div id="ig-picker-alt-selection" class="picker-selection" aria-hidden="true"></div>
+            <p id="ig-picker-alt-empty">別タイル画像はまだ読み込まれていません。</p>
+          </div>
+        </section>
+      </div>
+      <p id="ig-picker-status" class="picker-status" role="status" aria-live="polite"></p>
+    </div>
+  </dialog>
+
+  <footer>
+    <p>画像の記憶を、少しだけ接触不良に。</p>
+  </footer>
+  <script src="app.js"></script>
+</body>
+</html>

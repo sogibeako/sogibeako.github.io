@@ -1,0 +1,506 @@
+{
+    "meta": {
+        "created_at": "2026-07-21T08:47:27+00:00",
+        "reason": "before_upload",
+        "data_hash": "73f9ab5647d06b33a066772ba6e62847ff0786b9c4d7f995f858a01b46d5cb36",
+        "hash_algorithm": "sha256",
+        "counts": {
+            "todos": 23,
+            "events": 8,
+            "done_items": 19
+        },
+        "latest_data_timestamp": "2026-07-21 08:29:25"
+    },
+    "data": {
+        "schema": "kazuno-backup-v1",
+        "tables": {
+            "todos": [
+                {
+                    "id": 5,
+                    "title": "日記を書く",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": "2026-06-26",
+                    "created_at": "2026-06-26 10:58:48",
+                    "updated_at": null
+                },
+                {
+                    "id": 6,
+                    "title": "設計評価あと5件",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-06-26 11:18:04",
+                    "updated_at": null
+                },
+                {
+                    "id": 7,
+                    "title": "スマホ用の見栄えをよくする(一埜を表示、画像を切り抜いて胸元から上表示もつける)",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-06-26 11:22:25",
+                    "updated_at": null
+                },
+                {
+                    "id": 8,
+                    "title": "ToDoを選んで文言を修正できるようにする",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-06-26 11:24:20",
+                    "updated_at": null
+                },
+                {
+                    "id": 9,
+                    "title": "CLI入力時にガッと寄る感じとかどうしよう？ 全体的にスマホ用レイアウトの吟味。",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-06-26 11:25:22",
+                    "updated_at": null
+                },
+                {
+                    "id": 10,
+                    "title": "麻雀ゲームの順目を治す",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-06-26 20:51:44",
+                    "updated_at": null
+                },
+                {
+                    "id": 11,
+                    "title": "位相ライフゲームを作る",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-06-26 20:52:34",
+                    "updated_at": null
+                },
+                {
+                    "id": 12,
+                    "title": "麻雀、強化学習の作り方をChatGPTに聞いてCodexで回す",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-06-27 21:09:51",
+                    "updated_at": null
+                },
+                {
+                    "id": 13,
+                    "title": "ライフゲームの続きをAntigravityに",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-06-27 21:10:06",
+                    "updated_at": null
+                },
+                {
+                    "id": 14,
+                    "title": "麻雀の強化学習",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-06-27 23:29:25",
+                    "updated_at": null
+                },
+                {
+                    "id": 15,
+                    "title": "一般化ライフゲームの境界処理だけ！",
+                    "memo": "クレジット足りなかったので明日。",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-06-28 11:08:33",
+                    "updated_at": null
+                },
+                {
+                    "id": 25,
+                    "title": "モジュラー形式について",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-06-29 07:19:36",
+                    "updated_at": null
+                },
+                {
+                    "id": 26,
+                    "title": "BABA IS YOUフェアリーについて",
+                    "memo": "",
+                    "done": 0,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-06-29 07:19:49",
+                    "updated_at": null
+                },
+                {
+                    "id": 27,
+                    "title": "水炊き作る",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-06-29 07:20:24",
+                    "updated_at": null
+                },
+                {
+                    "id": 28,
+                    "title": "午後の紅茶、ストレートとレモン二個ずつ",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-07-03 08:17:09",
+                    "updated_at": null
+                },
+                {
+                    "id": 29,
+                    "title": "甘いお菓子(軽いもの)",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-07-03 08:17:37",
+                    "updated_at": null
+                },
+                {
+                    "id": 30,
+                    "title": "ChatWorksの年間利用料の領収書",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-07-08 05:11:37",
+                    "updated_at": null
+                },
+                {
+                    "id": 31,
+                    "title": "設計評価10件",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": "2026-07-10",
+                    "created_at": "2026-07-09 08:35:20",
+                    "updated_at": null
+                },
+                {
+                    "id": 32,
+                    "title": "河村邸の回答",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-07-10 15:01:39",
+                    "updated_at": null
+                },
+                {
+                    "id": 33,
+                    "title": "クラドニ図形を描画するWebアプリを作る",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-07-11 13:43:01",
+                    "updated_at": null
+                },
+                {
+                    "id": 34,
+                    "title": "設計評価10件",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-07-11 13:43:13",
+                    "updated_at": null
+                },
+                {
+                    "id": 35,
+                    "title": "一埜の夏っぽいイラスト",
+                    "memo": "",
+                    "done": 1,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-07-11 13:43:21",
+                    "updated_at": null
+                },
+                {
+                    "id": 36,
+                    "title": "眼鏡の作画を治す",
+                    "memo": "http://127.0.0.1:8030/top-image/top-0019.png",
+                    "done": 0,
+                    "priority": 0,
+                    "due_date": null,
+                    "created_at": "2026-07-21 08:29:25",
+                    "updated_at": null
+                }
+            ],
+            "events": [
+                {
+                    "id": 3,
+                    "title": "父調子悪く、呼ばれる。妹弟呼び、妹来る。",
+                    "memo": "",
+                    "event_date": "2026-06-30",
+                    "start_time": null,
+                    "end_time": null,
+                    "created_at": "2026-07-06 02:22:58",
+                    "updated_at": null
+                },
+                {
+                    "id": 4,
+                    "title": "弟来る",
+                    "memo": "",
+                    "event_date": "2026-07-01",
+                    "start_time": null,
+                    "end_time": null,
+                    "created_at": "2026-07-06 02:24:22",
+                    "updated_at": null
+                },
+                {
+                    "id": 5,
+                    "title": "父、腸の検査のため腹腔鏡。",
+                    "memo": "",
+                    "event_date": "2026-07-01",
+                    "start_time": null,
+                    "end_time": null,
+                    "created_at": "2026-07-06 02:24:52",
+                    "updated_at": null
+                },
+                {
+                    "id": 6,
+                    "title": "弟帰る",
+                    "memo": "",
+                    "event_date": "2026-07-03",
+                    "start_time": null,
+                    "end_time": null,
+                    "created_at": "2026-07-06 02:37:18",
+                    "updated_at": null
+                },
+                {
+                    "id": 2,
+                    "title": "妹帰る",
+                    "memo": "",
+                    "event_date": "2026-07-04",
+                    "start_time": null,
+                    "end_time": null,
+                    "created_at": "2026-07-06 02:22:01",
+                    "updated_at": null
+                },
+                {
+                    "id": 7,
+                    "title": "父、食事始まる。",
+                    "memo": "",
+                    "event_date": "2026-07-06",
+                    "start_time": null,
+                    "end_time": null,
+                    "created_at": "2026-07-08 05:21:46",
+                    "updated_at": null
+                },
+                {
+                    "id": 8,
+                    "title": "父、酸素の機械一つ外れる（管はまだ）",
+                    "memo": "",
+                    "event_date": "2026-07-07",
+                    "start_time": null,
+                    "end_time": null,
+                    "created_at": "2026-07-08 05:22:03",
+                    "updated_at": null
+                },
+                {
+                    "id": 9,
+                    "title": "父、心臓の機械一つ外れる。",
+                    "memo": "",
+                    "event_date": "2026-07-08",
+                    "start_time": null,
+                    "end_time": null,
+                    "created_at": "2026-07-08 05:22:15",
+                    "updated_at": null
+                }
+            ],
+            "done_items": [
+                {
+                    "id": 10,
+                    "done_date": "2026-07-15",
+                    "title": "父の面会に行った",
+                    "points": 5,
+                    "source": "template",
+                    "source_id": null,
+                    "created_at": "2026-07-21 08:23:40"
+                },
+                {
+                    "id": 18,
+                    "done_date": "2026-07-15",
+                    "title": "運動・散歩をした",
+                    "points": 4,
+                    "source": "template",
+                    "source_id": null,
+                    "created_at": "2026-07-21 08:24:47"
+                },
+                {
+                    "id": 9,
+                    "done_date": "2026-07-16",
+                    "title": "父の面会に行った",
+                    "points": 5,
+                    "source": "template",
+                    "source_id": null,
+                    "created_at": "2026-07-21 08:23:39"
+                },
+                {
+                    "id": 8,
+                    "done_date": "2026-07-17",
+                    "title": "父の面会に行った",
+                    "points": 5,
+                    "source": "template",
+                    "source_id": null,
+                    "created_at": "2026-07-21 08:23:37"
+                },
+                {
+                    "id": 17,
+                    "done_date": "2026-07-17",
+                    "title": "ToDoをこなした",
+                    "points": 5,
+                    "source": "template",
+                    "source_id": null,
+                    "created_at": "2026-07-21 08:24:42"
+                },
+                {
+                    "id": 7,
+                    "done_date": "2026-07-18",
+                    "title": "父の面会に行った",
+                    "points": 5,
+                    "source": "template",
+                    "source_id": null,
+                    "created_at": "2026-07-21 08:23:36"
+                },
+                {
+                    "id": 14,
+                    "done_date": "2026-07-18",
+                    "title": "料理をした",
+                    "points": 4,
+                    "source": "template",
+                    "source_id": null,
+                    "created_at": "2026-07-21 08:24:09"
+                },
+                {
+                    "id": 15,
+                    "done_date": "2026-07-18",
+                    "title": "買い物に行った",
+                    "points": 3,
+                    "source": "template",
+                    "source_id": null,
+                    "created_at": "2026-07-21 08:24:12"
+                },
+                {
+                    "id": 20,
+                    "done_date": "2026-07-18",
+                    "title": "勉強・制作を進めた",
+                    "points": 5,
+                    "source": "template",
+                    "source_id": null,
+                    "created_at": "2026-07-21 08:24:55"
+                },
+                {
+                    "id": 6,
+                    "done_date": "2026-07-19",
+                    "title": "父の面会に行った",
+                    "points": 5,
+                    "source": "template",
+                    "source_id": null,
+                    "created_at": "2026-07-21 08:23:33"
+                },
+                {
+                    "id": 13,
+                    "done_date": "2026-07-19",
+                    "title": "料理をした",
+                    "points": 4,
+                    "source": "template",
+                    "source_id": null,
+                    "created_at": "2026-07-21 08:24:08"
+                },
+                {
+                    "id": 19,
+                    "done_date": "2026-07-19",
+                    "title": "勉強・制作を進めた",
+                    "points": 5,
+                    "source": "template",
+                    "source_id": null,
+                    "created_at": "2026-07-21 08:24:52"
+                },
+                {
+                    "id": 11,
+                    "done_date": "2026-07-20",
+                    "title": "休憩を取れた",
+                    "points": 2,
+                    "source": "template",
+                    "source_id": null,
+                    "created_at": "2026-07-21 08:23:59"
+                },
+                {
+                    "id": 12,
+                    "done_date": "2026-07-20",
+                    "title": "洗濯をした",
+                    "points": 3,
+                    "source": "template",
+                    "source_id": null,
+                    "created_at": "2026-07-21 08:24:02"
+                },
+                {
+                    "id": 16,
+                    "done_date": "2026-07-20",
+                    "title": "ペットボトルを片付けた",
+                    "points": 3,
+                    "source": "template",
+                    "source_id": null,
+                    "created_at": "2026-07-21 08:24:36"
+                },
+                {
+                    "id": 1,
+                    "done_date": "2026-07-21",
+                    "title": "[ToDo] 一埜の夏っぽいイラスト",
+                    "points": 5,
+                    "source": "todo",
+                    "source_id": "35",
+                    "created_at": "2026-07-21 08:22:18"
+                },
+                {
+                    "id": 2,
+                    "done_date": "2026-07-21",
+                    "title": "[ToDo] クラドニ図形を描画するWebアプリを作る",
+                    "points": 5,
+                    "source": "todo",
+                    "source_id": "33",
+                    "created_at": "2026-07-21 08:22:22"
+                },
+                {
+                    "id": 3,
+                    "done_date": "2026-07-21",
+                    "title": "[ToDo] 設計評価10件",
+                    "points": 5,
+                    "source": "todo",
+                    "source_id": "34",
+                    "created_at": "2026-07-21 08:22:22"
+                },
+                {
+                    "id": 4,
+                    "done_date": "2026-07-21",
+                    "title": "父の面会に行った",
+                    "points": 5,
+                    "source": "template",
+                    "source_id": null,
+                    "created_at": "2026-07-21 08:23:30"
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2026年NazoText * 湫埜と雨滴 *</title>
+  <link rel="preload" as="font" href="/seoremium/Seoremium_clg.ttf" type="ttf" crossorigin />
+  <!-- Lightbox2 CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
+  <style>
+    /* 色は出来るだけ、SB Creative出版『日本の美しい色と言葉』から取っていく。 */
+    /* 当ページはp256『しとしと』 */
+    /* 氷雨 #e3e8f1 */
+    /* 俄雨 #6290b1 */
+    /* 長雨 #afd3e6 */
+    /* 秋雨 #609aa0 */
+    /* 五月雨 #9ec8d1 */
+
+    /* Seoremium */
+    @font-face {
+      font-family: "Seoremium_clg";
+      src: url("/seoremium/Seoremium_clg.ttf") format("truetype");
+      font-display: swap;
+    }
+
+    /* Source */
+    @font-face {
+      font-family: "Source Code Pro";
+      src: url("../jssproject/SourceCodePro-VariableFont_wght.ttf");
+      font-display: swap;
+    }
+
+    body {
+      font-size: 1rem;
+      background-color: #111822;
+      /* 青っぽい背景色 */
+      margin: 0;
+      padding: 0;
+      text-align: left;
+      line-height: 1.6;
+    }
+
+    h1 {
+      background-color: #609aa0;
+      /* 秋雨 */
+      color: black;
+      /* 文字は黒でよい */
+      padding: 0.5em;
+      /* 内側の余白で見た目よく */
+    }
+
+    h2 {
+      background-color: #6290b1;
+      /* 俄雨 */
+      color: black;
+      /* 文字は黒でよい */
+      padding: 0.2em;
+      /* 内側の余白で見た目よく */
+    }
+
+    h3 {
+      background-color: #fde5c5;
+      /* フルムーン */
+      color: black;
+      /* 文字は黒でよい */
+      padding: 0.1em;
+      /* 内側の余白で見た目よく */
+    }
+
+    .p_left {
+      text-align: left;
+    }
+
+    .wrapper {
+      max-width: 700px;
+      width: 80%;
+      margin: 50px auto;
+      padding: 20px;
+      border: 0px solid #111;
+      background-color: #afd3e6;
+      /* 長雨 */
+      font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+    }
+
+    .inner_wrapper {
+      width: 600px;
+      margin: 10px auto;
+      padding: 20px;
+      border: 1px solid #111;
+      background-color: #ffffee;
+      font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", sans-serif;
+    }
+
+    .grid-table {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 2px;
+    }
+
+    .grid-table2 {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 2px;
+    }
+
+    .cell {
+      border: 1px solid #ccc;
+      padding: 4px 8px;
+      line-break: strict;
+      /* 日本語の自然な改行ルールに従う */
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    img.yokonaga-image {
+      width: 100%;
+      max-width: 800px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    img.tatenaga-image {
+      width: 60%;
+      max-width: 800px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+
+    hr {
+      border-width: 2px 0 0 0;
+      /* 線の太さ */
+      border-style: dashed;
+      /* 線の種類 */
+      border-color: #609aa0;
+      /* 線の色 */
+    }
+
+    .seoremium {
+      font-family: "Seoremium_clg";
+      font-size: 1.4rem;
+      font-weight: 599;
+      letter-spacing: 0.1rem;
+    }
+
+    .br-sp {
+      display: none;
+    }
+
+    .eqwrap {
+      background: #afd3e6;
+      /* 好きな背景色 */
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+
+      /* 背景を横に伸ばす */
+      display: block;
+      width: 90%;
+
+      /* はみ出し対策：横だけスクロール */
+      overflow-x: auto;
+      overflow-y: hidden;
+
+      /* スクロール時にiOSで気持ちよく */
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* MathJaxのコンテナをブロック化してレイアウト安定 */
+    .eqwrap mjx-container {
+      display: block;
+    }
+
+    pre,
+    pre code {
+      background-color: #bbbbbb;
+      color: #000;
+      padding: 0.5em;
+      display: block;
+      overflow-x: auto;
+      border-radius: 4px;
+      font-family: "Source Code Pro", "Courier New", Courier, monospace;
+    }
+
+    code {
+      background-color: #bbbbbb;
+      color: #000;
+      padding: 0.1em 0.3em;
+      border-radius: 3px;
+      font-family: "Source Code Pro", "Courier New", Courier, monospace;
+      display: inline-block;
+      line-height: 1.2;
+    }
+
+    .bold {
+      font-weight: bold;
+    }
+
+    .del {
+      text-decoration: line-through;
+      text-decoration-color: gray;
+      font-size: 0.75rem;
+      color: gray;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+    }
+
+    table th,
+    table td {
+      border: 1px solid #666;
+      padding: 0.4em 0.6em;
+      text-align: left;
+    }
+
+    ol,
+    dt {
+      font-weight: bold;
+    }
+
+    .frac-list li {
+      line-height: 3.0;
+      /* まずコレが効く */
+      margin: 0.35em 0;
+      /* li同士の隙間 */
+    }
+
+    @media screen and (max-width: 600px) {
+      body {
+        font-size: 0.7rem;
+      }
+
+      h1,
+      h2 {
+        font-size: 1rem;
+      }
+
+      .seoremium {
+        font-size: 1rem;
+      }
+
+      .wrapper,
+      .inner_wrapper {
+        width: 95%;
+        padding: 10px;
+        word-wrap: break-word;
+        box-sizing: border-box;
+      }
+
+      .grid-table,
+      .grid-table2 {
+        grid-template-columns: 1fr;
+      }
+
+      .br-sp {
+        display: inline;
+      }
+    }
+  </style>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+  <div class="wrapper">
+    <div style="font-family: seoremium21">poli tokia!</div>
+    <div style="font-family: seoremium32">poli tokia!</div>
+    poli tokia!<br />
+    こんにちは！<br />
+    <br />
+    ABCDEFG HIJKLMN<br />
+    <div style="font-family: seoremium40">ABCDEFG HIJKLMN</div>
+    <div style="font-family: seoremium32">ABCDEFG HIJKLMN</div>
+    <div style="font-family: seoremium21">ABCDEFG HIJKLMN</div>
+    <br />
+    OPQRSTU VWXYZ<br />
+    <div style="font-family: seoremium40">OPQRSTU VWXYZ</div>
+    <div style="font-family: seoremium32">OPQRSTU VWXYZ</div>
+    <div style="font-family: seoremium21">OPQRSTU VWXYZ</div>
+    <br />
+    abcdefg hijklmn<br />
+    <div style="font-family: seoremium40">abcdefg hijklmn</div>
+    <div style="font-family: seoremium32">abcdefg hijklmn</div>
+    <div style="font-family: seoremium21">abcdefg hijklmn</div>
+    <br />
+    opqrstu vwxyz<br />
+    <div style="font-family: seoremium40">opqrstu vwxyz</div>
+    <div style="font-family: seoremium32">opqrstu vwxyz</div>
+    <div style="font-family: seoremium21">opqrstu vwxyz</div>
+    <br />
+    0123456789<br />
+    <div style="font-family: seoremium40">0123456789</div>
+    <div style="font-family: seoremium32">0123456789</div>
+    <div style="font-family: seoremium21">0123456789</div>
+  </div>
+
+  <div class="wrapper">
+    <div style="font-family: seoremium40">poli tokia!</div>
+    poli tokia!<br />
+    こんにちは！<br />
+    <br />
+    <div style="font-family: seoremium40">ABCDEFG HIJKLMN</div>
+    <div style="font-family: seoremium40">OPQRSTU VWXYZ</div>
+    <div style="font-family: seoremium40">abcdefg hijklmn</div>
+    <div style="font-family: seoremium40">opqrstu vwxyz</div>
+    <div style="font-family: seoremium40">0123456789</div>
+    <div style="font-family: seoremium40">Usnunjevesuiptoapoli. Coremetosaliputoapoli.</div>
+  </div>
+  <!-- jQuery（先） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <!-- Lightbox2（後） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
+</body>
+
+</html>

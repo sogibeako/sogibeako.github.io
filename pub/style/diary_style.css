@@ -135,6 +135,20 @@ hr {
     /* 線の色 */
 }
 
+blockquote {
+    margin: 1em 0;
+    padding: 0.1em 0 0.1em 1.25em;
+    border-left: 4px solid rgba(17, 24, 34, 0.22);
+}
+
+blockquote> :first-child {
+    margin-top: 0;
+}
+
+blockquote> :last-child {
+    margin-bottom: 0;
+}
+
 dt {
     font-weight: bold;
 }

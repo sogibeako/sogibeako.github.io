@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NES Picture ROM Studio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-pixel" aria-hidden="true"></span>
+      <div>
+        <h1>NES Picture ROM Studio</h1>
+        <p>画像を編集して、実機向け Mapper 0 ROM に変換</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="undoButton" class="button secondary" type="button">元に戻す</button>
+      <button id="downloadRomButton" class="button primary" type="button">.nes ROMを書き出す</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="side-panel left-panel">
+      <section class="panel-card">
+        <div class="card-heading"><h2>1. 画像とレイヤー</h2><span class="step-badge">INPUT</span></div>
+        <div class="card-body">
+          <div class="layer-tabs" role="group" aria-label="編集レイヤー">
+            <button class="layer-tab active" data-layer="0" type="button"><span class="layer-dot bg"></span>レイヤー1・背景</button>
+            <button class="layer-tab" data-layer="1" type="button"><span class="layer-dot fg"></span>レイヤー2・上側</button>
+          </div>
+          <label class="file-drop" id="fileDrop">
+            <input id="imageInput" type="file" accept="image/png,image/jpeg">
+            <strong>PNG / JPG を読み込む</strong>
+            <span>クリックまたはドロップ</span>
+          </label>
+          <div class="field-row two">
+            <label>配置
+              <select id="fitMode">
+                <option value="contain">全体を収める</option>
+                <option value="cover">画面を埋める</option>
+                <option value="stretch">256×240に伸縮</option>
+                <option value="native">原寸・中央</option>
+              </select>
+            </label>
+            <label>不透明度
+              <input id="layerOpacity" type="range" min="0" max="100" value="100">
+            </label>
+          </div>
+          <div class="button-row">
+            <button id="clearLayerButton" class="button secondary" type="button">選択レイヤーを消去</button>
+            <label class="check-line"><input id="showLayer1" type="checkbox" checked> L1</label>
+            <label class="check-line"><input id="showLayer2" type="checkbox" checked> L2</label>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel-card">
+        <div class="card-heading"><h2>2. 描画ツール</h2><span class="step-badge">EDIT</span></div>
+        <div class="card-body">
+          <div class="tool-grid">
+            <button class="tool-button active" data-tool="pencil" type="button">鉛筆</button>
+            <button class="tool-button" data-tool="eraser" type="button">消しゴム</button>
+            <button class="tool-button" data-tool="eyedropper" type="button">スポイト</button>
+            <button class="tool-button" data-tool="fill" type="button">塗りつぶし</button>
+          </div>
+          <label>ブラシサイズ
+            <select id="brushSize">
+              <option value="1">1 px</option>
+              <option value="2">2 px</option>
+              <option value="4" selected>4 px</option>
+              <option value="8">8 px</option>
+            </select>
+          </label>
+          <div class="selected-color-line">
+            <span>描画色</span><span id="selectedColor" class="large-swatch"></span><code id="selectedColorCode">$20</code>
+          </div>
+          <div id="masterPalette" class="master-palette" aria-label="NESマスターパレット"></div>
+          <p class="hint">色を選んで画像に描けます。変換後のパレット枠を選び、ここで色を置き換えることもできます。</p>
+          <div class="preprocess-box">
+            <div class="subheading-line">
+              <h3>1. 輪郭を強調</h3>
+              <span id="edgeStatus">未適用</span>
+            </div>
+            <label>強調の強さ <output id="edgeStrengthValue">35%</output>
+              <input id="edgeStrength" type="range" min="5" max="100" value="35">
+            </label>
+            <button id="enhanceEdgesButton" class="button secondary wide" type="button">選択レイヤーの輪郭を強調</button>
+            <p class="hint">細かなノイズは抑え、明暗の境界をシャープにします。色整理より先に適用するのがおすすめです。</p>
+            <div class="preprocess-divider"></div>
+            <div class="subheading-line">
+              <h3>2. NES向け色整理</h3>
+              <span id="prepStatus">未適用</span>
+            </div>
+            <label>残す色数
+              <select id="prepColorCount">
+                <option value="4">4色・単一パレット向け</option>
+                <option value="8">8色</option>
+                <option value="12">12色・上側スプライト向け</option>
+                <option value="13" selected>13色・背景全体向け</option>
+                <option value="16">16色</option>
+              </select>
+            </label>
+            <button id="optimizeColorsButton" class="button secondary wide" type="button">選択レイヤーの色を整理</button>
+            <div id="prepPalette" class="prep-palette" aria-label="整理後の色"></div>
+            <p class="hint">透明度を保ったまま近い色をまとめ、NES色へ揃えます。処理前の状態には「元に戻す」で戻れます。</p>
+          </div>
+        </div>
+      </section>
+    </aside>
+
+    <section class="stage-panel">
+      <div class="stage-toolbar">
+        <div class="view-tabs">
+          <button class="view-tab active" data-view="source" type="button">編集ビュー</button>
+          <button class="view-tab" data-view="nes" type="button">NESプレビュー</button>
+          <button class="view-tab" data-view="tiles" type="button">タイル表示</button>
+        </div>
+        <div class="stage-options">
+          <label class="check-line"><input id="showLoupe" type="checkbox"> ルーペ</label>
+          <select id="loupeZoom" class="compact-select" aria-label="ルーペ倍率">
+            <option value="4" selected>×4</option>
+            <option value="8">×8</option>
+          </select>
+          <label class="check-line"><input id="showGrid" type="checkbox"> 8pxグリッド</label>
+          <span>256 × 240</span>
+        </div>
+      </div>
+      <div class="canvas-stage" id="canvasStage">
+        <div class="screen-bezel">
+          <canvas id="mainCanvas" width="256" height="240" aria-label="画像編集キャンバス"></canvas>
+          <canvas id="gridCanvas" width="256" height="240" aria-hidden="true"></canvas>
+          <div id="loupePanel" class="loupe-panel" aria-hidden="true">
+            <div id="loupeLabel" class="loupe-label">LOUPE ×4</div>
+            <canvas id="loupeCanvas" width="128" height="128"></canvas>
+          </div>
+          <div id="emptyGuide" class="empty-guide">
+            <strong>画像を読み込んでください</strong>
+            <span>レイヤーを選び、PNG/JPGをドロップ</span>
+          </div>
+        </div>
+      </div>
+      <div class="status-strip">
+        <span id="cursorStatus">x: -- / y: --</span>
+        <span id="viewStatus">編集ビュー・レイヤー1</span>
+        <span id="dirtyStatus">未変換</span>
+      </div>
+    </section>
+
+    <aside class="side-panel right-panel">
+      <section class="panel-card">
+        <div class="card-heading"><h2>3. NES変換</h2><span class="step-badge accent">CONVERT</span></div>
+        <div class="card-body">
+          <label>上側レイヤーの出力
+            <select id="overlayMode">
+              <option value="merge">背景へ統合（自由度優先）</option>
+              <option value="sprites">透過スプライト（実機制限あり）</option>
+              <option value="ignore">レイヤー1のみ</option>
+            </select>
+          </label>
+          <label>ディザリング
+            <select id="ditherMode">
+              <option value="none">なし</option>
+              <option value="ordered" selected>規則的ディザ</option>
+            </select>
+          </label>
+          <label>ディザリング強度 <output id="ditherValue">18%</output>
+            <input id="ditherStrength" type="range" min="0" max="80" value="18">
+          </label>
+          <button id="convertButton" class="button primary wide" type="button">NES形式に変換</button>
+          <p class="hint">各16×16領域を4組の背景パレットへ割り当て、8×8タイルを自動的に重複統合します。</p>
+        </div>
+      </section>
+
+      <section class="panel-card">
+        <div class="card-heading"><h2>変換パレット</h2><span id="paletteEditBadge" class="step-badge">未変換</span></div>
+        <div class="card-body">
+          <h3>背景・4パレット</h3>
+          <div id="bgPalettes" class="palette-groups empty-palettes">変換後に表示されます</div>
+          <h3>スプライト・4パレット</h3>
+          <div id="spritePalettes" class="palette-groups empty-palettes">スプライト変換時に表示</div>
+        </div>
+      </section>
+
+      <section class="panel-card grow">
+        <div class="card-heading"><h2>ROM診断</h2><span id="romBadge" class="status-badge neutral">WAIT</span></div>
+        <div class="card-body diagnostics">
+          <div class="metric-grid">
+            <div><span>背景タイル</span><strong id="tileMetric">— / 256</strong></div>
+            <div><span>スプライト</span><strong id="spriteMetric">— / 64</strong></div>
+            <div><span>最大/走査線</span><strong id="scanlineMetric">— / 8</strong></div>
+            <div><span>ROM容量</span><strong>24 KiB</strong></div>
+          </div>
+          <div id="diagnosticList" class="diagnostic-list">
+            <p class="diagnostic neutral">画像を変換すると、実機制限を確認できます。</p>
+          </div>
+          <details>
+            <summary>出力仕様</summary>
+            <ul>
+              <li>iNES / Mapper 0 / NROM-128</li>
+              <li>PRG-ROM 16 KiB + CHR-ROM 8 KiB（+ iNESヘッダー）</li>
+              <li>NTSC向け静止画、背景 256×240</li>
+              <li>背景256種類、スプライト64枚まで</li>
+            </ul>
+          </details>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="nes-core.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

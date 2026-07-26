@@ -1999,8 +1999,10 @@ document.addEventListener('DOMContentLoaded', () => {
         wrapper.classList.remove('hide');
         wrapper.innerHTML = `
             <iframe id="${iframeId}" src="${embedUrl}" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen>
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" 
+                    allowfullscreen
+                    webkitallowfullscreen
+                    mozallowfullscreen>
             </iframe>
         `;
 
@@ -2505,6 +2507,10 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'cal':
                 await handleCalCommand(args.slice(1));
                 break;
+            case 'backup':
+            case 'bk':
+                await handleBackupCommand(args.slice(1));
+                break;
             case 'play':
                 await handlePlayCommand(args.slice(1));
                 break;
@@ -2635,6 +2641,85 @@ document.addEventListener('DOMContentLoaded', () => {
         printCli(`Switched to tab: ${tabId}`, 'success');
     }
 
+    function formatBackupCounts(counts) {
+        if (!counts) return 'counts: -';
+        return `todos:${counts.todos ?? 0} events:${counts.events ?? 0} done:${counts.done_items ?? 0}`;
+    }
+
+    function shortHash(hash) {
+        return hash ? `${hash.slice(0, 12)}...${hash.slice(-8)}` : '-';
+    }
+
+    async function handleBackupCommand(subArgs) {
+        const sub = (subArgs[0] || 'check').toLowerCase();
+        if (AppState.useLocalStorage) {
+            printCli('backup: API/DBモードではないため、サーバーバックアップは利用できません。', 'warning');
+            return;
+        }
+
+        if (sub === 'create' || sub === 'save') {
+            const reason = subArgs.slice(1).join('_') || 'manual_cli';
+            const data = await apiRequest('api/backup_create.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reason })
+            });
+            if (!data || data.fallback) return;
+            const backup = data.backup;
+            printCli(`backup created: ${backup.filename}`, 'success');
+            printCli(`hash: ${backup.data_hash}`, 'info');
+            printCli(`${formatBackupCounts(backup.counts)} latest:${backup.latest_data_timestamp || '-'}`, 'muted');
+            return;
+        }
+
+        if (sub === 'list' || sub === 'ls') {
+            const data = await apiRequest('api/backup_list.php');
+            if (!data || data.fallback) return;
+            const backups = data.backups || [];
+            if (backups.length === 0) {
+                printCli('backup: まだバックアップはありません。backup create で作成できます。', 'muted');
+                return;
+            }
+            printCli('--- backups (newest first) ---', 'info');
+            backups.slice(0, 12).forEach(item => {
+                printCli(`${item.filename}  ${shortHash(item.data_hash)}  ${formatBackupCounts(item.counts)}`);
+            });
+            if (backups.length > 12) {
+                printCli(`... and ${backups.length - 12} more`, 'muted');
+            }
+            return;
+        }
+
+        if (sub === 'check' || sub === 'hash') {
+            const data = await apiRequest('api/backup_check.php');
+            if (!data || data.fallback) return;
+            printCli(`current hash: ${data.current.data_hash}`, 'info');
+            printCli(`current ${formatBackupCounts(data.current.counts)} latest:${data.current.latest_data_timestamp || '-'}`, 'muted');
+            if (!data.latest_backup) {
+                printCli('latest backup: none', 'warning');
+                return;
+            }
+            printCli(`latest backup: ${data.latest_backup.filename}`, 'info');
+            printCli(`backup hash:  ${data.latest_backup.data_hash}`, 'info');
+            printCli(data.matches_latest ? 'OK: 現在DBと最新バックアップのハッシュは一致しています。' : '注意: 現在DBと最新バックアップのハッシュが違います。backup create 推奨です。', data.matches_latest ? 'success' : 'warning');
+            return;
+        }
+
+        if (sub === 'download' || sub === 'dl') {
+            const filename = subArgs[1];
+            if (!filename) {
+                printCli('Usage: backup download <filename>', 'danger');
+                return;
+            }
+            const url = `api/backup_download.php?file=${encodeURIComponent(filename)}`;
+            window.open(url, '_blank');
+            printCli(`backup download: ${filename}`, 'success');
+            return;
+        }
+
+        printCli('Usage: backup check / backup create [reason] / backup list / backup download <file>', 'danger');
+    }
+
     async function handleLocationCommand(subArgs) {
         const sub = (subArgs[0] || '').toLowerCase();
         if (sub === 'map') {
@@ -2674,6 +2759,8 @@ document.addEventListener('DOMContentLoaded', () => {
         printCli('cal today                 - 今日の予定を表示します。', 'muted');
         printCli('cal month                 - 当月の予定リストを表示します。', 'muted');
         printCli('cal add <日付> <予定>     - 予定を追加します。 (例: cal add 2026-06-28 請求確認)', 'muted');
+        printCli('backup create/check/list  - ToDo/Calendar/できたことのバックアップを作成・確認します。', 'muted');
+        printCli('backup download <file>    - バックアップJSONをPCへ保存します。', 'muted');
         printCli('play <URL|file>           - YouTube動画、またはVFSプレイリストを連続再生します。', 'muted');
         printCli('play loop <URL|file>      - お気に入り用に、動画またはプレイリストをループ再生します。', 'muted');
         printCli('queue add <name> <URL>    - 名前付き再生キューへ動画を追加します。', 'muted');

@@ -103,6 +103,19 @@ function init_tables($pdo, $type) {
             is_dir INTEGER NOT NULL DEFAULT 0,
             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
         );");
+
+        // done_items テーブル (SQLite)
+        $pdo->exec("CREATE TABLE IF NOT EXISTS done_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            done_date TEXT NOT NULL,
+            title TEXT NOT NULL,
+            points INTEGER NOT NULL DEFAULT 0,
+            source TEXT NULL,
+            source_id TEXT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );");
+        $pdo->exec("CREATE INDEX IF NOT EXISTS idx_done_items_date ON done_items (done_date);");
+        $pdo->exec("CREATE INDEX IF NOT EXISTS idx_done_items_source ON done_items (done_date, source, source_id);");
     } else {
         // todos テーブル (MySQL)
         $pdo->exec("CREATE TABLE IF NOT EXISTS todos (
@@ -151,6 +164,19 @@ function init_tables($pdo, $type) {
             content LONGTEXT NULL,
             is_dir TINYINT(1) NOT NULL DEFAULT 0,
             updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
+
+        // done_items テーブル (MySQL)
+        $pdo->exec("CREATE TABLE IF NOT EXISTS done_items (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            done_date DATE NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            points INT NOT NULL DEFAULT 0,
+            source VARCHAR(50) NULL,
+            source_id VARCHAR(100) NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_done_items_date (done_date),
+            INDEX idx_done_items_source (done_date, source, source_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
     }
 }

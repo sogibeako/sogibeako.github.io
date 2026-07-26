@@ -1379,7 +1379,7 @@ body.is-resizing-calendar {
     color: #e2e8f0;
     font-size: 0.8rem;
     z-index: 10;
-    pointer-events: auto;
+    pointer-events: none;
     box-sizing: border-box;
 }
 
@@ -1387,6 +1387,7 @@ body.is-resizing-calendar {
     color: #38bdf8;
     text-decoration: underline;
     font-weight: 600;
+    pointer-events: auto;
 }
 
 .video-local-link-helper a:hover {

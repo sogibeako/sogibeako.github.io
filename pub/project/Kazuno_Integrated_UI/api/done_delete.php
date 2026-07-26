@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/backup_lib.php';
 check_auth();
 
 $input = json_decode(file_get_contents('php://input'), true);
@@ -23,6 +24,8 @@ try {
 
     $sum_stmt = $db->query("SELECT COALESCE(SUM(points), 0) AS total_points FROM done_items");
     $sum = $sum_stmt->fetch();
+
+    backup_try_create_snapshot($db, 'done_delete');
 
     send_json([
         'success' => true,

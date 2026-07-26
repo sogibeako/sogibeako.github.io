@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=20260721-video-fullscreen">
 </head>
 <body>
 
@@ -119,6 +119,9 @@
                     <button class="tab-trigger" data-tab="video" role="tab" aria-selected="false">
                         <i class="fa-brands fa-youtube"></i> <span>Video</span>
                     </button>
+                    <button class="tab-trigger" data-tab="location" role="tab" aria-selected="false">
+                        <i class="fa-solid fa-location-crosshairs"></i> <span>Location</span>
+                    </button>
                     <button class="tab-trigger" data-tab="oneirotopia" role="tab" aria-selected="false">
                         <i class="fa-solid fa-compass"></i> <span>Oneirotopia</span>
                     </button>
@@ -195,8 +198,37 @@
                                 </div>
                             </div>
 
+                            <div class="calendar-resize-handle" id="calendarResizeHandle" role="separator" aria-orientation="vertical" aria-label="カレンダーと予定欄の幅を調整"></div>
+
                             <div class="calendar-details-panel">
                                 <h3 id="calSelectedDateText" class="details-title">日付が選択されていません</h3>
+                                <div class="done-summary-box">
+                                    <div>
+                                        <span class="done-summary-label">一埜ポイント</span>
+                                        <strong id="kazunoPointTotal">0 pt</strong>
+                                    </div>
+                                    <div>
+                                        <span class="done-summary-label">この日</span>
+                                        <strong id="kazunoPointDay">0 pt</strong>
+                                    </div>
+                                </div>
+                                <div class="done-today-panel">
+                                    <h4><i class="fa-solid fa-star"></i> 今日できたこと</h4>
+                                    <div class="done-template-grid" id="doneTemplateGrid"></div>
+                                    <form id="doneTodayForm" class="done-today-form">
+                                        <input type="text" id="doneTodayTitle" class="input-text" placeholder="できたことを入力（例: 台所を掃除した）">
+                                        <select id="doneTodayPoints" class="input-select" title="一埜ポイント">
+                                            <option value="1">1 pt</option>
+                                            <option value="3" selected>3 pt</option>
+                                            <option value="5">5 pt</option>
+                                            <option value="10">10 pt</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fa-solid fa-check"></i> 記録
+                                        </button>
+                                    </form>
+                                    <div id="doneTodayList" class="done-today-list"></div>
+                                </div>
                                 <div id="calDayEventList" class="cal-day-event-list">
                                     <p class="empty-state">この日の予定はありません</p>
                                 </div>
@@ -326,7 +358,52 @@
                         </div>
                     </div>
 
-                    <!-- 5. Oneirotopia (工事中) -->
+                    <!-- 5. Location -->
+                    <div class="tab-panel" id="tab-location" role="tabpanel">
+                        <div class="location-layout">
+                            <div class="location-action-row">
+                                <button id="btnGetLocation" class="btn btn-primary">
+                                    <i class="fa-solid fa-location-crosshairs"></i> <span>Find current address</span>
+                                </button>
+                                <button id="btnOpenLocationMap" class="btn btn-text" disabled>
+                                    <i class="fa-solid fa-map-location-dot"></i> <span>Open map</span>
+                                </button>
+                                <button id="btnCopyLocationAddress" class="btn btn-text" disabled>
+                                    <i class="fa-regular fa-copy"></i> <span>Copy</span>
+                                </button>
+                            </div>
+
+                            <div class="location-result-panel">
+                                <div class="location-status" id="locationStatus">
+                                    Press the button to ask the browser for location permission.
+                                </div>
+                                <div class="location-address" id="locationAddress">-</div>
+                                <div class="location-detail-grid">
+                                    <div>
+                                        <span class="location-label">Latitude</span>
+                                        <span id="locationLat" class="location-value">-</span>
+                                    </div>
+                                    <div>
+                                        <span class="location-label">Longitude</span>
+                                        <span id="locationLon" class="location-value">-</span>
+                                    </div>
+                                    <div>
+                                        <span class="location-label">Accuracy</span>
+                                        <span id="locationAccuracy" class="location-value">-</span>
+                                    </div>
+                                    <div>
+                                        <span class="location-label">Updated</span>
+                                        <span id="locationUpdated" class="location-value">-</span>
+                                    </div>
+                                </div>
+                                <p class="location-privacy-note">
+                                    Location is requested only when you press the button. This app does not save location history.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. Oneirotopia (工事中) -->
                     <div class="tab-panel" id="tab-oneirotopia" role="tabpanel">
                         <div class="oneirotopia-layout">
                             <div class="under-construction-banner">
@@ -410,7 +487,7 @@
 
     <!-- JSファイルのインポート -->
     <script src="js/parser.js?v=2.0"></script>
-    <script src="js/app.js?v=2.0"></script>
+    <script src="js/app.js?v=20260721-video-fullscreen"></script>
 
 </body>
 </html>

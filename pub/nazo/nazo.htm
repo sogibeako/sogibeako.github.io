@@ -10,6 +10,36 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="../style/index_style.css">
   <link rel="stylesheet" href="../style/booru_style.css">
+  <script>
+    const pressed = new Set();
+
+    // =========================
+    // PC: A + B + Enter
+    // =========================
+    window.addEventListener("keydown", (e) => {
+      const tag =
+        e.target && e.target.tagName ? e.target.tagName.toLowerCase() : "";
+      if (tag === "input" || tag === "textarea" || e.target.isContentEditable) {
+        return;
+      }
+
+      pressed.add(e.key.toLowerCase());
+
+      if (e.key === "Enter") {
+        if (pressed.has("a") && pressed.has("b")) {
+          e.preventDefault();
+          window.location.href = "../index.html";
+        }
+      }
+    });
+
+    window.addEventListener("keyup", (e) => {
+      pressed.delete(e.key.toLowerCase());
+    });
+
+    window.addEventListener("blur", () => pressed.clear());
+  </script>
+
 </head>
 
 <body>
@@ -19,14 +49,8 @@
       <b><a href="nazo.htm">NazoText</a></b>
     </div>
     <h1>＊湫埜と雨滴　裏ページ＊</h1>
-    <h3>ここは？</h3>
-    <hr />
-    ネットの旅人よ、変なところに辿りついてしまったようですね……（古くせ～ノリ）<br />
-    隠しページです（っていうかそもそも誰もここに辿りつかないんじゃないかな……）<br />
-    index.html から [a] + [b] を押しながら [Enter] でこちらに来られるようになってます。<br />
-    <br />
     <h2>（裏）日記類</h2>
-    <h3>それこそ表で書きづらいことを。</h3>
+    <h3>ちょっとだけ表で書きづらいことを。</h3>
     <hr />
     <div class="grid-table">
       <div class="cell p_left">
@@ -42,19 +66,19 @@
     <hr />
     <div class="grid-table">
       <div class="cell p_left">
-        <a href="project/RegsumLab6.htm">## ζ(-1) ##</a>
+        <a href="project/RegsumLab7.htm">## ζ(-1) ##</a>
       </div>
       <div class="cell p_left">
         総和法盛り目の正規化電卓。
       </div>
       <div class="cell p_left">
-        <a href="symbolic_calc/index.html">## Σ ##</a>
+        <a href="project/symbolic_calc/index.html">## Σ ##</a>
       </div>
       <div class="cell p_left">
         級数展開などする電卓。
       </div>
       <div class="cell p_left">
-        <a href="project/homology_calc.html">## ὁ ##</a>
+        <a href="project/homology_calc2.html">## ὁ ##</a>
       </div>
       <div class="cell p_left">
         ホモロジーの計算を得る。<br />
@@ -65,7 +89,7 @@
     <hr />
     <div class="grid-table">
       <div class="cell p_left">
-        <a href="noise_engine/index.html">## μ ##</a>
+        <a href="project/noise_engine/index.html">## μ ##</a>
       </div>
       <div class="cell p_left">
         webで動くグリッチノイズメーカー。wav入力が可能。<br />
@@ -75,7 +99,7 @@
     </div>
     <div class="grid-table">
       <div class="cell p_left">
-        <a href="../jssproject/0007/0007_integrated_20260603.htm">## С ##</a>
+        <a href="../jssproject/0007/0007_integrated_20260722.htm">## С ##</a>
       </div>
       <div class="cell p_left">
         FormulaSynthの強化版。ポルタメントやLFOなど強化したらVSTiにするもの。
@@ -86,7 +110,7 @@
     <hr />
     <div class="grid-table">
       <div class="cell p_left">
-        <a href="sibling_rpg/terrain06.htm">## τ ##</a>
+        <a href="project/sibling_rpg/terrain06.htm">## τ ##</a>
       </div>
       <div class="cell p_left">
         もう変なマップと妹のことしか考えられない。妹と色んな地形への冒険に出る。<br />
@@ -103,7 +127,7 @@
     <hr />
     <div class="grid-table">
       <div class="cell p_left">
-        <a href="tileEngine.htm">## Т ##</a>
+        <a href="project/tileEngine.htm">## Т ##</a>
       </div>
       <div class="cell p_left">
         タイル貼り合わせ。<br />
@@ -146,10 +170,10 @@
         コマンドまとめ。<br />
       </div>
       <div class="cell p_left">
-        <a href="column/ogero.htm">消化についての考察</a>
+        <a href="column/lingua_latina.htm">ラテン語</a>
       </div>
       <div class="cell p_left">
-        ちょっとマニアックな分析。<br />
+        覚えておきたいものについて。<br />
       </div>
       <div class="cell p_left">
         <a href="column/edoMuseum.htm">平均律とMOSについて</a>
@@ -179,7 +203,7 @@
         <a href="column/god.htm">「神」概念の言語論的再構成</a>
       </div>
       <div class="cell p_left">
-        神はいるか？
+        神っているのかな？
       </div>
     </div>
     <h2>（裏）書庫類</h2>
@@ -200,14 +224,14 @@
       </div>
     </div>
     <br />
-    <h2>ニュース電波</h2>
+    <h2>ニュース</h2>
     <div id="rss-area" class="p_left">読み込み中……</div>
     <br />
     <hr />
     <img src="img/top.png" class="yokonaga-image" id="booru-secret-image"><br />
     <br />
     <div id="booru-wrapper" style="display:none;">
-      <h2>観測アンテナ</h2>
+      <h2>お世話になっています。</h2>
       <hr />
       <div id="booru-area" class="p_left">読み込み中……</div>
       <br />

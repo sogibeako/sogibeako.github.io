@@ -242,6 +242,15 @@
       margin: 20px 0;
     }
 
+    .wrapper blockquote {
+      margin: 1em 0;
+      padding: 0.1em 0 0.1em 1.25em;
+      border-left: 4px solid rgba(17, 24, 34, 0.22);
+    }
+
+    .wrapper blockquote > :first-child { margin-top: 0; }
+    .wrapper blockquote > :last-child { margin-bottom: 0; }
+
     .wrapper dt { font-weight: bold; }
     .wrapper .seoremium {
       font-family: "Seoremium_clg";
@@ -416,6 +425,9 @@
     img.yokonaga-image { width: 100%; max-width: 800px; height: auto; display: block; margin: 0 auto; }
     img.tatenaga-image { width: 60%; max-width: 800px; height: auto; display: block; margin: 0 auto; }
     hr { border-width: 2px 0 0 0; border-style: dashed; border-color: #609aa0; }
+    blockquote { margin: 1em 0; padding: 0.1em 0 0.1em 1.25em; border-left: 4px solid rgba(17, 24, 34, 0.22); }
+    blockquote > :first-child { margin-top: 0; }
+    blockquote > :last-child { margin-bottom: 0; }
     dt { font-weight: bold; }
     .seoremium { font-family: "Seoremium_clg"; font-size: 1.0rem; font-weight: normal; }
     .br-sp { display: none; }
@@ -509,9 +521,10 @@
       if (line.startsWith('```')) return true;
       if (line.trim() === '$$') return true;
       if (line.trim() === '::seo' || line.trim() === ':::hidden' || line.trim() === ':::inner') return true;
+      if (line.startsWith('>')) return true;
       if (line.startsWith('|')) return true;
       if (line.match(/^(#{1,6})\s+/)) return true;
-      if (line.trim() === '---') return true;
+      if (/^-{3,}$/.test(line.trim())) return true;
       if (line.match(/^(\s*)(-\s+|\d+\.\s+)/)) return true;
       return false;
     }
@@ -626,6 +639,17 @@
           continue;
         }
 
+        if (line.startsWith('>')) {
+          const quoteLines = [];
+          while (i < lines.length && lines[i].startsWith('>')) {
+            quoteLines.push(lines[i].replace(/^> ?/, ''));
+            i++;
+          }
+          const quoteHtml = renderBlocks(parseBlocks(quoteLines, wrapP, indentSize), wrapP, indentSize);
+          blocks.push({ type: 'blockquote', html: quoteHtml });
+          continue;
+        }
+
         if (line.startsWith('|') && i + 1 < lines.length && lines[i+1].match(/^\|\s*[:-]+\s*\|/)) {
           let tableLines = [line];
           i += 2; 
@@ -644,7 +668,7 @@
           continue;
         }
 
-        if (line.trim() === '---') {
+        if (/^-{3,}$/.test(line.trim())) {
           blocks.push({ type: 'hr' });
           i++;
           continue;
@@ -739,6 +763,8 @@
           html += `<hr />\n`;
         } else if (block.type === 'list') {
           html += block.html;
+        } else if (block.type === 'blockquote') {
+          html += `<blockquote>\n${block.html}</blockquote>\n`;
         } else if (block.type === 'rawhtml') {
           html += block.content + '\n';
         } else if (block.type === 'paragraph') {
@@ -790,9 +816,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${titleStr}</title>
-  <link rel="preload" as="font" href="/seoremium/seoremium41.ttf" type="ttf" crossorigin />
+  <link rel="preload" as="font" href="../seoremium/seoremium41.ttf" type="ttf" crossorigin />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
-  <style>${userGlobalCss}  </style>
+  <link rel="stylesheet" href="../style/diary_style.css">
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"><\/script>
 </head>
 <body>

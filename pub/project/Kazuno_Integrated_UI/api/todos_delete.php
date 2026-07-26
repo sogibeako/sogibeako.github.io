@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/backup_lib.php';
 check_auth();
 
 $input = json_decode(file_get_contents('php://input'), true);
@@ -19,6 +20,8 @@ try {
 
     $stmt = $db->prepare("DELETE FROM todos WHERE id = :id");
     $stmt->execute([':id' => $id]);
+
+    backup_try_create_snapshot($db, 'todos_delete');
     
     send_json(['success' => true]);
 } catch (PDOException $e) {

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/backup_lib.php';
 check_auth();
 
 $input = json_decode(file_get_contents('php://input'), true);
@@ -34,6 +35,8 @@ try {
     $stmt = $db->prepare("SELECT * FROM todos WHERE id = :id");
     $stmt->execute([':id' => $new_id]);
     $todo = $stmt->fetch();
+
+    backup_try_create_snapshot($db, 'todos_add');
     
     send_json($todo);
 } catch (PDOException $e) {

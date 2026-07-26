@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Diary</title>
+  <link rel="preload" as="font" href="../../seoremium/seoremium41.ttf" type="ttf" crossorigin />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="../../style/diary_style.css">
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+  <div class="wrapper">
+    <div class="p_left">
+      現在位置 : <a href="../../index.html">ホーム</a> ＞ <a href="../nazo.htm">NazoText</a> ＞
+      <b><a href="lingua_latina.htm">Lingua Latina</a></b>
+    </div>
+    <hr />
+
+    <h1>ラテン語</h1>
+    <h3>nulla poena sine lege（法律なくして刑罰なし）</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>単語</th>
+          <th>辞書形</th>
+          <th>品詞・形</th>
+          <th>意味</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>nulla</td>
+          <td>nullus, nulla, nullum</td>
+          <td>形容詞</td>
+          <td>いかなる～もない</td>
+        </tr>
+        <tr>
+          <td>poena</td>
+          <td>poena, poenae</td>
+          <td>名詞・女性・単数・主格</td>
+          <td>刑罰</td>
+        </tr>
+        <tr>
+          <td>sine</td>
+          <td>sine</td>
+          <td>前置詞・奪格支配</td>
+          <td>～なしに、～を伴わず</td>
+        </tr>
+        <tr>
+          <td>lege</td>
+          <td>lex, legis</td>
+          <td>名詞・女性・単数・奪格</td>
+          <td>法律によって</td>
+        </tr>
+      </tbody>
+    </table>
+    <blockquote>
+      <p>nulla poena est<br>刑罰は存在しない</p>
+    </blockquote>
+    <blockquote>
+      <p>sine aqua<br>水なしに</p>
+    </blockquote>
+    <blockquote>
+      <p>sine causa<br>理由なく</p>
+    </blockquote>
+    <blockquote>
+      <p>sine lege<br>法律なしに</p>
+    </blockquote>
+
+    <hr />
+
+    <div style="text-align: center;">
+      <a href="../index.html" class="rain-window-btn">
+        <canvas data-rainwindow="true"></canvas>
+        <span class="rw-label">Back</span>
+      </a>
+    </div>
+
+    <script>
+      document.querySelectorAll('canvas[data-rainwindow]').forEach(cv => {
+        const dpr = window.devicePixelRatio || 1;
+        const parent = cv.parentElement;
+        const rect = parent.getBoundingClientRect();
+        cv.width = rect.width * dpr; cv.height = rect.height * dpr;
+        const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+        const w = rect.width, h = rect.height;
+        const drops = Array.from({ length: 30 }, () => ({
+          x: Math.random() * w, y: Math.random() * h, speed: 0.5 + Math.random() * 1.5,
+          len: 4 + Math.random() * 10, opacity: 0.15 + Math.random() * 0.35, width: 0.5 + Math.random() * 0.8
+        }));
+        const splashes = [];
+        function draw() {
+          ctx.clearRect(0, 0, w, h);
+          drops.forEach(d => {
+            ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - 0.3, d.y + d.len);
+            ctx.strokeStyle = `rgba(158,200,209,${d.opacity})`; ctx.lineWidth = d.width; ctx.stroke();
+            d.y += d.speed;
+            if (d.y > h) {
+              splashes.push({ x: d.x, y: h - 2, r: 0, opacity: 0.4 });
+              d.y = -d.len - Math.random() * 20; d.x = Math.random() * w;
+            }
+          });
+          splashes.forEach(s => {
+            s.r += 0.3; s.opacity -= 0.015;
+            if (s.opacity <= 0) return;
+            ctx.beginPath(); ctx.ellipse(s.x, s.y, s.r * 1.5, s.r * 0.5, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(158,200,209,${s.opacity})`; ctx.lineWidth = 0.5; ctx.stroke();
+          });
+          while (splashes.length > 0 && splashes[0].opacity <= 0) splashes.shift();
+          requestAnimationFrame(draw);
+        }
+        draw();
+      });
+    </script>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
+</body>
+
+</html>
