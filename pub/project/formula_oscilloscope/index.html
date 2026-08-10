@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101410">
+  <title>式景 — Formula Oscilloscope</title>
+  <meta name="description" content="時間変動する数式を波形とリサージュで観察し、音として演奏できるブラウザ・オシロスコープ">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="masthead">
+    <div><p class="eyebrow">FORMULA OSCILLOSCOPE / 01</p><h1>式景 <span>しきけい</span></h1></div>
+    <div class="header-actions">
+      <span id="status" class="status" data-kind="ok">準備完了</span>
+      <button id="runButton" class="button primary" type="button">一時停止</button>
+      <button id="audioButton" class="button" type="button">音声を開始</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="scope-deck" aria-label="オシロスコープ">
+      <div class="scope-titlebar">
+        <div>
+          <p class="channel-label"><i class="dot dot-x"></i> CH X <span id="xReadout">0.000</span></p>
+          <p class="channel-label"><i class="dot dot-y"></i> CH Y <span id="yReadout">0.000</span></p>
+        </div>
+        <div class="scope-tabs" role="tablist" aria-label="表示モード">
+          <button class="scope-tab active" data-view="split" type="button">DUAL</button>
+          <button class="scope-tab" data-view="xy" type="button">X/Y</button>
+          <button class="scope-tab" data-view="time" type="button">TIME</button>
+        </div>
+      </div>
+      <div class="screens" data-view="split">
+        <figure class="screen screen-time"><figcaption>TIME DOMAIN <span id="timeReadout">20 ms/div</span></figcaption><canvas id="timeCanvas" aria-label="XとYの時間波形"></canvas></figure>
+        <figure class="screen screen-xy"><figcaption>LISSAJOUS / X–Y <span>LIVE</span></figcaption><canvas id="xyCanvas" aria-label="X Yリサージュ波形"></canvas></figure>
+      </div>
+      <div class="scope-controls">
+        <label>TIME / DIV
+          <select id="timeDiv">
+            <option value="0.001">1 ms</option><option value="0.002">2 ms</option><option value="0.005">5 ms</option><option value="0.01">10 ms</option><option value="0.02" selected>20 ms</option><option value="0.05">50 ms</option><option value="0.1">100 ms</option><option value="0.2">200 ms</option>
+          </select>
+        </label>
+        <label>X GAIN <input id="xGain" type="range" min="0.1" max="4" value="1" step="0.05"><output>1.00×</output></label>
+        <label>Y GAIN <input id="yGain" type="range" min="0.1" max="4" value="1" step="0.05"><output>1.00×</output></label>
+        <label>AFTERGLOW <input id="persistence" type="range" min="0" max="0.96" value="0.72" step="0.01"><output>72%</output></label>
+        <label>AUDIO VOL <input id="audioVolume" type="range" min="0" max="1" value="0.34" step="0.01"><output>34%</output></label>
+      </div>
+    </section>
+
+    <section class="workbench">
+      <div class="editor-panel">
+        <div class="panel-heading">
+          <div><p class="panel-index">01 / SIGNALS</p><h2>数式を入力</h2></div>
+          <div class="preset-wrap"><label for="preset">PATCH</label>
+            <select id="preset"><option value="lissajous">3 : 2 リサージュ</option><option value="waveLab">波形リサージュ実験室</option><option value="triangleSaw">三角波 × 鋸波</option><option value="pulseSine">パルス波 × サイン波</option><option value="sawSquare">鋸波 × 矩形波</option><option value="stepCircles">ステップする円群</option><option value="stepLissajous">ステップするリサージュ群</option><option value="orbit">ゆらぐ軌道</option><option value="astroid">アステロイド</option><option value="hypotrochoid">ハイポトロコイド</option><option value="polygon">多角形シンセ</option><option value="cube">回転する立方体</option><option value="tetrahedron">回転する正四面体</option><option value="bits">8-bit ステップ</option><option value="rose">変調ローズ</option></select>
+            <button id="loadPreset" class="mini-button" type="button">読込</button>
+          </div>
+        </div>
+        <div class="formula-grid">
+          <label class="formula-card formula-x"><span><b>X</b> HORIZONTAL / AUDIO L</span><textarea id="formulaX" spellcheck="false">let drift = 0.12 * sin(t * 0.7)
+sin(twopi * (3 + drift) * ph)</textarea></label>
+          <label class="formula-card formula-y"><span><b>Y</b> VERTICAL / AUDIO R</span><textarea id="formulaY" spellcheck="false">Param wobble (0.16, min=0, max=1)
+let bend = wobble * sin(twopi * 0.18 * t)
+sin(twopi * (2 + bend) * ph + pi / 2)</textarea></label>
+        </div>
+        <div class="compile-row">
+          <button id="compileButton" class="button primary" type="button">式を適用 <kbd>Ctrl</kbd> + <kbd>Enter</kbd></button>
+          <label class="switch"><input id="caretPower" type="checkbox" checked><span></span> <code>^</code> を累乗として扱う</label>
+          <p id="compileInfo">X / Y ともに正常</p>
+        </div>
+        <details class="syntax-help"><summary>使える変数・演算子を見る</summary>
+          <div class="help-grid">
+            <p><b>時刻</b><code>t</code> 秒、<code>ph</code> 位相 0…1、<code>n</code> サンプル番号、<code>sr</code></p>
+            <p><b>演奏</b><code>freq</code> Hz、<code>note</code> 音律上の段数、<code>gate</code>、<code>vel</code></p>
+            <p><b>宣言</b><code>let a = …</code> / <code>const a = …</code> / <code>a = …</code> / 最終行が出力</p>
+            <p><b>演算</b><code>?: &amp; | ^ ~ &lt;&lt; &gt;&gt; &gt;&gt;&gt; &amp;&amp; || !</code>。累乗は <code>**</code> / <code>pow()</code></p>
+            <p><b>関数</b><code>sin cos tan saw tri square pulse abs floor clamp fold fract phasor mix pick</code></p>
+            <p><b>パラメータ</b><code>Param wobble (0.16, min=0, max=1)</code> の形式でノブを作成</p>
+          </div>
+        </details>
+      </div>
+
+      <aside class="side-stack">
+        <section class="panel params-panel">
+          <div class="panel-heading compact"><div><p class="panel-index">02 / MOD</p><h2>パラメータ</h2></div></div>
+          <div id="params" class="params"></div><p id="emptyParams" class="muted">式中の <code>Param</code> 行を読み取ります。</p>
+        </section>
+        <section class="panel effects-panel">
+          <div class="panel-heading compact"><div><p class="panel-index">03 / FX</p><h2>共通エフェクター</h2></div><button id="resetEffects" class="mini-button" type="button">RESET</button></div>
+          <div class="effects-grid">
+            <label class="effect-select">FILTER
+              <select id="filterType"><option value="off">OFF</option><option value="lowpass">LOW PASS</option><option value="highpass">HIGH PASS</option><option value="bandpass">BAND PASS</option></select>
+            </label>
+            <label>FILTER MAX <output>Hz</output><input id="filterMaxHz" type="number" min="100" max="384000" value="20000" step="100"></label>
+            <label>CUTOFF <output id="filterCutoffOut">5024 Hz</output><input id="filterCutoff" type="range" min="0" max="1" value="0.8" step="0.001"></label>
+            <label>RESONANCE <output id="filterResonanceOut">0.71 Q</output><input id="filterResonance" type="range" min="0.1" max="12" value="0.71" step="0.01"></label>
+            <label>PHASER <output id="phaserMixOut">0%</output><input id="phaserMix" type="range" min="0" max="1" value="0" step="0.01"></label>
+            <label>PHASER RATE <output id="phaserRateOut">0.30 Hz</output><input id="phaserRate" type="range" min="0.05" max="5" value="0.3" step="0.01"></label>
+            <label>OVERDRIVE <output id="overdriveOut">0%</output><input id="overdrive" type="range" min="0" max="1" value="0" step="0.01"></label>
+            <label>SOFT FOLD <output id="foldAmountOut">0%</output><input id="foldAmount" type="range" min="0" max="1" value="0" step="0.01"></label>
+            <label>FOLD THRESHOLD <output id="foldThresholdOut">1.00</output><input id="foldThreshold" type="range" min="0.1" max="1.5" value="1" step="0.01"></label>
+          </div>
+          <p class="muted">X/Y表示とステレオ音声（X=L / Y=R）を、Fold → Overdrive → Phaser → Filter の順で処理します。音声Cutoffは折り返し防止のため再生サンプルレートの45%までです。</p>
+        </section>
+        <section class="panel tuning-panel">
+          <div class="panel-heading compact"><div><p class="panel-index">04 / TUNING</p><h2>音律</h2></div><span id="tuningBadge" class="badge">12音 / 2:1</span></div>
+          <label class="base-control">基準周波数 <input id="baseHz" type="number" min="1" max="20000" step="0.1" value="440"> Hz</label>
+          <textarea id="tuning" spellcheck="false" aria-label="音律データ">100.
+200.
+300.
+400.
+500.
+600.
+700.
+800.
+900.
+1000.
+1100.
+1200.</textarea>
+          <button id="parseTuning" class="mini-button wide" type="button">音律を解析</button>
+          <p class="muted">セント値（末尾 <code>.</code>）または比率（<code>3/2</code>）。最終行を周期として扱います。</p>
+        </section>
+      </aside>
+    </section>
+
+    <section class="keyboard-section">
+      <div class="keyboard-copy"><p class="panel-index">05 / PLAY</p><h2>PCキーボードで演奏</h2><p><code>Z–M</code> 低域 · <code>A–L</code> 基音域 · <code>Q–P</code> +5度 · <code>1–0</code> +10度</p></div>
+      <div id="keyboard" class="keyboard" aria-label="演奏鍵盤"></div>
+      <div class="note-monitor"><span>ACTIVE</span><strong id="noteName">—</strong><b id="frequency">440.00 Hz</b></div>
+    </section>
+  </main>
+  <footer><p>SHIKEI / browser instrument</p><p>式はこの端末のブラウザ内だけで評価されます。</p></footer>
+  <script src="app.js"></script>
+</body>
+</html>

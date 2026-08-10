@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
             last_tab: 'todo',
             default_video_url: '',
             kazuno_float_enabled: true,
+            cli_font_size: 16,
             speech_interval: 30 // おしゃべり間隔（秒、デフォルト30秒）
         },
         pomoSequenceIndex: 0,
@@ -412,10 +413,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.kazuno_float_enabled !== undefined) {
                 AppState.settings.kazuno_float_enabled = String(data.kazuno_float_enabled) !== 'false' && String(data.kazuno_float_enabled) !== '0';
             }
+            if (data.cli_font_size) AppState.settings.cli_font_size = normalizeCliFontSize(data.cli_font_size);
             if (data.speech_interval) AppState.settings.speech_interval = parseInt(data.speech_interval);
         } else {
             const localSettings = JSON.parse(localStorage.getItem('kazuno_settings') || '{}');
             Object.assign(AppState.settings, localSettings);
+            AppState.settings.cli_font_size = normalizeCliFontSize(AppState.settings.cli_font_size);
             if (AppState.settings.last_tab) {
                 switchTab(AppState.settings.last_tab);
             }
@@ -427,6 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
             intervalInput.value = AppState.settings.speech_interval;
         }
         applyKazunoFloatSetting();
+        applyCliFontSize();
     }
 
     async function saveSetting(key, value) {
@@ -447,6 +451,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (avatar) {
             avatar.classList.toggle('float-disabled', !AppState.settings.kazuno_float_enabled);
         }
+    }
+
+    function normalizeCliFontSize(value) {
+        const size = parseInt(value, 10);
+        if (!Number.isFinite(size)) return 16;
+        return Math.max(12, Math.min(28, size));
+    }
+
+    function applyCliFontSize() {
+        const size = normalizeCliFontSize(AppState.settings.cli_font_size);
+        AppState.settings.cli_font_size = size;
+        document.documentElement.style.setProperty('--cli-font-size', `${size}px`);
     }
 
     /* ==========================================================================
@@ -1867,12 +1883,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let youtubeApiReadyPromise = null;
     let youtubePlayerBuildId = 0;
     let youtubeVolumePollTimer = null;
+    let niconicoPlayerId = null;
+    let niconicoIframe = null;
+    let niconicoLoopEnabled = false;
+    let niconicoMessageListenerAttached = false;
+    let activeMediaSequence = null;
     let videoPlaybackActive = false;
     let activeAutoQueueName = null;
+    let activeQueuePlayback = null;
     
     function initVideo() {
         const playBtn = document.getElementById('playVideoBtn');
         const urlInput = document.getElementById('videoUrlInput');
+        const queuePrevBtn = document.getElementById('queuePrevBtn');
+        const queueNextBtn = document.getElementById('queueNextBtn');
 
         if (!playBtn || !urlInput) return;
 
@@ -1882,9 +1906,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         playBtn.addEventListener('click', () => {
             const url = urlInput.value.trim();
-            if (url) playYoutubeVideo(url);
+            if (url) playMediaUrl(url);
         });
 
+        if (queuePrevBtn) {
+            queuePrevBtn.addEventListener('click', async () => {
+                await ensureVfsReady();
+                await playPreviousQueueItem(activeQueuePlayback?.name || activeAutoQueueName || 'default');
+            });
+        }
+
+        if (queueNextBtn) {
+            queueNextBtn.addEventListener('click', async () => {
+                await ensureVfsReady();
+                await playNextQueueItem(activeQueuePlayback?.name || activeAutoQueueName || 'default');
+            });
+        }
+
+        initNiconicoMessageListener();
         renderVideoHistory();
     }
 
@@ -1910,6 +1949,77 @@ document.addEventListener('DOMContentLoaded', () => {
             return trimmed;
         }
         return null;
+    }
+
+    function extractNiconicoId(url) {
+        const trimmed = url.trim();
+        const rawMatch = trimmed.match(/^(sm|nm|so)\d+$/i);
+        if (rawMatch) {
+            return rawMatch[0].toLowerCase();
+        }
+        const match = trimmed.match(/(?:nicovideo\.jp\/watch\/|nico\.ms\/|embed\.nicovideo\.jp\/watch\/)((?:sm|nm|so)\d+)/i);
+        return match ? match[1].toLowerCase() : null;
+    }
+
+    function parseMediaRef(input) {
+        const text = String(input || '').trim();
+        if (!text) return null;
+        const nicoId = extractNiconicoId(text);
+        if (nicoId) {
+            return {
+                provider: 'niconico',
+                id: nicoId,
+                original: text,
+                label: `niconico:${nicoId}`,
+                watchUrl: `https://www.nicovideo.jp/watch/${nicoId}`
+            };
+        }
+        const youtubeId = extractYoutubeId(text);
+        if (youtubeId) {
+            return {
+                provider: 'youtube',
+                id: youtubeId,
+                original: text,
+                label: `youtube:${youtubeId}`,
+                watchUrl: /^https?:\/\//i.test(text) ? text : `https://www.youtube.com/watch?v=${youtubeId}`
+            };
+        }
+        return null;
+    }
+
+    function initNiconicoMessageListener() {
+        if (niconicoMessageListenerAttached) return;
+        niconicoMessageListenerAttached = true;
+        window.addEventListener('message', (event) => {
+            if (event.origin !== 'https://embed.nicovideo.jp') return;
+            let data = event.data;
+            if (typeof data === 'string') {
+                try {
+                    data = JSON.parse(data);
+                } catch (e) {
+                    return;
+                }
+            }
+            if (!data || data.playerId !== niconicoPlayerId) return;
+            const status = data.data && typeof data.data.playerStatus !== 'undefined' ? Number(data.data.playerStatus) : null;
+            if ((data.eventName === 'playerStatusChange' || data.eventName === 'statusChange') && status === 4) {
+                if (niconicoLoopEnabled && niconicoIframe && niconicoIframe.contentWindow) {
+                    niconicoIframe.contentWindow.postMessage({
+                        eventName: 'seek',
+                        sourceConnectorType: 1,
+                        playerId: niconicoPlayerId,
+                        data: { time: 0 }
+                    }, 'https://embed.nicovideo.jp');
+                    niconicoIframe.contentWindow.postMessage({
+                        eventName: 'play',
+                        sourceConnectorType: 1,
+                        playerId: niconicoPlayerId
+                    }, 'https://embed.nicovideo.jp');
+                    return;
+                }
+                handleVideoEnded();
+            }
+        });
     }
 
     function loadYoutubeIframeApi() {
@@ -1988,12 +2098,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1500);
     }
 
+    function stopYoutubePlayerTracking() {
+        youtubePlayerBuildId++;
+        if (youtubeVolumePollTimer) {
+            clearInterval(youtubeVolumePollTimer);
+            youtubeVolumePollTimer = null;
+        }
+        if (youtubePlayer && typeof youtubePlayer.destroy === 'function') {
+            try { youtubePlayer.destroy(); } catch (e) { /* ignore stale player cleanup */ }
+        }
+        youtubePlayer = null;
+    }
+
     function renderYoutubeEmbed(embedUrl, options = {}) {
         const placeholder = document.getElementById('videoPlaceholder');
         const wrapper = document.getElementById('videoIframeWrapper');
         if (!placeholder || !wrapper) return;
 
         rememberCurrentYoutubeVolume();
+        niconicoPlayerId = null;
+        niconicoIframe = null;
+        niconicoLoopEnabled = false;
         const iframeId = `youtubePlayerFrame-${Date.now()}`;
         placeholder.classList.add('hide');
         wrapper.classList.remove('hide');
@@ -2045,9 +2170,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handleVideoEnded() {
         if (!activeAutoQueueName) {
+            if (activeMediaSequence && (activeMediaSequence.index < activeMediaSequence.items.length - 1 || activeMediaSequence.loop)) {
+                activeMediaSequence.index = activeMediaSequence.index < activeMediaSequence.items.length - 1 ? activeMediaSequence.index + 1 : 0;
+                const next = activeMediaSequence.items[activeMediaSequence.index];
+                playMediaItem(next, false, { keepAutoQueue: true, keepSequence: true });
+                printCli(`sequence next: ${next.original || next.label}`, 'muted');
+                return;
+            }
             videoPlaybackActive = false;
+            activeMediaSequence = null;
             return;
         }
+        activeMediaSequence = null;
         await playNextQueueItem(activeAutoQueueName, { fromAuto: true });
     }
 
@@ -2088,10 +2222,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (localLinkHelper) {
             if (isLocalFile) {
-                localLinkHelper.classList.remove('hide');
-                localLinkHelper.innerHTML = `
-                    <i class="fa-solid fa-circle-info"></i> ローカル起動（file://）では動画によって埋め込み再生が制限される場合があります（エラー154など）。再生できない場合は <a href="${url}" target="_blank">YouTubeで直接開く <i class="fa-solid fa-arrow-up-right-from-square"></i></a> をお試しください。
-                `;
+                showVideoHelper(`
+                    <span><i class="fa-solid fa-circle-info"></i> ローカル起動（file://）では動画によって埋め込み再生が制限される場合があります（エラー154など）。再生できない場合は <a href="${url}" target="_blank">YouTubeで直接開く <i class="fa-solid fa-arrow-up-right-from-square"></i></a> をお試しください。</span>
+                `);
             } else {
                 localLinkHelper.classList.add('hide');
             }
@@ -2103,6 +2236,130 @@ document.addEventListener('DOMContentLoaded', () => {
             saveVideoToHistory(url);
             saveSetting('default_video_url', url);
         }
+    }
+
+    function playMediaUrl(url, saveHistory = true, options = {}) {
+        const playlistId = extractYoutubePlaylistId(url);
+        if (playlistId && (/youtube\.com|youtu\.be/i.test(url) || /^(PL|UU|LL|FL|RD|WL)/.test(String(url).trim()))) {
+            playYoutubeVideo(url, saveHistory, options);
+            return true;
+        }
+
+        const media = parseMediaRef(url);
+        if (media) {
+            playMediaItem(media, saveHistory, options);
+            return true;
+        }
+
+        window.say('対応している動画URLではないかも……？', 'angry');
+        return false;
+    }
+
+    function playMediaItem(media, saveHistory = true, options = {}) {
+        if (!media) return false;
+        if (!options.keepSequence) {
+            activeMediaSequence = null;
+        }
+        if (media.provider === 'youtube') {
+            playYoutubeVideo(media.watchUrl || media.original || media.id, saveHistory, options);
+            return true;
+        }
+        if (media.provider === 'niconico') {
+            playNiconicoVideo(media, saveHistory, options);
+            return true;
+        }
+        return false;
+    }
+
+    function playNiconicoVideo(media, saveHistory = true, options = {}) {
+        const localLinkHelper = document.getElementById('videoLocalLink');
+        const playerId = `kazunoNicoPlayer-${Date.now()}`;
+        niconicoPlayerId = playerId;
+        niconicoLoopEnabled = !!options.loop;
+        const embedUrl = `https://embed.nicovideo.jp/watch/${media.id}?autoplay=1&jsapi=1&playerId=${encodeURIComponent(playerId)}`;
+
+        rememberCurrentYoutubeVolume();
+        stopYoutubePlayerTracking();
+        const placeholder = document.getElementById('videoPlaceholder');
+        const wrapper = document.getElementById('videoIframeWrapper');
+        if (!placeholder || !wrapper) return;
+        placeholder.classList.add('hide');
+        wrapper.classList.remove('hide');
+        wrapper.innerHTML = `
+            <iframe id="${playerId}" src="${embedUrl}"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture; fullscreen"
+                    allowfullscreen
+                    webkitallowfullscreen
+                    mozallowfullscreen>
+            </iframe>
+        `;
+        niconicoIframe = document.getElementById(playerId);
+
+        videoPlaybackActive = true;
+        if (options.autoAdvanceQueue) {
+            activeAutoQueueName = normalizeQueueName(options.autoAdvanceQueue);
+        } else if (options.loop || !options.keepAutoQueue) {
+            activeAutoQueueName = null;
+        }
+
+        if (localLinkHelper) {
+            showVideoHelper(`
+                <span><i class="fa-solid fa-circle-info"></i> ニコニコ動画を埋め込み再生しています。再生できない場合は <a href="${media.watchUrl}" target="_blank">ニコニコで直接開く <i class="fa-solid fa-arrow-up-right-from-square"></i></a> をお試しください。</span>
+            `);
+        }
+
+        switchTab('video');
+        saveSetting('last_tab', 'video');
+        if (saveHistory) {
+            saveVideoToHistory(media.original || media.watchUrl || media.label);
+            saveSetting('default_video_url', media.original || media.watchUrl || media.label);
+        }
+        window.say(options.loop ? 'ニコニコ動画をループ再生で開くね。' : 'ニコニコ動画を開くね。コメントの海だ。', 'present');
+    }
+
+    function showVideoHelper(html) {
+        const helper = document.getElementById('videoLocalLink');
+        if (!helper) return;
+        helper.classList.remove('hide');
+        helper.innerHTML = `
+            <div class="video-helper-content">
+                ${html}
+                <button type="button" class="video-helper-close" aria-label="案内を閉じる" title="案内を閉じる">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        `;
+        const closeBtn = helper.querySelector('.video-helper-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => helper.classList.add('hide'));
+        }
+    }
+
+    function playMediaItems(mediaItems, label = 'queue', saveHistory = true, options = {}) {
+        const items = (mediaItems || []).filter(Boolean);
+        if (items.length === 0) {
+            printCli('queue: 再生できる動画がありません。', 'danger');
+            return false;
+        }
+
+        const allYoutube = items.every(item => item.provider === 'youtube');
+        if (allYoutube && items.length > 1) {
+            activeMediaSequence = null;
+            playYoutubeVideoIds(items.map(item => item.id), label, saveHistory, options);
+            return true;
+        }
+
+        activeMediaSequence = items.length > 1 ? { items, index: 0, label, loop: !!options.loop } : null;
+        const itemOptions = activeMediaSequence ? { ...options, loop: false, keepSequence: true } : options;
+        playMediaItem(items[0], saveHistory, itemOptions);
+        if (saveHistory && label) {
+            saveVideoToHistory(label);
+            saveSetting('default_video_url', label);
+        }
+        if (items.length > 1) {
+            window.say(`${label} から ${items.length} 件の混在プレイリストを読み込んだよ。`, 'present');
+        }
+        return true;
     }
 
     function playYoutubeVideoIds(videoIds, label = 'queue', saveHistory = true, options = {}) {
@@ -2174,7 +2431,7 @@ document.addEventListener('DOMContentLoaded', () => {
             li.title = url;
             li.addEventListener('click', () => {
                 document.getElementById('videoUrlInput').value = url;
-                playYoutubeVideo(url, false);
+                playMediaUrl(url, false);
             });
             list.appendChild(li);
         });
@@ -2473,7 +2730,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const args = parseCommandArgs(cmdLine);
         const baseCmd = args[0].toLowerCase();
-        const vfsCommands = new Set(['ls', 'files', 'cd', 'mkdir', 'mv', 'cp', 'head', 'tail', 'cat', 'rm', 'del', 'export', 'import', 'nano', 'run', 'queue', 'qplay']);
+        const vfsCommands = new Set(['ls', 'files', 'cd', 'mkdir', 'mv', 'cp', 'head', 'tail', 'cat', 'rm', 'del', 'export', 'import', 'nano', 'run', 'queue', 'qplay', 'qnext', 'qprev', 'qback']);
         if (vfsCommands.has(baseCmd)) {
             await ensureVfsReady();
         }
@@ -2520,6 +2777,13 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'qplay':
                 await handleQueueCommand(['play', ...args.slice(1)]);
                 break;
+            case 'qnext':
+                await handleQueueCommand(['next', ...args.slice(1)]);
+                break;
+            case 'qprev':
+            case 'qback':
+                await handleQueueCommand(['prev', ...args.slice(1)]);
+                break;
             case 'open':
                 handleOpenCommand(args.slice(1));
                 break;
@@ -2540,6 +2804,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'tabs':
                 handleTabCommand([]);
+                break;
+            case 'cli':
+            case 'font':
+            case 'fontsize':
+                await handleCliCommand(args.slice(baseCmd === 'cli' ? 1 : 0));
                 break;
             case 'ls':
             case 'files':
@@ -2641,9 +2910,77 @@ document.addEventListener('DOMContentLoaded', () => {
         printCli(`Switched to tab: ${tabId}`, 'success');
     }
 
+    async function handleCliCommand(subArgs) {
+        const sub = (subArgs[0] || 'font').toLowerCase();
+        const current = normalizeCliFontSize(AppState.settings.cli_font_size);
+
+        if (sub === 'font' || sub === 'fontsize' || sub === 'size') {
+            const value = subArgs[1];
+            if (!value) {
+                printCli(`CLI font size: ${current}px`, 'info');
+                printCli('Use: cli font 18 / cli font +2 / cli font -2 / cli font reset', 'muted');
+                return;
+            }
+            await setCliFontSizeFromInput(value, current);
+            return;
+        }
+
+        if (sub === 'bigger' || sub === 'large' || sub === '+') {
+            await setCliFontSize(current + 2);
+            return;
+        }
+
+        if (sub === 'smaller' || sub === 'small' || sub === '-') {
+            await setCliFontSize(current - 2);
+            return;
+        }
+
+        if (sub === 'reset') {
+            await setCliFontSize(16);
+            return;
+        }
+
+        if (/^[+-]?\d+$/.test(sub)) {
+            await setCliFontSizeFromInput(sub, current);
+            return;
+        }
+
+        printCli('Usage: cli font [px|+N|-N|reset] / cli bigger / cli smaller', 'danger');
+    }
+
+    async function setCliFontSizeFromInput(input, current) {
+        const text = String(input).trim().toLowerCase();
+        if (text === 'reset' || text === 'default') {
+            await setCliFontSize(16);
+            return;
+        }
+        if (/^[+-]\d+$/.test(text)) {
+            await setCliFontSize(current + parseInt(text, 10));
+            return;
+        }
+        await setCliFontSize(parseInt(text, 10));
+    }
+
+    async function setCliFontSize(size) {
+        const next = normalizeCliFontSize(size);
+        await saveSetting('cli_font_size', next);
+        applyCliFontSize();
+        printCli(`CLI font size: ${next}px`, 'success');
+        if (next !== parseInt(size, 10)) {
+            printCli('指定値は 12px から 28px の範囲に丸めました。', 'muted');
+        }
+    }
+
     function formatBackupCounts(counts) {
         if (!counts) return 'counts: -';
-        return `todos:${counts.todos ?? 0} events:${counts.events ?? 0} done:${counts.done_items ?? 0}`;
+        return `todos:${counts.todos ?? 0} events:${counts.events ?? 0} done:${counts.done_items ?? 0} vfs:${counts.vfs_files ?? 0} (${formatBytes(counts.vfs_bytes ?? 0)})`;
+    }
+
+    function formatBytes(bytes) {
+        const value = Number(bytes) || 0;
+        if (value < 1024) return `${value}B`;
+        if (value < 1024 * 1024) return `${(value / 1024).toFixed(1)}KB`;
+        return `${(value / 1024 / 1024).toFixed(2)}MB`;
     }
 
     function shortHash(hash) {
@@ -2759,12 +3096,13 @@ document.addEventListener('DOMContentLoaded', () => {
         printCli('cal today                 - 今日の予定を表示します。', 'muted');
         printCli('cal month                 - 当月の予定リストを表示します。', 'muted');
         printCli('cal add <日付> <予定>     - 予定を追加します。 (例: cal add 2026-06-28 請求確認)', 'muted');
-        printCli('backup create/check/list  - ToDo/Calendar/できたことのバックアップを作成・確認します。', 'muted');
+        printCli('backup create/check/list  - ToDo/Calendar/できたこと/VFSのバックアップを作成・確認します。', 'muted');
         printCli('backup download <file>    - バックアップJSONをPCへ保存します。', 'muted');
-        printCli('play <URL|file>           - YouTube動画、またはVFSプレイリストを連続再生します。', 'muted');
+        printCli('play <URL|file>           - YouTube/ニコニコ動画、またはVFSプレイリストを再生します。', 'muted');
         printCli('play loop <URL|file>      - お気に入り用に、動画またはプレイリストをループ再生します。', 'muted');
-        printCli('queue add <name> <URL>    - 名前付き再生キューへ動画を追加します。', 'muted');
+        printCli('queue add <name> <URL>    - 名前付き再生キューへYouTube/ニコニコ動画を追加します。', 'muted');
         printCli('qplay <name>              - キューの先頭未再生を再生し、その行をコメントアウトします。', 'muted');
+        printCli('qnext/qprev <name>        - キュー再生を次へ進める / 前へ戻します。', 'muted');
         printCli('queue list [name]         - キュー一覧、または指定キューの中身を表示します。', 'muted');
         printCli('queue stop                - 現在のキュー自動送りを停止します。', 'muted');
         printCli('open <URL>                - 指定したURLをブラウザ別タブで開きます。', 'muted');
@@ -2772,6 +3110,7 @@ document.addEventListener('DOMContentLoaded', () => {
         printCli('hcalc                     - 計算機能(calc)の利用可能演算子・定数・関数のヘルプを表示します。', 'muted');
         printCli('tab <name> / goto <name>  - 指定タブへ移動します。todo, calendar, pomodoro, video, location, cli, oneirotopia', 'muted');
         printCli('tabs                      - 移動できるタブ名を表示します。', 'muted');
+        printCli('cli font [px|+/−|reset]   - CLI文字サイズを表示・変更します。(例: cli font 18, cli bigger)', 'muted');
         printCli('whereami / address        - 位置情報の許可を取り、現在地の住所を表示します。', 'muted');
         printCli('whereami map              - 最後に取得した現在地をOpenStreetMapで開きます。', 'muted');
         printCli('ls                        - 仮想ファイル・フォルダの一覧を表示します。', 'muted');
@@ -2790,7 +3129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         printCli('kazuno <表情>             - 一埜の表情を手動で切り替えます。', 'muted');
         printCli('kazuno interval <秒>      - おしゃべり間隔(秒)を変更します。(0で停止)', 'muted');
         printCli('kazuno float on|off|toggle - 一埜のフワフワ動作を切り替えます。', 'muted');
-        printCli('nano keys                 - F2保存 / F3終了 / F4保存して終了 / Esc終了', 'muted');
+        printCli('nano keys                 - F2保存 / F3終了 / F4保存して終了 / Ctrl+C/V/X コピー・貼付・切取', 'muted');
         printCli('oneiro <サブコマンド>     - Oneirotopiaの将来用コマンドを実行します。', 'muted');
     }
 
@@ -3062,7 +3401,7 @@ document.addEventListener('DOMContentLoaded', () => {
             input = subArgs[1];
         }
         if (!input) {
-            printCli('エラー: 再生するYouTube URL、動画ID、またはプレイリストファイルを指定してください。 (例: play dQw4w9WgXcQ, play loop playlist.txt)', 'danger');
+            printCli('エラー: 再生するYouTube/ニコニコURL、動画ID、またはプレイリストファイルを指定してください。 (例: play sm9, play loop playlist.txt)', 'danger');
             return;
         }
 
@@ -3075,36 +3414,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             const lines = content.split(/\r?\n/);
-            const videoIds = [];
+            const mediaItems = [];
             
             for (let line of lines) {
                 line = line.trim();
                 if (!line || line.startsWith('#')) continue;
+                const playableText = line.split(/\s+#/)[0].trim().split(/\s+/)[0] || '';
                 
-                const vid = extractYoutubeId(line);
-                if (vid) {
-                    videoIds.push(vid);
-                } else if (/^[a-zA-Z0-9_-]{11}$/.test(line)) {
-                    videoIds.push(line);
+                const media = parseMediaRef(playableText);
+                if (media) {
+                    mediaItems.push(media);
                 }
             }
 
-            if (videoIds.length === 0) {
+            if (mediaItems.length === 0) {
                 printCli(`エラー: プレイリストファイル "${input}" から有効な動画IDが見つかりませんでした。`, 'danger');
                 return;
             }
 
-            printCli(`内部プレイリスト "${input}" から ${videoIds.length} 個の動画を読み込みました。${loop ? ' (loop)' : ''}`, 'success');
-            playYoutubeVideoIds(videoIds, input, true, { loop });
-            window.say(loop ? `自作プレイリスト「${input}」をループ再生するね！` : `自作プレイリスト「${input}」から ${videoIds.length} 曲を読み込んで連続再生するね！`, 'happy');
+            printCli(`内部プレイリスト "${input}" から ${mediaItems.length} 個の動画を読み込みました。${loop ? ' (loop)' : ''}`, 'success');
+            playMediaItems(mediaItems, input, true, { loop });
+            window.say(loop ? `自作プレイリスト「${input}」をループ再生するね！` : `自作プレイリスト「${input}」から ${mediaItems.length} 曲を読み込んで連続再生するね！`, 'happy');
             
             saveVideoToHistory(input);
             saveSetting('default_video_url', input);
         } else {
             switchTab('video');
             saveSetting('last_tab', 'video');
-            playYoutubeVideo(input, true, { loop });
-            printCli(`動画の埋め込み再生を開始しました: ${input}${loop ? ' (loop)' : ''}`, 'success');
+            const played = playMediaUrl(input, true, { loop });
+            if (played) {
+                printCli(`動画の埋め込み再生を開始しました: ${input}${loop ? ' (loop)' : ''}`, 'success');
+            } else {
+                printCli(`エラー: 対応している動画URLまたはIDではありません: ${input}`, 'danger');
+            }
         }
     }
 
@@ -3131,9 +3473,23 @@ document.addEventListener('DOMContentLoaded', () => {
         return lines.map((line, index) => {
             const trimmed = line.trim();
             const isComment = trimmed.startsWith('#');
-            const playableText = trimmed.split(/\s+#/)[0].trim().split(/\s+/)[0] || '';
-            const vid = !isComment ? extractYoutubeId(playableText) : null;
-            return { line, index, trimmed, playableText, isComment, videoId: vid };
+            const playedMatch = trimmed.match(/^#\s*played\s+(\S+)\s+(.+)$/);
+            const originalLine = playedMatch ? playedMatch[2] : line;
+            const playableSource = playedMatch ? originalLine.trim() : trimmed;
+            const playableText = playableSource.split(/\s+#/)[0].trim().split(/\s+/)[0] || '';
+            const media = !isComment || playedMatch ? parseMediaRef(playableText) : null;
+            return {
+                line,
+                index,
+                trimmed,
+                playableText,
+                originalLine,
+                isComment,
+                isPlayed: !!playedMatch,
+                playedAt: playedMatch ? playedMatch[1] : null,
+                media,
+                videoId: media && media.provider === 'youtube' ? media.id : null
+            };
         });
     }
 
@@ -3150,27 +3506,76 @@ document.addEventListener('DOMContentLoaded', () => {
         saveVfsFile(getQueuePath(name), content);
     }
 
+    function markQueueLinePlayed(lines, item) {
+        lines[item.index] = `# played ${new Date().toISOString()} ${item.originalLine || item.line}`;
+    }
+
+    async function playQueueItemByParsedItem(queueName, content, item, options = {}) {
+        const updatedLines = content.split(/\r?\n/);
+        markQueueLinePlayed(updatedLines, item);
+        saveQueueContent(queueName, updatedLines.join('\n').replace(/\s*$/g, '') + '\n');
+
+        activeAutoQueueName = queueName;
+        activeQueuePlayback = {
+            name: queueName,
+            index: item.index,
+            line: item.originalLine || item.line,
+            media: item.media
+        };
+        playMediaItem(item.media, true, { autoAdvanceQueue: queueName });
+        printCli(`queue "${queueName}" から再生しました: ${item.originalLine || item.line}`, 'success');
+        printCli(`再生済みとしてコメントアウトしました: ${getQueuePath(queueName)}`, 'muted');
+        return true;
+    }
+
     async function playNextQueueItem(name, options = {}) {
         const queueName = normalizeQueueName(name);
         const content = await readQueueContent(queueName);
         const parsed = parseQueueLines(content);
-        const nextItem = parsed.find(item => item.videoId);
+        let nextItem = parsed.find(item => item.media && !item.isPlayed);
+        if (!nextItem && options.allowPlayed) {
+            const startIndex = activeQueuePlayback && activeQueuePlayback.name === queueName ? activeQueuePlayback.index + 1 : 0;
+            nextItem = parsed.find(item => item.media && item.index >= startIndex) || parsed.find(item => item.media);
+        }
         if (!nextItem) {
             activeAutoQueueName = null;
             videoPlaybackActive = false;
+            activeQueuePlayback = null;
             printCli(`queue "${queueName}" に未再生の動画はありません。`, options.fromAuto ? 'muted' : 'warning');
             return false;
         }
 
-        const updatedLines = content.split(/\r?\n/);
-        updatedLines[nextItem.index] = `# played ${new Date().toISOString()} ${nextItem.line}`;
-        saveQueueContent(queueName, updatedLines.join('\n').replace(/\s*$/g, '') + '\n');
+        return await playQueueItemByParsedItem(queueName, content, nextItem, options);
+    }
 
-        activeAutoQueueName = queueName;
-        playYoutubeVideoIds([nextItem.videoId], `queue:${queueName}`, true, { autoAdvanceQueue: queueName });
-        printCli(`queue "${queueName}" から再生しました: ${nextItem.line}`, 'success');
-        printCli(`再生済みとしてコメントアウトしました: ${getQueuePath(queueName)}`, 'muted');
-        return true;
+    async function playPreviousQueueItem(name) {
+        const queueName = normalizeQueueName(name);
+        const content = await readQueueContent(queueName);
+        const parsed = parseQueueLines(content);
+        const playable = parsed.filter(item => item.media);
+        if (playable.length === 0) {
+            printCli(`queue "${queueName}" に再生できる動画はありません。`, 'warning');
+            return false;
+        }
+
+        const currentIndex = activeQueuePlayback && activeQueuePlayback.name === queueName
+            ? activeQueuePlayback.index
+            : (playable.filter(item => item.isPlayed).pop() || playable[0]).index;
+        const currentItem = playable.find(item => item.index === currentIndex);
+        const previousItems = playable.filter(item => item.index < currentIndex);
+        const previousItem = previousItems.length > 0 ? previousItems[previousItems.length - 1] : null;
+
+        if (!previousItem) {
+            printCli(`queue "${queueName}" はこれより前の動画がありません。`, 'warning');
+            return false;
+        }
+
+        const updatedLines = content.split(/\r?\n/);
+        if (currentItem && currentItem.isPlayed) {
+            updatedLines[currentItem.index] = currentItem.originalLine;
+        }
+        const updatedContent = updatedLines.join('\n').replace(/\s*$/g, '') + '\n';
+        return await playQueueItemByParsedItem(queueName, updatedContent, previousItem, { fromPrev: true });
     }
 
     async function handleQueueCommand(subArgs) {
@@ -3181,12 +3586,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetName = normalizeQueueName(subArgs[1] || 'default');
             const item = subArgs[2];
             if (!item) {
-                printCli('Usage: queue add <name> <YouTube URL or ID>', 'danger');
+                printCli('Usage: queue add <name> <YouTube/Niconico URL or ID>', 'danger');
                 return;
             }
-            const vid = extractYoutubeId(item);
-            if (!vid) {
-                printCli('queue add: 有効なYouTube URLまたは動画IDを指定してください。', 'danger');
+            const media = parseMediaRef(item);
+            if (!media) {
+                printCli('queue add: 有効なYouTube/ニコニコURLまたは動画IDを指定してください。', 'danger');
                 return;
             }
             const comment = subArgs.slice(3).join(' ').trim();
@@ -3208,15 +3613,20 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        if (sub === 'prev' || sub === 'previous' || sub === 'back') {
+            await playPreviousQueueItem(name);
+            return;
+        }
+
         if (sub === 'playall') {
             const content = await readQueueContent(name);
-            const videoIds = parseQueueLines(content).filter(item => item.videoId).map(item => item.videoId);
-            if (videoIds.length === 0) {
+            const mediaItems = parseQueueLines(content).filter(item => item.media).map(item => item.media);
+            if (mediaItems.length === 0) {
                 printCli(`queue "${name}" に未再生の動画はありません。`, 'warning');
                 return;
             }
-            playYoutubeVideoIds(videoIds, `queue:${name}:all`, true);
-            printCli(`queue "${name}" の未再生 ${videoIds.length} 件を連続再生します。`, 'success');
+            playMediaItems(mediaItems, `queue:${name}:all`, true);
+            printCli(`queue "${name}" の未再生 ${mediaItems.length} 件を連続再生します。`, 'success');
             return;
         }
 
@@ -3265,7 +3675,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        printCli('Usage: queue add|play|playall|list|edit|path <name> ... / qplay <name>', 'danger');
+        printCli('Usage: queue add|play|next|prev|playall|list|edit|path <name> ... / qplay <name>', 'danger');
     }
 
     function handleOpenCommand(subArgs) {
@@ -4004,19 +4414,12 @@ J_QGZopb1zU
             <textarea class="editor-textarea" id="editorTextarea" spellcheck="false" placeholder="10 PRINT \\"HELLO\\"\\n20 GOTO 10"></textarea>
             <div class="editor-status-bar" id="editorStatusBar"></div>
             <div class="editor-shortcuts">
-                <div class="shortcut-item" id="editorShortcutHelp"><span class="key">^G</span><span class="label">Get Help</span></div>
+                <div class="shortcut-item" id="editorShortcutCopy"><span class="key">Ctrl+C</span><span class="label">Copy</span></div>
                 <div class="shortcut-item" id="editorShortcutSave"><span class="key">F2</span><span class="label">Save</span></div>
-                <div class="shortcut-item" id="editorShortcutRead"><span class="key">^R</span><span class="label">Read File</span></div>
-                <div class="shortcut-item" id="editorShortcutPrev"><span class="key">^Y</span><span class="label">Prev Pg</span></div>
-                <div class="shortcut-item" id="editorShortcutCut"><span class="key">^K</span><span class="label">Cut Text</span></div>
-                <div class="shortcut-item" id="editorShortcutPos"><span class="key">^C</span><span class="label">Cur Pos</span></div>
+                <div class="shortcut-item" id="editorShortcutPaste"><span class="key">Ctrl+V</span><span class="label">Paste</span></div>
+                <div class="shortcut-item" id="editorShortcutCut"><span class="key">Ctrl+X</span><span class="label">Cut</span></div>
                 <div class="shortcut-item" id="editorShortcutExit"><span class="key">F3</span><span class="label">Exit</span></div>
                 <div class="shortcut-item" id="editorShortcutSaveExit"><span class="key">F4</span><span class="label">SaveExit</span></div>
-                <div class="shortcut-item" id="editorShortcutJustify"><span class="key">^J</span><span class="label">Justify</span></div>
-                <div class="shortcut-item" id="editorShortcutSearch"><span class="key">^W</span><span class="label">Where Is</span></div>
-                <div class="shortcut-item" id="editorShortcutNext"><span class="key">^V</span><span class="label">Next Pg</span></div>
-                <div class="shortcut-item" id="editorShortcutPaste"><span class="key">^U</span><span class="label">Paste Text</span></div>
-                <div class="shortcut-item" id="editorShortcutSpell"><span class="key">^T</span><span class="label">To Spell</span></div>
             </div>
         `;
 
@@ -4075,10 +4478,10 @@ J_QGZopb1zU
             printCli(`nano: ${filename} の編集を終了しました。`, 'info');
         }
 
-        function showUnimplementedMsg(key) {
-            statusBarEl.textContent = `[ ショートカット '${key}' は実装されていません ]`;
+        function showNativeEditMsg(name) {
+            statusBarEl.textContent = `[ ${name} はキーボード操作で使えます ]`;
             setTimeout(() => {
-                if (statusBarEl.textContent.includes(`'${key}'`)) {
+                if (statusBarEl.textContent.includes(name)) {
                     statusBarEl.textContent = '';
                 }
             }, 1500);
@@ -4100,23 +4503,9 @@ J_QGZopb1zU
             }
         });
 
-        // Dummy actions for other shortcuts
-        const dummyShortcuts = [
-            { id: 'editorShortcutHelp', name: '^G' },
-            { id: 'editorShortcutRead', name: '^R' },
-            { id: 'editorShortcutPrev', name: '^Y' },
-            { id: 'editorShortcutCut', name: '^K' },
-            { id: 'editorShortcutPos', name: '^C' },
-            { id: 'editorShortcutJustify', name: '^J' },
-            { id: 'editorShortcutSearch', name: '^W' },
-            { id: 'editorShortcutNext', name: '^V' },
-            { id: 'editorShortcutPaste', name: '^U' },
-            { id: 'editorShortcutSpell', name: '^T' }
-        ];
-
-        dummyShortcuts.forEach(s => {
-            document.getElementById(s.id).addEventListener('click', () => showUnimplementedMsg(s.name));
-        });
+        document.getElementById('editorShortcutCopy').addEventListener('click', () => showNativeEditMsg('Ctrl+C Copy'));
+        document.getElementById('editorShortcutPaste').addEventListener('click', () => showNativeEditMsg('Ctrl+V Paste'));
+        document.getElementById('editorShortcutCut').addEventListener('click', () => showNativeEditMsg('Ctrl+X Cut'));
 
         textarea.addEventListener('keydown', e => {
             if (e.key === 'F2') {
@@ -4134,9 +4523,14 @@ J_QGZopb1zU
             } else if (e.ctrlKey && e.key === 'q') {
                 e.preventDefault();
                 document.getElementById('editorShortcutExit').click();
-            } else if (e.ctrlKey && ['g','r','y','k','c','j','w','v','u','t'].includes(e.key.toLowerCase())) {
+            } else if (e.ctrlKey && ['g','r','y','k','j','w','u','t'].includes(e.key.toLowerCase())) {
                 e.preventDefault();
-                showUnimplementedMsg('^' + e.key.toUpperCase());
+                statusBarEl.textContent = `[ Ctrl+${e.key.toUpperCase()} は未使用です ]`;
+                setTimeout(() => {
+                    if (statusBarEl.textContent.includes(`Ctrl+${e.key.toUpperCase()}`)) {
+                        statusBarEl.textContent = '';
+                    }
+                }, 1500);
             }
         });
     }

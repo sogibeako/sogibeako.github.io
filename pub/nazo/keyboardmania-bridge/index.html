@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet">
+  <meta name="referrer" content="no-referrer">
+  <title>鍵盤の橋渡し | Keyboardmania MIDI Bridge</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="secret-note" aria-label="このページについて">
+      <span class="secret-mark" aria-hidden="true">＊</span>
+      <p>配布ページ</p>
+    </header>
+
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <p class="eyebrow">RU025 / PRIVATE DROP 01</p>
+        <h1 id="page-title">鍵盤<br><span>変換器</span></h1>
+        <p class="lead">
+          PlayStation 2用Keyboardmaniaコントローラーを、
+          パソコンのMIDIキーボードとして使うためのBridgeです。
+        </p>
+
+        <div class="availability">
+          <span class="status-dot" aria-hidden="true"></span>
+          Windows 10 / 11・64bit版
+        </div>
+
+        <a class="download-button" href="keyboardmania-midi-bridge-windows-x64.zip" download>
+          <span class="download-icon" aria-hidden="true">↓</span>
+          <span>
+            <strong>Windows版をダウンロード</strong>
+            <small>ZIP・約643 KB</small>
+          </span>
+        </a>
+
+        <p class="sub-link">
+          <a href="README.md">先に詳しい説明書を読む</a>
+        </p>
+      </div>
+
+      <div class="keyboard-card" aria-label="Keyboardmaniaコントローラーのイメージ">
+        <div class="device-label">
+          <span>KEYBOARDMANIA</span>
+          <small>USB MIDI BRIDGE</small>
+        </div>
+        <div class="keys" aria-hidden="true">
+          <i class="white"></i><i class="black b1"></i>
+          <i class="white"></i><i class="black b2"></i>
+          <i class="white"></i>
+          <i class="white"></i><i class="black b4"></i>
+          <i class="white"></i><i class="black b5"></i>
+          <i class="white"></i><i class="black b6"></i>
+          <i class="white"></i>
+        </div>
+        <div class="signal">
+          <span>USB</span>
+          <b aria-hidden="true">················</b>
+          <span>MIDI</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="steps section-block" aria-labelledby="start-title">
+      <div class="section-heading">
+        <p class="section-number">01</p>
+        <div>
+          <p class="eyebrow">QUICK START</p>
+          <h2 id="start-title">3つだけ準備します</h2>
+        </div>
+      </div>
+
+      <ol class="step-list">
+        <li>
+          <span class="step-no">1</span>
+          <div>
+            <h3>loopMIDIを起動</h3>
+            <p>
+              <a href="https://www.tobias-erichsen.de/software/loopmidi.html"
+                rel="noreferrer">loopMIDI</a>をインストールし、
+              <code>Keyboardmania</code>というポートを作ります。
+            </p>
+          </div>
+        </li>
+        <li>
+          <span class="step-no">2</span>
+          <div>
+            <h3>コントローラーを接続</h3>
+            <p>
+              ZIPを「すべて展開」し、USBを挿してから
+              <code>keyboardmania-midi-bridge.exe</code>を開きます。
+            </p>
+          </div>
+        </li>
+        <li>
+          <span class="step-no">3</span>
+          <div>
+            <h3>DAWで選択</h3>
+            <p>
+              黒い画面でポート番号を入力します。
+              <code>Ready...</code>と出たら、DAWのMIDI入力に
+              <code>Keyboardmania</code>を選びます。
+            </p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <section class="ready-panel section-block" aria-labelledby="ready-title">
+      <div>
+        <p class="eyebrow">YOU ARE READY WHEN...</p>
+        <h2 id="ready-title">この表示が出れば成功です</h2>
+        <p>
+          好きなピアノやシンセをDAWのトラックへ設定して、
+          鍵盤を押してみてください。
+        </p>
+      </div>
+      <pre aria-label="正常起動時の表示例"><code>Available MIDI ports:
+  [0] Keyboardmania
+
+Enter MIDI port number: 0
+Opened Keyboardmania
+Ready...</code></pre>
+    </section>
+
+    <section class="controls section-block" aria-labelledby="controls-title">
+      <div class="section-heading">
+        <p class="section-number">02</p>
+        <div>
+          <p class="eyebrow">CONTROLS</p>
+          <h2 id="controls-title">演奏中のキー操作</h2>
+        </div>
+      </div>
+
+      <dl class="control-grid">
+        <div><dt>←</dt><dd>1オクターブ下げる</dd></div>
+        <div><dt>→</dt><dd>1オクターブ上げる</dd></div>
+        <div><dt>−</dt><dd>元の音域へ戻す</dd></div>
+        <div><dt>Q</dt><dd>Bridgeを終了する</dd></div>
+      </dl>
+    </section>
+
+    <section class="mac-note section-block" aria-labelledby="mac-title">
+      <div class="mac-intro">
+        <div class="mac-badge" aria-hidden="true">MAC</div>
+        <div>
+          <p class="eyebrow">BUILD IT ON YOUR MAC</p>
+          <h2 id="mac-title">Mac版は手元でビルドできます</h2>
+          <p>
+            Mac環境でソースから作る方法を用意しました。
+            一度コマンドを実行すれば、Apple Silicon／Intel両対応の
+            Universal版ZIPが生成されます。
+          </p>
+        </div>
+      </div>
+
+      <a class="source-button" href="keyboardmania-midi-bridge-source.zip" download>
+        <span aria-hidden="true">⌘</span>
+        <span>
+          <strong>Macビルド用ソースをダウンロード</strong>
+          <small>ZIP・CMakeで依存ライブラリを自動取得</small>
+        </span>
+      </a>
+
+      <div class="mac-build-steps">
+        <div>
+          <span>1</span>
+          <p><strong>開発ツール</strong><br><code>xcode-select --install</code></p>
+        </div>
+        <div>
+          <span>2</span>
+          <p><strong>CMake</strong><br><code>brew install cmake</code></p>
+        </div>
+        <div>
+          <span>3</span>
+          <p><strong>Universal版を作成</strong><br><code>sh scripts/build-macos.sh</code></p>
+        </div>
+      </div>
+
+      <details class="mac-build-details">
+        <summary style="">Mac版の詳しいビルド手順を見る</summary>
+        <div class="mac-build-body">
+          <p>
+            ソースZIPを展開したら「ターミナル」を開き、次を上から順番に実行します。
+          </p>
+          <pre><code>xcode-select --install
+brew install cmake
+cd ~/Downloads/keyboardmania-midi-bridge-source
+sh scripts/build-macos.sh</code></pre>
+          <p>
+            成功すると、ソースフォルダー内の
+            <code>dist/keyboardmania-midi-bridge-macos-universal.zip</code>
+            に完成品が作られます。初回起動方法やエラー対処は
+            <a href="BUILD-MAC.md">詳しいMacビルド説明書</a>を確認してください。
+          </p>
+          <p class="small-note">
+            Homebrewを使わない場合は、CMake公式サイトからmacOS版を
+            インストールしても構いません。ビルド中はインターネット接続が必要です。
+          </p>
+        </div>
+      </details>
+    </section>
+
+    <section class="help section-block" aria-labelledby="help-title">
+      <div class="section-heading">
+        <p class="section-number">03</p>
+        <div>
+          <p class="eyebrow">IF SOMETHING IS WRONG</p>
+          <h2 id="help-title">困ったとき</h2>
+        </div>
+      </div>
+
+      <details>
+        <summary>コントローラーを探す表示から進まない</summary>
+        <p>
+          USBを一度抜き、数秒待ってから挿し直します。
+          USBハブではなく、パソコン本体へ直接つなぐのも試してください。
+        </p>
+      </details>
+      <details>
+        <summary>MIDIポートがないと言われる</summary>
+        <p>
+          loopMIDIを起動し、<code>Keyboardmania</code>ポートが
+          作られていることを確認してから、Bridgeを起動し直します。
+        </p>
+      </details>
+      <details>
+        <summary>Readyなのに音が鳴らない</summary>
+        <p>
+          DAWのMIDI入力、ソフト音源、録音待機または入力モニターを確認します。
+          詳しい確認方法は同梱のREADMEにまとめています。
+        </p>
+      </details>
+    </section>
+
+    <section class="provenance section-block" aria-labelledby="about-title">
+      <p class="eyebrow">ABOUT THIS BUILD</p>
+      <h2 id="about-title">小さな改良版について</h2>
+      <p>
+        この配布物は、Heelさん（GitHub:
+        <a href="https://github.com/has207/keyboardmania-midi-bridge"
+          rel="noreferrer">has207</a>）による
+        <em>keyboardmania-midi-bridge</em>を基にした非公式の改良版です。
+        元のWindows向けコードを、再現しやすいビルドとMac対応へ拡張しています。
+      </p>
+      <p>
+        元プロジェクトと本配布物はMIT Licenseです。
+        著作権表示とライセンス全文はZIP内の<code>LICENSE</code>に収録しています。
+      </p>
+      <div class="file-check">
+        <span>SHA-256</span>
+        <code>E20A78F68B5F5FB8477D7D1FD2A4F1F24B88D6F59889C7776369C7D0B2FE2B92</code>
+      </div>
+    </section>
+
+    <footer>
+      <p>for a sibling, with a little rain.</p>
+      <p class="privacy-note">
+        このページは検索結果への掲載を拒否していますが、URLを知る人は閲覧できます。
+      </p>
+    </footer>
+  </main>
+</body>
+</html>

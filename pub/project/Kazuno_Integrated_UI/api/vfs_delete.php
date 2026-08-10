@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/backup_lib.php';
 check_auth();
 
 $input = json_decode(file_get_contents('php://input'), true);
@@ -22,6 +23,8 @@ try {
         $stmt = $db->prepare("DELETE FROM vfs_files WHERE path = :path");
         $stmt->execute([':path' => $path]);
     }
+
+    backup_try_create_snapshot($db, $recursive ? 'vfs_delete_recursive' : 'vfs_delete');
     send_json(['success' => true]);
 } catch (PDOException $e) {
     send_json(['error' => $e->getMessage()], 500);

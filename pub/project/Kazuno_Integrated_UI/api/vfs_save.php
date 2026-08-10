@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/backup_lib.php';
 check_auth();
 
 $input = json_decode(file_get_contents('php://input'), true);
@@ -23,6 +24,8 @@ try {
     $stmt = $db->prepare("SELECT path, is_dir, updated_at, LENGTH(content) AS size FROM vfs_files WHERE path = :path");
     $stmt->execute([':path' => $path]);
     $item = $stmt->fetch();
+
+    backup_try_create_snapshot($db, $is_dir ? 'vfs_mkdir' : 'vfs_save');
     send_json(['success' => true, 'item' => $item]);
 } catch (PDOException $e) {
     send_json(['error' => $e->getMessage()], 500);

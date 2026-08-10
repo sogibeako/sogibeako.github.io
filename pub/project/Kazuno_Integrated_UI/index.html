@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css?v=20260721-backup-hash">
+    <link rel="stylesheet" href="css/style.css?v=20260810-queue-nav">
 </head>
 <body>
 
@@ -331,6 +331,8 @@
                         <div class="video-layout">
                             <div class="video-form">
                                 <input type="text" id="videoUrlInput" placeholder="YouTube URLを入力 (https://www.youtube.com/watch?v=xxxx)" class="input-text">
+                                <button id="queuePrevBtn" class="btn btn-text" type="button"><i class="fa-solid fa-backward-step"></i> 戻る</button>
+                                <button id="queueNextBtn" class="btn btn-text" type="button"><i class="fa-solid fa-forward-step"></i> 進む</button>
                                 <button id="playVideoBtn" class="btn btn-primary"><i class="fa-solid fa-circle-play"></i> 再生</button>
                             </div>
                             
@@ -487,7 +489,7 @@
 
     <!-- JSファイルのインポート -->
     <script src="js/parser.js?v=2.0"></script>
-    <script src="js/app.js?v=20260721-backup-hash"></script>
+    <script src="js/app.js?v=20260810-queue-nav"></script>
 
 </body>
 </html>

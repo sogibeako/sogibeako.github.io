@@ -29,11 +29,12 @@ function backup_fetch_all($db, $sql) {
 
 function backup_collect_state($db) {
     return [
-        'schema' => 'kazuno-backup-v1',
+        'schema' => 'kazuno-backup-v2',
         'tables' => [
             'todos' => backup_fetch_all($db, "SELECT * FROM todos ORDER BY id ASC"),
             'events' => backup_fetch_all($db, "SELECT * FROM events ORDER BY event_date ASC, start_time ASC, id ASC"),
-            'done_items' => backup_fetch_all($db, "SELECT * FROM done_items ORDER BY done_date ASC, id ASC")
+            'done_items' => backup_fetch_all($db, "SELECT * FROM done_items ORDER BY done_date ASC, id ASC"),
+            'vfs_files' => backup_fetch_all($db, "SELECT path, content, is_dir, updated_at, LENGTH(content) AS size FROM vfs_files ORDER BY path ASC")
         ]
     ];
 }
@@ -43,10 +44,17 @@ function backup_state_hash($state) {
 }
 
 function backup_state_counts($state) {
+    $vfs_files = $state['tables']['vfs_files'] ?? [];
+    $vfs_bytes = 0;
+    foreach ($vfs_files as $file) {
+        $vfs_bytes += intval($file['size'] ?? 0);
+    }
     return [
         'todos' => count($state['tables']['todos'] ?? []),
         'events' => count($state['tables']['events'] ?? []),
-        'done_items' => count($state['tables']['done_items'] ?? [])
+        'done_items' => count($state['tables']['done_items'] ?? []),
+        'vfs_files' => count($vfs_files),
+        'vfs_bytes' => $vfs_bytes
     ];
 }
 
@@ -66,7 +74,8 @@ function backup_state_latest($state) {
     $candidates = [
         backup_latest_timestamp($state['tables']['todos'] ?? [], ['updated_at', 'created_at']),
         backup_latest_timestamp($state['tables']['events'] ?? [], ['updated_at', 'created_at']),
-        backup_latest_timestamp($state['tables']['done_items'] ?? [], ['created_at'])
+        backup_latest_timestamp($state['tables']['done_items'] ?? [], ['created_at']),
+        backup_latest_timestamp($state['tables']['vfs_files'] ?? [], ['updated_at'])
     ];
     $latest = null;
     foreach ($candidates as $candidate) {

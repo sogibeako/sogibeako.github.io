@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="文字のコードポイント、Unicode名、分類、符号化とWiktionary項目を調べるツール">
+  <title>Unicode文字列インスペクタ</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">UNICODE 17.0 / CODE POINT INSPECTOR</p>
+        <h1>Unicode文字列<br><span>インスペクタ</span></h1>
+      </div>
+      <p class="lead">見慣れない文字の正体を、コードポイント単位で静かにひらきます。</p>
+    </header>
+
+    <section class="input-panel" aria-labelledby="input-heading">
+      <div class="panel-heading">
+        <label id="input-heading" for="source">調べたい文字列</label>
+        <div class="counter"><strong id="count">0</strong><span> / 16 コードポイント</span></div>
+      </div>
+      <textarea id="source" rows="3" spellcheck="false" placeholder="例：猫𠮷é♥️が" aria-describedby="input-note"></textarea>
+      <div class="input-footer">
+        <p id="input-note">入力と同時に解析します。空白や改行も1コードポイントとして扱います。</p>
+        <div class="actions">
+          <button id="sample" class="button button-quiet" type="button">例を入力</button>
+          <button id="inspect" class="button" type="button">調べる</button>
+        </div>
+      </div>
+      <p id="message" class="message" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="results" aria-labelledby="results-heading">
+      <div class="results-heading">
+        <div>
+          <p class="eyebrow">ANALYSIS</p>
+          <h2 id="results-heading">解析結果</h2>
+        </div>
+        <p id="summary">文字列を入力してください</p>
+      </div>
+      <div id="empty" class="empty">
+        <span class="empty-glyph" aria-hidden="true">文</span>
+        <p>上の欄に文字を入力すると、ここにUnicode情報が表示されます。</p>
+      </div>
+      <div id="table-wrap" class="table-wrap" hidden>
+        <table>
+          <thead>
+            <tr>
+              <th>文字</th><th>コードポイント</th><th>Unicode名</th><th>分類</th><th>Script / Block</th><th>符号化</th><th>正規化</th><th>Wiktionary</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      <p>Unicode Character Database 17.0.0</p>
+      <p>日本語版・英語版Wiktionaryは項目の存在のみを確認します。</p>
+    </footer>
+  </main>
+  <noscript>このツールを使うにはJavaScriptを有効にしてください。</noscript>
+  <script src="app.js" defer></script>
+</body>
+</html>

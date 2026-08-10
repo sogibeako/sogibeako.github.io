@@ -475,6 +475,7 @@ function startRound(settings = state.settings || presets[0].settings, presetId =
     drawnTileId: null,
     hands: [[], [], [], []],
     rivers: [[], [], [], []],
+    discardHistory: [[], [], [], []],
     melds: [[], [], [], []],
     flowers: [[], [], [], []],
     riichi: [false, false, false, false],
@@ -591,6 +592,7 @@ function drawHumanAuto() {
   if (canWinNow(0, { type: "ツモ", player: 0, tile: drawn })) {
     state.pendingWin = { type: "ツモ", player: 0, tile: drawn };
     addLog(`あなたが${label(drawn)}をツモ。和了できます。`);
+    queueHumanClosedKan("和了できます。暗カンも可能な場合は候補を選べます。");
   } else if (state.riichi[0]) {
     if (!queueHumanClosedKan("リーチ中です。暗カン可能な面子があります。")) {
       addLog(`リーチ中のため、${label(drawn)}をツモ切りします。`);
@@ -731,6 +733,9 @@ function discardFrom(playerIndex, tileIndex) {
   const [tile] = state.hands[playerIndex].splice(tileIndex, 1);
   const isRiichiDeclaration = state.riichiPendingDiscard[playerIndex];
   const riverTile = { ...tile, riichiDiscard: isRiichiDeclaration, houteiDiscard: state.wall.length === 0 };
+  state.discardHistory ||= [[], [], [], []];
+  state.discardHistory[playerIndex] ||= [];
+  state.discardHistory[playerIndex].push(riverTile);
   state.rivers[playerIndex].push(riverTile);
   state.discardCounts[playerIndex] += 1;
   state.drawnTileId = null;
@@ -1742,8 +1747,25 @@ function isWinningHand(playerIndex, extraTile = null) {
 }
 
 function canWinNow(playerIndex, win) {
+  if (isRonWin(win) && isFuriten(playerIndex)) return false;
+  return canWinIgnoringFuriten(playerIndex, win);
+}
+
+function canWinIgnoringFuriten(playerIndex, win) {
   const tiles = scoringTilesForWin(win);
   return isWinningHandWithTiles(playerIndex, tiles) && hasRequiredYaku(playerIndex, tiles, win);
+}
+
+function isFuriten(playerIndex) {
+  const discardedKeys = new Set([
+    ...(state.discardHistory?.[playerIndex] || []),
+    ...(state.rivers[playerIndex] || [])
+  ].map(keyOf));
+  if (!discardedKeys.size) return false;
+  return allPrototypeTiles().some((tile) => (
+    discardedKeys.has(keyOf(tile)) &&
+    canWinIgnoringFuriten(playerIndex, { type: "ロン", player: playerIndex, tile })
+  ));
 }
 
 function hasRequiredYaku(playerIndex, tiles, win) {
@@ -3957,13 +3979,58 @@ function debugCpuCallProbability(handCodes, optionCodes, type, options = {}) {
   }
 }
 
-function debugClosedKanOptions(codes) {
+function debugClosedKanOptions(codes, options = {}) {
   const previousHand = state.hands[0];
+  const previousRiichi = state.riichi[0];
+  const previousDrawnTileId = state.drawnTileId;
+  const previousMelds = state.melds[0];
   try {
     state.hands[0] = codes.map((code, index) => makeTile(code[0], Number(code.slice(1)), 990000 + index));
+    state.riichi[0] = !!options.riichi;
+    state.melds[0] = [];
+    state.drawnTileId = state.hands[0][options.drawnIndex ?? state.hands[0].length - 1]?.id || null;
     return closedKanOptions(0).map((option) => option.tiles.map(tileCode));
   } finally {
     state.hands[0] = previousHand;
+    state.riichi[0] = previousRiichi;
+    state.drawnTileId = previousDrawnTileId;
+    state.melds[0] = previousMelds;
+  }
+}
+
+function debugFuritenRon(handCodes, discardedCodes, winCode, options = {}) {
+  const previousSettings = state.settings;
+  const previousHand = state.hands[0];
+  const previousRivers = state.rivers;
+  const previousDiscardHistory = state.discardHistory;
+  const previousMelds = state.melds[0];
+  try {
+    state.settings = { ...state.settings, cosmic: !!options.cosmic, china: !!options.china };
+    state.hands[0] = handCodes.map((code, index) => makeTile(code[0], Number(code.slice(1)), 930000 + index));
+    state.rivers = [
+      discardedCodes.map((code, index) => makeTile(code[0], Number(code.slice(1)), 931000 + index)),
+      [],
+      [],
+      []
+    ];
+    state.discardHistory = state.rivers.map((river) => [...river]);
+    state.melds[0] = (options.melds || []).map((meldCodes, meldIndex) => ({
+      type: options.meldTypes?.[meldIndex] || "debug-meld",
+      from: 1,
+      tiles: meldCodes.map((code, index) => makeTile(code[0], Number(code.slice(1)), 932000 + meldIndex * 10 + index))
+    }));
+    const tile = makeTile(winCode[0], Number(winCode.slice(1)), 933000);
+    return {
+      furiten: isFuriten(0),
+      canRon: canWinNow(0, { type: "ロン", player: 0, discarder: 1, tile }),
+      canRonIgnoringFuriten: canWinIgnoringFuriten(0, { type: "ロン", player: 0, discarder: 1, tile })
+    };
+  } finally {
+    state.settings = previousSettings;
+    state.hands[0] = previousHand;
+    state.rivers = previousRivers;
+    state.discardHistory = previousDiscardHistory;
+    state.melds[0] = previousMelds;
   }
 }
 
@@ -4033,7 +4100,7 @@ function debugOpenKanRules() {
   }
 }
 
-window.mizuharaMahjongDebug = { debugChinesePattern, debugCpuDiscard, debugRiichiDiscard, debugCpuCallProbability, debugClosedKanOptions, debugOpenKanRules, roundProgressionDecision };
+window.mizuharaMahjongDebug = { debugChinesePattern, debugCpuDiscard, debugRiichiDiscard, debugCpuCallProbability, debugClosedKanOptions, debugFuritenRon, debugOpenKanRules, roundProgressionDecision };
 
 function tileSvgData(tile) {
   const color = suitColor[tile.suit];
@@ -5722,5 +5789,9 @@ document.documentElement.dataset.cpuSelfTests = JSON.stringify({
 document.documentElement.dataset.closedKanSelfTests = JSON.stringify({
   single: debugClosedKanOptions(["m1", "m1", "m1", "m1", "p2", "p3", "p4", "s2", "s3", "s4", "z1", "z1", "m7", "m8"]),
   multiple: debugClosedKanOptions(["m1", "m1", "m1", "m1", "p9", "p9", "p9", "p9", "s2", "s3", "s4", "z1", "z1", "m7"])
+});
+document.documentElement.dataset.furitenSelfTests = JSON.stringify({
+  ronBlockedByOwnDiscard: debugFuritenRon(["m1", "m2", "m3", "p1", "p2", "p3", "z5", "z5", "z5", "s2", "s2", "s3", "s4"], ["s2"], "s2"),
+  ronAllowedWithoutOwnDiscard: debugFuritenRon(["m1", "m2", "m3", "p1", "p2", "p3", "z5", "z5", "z5", "s2", "s2", "s3", "s4"], [], "s2")
 });
 document.documentElement.dataset.openKanSelfTests = JSON.stringify(debugOpenKanRules());
