@@ -1,0 +1,32 @@
+import { createRequire } from "node:module";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+const require = createRequire(import.meta.url);
+const user = process.env.USERPROFILE || process.env.HOME;
+const modulePath = process.env.PLAYWRIGHT_MODULE || path.join(user, ".cache", "codex-runtimes", "codex-primary-runtime", "dependencies", "node", "node_modules", "playwright");
+const { chromium } = require(modulePath);
+const root = path.resolve(import.meta.dirname, "..", "..");
+const textbookUrl = pathToFileURL(path.join(root, "dist", "unit-01", "index.html")).href;
+const drillUrl = pathToFileURL(path.join(root, "dist", "unit-01", "drill.html")).href;
+const executablePath = process.env.BROWSER_EXE || "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe";
+const browser = await chromium.launch({headless:true, executablePath});
+const page = await browser.newPage({viewport:{width:320,height:800}});
+const consoleErrors=[]; page.on("console",(msg)=>{if(msg.type()==="error") consoleErrors.push(msg.text());});
+await page.goto(textbookUrl);
+for (const heading of ["1A 文字と基本の読み方","1B 長母音・音節・音節量","1C アクセントと語尾の役割"]) await page.getByRole("heading",{name:heading}).waitFor();
+await page.getByRole("link",{name:"単元確認へ進む"}).click(); await page.waitForFunction(()=>globalThis.__M5_TEST__?.ready);
+if((await page.evaluate(()=>globalThis.__M5_TEST__.normalizationFailures)).length) throw new Error("browser normalization failed");
+await page.getByLabel("/k/").check(); await page.getByRole("button",{name:"回答する"}).press("Enter"); await page.getByText("正解です。",{exact:false}).waitFor();
+await page.getByRole("button",{name:"次の問題"}).press("Enter"); if(!(await page.getByRole("heading",{name:"問題"}).evaluate((node)=>node===document.activeElement))) throw new Error("question heading did not receive focus");
+await page.getByLabel("練習する小節を選択").selectOption("unit-01b"); await page.getByLabel("回答").fill("Roma"); await page.getByLabel("回答").press("Enter"); await page.getByText("不正解です。",{exact:false}).waitFor();
+await page.getByRole("button",{name:"再挑戦"}).click(); await page.getByLabel("回答").fill("Rōma"); await page.getByRole("button",{name:"回答する"}).click(); await page.getByText("正解です。",{exact:false}).waitFor();
+const saved=await page.evaluate(()=>localStorage.getItem("latin-learning-system:unit-01:v1")!==null); if(!saved) throw new Error("unit progress not saved");
+await page.reload(); await page.waitForFunction(()=>globalThis.__M5_TEST__?.ready); if((await page.evaluate(()=>globalThis.__M5_TEST__.state().correct))<1) throw new Error("unit progress not restored");
+await page.getByLabel("練習する小節を選択").selectOption("unit-01a");
+for(let i=0;i<5;i++) { await page.evaluate(()=>{const data=JSON.parse(document.getElementById("drill-data").textContent);const state=globalThis.__M5_TEST__.state();const q=data.units.find((u)=>u.id===state.unit_id).questions[state.index];if(q.type==="selected-response"){document.querySelector(`input[name="answer"][value="${CSS.escape(q.accepted_answers[0])}"]`).checked=true;}else{document.getElementById("short-answer").value=q.accepted_answers[0];}}); await page.getByRole("button",{name:"回答する"}).click(); await page.getByRole("button",{name:"次の問題"}).click(); }
+for(const box of await page.getByRole("checkbox").all()) await box.check(); await page.getByRole("button",{name:"回答する"}).click(); await page.getByText("自己確認を記録しました。",{exact:false}).waitFor();
+for (const width of [320,768,1280]) { await page.setViewportSize({width,height:800}); if(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth)) throw new Error(`horizontal overflow at ${width}`); }
+await page.emulateMedia({media:"print"}); if(await page.getByRole("button",{name:"回答する"}).isVisible()) throw new Error("print controls visible"); await page.emulateMedia({media:"screen"});
+await page.goto(drillUrl+"?storage=fail"); await page.waitForFunction(()=>globalThis.__M5_TEST__?.ready); if((await page.evaluate(()=>globalThis.__M5_TEST__.storageMode()))!=="memory") throw new Error("memory fallback not active");
+if(consoleErrors.length) throw new Error("console errors: "+consoleErrors.join(" | "));
+await browser.close(); console.log("Browser unit-01 regression: passed.");

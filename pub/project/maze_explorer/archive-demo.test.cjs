@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict'),M=require('./core.js');
+const w=M.createArchiveDemo(),g=M.createGame(w);
+assert.equal(w.learningLaps,3);assert.equal(w.selfVision,false);assert.ok(!g.bird);assert.equal(g.steps,0);assert.equal(g.turns,0);
+assert.equal(g.cognition.archives.length,1);assert.deepEqual(M.matchEntranceMaps(g),[]);
+const original=M.archiveCells(g,0),snapshot=JSON.stringify(original);
+assert.ok(M.inspectEntranceMemory(g,0).classes>1);
+for(let i=0;i<23;i++)M.move(g,'right');assert.ok(!g.cognition.known_loops.has('x'));
+M.move(g,'right');assert.ok(g.cognition.known_loops.has('x'));assert.ok(!g.cognition.known_loops.has('y'));
+assert.equal(g.player.world_position,w.start);assert.equal(M.inspectEntranceMemory(g,0).classes,1);
+assert.ok(M.archiveCells(g,0,true).length<original.length);assert.equal(JSON.stringify(M.archiveCells(g,0)),snapshot);
+assert.deepEqual(M.matchEntranceMaps(g,true),[0]);assert.equal(g.turns,24);
+const reset=M.createGame(w);assert.equal(reset.turns,0);assert.equal(reset.cognition.matchedArchives.size,0);assert.deepEqual(M.archiveCells(reset,0),original);
+assert.ok(!M.createGame(M.createTorusDemo()).cognition.archives.length);
+console.log('PASS: archive demo starts ambiguous, no granted knowledge, 24 real steps unlock horizontal only, detached folding, manual match, reproducible restart, other demos unchanged.');

@@ -1,0 +1,12 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"lesson.schema.json",
+  "title":"Lesson manuscript metadata",
+  "type":"object","additionalProperties":false,
+  "required":["id","schema_version","content_version","title","created_at","updated_at","unit_id","purpose","skills","vocabulary","blocks","source_refs","evidence","review","notes"],
+  "properties":{
+    "id":{"type":"string","pattern":"^lesson-[a-z0-9]+(?:-[a-z0-9]+)*$"},"schema_version":{"$ref":"common.schema.json#/definitions/semver"},"content_version":{"$ref":"common.schema.json#/definitions/semver"},"title":{"$ref":"common.schema.json#/definitions/nonEmptyString"},"created_at":{"$ref":"common.schema.json#/definitions/isoDateTime"},"updated_at":{"$ref":"common.schema.json#/definitions/isoDateTime"},"unit_id":{"$ref":"common.schema.json#/definitions/unitId"},"purpose":{"type":"string","minLength":1},"skills":{"$ref":"common.schema.json#/definitions/skillArray"},"vocabulary":{"$ref":"common.schema.json#/definitions/lexemeArray"},
+    "blocks":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["block_id","kind","new_concept_count","skill_refs","status"],"properties":{"block_id":{"type":"string","pattern":"^[a-z][a-z0-9-]*$"},"kind":{"enum":["objective","explanation","example","formal-table","function-note","misconception","practice-link","supplement","advanced","summary"]},"new_concept_count":{"type":"integer","minimum":0},"skill_refs":{"$ref":"common.schema.json#/definitions/skillArray"},"status":{"enum":["planned","draft","review-ready","approved"]}}}},
+    "source_refs":{"type":"array","items":{"$ref":"source.schema.json#/definitions/sourceClaimReference"}},"evidence":{"$ref":"common.schema.json#/definitions/evidenceArray"},"review":{"$ref":"review.schema.json#/definitions/reviewBundle"},"notes":{"type":"string"}
+  }
+}

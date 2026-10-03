@@ -87,6 +87,8 @@ h3 {
     border: 1px solid #111;
     background-color: #ffffee;
     font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", sans-serif;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .grid-table {
@@ -213,6 +215,73 @@ table td {
 
 ol {
     font-weight: bold;
+}
+
+.wrapper,
+.inner_wrapper,
+details {
+    min-width: 0;
+}
+
+.table-scroll {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    -webkit-overflow-scrolling: touch;
+    box-sizing: border-box;
+}
+
+.table-scroll table {
+    width: max-content;
+    min-width: 100%;
+    margin: 1em 0;
+}
+
+.table-scroll th,
+.table-scroll td {
+    white-space: nowrap;
+}
+
+.syntax {
+    position: relative;
+    display: inline-block;
+}
+
+/* 最内層 */
+.syntax-1 {
+    border-bottom: 1px solid currentColor;
+}
+
+/* 2階層目 */
+.syntax-2 {
+    padding-bottom: 5px;
+}
+
+.syntax-2::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 1px;
+    border-bottom: 1px solid currentColor;
+}
+
+/* 3階層目 */
+.syntax-3 {
+    padding-bottom: 9px;
+}
+
+.syntax-3::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 1px;
+    border-bottom: 1px solid currentColor;
 }
 
 /* ============================================================

@@ -1,0 +1,20 @@
+{
+  "schema_status":"provisional-m5-coverage",
+  "content_version":"0.1.0",
+  "unit_id":"unit-01",
+  "coverage":[
+    {"skill_id":"orth.alphabet.classical-basic","explanation":"lesson-unit-01a:letters-and-sounds","example":"ex-u01a-caesar","guided":"q-u01a-c-sound-guided","independent":"q-u01a-alphabet-independent","later_review":"q-u01-check-read-self"},
+    {"skill_id":"orth.i-j.variant-recognize","explanation":"lesson-unit-01a:ij-uv","example":"ex-u01a-variants","guided":"q-u01a-ij-guided","independent":"q-u01a-ij-independent","later_review":"lesson-unit-01c:unit-check"},
+    {"skill_id":"orth.u-v.variant-recognize","explanation":"lesson-unit-01a:ij-uv","example":"ex-u01a-variants","guided":"q-u01a-uv-guided","independent":"q-u01-check-variants","later_review":"q-u01-check-variants"},
+    {"skill_id":"phon.letter-sound.classical-basic","explanation":"lesson-unit-01a:letters-and-sounds","example":"ex-u01a-caesar","guided":"q-u01a-c-sound-guided","independent":"q-u01a-alphabet-independent","later_review":"q-u01-check-read-self"},
+    {"skill_id":"phon.word.read-aloud.basic","explanation":"lesson-unit-01a:reading-practice","example":"ex-u01a-caesar","guided":"q-u01a-read-self","independent":"q-u01-check-read-self","later_review":"q-u01-check-read-self"},
+    {"skill_id":"orth.macron.recognize","explanation":"lesson-unit-01b:vowel-length","example":"ex-u01b-roma","guided":"q-u01b-macron-sensitive","independent":"q-u01b-macron-insensitive","later_review":"q-u01-check-quantity"},
+    {"skill_id":"phon.syllable.divide-basic","explanation":"lesson-unit-01b:syllable-division","example":"ex-u01b-terra","guided":"q-u01b-syllable-guided","independent":"q-u01b-quantity-independent","later_review":"q-u01-check-read-self"},
+    {"skill_id":"phon.syllable.quantity.basic","explanation":"lesson-unit-01b:syllable-quantity","example":"ex-u01b-terra","guided":"q-u01b-syllable-guided","independent":"q-u01b-quantity-independent","later_review":"q-u01-check-quantity"},
+    {"skill_id":"phon.accent.rule.basic","explanation":"lesson-unit-01c:accent","example":"ex-u01c-amicus","guided":"q-u01c-accent-guided","independent":"q-u01c-accent-independent","later_review":"q-u01-check-read-self"},
+    {"skill_id":"phon.macron-editorial-aid.recognize","explanation":"lesson-unit-01b:editorial-macrons","example":"ex-u01b-roma","guided":"q-u01c-editorial-aid","independent":"q-u01-check-aid","later_review":"q-u01-check-aid"},
+    {"skill_id":"morph.ending.grammatical-information","explanation":"lesson-unit-01c:ending-information","example":"ex-u01c-ending","guided":"q-u01c-ending-guided","independent":"q-u01-check-ending","later_review":"q-u01-check-ending"},
+    {"skill_id":"register.classical-prose.scope-recognize","explanation":"lesson-unit-01c:course-register","example":"ex-u01c-ending","guided":"q-u01c-register-independent","independent":"q-u01-check-register","later_review":"q-u01-check-register"}
+  ],
+  "notes":"guidedとindependentが同一IDの技能は、人間レビューで追加問題の必要性を判断する。問題数の水増しを避けた暫定配置。"
+}

@@ -1,0 +1,16 @@
+{
+  "schema_status":"provisional-m5-machine-readable-terms",
+  "content_version":"0.1.0",
+  "terms":[
+    {"id":"term-reconstructed-classical-pronunciation","term":"復元古典式","introduced_in":"unit-01a","definition_ja":"古典期の発音を研究にもとづいて再構成した発音方式。古代の録音の完全な再現ではない。","skills":["phon.letter-sound.classical-basic"],"source_refs":["src-lat-ag-dcc"]},
+    {"id":"term-sound-value","term":"音価","introduced_in":"unit-01a","definition_ja":"ある文字が表す音。文字の形そのものとは区別する。","skills":["phon.letter-sound.classical-basic"],"source_refs":["src-lat-ag-dcc"]},
+    {"id":"term-macron","term":"長母音記号（マクロン）","introduced_in":"unit-01b","definition_ja":"長い母音を示すために母音の上へ付ける横棒。教材・辞書・版による補助表示である。","skills":["orth.macron.recognize","phon.macron-editorial-aid.recognize"],"source_refs":["src-lat-ag-dcc"]},
+    {"id":"term-syllable","term":"音節","introduced_in":"unit-01b","definition_ja":"ひとまとまりとして発音される単位。","skills":["phon.syllable.divide-basic"],"source_refs":["src-lat-ag-dcc"]},
+    {"id":"term-syllable-quantity","term":"音節量","introduced_in":"unit-01b","definition_ja":"音節を長い・短いと数えるための性質。母音の長短と同一ではない。","skills":["phon.syllable.quantity.basic"],"source_refs":["src-lat-ag-dcc"]},
+    {"id":"term-penult","term":"ペヌルティマ","introduced_in":"unit-01c","definition_ja":"語末から二番目の音節。","skills":["phon.accent.rule.basic"],"source_refs":["src-lat-ag-dcc"]},
+    {"id":"term-antepenult","term":"アンテペヌルティマ","introduced_in":"unit-01c","definition_ja":"語末から三番目の音節。","skills":["phon.accent.rule.basic"],"source_refs":["src-lat-ag-dcc"]},
+    {"id":"term-ending","term":"語尾","introduced_in":"unit-01c","definition_ja":"語の終わりの部分。ラテン語では文法情報を担うことがある。","skills":["morph.ending.grammatical-information"],"source_refs":[]},
+    {"id":"term-register","term":"レジスター","introduced_in":"unit-01c","definition_ja":"時代・文体・使用場面による言葉の範囲や特徴。","skills":["register.classical-prose.scope-recognize"],"source_refs":[]}
+  ],
+  "notes":"文法・音声学用語であり、単元の新出ラテン語数には含めない。正式SchemaはM5の人間レビュー後に再検討する。"
+}

@@ -1,0 +1,13 @@
+const assert=require('node:assert/strict');
+const O=require('./orientation.js'),S=require('./orientation-save.js'),A=require('./orientation-autosave.js');
+const data=new Map();let fail=false;
+const storage={getItem:k=>data.get(k)??null,setItem(k,v){if(fail)throw Error('quota');data.set(k,v);}};
+const first=A.create(storage,S),state=O.create();assert.equal(first.read(),null);first.save(state);
+O.move(state,'down');first.save(state);assert.deepEqual(first.restore(),state);
+const other=A.create(storage,S);O.move(state,'down');first.save(state);
+assert.throws(()=>other.save(O.create()),/別のタブ/);assert.deepEqual(other.restore(),state);
+const saved=data.get(A.key);fail=true;O.move(state,'right');assert.throws(()=>first.save(state),/quota/);assert.equal(data.get(A.key),saved);fail=false;first.save(state);
+const before=data.get(A.key);const bad={...state,history:Array(20001).fill(['mark'])};assert.throws(()=>first.save(bad),/20,000/);assert.equal(data.get(A.key),before);
+data.set(A.key,'broken');assert.throws(()=>first.restore(),/JSON/);assert.equal(data.get(A.key),'broken');
+assert.throws(()=>A.create({getItem(){throw Error('denied');}},S),/denied/);
+console.log('autosave: replay, conflict, quota, invalid data, action limit and unavailable storage passed');

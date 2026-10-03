@@ -1,0 +1,36 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"normalization-profile.schema.json",
+  "title":"Normalization profile collection",
+  "type":"object","additionalProperties":false,
+  "required":["schema_version","content_version","updated_at","normative_status","comparison_form_persistence","profiles"],
+  "properties":{
+    "schema_version":{"$ref":"common.schema.json#/definitions/semver"},
+    "content_version":{"$ref":"common.schema.json#/definitions/semver"},
+    "updated_at":{"$ref":"common.schema.json#/definitions/isoDateTime"},
+    "normative_status":{"const":"operational-source-of-truth"},
+    "comparison_form_persistence":{"const":false},
+    "profiles":{"type":"array","minItems":5,"maxItems":5,"items":{"$ref":"#/definitions/profile"}}
+  },
+  "definitions":{
+    "profile":{
+      "type":"object","additionalProperties":false,
+      "required":["id","input_kind","ordered_steps","unicode_normalization","case_handling","outer_space","internal_space","punctuation","apostrophes","macrons","i_j","u_v","preserve_other_letters"],
+      "properties":{
+        "id":{"enum":["meaning-default","morphology-default","macron-sensitive","orthography-strict","structured-features"]},
+        "input_kind":{"enum":["text","structured"]},
+        "ordered_steps":{"type":"array","minItems":1,"items":{"type":"string","minLength":1},"uniqueItems":true},
+        "unicode_normalization":{"const":"NFC"},
+        "case_handling":{"enum":["fold","preserve","not-applicable"]},
+        "outer_space":{"enum":["trim","preserve","not-applicable"]},
+        "internal_space":{"enum":["collapse","preserve","not-applicable"]},
+        "punctuation":{"enum":["remove-nonscored","preserve","not-applicable"]},
+        "apostrophes":{"enum":["remove-if-nonscored","preserve","not-applicable"]},
+        "macrons":{"enum":["fold","preserve","not-applicable"]},
+        "i_j":{"enum":["fold-to-i","preserve","not-applicable"]},
+        "u_v":{"enum":["fold-to-u","preserve","not-applicable"]},
+        "preserve_other_letters":{"const":true}
+      }
+    }
+  }
+}

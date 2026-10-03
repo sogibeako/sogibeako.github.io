@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict'),M=require('./core.js');
+const g=M.createGame(M.createArchiveDemo());
+M.setArchiveNote(g,0,'長い廊下\n戻りたい場所');
+g.cognition.archives.push({turn:24,nodes:new Map([['a',{terrain:1,feature:'1'}],['b',{terrain:1,feature:'1'}]])});
+g.cognition.matchedArchives.add(1);g.markerNames.set('1','分岐');g.markerNames.set('9','未記録の秘密');
+const snapshot=()=>JSON.stringify(g,(_,v)=>v instanceof Map?[...v]:v instanceof Set?[...v]:v);
+const before=snapshot(),text=M.exportArchiveNotes(g);
+assert.ok(text.includes('長い廊下\n戻りたい場所'));
+assert.ok(text.includes('24行動目まで / 照合済み'));
+assert.ok(text.includes('（メモなし）'));
+assert.equal(text.split('目印 1「分岐」').length-1,1);
+assert.ok(!text.includes('未記録の秘密'));
+assert.ok(text.includes('シード: '+g.world.seed));assert.equal(snapshot(),before);
+assert.ok(M.exportArchiveNotes(M.createGame(M.generate())).includes('保存地図帳: 0冊'));
+console.log('PASS: all notebook notes, multiline Japanese, observed markers only, deduplication, matched state, seed, no mutation, empty archives.');

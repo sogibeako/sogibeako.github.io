@@ -167,6 +167,15 @@ textarea:focus {
   margin-top: 1rem;
 }
 
+.keyboard.native-mode .key {
+  opacity: 0.7;
+}
+
+.keyboard.native-mode .key:hover,
+.keyboard.native-mode .key.active {
+  opacity: 1;
+}
+
 .key-row {
   display: flex;
   gap: 0.5rem;

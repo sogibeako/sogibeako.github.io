@@ -959,6 +959,7 @@ body.is-resizing-calendar {
     gap: 15px;
     overflow-y: auto;
     min-width: 0;
+    min-height: 0;
 }
 
 .details-title {
@@ -1085,8 +1086,14 @@ body.is-resizing-calendar {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-height: 160px;
+    flex: 1 1 180px;
+    min-height: 120px;
+    max-height: clamp(160px, 32vh, 320px);
     overflow-y: auto;
+    border: 1px solid rgba(14, 165, 233, 0.08);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.28);
+    padding: 8px;
 }
 
 .empty-state {
@@ -1151,6 +1158,7 @@ body.is-resizing-calendar {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    flex: 0 0 auto;
 }
 
 .cal-event-form h4 {
@@ -1928,6 +1936,30 @@ body.is-resizing-calendar {
 
 /* ウィンドウの高さが足りない場合に一埜の顔（上半身）を優先して表示する */
 @media (max-height: 750px) and (min-width: 769px) {
+    .calendar-details-panel {
+        gap: 10px;
+    }
+
+    .done-today-panel {
+        gap: 6px;
+        padding: 9px;
+    }
+
+    .done-template-grid {
+        max-height: 72px;
+        overflow-y: auto;
+    }
+
+    .done-today-list {
+        max-height: 90px;
+        overflow-y: auto;
+    }
+
+    .cal-day-event-list {
+        min-height: 140px;
+        max-height: 38vh;
+    }
+
     .kazuno-avatar {
         height: 160%; /* 高さを1.6倍にして拡大 */
         object-fit: cover;
@@ -1939,6 +1971,19 @@ body.is-resizing-calendar {
 
 /* さらに極端に高さが低いウィンドウへの最適化 */
 @media (max-height: 600px) and (min-width: 769px) {
+    .done-template-grid {
+        max-height: 48px;
+    }
+
+    .done-today-list {
+        max-height: 64px;
+    }
+
+    .cal-day-event-list {
+        min-height: 120px;
+        max-height: 42vh;
+    }
+
     .kazuno-avatar {
         height: 200%; /* 高さを2.0倍にして拡大 */
         object-fit: cover;

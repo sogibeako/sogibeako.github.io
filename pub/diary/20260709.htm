@@ -9,7 +9,17 @@
   <!-- Lightbox2 CSS -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="../style/diary_style.css">
-  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <link rel="stylesheet" href="../nazo/project/cat-diagram2/style.css">
+  <script>
+    window.MathJax = {
+      tex: {
+        packages: { '[+]': ['ams'] }
+      }
+    };
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
+  <script src="../nazo/project/cat-diagram2/cat-diagram.js"></script>
   <script>
     const pressed = new Set();
     window.addEventListener("keydown", (e) => {
@@ -40,26 +50,1206 @@
     </div>
     <hr />
     <p style="text-align: center">
-      <a href="20260406.htm">←2026年第二期</a>　　　　　　　2026年第四期→
+      <a href="20260406.htm">←2026年第二期</a>　　　　　　　<a href="20261012.htm">2026年第四期→</a>
     </p>
-    <h1>2026年08月09日</h1>
+    <h1>2026年9月30日</h1>
+    <p>
+      別に何ともないよと思っていても、それなりに憂鬱を感じることがある。自分の場合、こういう時はだいたい男女論を攻撃している。だがこれは、分かりやすいものを攻撃してしまってるだけだ。<br>本当は頭の何かで何かを果てしなく恨んでるんだろうけど、何を打倒すればいいのかもわからない。明日通院した時に話した方がいいのかどうなのか。鬱症状の一種なのかどうなのか判断がつかない。特段診断も出ていないし。
+    </p>
+    <p>
+      結構虚しさが出ている。要するに、「まともな価値基準なんか誰一人持ってないくせになぜ義務や推奨といった様相が発生するのか、なぜ理性なんてものを人間に仮定するのか、なぜ同意もしてない社会契約や風潮に自分は巻き込まれているのか」という怒りがあるのだと思う。
+    </p>
+    <blockquote>
+      <p>スーパーマリオブラザーズ：マリオはなぜ壁をすり抜ける？マイナスワールドへ続く裏技を仕組み。ファミコン【レトロゲーム技術分析】<br><a
+          href="https://youtu.be/xMRXzT2n26c?si=eGB83rg5pCtWYXvT">YouTube</a></p>
+    </blockquote>
+    <p>通常の領域をはみ出して、スプライトのグラフィック上までカウンタが回っていくのってちょっとおもろいと思う。文字とかじゃなくなる感じが。</p>
+    <p>ざっくり、</p>
+    <ul>
+      <li>添字の連続化に興味がある。陰計算で添字を指数に戻して分数階微分したらどうか？</li>
+      <li>陰計算だけでなく一般の数式の連続化を考えるなら母関数。</li>
+      <li>添字に実数とか複素数とか二重数とかp-進数とか色々代入することも出来るかも？</li>
+      <li>添字に位相空間とか入るの？ 代入そのものを表す普遍性は？ → 指数対象っぽい。フィボナッチ数列に位相空間を代入とかしてみたいよね</li>
+      <li>一般に、拡張をするための手法があると嬉しいよね
+        <ul>
+          <li>Kan-拡張？ でも、情報が足りないかも？</li>
+          <li>豊穣圏？</li>
+        </ul>
+      </li>
+      <li>添字 i ∈ I に対して余積（直和）を取ると、I×Aになる（＝和から積構造が出る）より一般にはcopower</li>
+      <li>p-進対象は？ → 逆系・射影極限を取る操作</li>
+      <li>『複素対象』みたいなのはあるのか？ → 概複素構造+可積分性</li>
+      <li>「一点特異空点が作りづらい +
+        あるzで特異空間になる部分でもwで解析的だと一致の定理でローラン展開が伸びるため却って計算しづらい」などの現象（Hartogs現象）が起きるのが多変数複素解析で、穴の構造（積分経路もそうかも）をコホモロジーで調べる</li>
+      <li>穴を調べるのがホモロジー、穴から実数を返す汎関数がコホモロジー、そして微分形式からコホモロジーが作れるらしい？（二回を取ると0になるところとかも）</li>
+      <li>微分方程式の解けない部分が穴としてコホモロジーとして現れるということがあるらしい</li>
+      <li>
+        接空間……の一部の、指定した部分空間分布Dからリー括弧がはみ出ない、というのがざっくり可積分性の意味？<br>みたいな話をChatGPTとした。わかったからと言っても何にもならないのだけど、それでも変な計算とか出来るのはちょっと楽しい。
+      </li>
+    </ul>
+    <br />
+    <h1>2026年9月27日</h1>
+    <p>トップ絵を置き換えたりしたりしました。休日は仕事したりしてました。牛丼食べたりネパールカレー食べたりしてました。</p>
+    <h2>数学：ファイバー積のこと</h2>
+    <p>ファイバー積は写像f,gと同値関係と空間X,Y,Zから導かれる積で、空間Zが一点の時、単なる積と一致するらしい。$$ X\overset{f}\longrightarrow Z\overset{g}\longleftarrow
+      Y$$がある時、$$X \times_Z Y = \lbrace(x,y)\in X \times Y \mid f(x) = g(y)
+      \rbrace$$を作る。例えば数も入れられる。有限集合として$$X=\{1,2,3\},~~Y=\{4,5,6,7\},~~Z=\{0,1\}$$を考えて、各写像を$$f(x)=x\bmod
+      2,~~~~g(y)=y\bmod2$$とすると、ファイバー積は$$X\times_Z Y= \{(x,y)\mid x \equiv y \bmod
+      2\}$$となる。つまり、xとyが法を2として合同となる組み合わせを選出することになるので、$$(1,5),~(1,7)~,(2,4)~,(2,6)~,(3,5)~,(3,7)$$が残る。</p>
+    <p>一般に、有限集合のファイバー積の要素数は$$|X \times_Z Y| = \sum_{z\in Z}|f^{-1}(z)||g^{-1}(z)|.$$となるらしい。先程の例で検算すると、$$f^{-1}(0) =
+      \{2\},~~f^{-1}(1)=\{1,3\}$$よって \(f^{-1}\)
+      については、$$|f^{-1}(0)|=1,~~|f^{-1}(1)|=2$$となり一方、$$g^{-1}(0)=\{4,6\},~~g^{-1}(1)=\{5,7\}$$よって \(g^{-1}\)
+      については、$$|g^{-1}(0)|=2,~~|g^{-1}(1)|=2$$となる。（注：ちゃんと \(Z\) の逆像から考えること。最初、ファイバー積後の空間から考えてよくわからなくなった）<br>偶数側 \(z=0\)
+      では、\(1\times2 = 2\)、すなわち\((2,4),~(2,6)\) が出来る。奇数側 \(z=1\) では、\(2\times2 = 4\)、すなわち\((1,5),~(1,7),~(3,5),~(3,7)\)
+      が出来る。したがって、計6個。</p>
+    <p>もちろん写像は自由に変えることが出来て、例えば$$\mathbb Z \xrightarrow{\,a\mapsto a^2\bmod n\,} \mathbb Z/n\mathbb Z
+      \xleftarrow{\,b\mapsto b^3\bmod n\,} \mathbb Z $$とすると、$$\mathbb Z\times_{\mathbb Z/n\mathbb Z}\mathbb Z =
+      \{(a,b):a^2\equiv b^3\pmod n\}. $$となり、合同方程式の解集合となる。</p>
+    <p>もしも \(Z\) が一点なら、条件 \(f(x) = g(y)\) は自動的なので、通常の掛け算になる。（つまり終対象 \(1\) の上の引き戻しは通常の直積になる……）</p>
+    <div style="text-align: center;">
+      <div id="product"></div>
+    </div>
+    <script>
+      const data = {
+        "options": {
+          "layout": "manual"
+        },
+        "nodes": [
+          {
+            "id": "A",
+            "label": "\\text{X}\\times \\text{Y}",
+            "x": 167,
+            "y": 136
+          },
+          {
+            "id": "B",
+            "label": "\\text{Y}",
+            "x": 296,
+            "y": 136
+          },
+          {
+            "id": "N1790532938811428",
+            "label": "\\text{X}",
+            "x": 167,
+            "y": 255
+          },
+          {
+            "id": "N1790532938811737",
+            "label": "1",
+            "x": 296,
+            "y": 255
+          },
+          {
+            "id": "N1790533148966",
+            "label": " //",
+            "x": 229,
+            "y": 198
+          },
+          {
+            "id": "N1790533262157",
+            "label": "A",
+            "x": 69,
+            "y": 49
+          }
+        ],
+        "arrows": [
+          {
+            "from": "A",
+            "to": "B",
+            "label": "\\pi_Y",
+            "curve": 0,
+            "id": "A1790532917925ang170"
+          },
+          {
+            "from": "N1790532938811428",
+            "to": "N1790532938811737",
+            "label": "f",
+            "curve": 0,
+            "id": "A1790532938811347",
+            "labelOffsetY": 3
+          },
+          {
+            "id": "A1790533006364hqek0",
+            "from": "A",
+            "to": "N1790532938811428",
+            "label": "\\pi_X",
+            "curve": 0,
+            "shift": 0,
+            "style": "solid",
+            "labelOffsetX": -7,
+            "labelOffsetY": -5
+          },
+          {
+            "id": "A17905330113525ttxd",
+            "from": "B",
+            "to": "N1790532938811737",
+            "label": "g",
+            "curve": 0,
+            "shift": 0,
+            "style": "solid",
+            "labelOffsetY": -4
+          },
+          {
+            "id": "A17905332766102h4si",
+            "from": "N1790533262157",
+            "to": "A",
+            "label": "!_{\\text{X}\\times\\text{Y}}",
+            "curve": 0,
+            "shift": -1,
+            "style": "dashed",
+            "labelOffsetX": 1,
+            "labelOffsetY": 14
+          },
+          {
+            "id": "A1790533280194efwo8",
+            "from": "N1790533262157",
+            "to": "N1790532938811428",
+            "label": "",
+            "curve": 30,
+            "shift": 0,
+            "style": "solid"
+          },
+          {
+            "id": "A1790533282351fi513",
+            "from": "N1790533262157",
+            "to": "B",
+            "label": "",
+            "curve": -30,
+            "shift": 0,
+            "style": "solid"
+          }
+        ]
+      }
+      window.addEventListener("load", async () => {
+        await MathJax.startup.promise;
+        await CatDiagram.render("#product", data);
+      });
+    </script>
+    <h1>2026年9月26日</h1>
+    <p>頭痛が強かった。結局今週は3錠飲んだ。</p>
+    <pre><code>微分 ----&gt; 変分
+ |          |
+ |          |
+ |          |
+ v          v
+差分 ----&gt; ？？？</code></pre>
+    <p>ということを思いついたところ、離散変分というものがあるらしい。数列に対して使えるとか。なるほどね……？</p>
+    <p>とか、ずんだもんの定理【数学解説】氏の <a
+        href="https://www.youtube.com/watch?v=0rShn8U4QKI&pp=ygUJ6Zmw6KiI566X">【ベルヌーイ数】累乗のようなもの【陰計算】</a> を見てて、それはなんだ！？
+      となり、添え字とか変分とかファイバー積とか、気になることがだいぶ増えてきた。が仕事が多くてシット。</p>
+    <h2>空想</h2>
+    <p>
+      何かのテロリズムによってヴェブレン階層に概念的航空機が命中、層崩壊を起こして超限階層から雪崩を打って崩れてきて自然数まで落ちてきていずれ数学が壊れることが予想されているのだが、とにかく階数が大きいので人類の生きる有限時間内にそれが届くかどうかまだわからない……みたいなSFを考えた。
+    </p>
+    <p>証明論的順序数が次々使用不能になって、算術階層しか使えなくなったりする。集合論方面との通信が途絶し、人類数学圏は算術階層（\(\Sigma^0_1, \Pi^0_1, \Sigma^0_2, \Pi^0_2,
+      \cdots\)）を中心に防衛戦を構築、</p>
+    <p>「\(\Sigma^0_{17}\) が陥落」<br>「総員 \(\Pi^0_{16}\) へ退避せよ」</p>
+    <p>みたいな……（←まず数学に詳しくなってから書け）</p>
+    <p>「超限崩壊の推定到達時間は\(1.73\times10^84\)
+      年後」<br>「じゃあ大丈夫じゃん」<br>「前回予測は現在使用不能となった超限帰納法に依存していました。現在利用可能な体系では、崩壊前線が単調に下降していることを証明できません。というより、『前線』という単一の対象として記述することが難しくなりつつあります」
+    </p>
+    <p>みたいな。で、身体的な手続きとして無限を保存したりしてなんとか復活したり……。</p>
+    <h2>もうちょっと細かくヴェブレン階層についての実験と覚書</h2>
+    <p>通常のヴェブレン階層については省きつつ、超現実数においては、順序数 \(\omega\) に対応するものとして、$$\omega =
+      \lbrace0,1,2,\cdots\mid\rbrace$$というものがあり、そこからデクリメントをすると、$$\omega-1 = \lbrace 0, 1, 2, \cdots \mid
+      \omega\rbrace$$$$\omega-2 = \lbrace 0, 1, 2, \cdots \mid \omega,
+      \omega-1\rbrace$$という風になっていく。左手と右手のせめぎ合いになっていて、左手はとにかくどこまで下から抑えられるか、右手はとにかくどこまで上から抑えられるか、それで二分木を形成するという感覚が近い。このままどんどこ減らすと、$$\dfrac{\omega}{2}=\lbrace0,1,2,\cdots\mid\omega,\omega-1,\omega-2,\cdots\rbrace$$$$\dfrac{\omega}{4}=\lbrace0,1,2,\cdots\mid\omega,\omega-1,\omega-2,\cdots,\dfrac{\omega}{2},\dfrac{\omega}{2}-1,\dfrac{\omega}{2}-2,\cdots\rbrace\rbrace$$$$\omega^{\frac{1}{2}}
+      =
+      \lbrace0,1,2,\cdots\mid\omega,\dfrac{\omega}{2},\dfrac{\omega}{4},\cdots\rbrace$$という風になっていくというのがいわゆるConwayのω-mapというもので、ここでヴェブレン階層の0階が$$\omega^\alpha
+      = \Phi(0, \alpha)$$というものだったことを思い出すと、$$\omega^{\frac{1}{2}} =
+      \Phi(0,1/2)$$と考えることが出来るよね、つまり、「超現実数における各変数は、いずれも超現実数それ自体を再演するのではないか」という仮定から入った。シーケンスっぽく書くと$$\omega^{+-} =
+      \Phi(0,+-)$$みたいなこと、そして$$\Phi(1,0) = \Phi(0, \Phi(1,0)) $$$$\Phi(2,0) = \Phi(1, \Phi(2,0))$$なのだから$$\Phi(1/2,0) =
+      \Phi(1, -\Phi(2,0))$$なのではないか、みたいなこと……。</p>
+    <p>その着想をChatGPTに依頼してLeanを実験してもらい、今のところ第一変数にω日目の数（任意の正の有理数）を入れても破綻が起きない『らしい』、というところまでは話をしてきた。</p>
+    <p>\(\Phi(1/3, 1)\) は「あることはわかった、だがこの記号の意味がオヌシにわかるかぁ～？（by ChatGPT）」という感じになってきた（地力不足を感じて悲しい）。どうも、$$\Phi(1/3, 1) =
+      \Phi(1, 何か_1) = \Phi(1, -\Phi(2, 何か_2)) = \cdots$$という感じで、各 \(\cdots\)
+      部分で座標変換しながら伸びてくことになるようなのだが、それの同定がなかなか難しいみたい。実際、1→何か1の部分で、正負の時点で入れ替わってるし……。あと、$$\Phi(1,\Phi(3,0)) = \Phi(2,
+      \Phi(3,0))$$なので、そもそも \(\neg\forall \in \text{No}~~[\Phi(1, x) = \Phi(2, x)]\)
+      ではある。要するに不動点で各階層の像がぶつかるので、第一変数を上げれば単純に「値域全体が上へ移動する」と考えるのはちょっと違うんですよね。</p>
+    <br />
+    <h1>2026年9月24日</h1>
+    <p>なんかしばらく書かなかった。</p>
+    <p>連休中に、札幌の円山動物園に行ってきた。何気に久しぶりかも。語学に関心を持って以来では初めて訪れたので、学名を見ながらChatGPTに質問するという見方が増えており、楽しかった。今度は植物園もいいかも。</p>
+    <p>帰りにステラプレイス内の鼎泰豐に寄ってきた。結構したけど、すごくおいしかった……。</p>
+    <p>片頭痛薬はだいたい週2くらいで飲んでいる。10錠あるので、通院は一か月に一回くらいでいいのではないか。</p>
+    <p>「悪人はその人で大変なんだから憐れむだけにしてほっとけ」という話を聞いたのだけど、すると「善悪が曖昧な場面でこそ出張らねばならぬ」ということになり、確かにそれはそうなのかも。</p>
+    <p>せっかく日記を書いてるので、月に一度くらい、時事についてまとめた方がいいと思う。</p>
+    <hr />
+    <p><b>2026年8月26日　ネパールと中国の国境で土石流が発生、大被害。</b></p>
+    <blockquote>
+      <p>原因となった地質学的事象は、<a href="https://ja.wikipedia.org/wiki/%E3%83%92%E3%83%9E%E3%83%A9%E3%83%A4%E5%B1%B1%E8%84%88 "
+          ヒマラヤ山脈"">ヒマラヤ山脈</a>の<a
+          href="https://ja.wikipedia.org/wiki/%E3%83%A9%E3%83%B3%E3%82%BF%E3%83%B3%E3%83%BB%E3%83%AA%E3%83%AB%E3%83%B3 "
+          ランタン・リルン"">ランタン・リルン</a>山で発生した<a href="https://ja.wikipedia.org/wiki/%E6%B0%B7%E6%B2%B3%E5%B4%A9%E5%A3%8A "
+          氷河崩壊"">氷河崩壊</a>と考えられており、世界各地の<a href="https://ja.wikipedia.org/wiki/%E5%9C%B0%E9%9C%87%E8%A8%88 "
+          地震計"">地震計</a>で<a
+          href="https://ja.wikipedia.org/wiki/%E8%A1%A8%E9%9D%A2%E6%B3%A2%E3%83%9E%E3%82%B0%E3%83%8B%E3%83%81%E3%83%A5%E3%83%BC%E3%83%89 "
+          表面波マグニチュード"">Ms</a> 5.2に達する揺れが観測された - <a
+          href="https://ja.wikipedia.org/wiki/2026%E5%B9%B4%E3%83%8D%E3%83%91%E3%83%BC%E3%83%AB%E6%B4%AA%E6%B0%B4">Wikipedia</a>
+      </p>
+    </blockquote>
+    <p><b>2026年9月18日　トランプ大統領がメディア3社をホワイトハウスから排除</b></p>
+    <blockquote>
+      <p>9月18日、ドナルド・トランプ米大統領がCNN、ポリティコ、MS NOWの主要3メディアに対しホワイトハウスへの取材アクセスを即時停止すると通告 - <a
+          href="https://jbpress.ismedia.jp/articles/-/97153">JBPress</a></p>
+    </blockquote>
+    <p><b>2026年9月22日　台風25号が千葉を直撃、印旛沼の堤防が決壊。</b></p>
+    <blockquote>
+      <p><a href="http://www.asahi.com/area/chiba/ " 千葉県 のトピックスを開く"">千葉県</a>河川環境課などは22日、台風25号により、印旛沼の北沼の堤防（<a
+          href="https://www.asahi.com/topics/word/%E6%88%90%E7%94%B0%E5%B8%82.html " 成田市
+          のトピックスを開く"">成田市</a>）の一部が破堤したと発表した。周辺の田んぼが広範囲に<a
+          href="https://www.asahi.com/topics/word/%E8%B1%AA%E9%9B%A8%E7%81%BD%E5%AE%B3.html " 浸水
+          のトピックスを開く"">浸水</a>しているという。同日午前4時半時点の水位は基準点から5.04メートルで、1968年度の管理開始以来最大となった。 - <a
+          href="https://www.asahi.com/articles/ASV9R0PBCV9RUDCB017M.html">朝日新聞</a></p>
+    </blockquote>
+    <hr />
+    <p>SNSのあれこれ（特に男女論）について書こうかと思ったのだけど、嫌になったのでやめた。</p>
+    <p>そうそう、そういえば <a href="https://www.syzygys.jp/shop.html">シジジーズの新譜の「Chi Kyuu」が出ている</a> 。聞きたい。<a
+        href="https://www.toyromusic.com/toyro_no_kokoro/?article=260701_shimizu">冷水ひとみさんご本人による曲目解説も</a> 。</p>
+    <p>肩肘はらずに、少し込み入ったこと（数学とか音楽とか……）について考えをまとめられたらいいと思うのだけど、日記には相応しくないと思う。勉強しなくちゃいけないことも多い。</p>
+    <p>
+      「AIがあるとやる気が出ない」という人も多いと思うけど、自分はどんどん教師にしたい。専門家に質問したとして、その答えの正解率は100%に限りなく近いのかもしれないが、自分が話しかけるとしてピントの外れた質問をし続けて辟易させることが目に見えている。それよりは、AIがときおり間違うとしても少なくとも自分より正答率が高いのだから（ｗ、気になることはどんどん聞いてしまえと思っている。
+    </p>
+    <br />
+    <h1>2026年9月15日</h1>
+    <p>冷え込んできた。養母がストーブを使えないといけないので、ストーブ前の粗大なゴミ類を処理施設に持ち込む。途中、サジェストされて気になっていたスマナサーラ長老の動画を見てみて、少し興味を持つ。</p>
+    <p>CodexにLeanを使ってもらって、超現実数について進める。もしかしたら \(\Phi(1/3, 1)\) みたいなところまで進めるかもしれない。ほんとに！？
+      しかし今月20日までの利用可能トークンを使い切ってしまった。頑張っていただいてます……。</p>
+    <p>
+      頭痛と眠気のため、土日はほとんど起き上がることが出来ず。結局日曜の深夜になって起き始めて、売りたい本に未練が残らないように必要なぶんを読んだり撮影したりして、30冊くらいは判断した。Kindleで買い戻せるものもいっぱいあると思うし、それでいいと思う。
+      実家にある父の村上春樹の初版本についても最初は文庫本だけ持って帰ってきて読もうかと考えていたけど、あまり気が進まないだろうと予測できるのでこの際一旦綺麗に処分してしまうことに心を決めた。読みたい人の手に渡って本として在ってくれれば、というのがいい落ち着きどころだろう。
+    </p>
+    <p>
+      その他のきっかけもあり、昨日、頭痛外来に行ってみることにした。子供時代からずっとある頭痛について話すと、片頭痛にまず間違いないとのことで、一応MRIをした上で判断いただき、薬と頭痛手帳をいただく。早速一錠使うと（本格的に痛くなり始めてからの服用だと、効き目が薄いらしい）、だいぶ頭が軽くなった感じがした。
+    </p>
+    <p>
+      片頭痛、一回だけ雪の照り返しがすごい時に路上でスマホを使って閃輝暗点が出たことくらいはあったけど、どうも吐いたり寝込んだりというイメージが強かったので、まさか自分がそれだとはちょっと意外な……。まあ血縁にも片頭痛とかメニエール持ちとか多いし。もっと早く行けば良かったかもしれない。
+    </p>
+    <p>（法話を聞いたのもあってか）だいぶ落ち着いてきたし、精神科は次は大丈夫かもしれない。予約の日に行って、話して、一旦止めてもらうかな。</p>
+    <p>古代語やったり完全列やったりしたい気持ち。</p>
+    <br />
+    <h1>2026年9月9日</h1>
+    <h2>生活</h2>
+    <p>精神科に行ってきて睡眠薬を貰った。これは入眠がすごい。ただ起き掛け、口が超絶苦いｗ</p>
+    <p>相続税について税理士さんに相談したり、実家の書類のシュレッダーがけを呼んだり。それと仕事が大量に来ている。忙しいが今しばらく頑張る。</p>
+    <p>財産分与と家の片づけまで済めば、それ以降のことはもう流れに任せてしまいたいと思う。あるべき地点に収まったら、それから自分の出来ることをしてあげればいい。
+    </p>
+    <h2>Codex遊び</h2>
+    <p>ヴェブレン階層は超現実数まで拡張できるのか？ イメージは、</p>
+    <blockquote>
+      <p>\(\Phi(\dfrac{1}{2}, 0) = \Phi(1, -\Phi(2,0)) = \epsilon_{-\zeta_0}\) </p>
+      <p> \(\Phi(\dfrac{1}{4}, 0) = \Phi(1, -\Phi(3,0)) = \epsilon_{-\eta_0}\)</p>
+      <p> \(\Phi(\dfrac{3}{4},0) = \Phi(1, -\Phi(2, -\Phi(3,0))) = \epsilon_{-{\zeta_{-\eta_0}}}\)</p>
+    </blockquote>
+    <p>のように、0から始まる超現実数みたいに、二分木をポキポキ進んでいくイメージ。\(\Phi(2, 0) = \Phi(1, \Phi(2,0))\)
+      なので結構うまく行ってるのではないかと思うんだけど……（というか上のような記法を導入しないと対応する超現実数の表記がないような気がする）</p>
+    <p>これについては巨大数wikiとかコンウェイの本とか読んでた15年前くらいから気になっていて、せっかくなのでCodex氏にLeanを頑張ってもらっている。Leanについては自分でも勉強してみたいけれど、まあじっくりと。</p>
+    <h2>語学</h2>
+    <p>Sound Horizonの5thアルバム『Roman』に出てきたフランス語についてラテン語系語源から考えていた。</p>
+    <ul>
+      <li>← 廻るよ廻る…<ruby>死神<rt>dieu</rt></ruby>の<ruby>回転盤<rt>roulette</rt></ruby> →
+        <ul>
+          <li>考えるきっかけになった下り。この前の部分もルーレットの『目』にちなんだ動詞で畳みかける、すごくかっこいい部分。</li>
+          <li><i lang="fr">dieu m.</i> は ラテン語 <i lang="la">deus m.</i> から来ている。フランス語では小文字で <i lang="la">dieu</i>
+            なら「神」、複数形もあって <i lang="fr">dieux</i> で「神々」。大文字で <i lang="fr">Dieu</i> と書くとキリスト教・ユダヤ教などの唯一神のことを言うとか。（教会ラテン語でも
+            <i lang="la">in principio creavit Deus caelum et terram</i> みたいに大文字にする）
+          </li>
+        </ul>
+      </li>
+      <li>廻る回る<span style="position:relative;display:inline-block;white-space:nowrap;">緋色の風車<span
+            style="position:absolute;left:50%;top:-0.5em;transform:translateX(-50%);white-space:nowrap;font-size:.55em;line-height:1;">Moulin
+            rouge</span></span>　綺麗な花を咲かせて
+        <ul>
+          <li><i lang="fr">moulin m.</i>（風車、水車）は、後期ラテン語 <i lang="la">molīnum n.</i>（製粉所、水車）、ラテン語 <i
+              lang="la">molō</i>（挽く）や <i lang="la">mola f.</i>（石臼）、古代ギリシャ語 <i lang="grc">μύλη f.</i> （製粉所、石臼…）、英語 meal
+            と関連。
+            <ul>
+              <li><i lang="la">mola</i> から文法性が入れ替わってるな……と思ったけど、<i lang="la">molīnum</i>
+                を挟んで中性名詞化した→フランス語ではラテン語の中性が消滅した＋単数形がラテン語男性名詞と似た振る舞いをしていたため男性側に吸収された、という流れだとか。</li>
+              <li>日本語で言えば、『この語は語尾がア段だから、この助詞・活用・連体の形と相性がいい』くらいの気持ちなんだろうなあ。</li>
+              <li>ラテン語、第二変化名詞複数形主格が -a で第一変化名詞単数主格と同じになるのは意地悪でしょ、と思っていたのだが、ラテン語 <i lang="la">folium n.</i>（落ち葉）の複数形 <i
+                  lang="la">folia n.pl.</i> が、イタリア語では <i lang="it">foglia .f</i>
+                と女性名詞になるということがあるようなので、恐らく木の葉は順次雌雄同体なのだろう。</li>
+            </ul>
+          </li>
+          <li><i lang="fr">rouge</i> は <i lang="la">rubeus, -a, -um</i> と関連。</li>
+          <li>ちなみにワインの「ロゼ」は薔薇 <i lang="la">rosa f.</i> から。</li>
+        </ul>
+      </li>
+      <li>泣き叫ぶ《<ruby>狂乱<rt>lune</rt></ruby>の<ruby>調べ<rt>harmonie</rt></ruby>》　焼けた《<ruby>屍肉<rt>にく</rt></ruby>の<ruby>風味
+          <rt>saveur</rt>
+        </ruby>》
+        <ul>
+          <li>『少年は剣を…』では『泣き叫ぶ《<ruby>狂乱<rt>luna</rt></ruby>の<ruby>調べ<rt>harmony</rt></ruby>》焼けた《<ruby>屍肉<rt>にく</rt>
+            </ruby>の<ruby>風味<rt>flavor</rt></ruby>》』と歌われていたので、アルバムで聞いて「うおぉなんか歌詞が違う！！」と謎にテンションが爆上げになった。</li>
+          <li><i lang="fr">saveur f.</i> はラテン語 <i lang="la">sapor m.</i>（味、風味）、<i lang="la">sapiō</i>（味がする、味わう、識別する）
+            が関連が深く、『物事を味わい分ける→判断力がある→賢い』という流れがあるらしい。現在分詞にすれば <i lang="la">sapiēns</i> 、サピエンス。</li>
+          <li>日本語でも経験値を表す言葉として『酸いも甘いも嚙み分ける』というのがあるよね</li>
+        </ul>
+      </li>
+    </ul>
+    <br />
+    <h1>2026年9月6日</h1>
+    <p>直和と直積ってどう違うのかなと思っていたのだけど、有限の範囲では差はないらしい。無限直和は非零な元は有限個に限られ、無限直積はそうでなくてもよいらしい。</p>
+    <p>無限直積 \({\displaystyle\prod_{i\in I}A_i}\) からは各成分へ向かう射影 \(\pi_i : {\displaystyle\prod_{j\in I}} A_j \to A_i\)
+      があり、任意の対象 \(X\) から各 \(A_i\) への射 \(f_i : X \to A_i\) が全部そろっていれば、それらをまとめてただ一つの射 \(f : X \to
+      {\displaystyle\prod_{i}A_i}\) にすることができ、無限個の成分を同時に指定できる。つまり、\(\pi_i \circ f = f_i\)
+      とでき、無限個の成分を同時に指定できる（無限直積への射が定義できる）。</p>
+    <p>一方、無限直和 \({\displaystyle\bigoplus_{i\in I}A_i}\) には各成分から入ってくる標準入射 \(\sigma_i : A_i \to
+      {\displaystyle\bigoplus_{j\in I}A_j}\) がある。そして、各 \(A_i\) から共通の対象 \(Y\) への射があれば、それらをまとめて \(g:
+      {\displaystyle\bigoplus_{i}A_i} \to Y\) と出来る。つまり、\(g \circ \sigma_i = g_i\) とできる（無限直和からの射が定義できる）。</p>
+    <p>ざっくり、「入射は射が無限個あっても具体的な一つの元への入力は有限個しか出来ないが、直積は天下り的に無限個の要素を持った元を考えられるよね」くらいに思うことにした。</p>
+    <p>そこで、$$\dfrac{\displaystyle\prod_{n\in \mathbb{N}}\mathbb{Z}}{\displaystyle\bigoplus_{n\in
+      \mathbb{N}}\mathbb{Z}}$$という商群を考えてみたくなったりするが、これは「有限個の部分を除いて、\(a_n = b_n\) が成り立つような数列は同値関係とする」集合らしい……で、$$0
+      \longrightarrow {\displaystyle\bigoplus_{n}\mathbb{Z}}
+      \xrightarrow{~~\sigma~~}{\displaystyle\prod_{n}\mathbb{Z}}\xrightarrow{~~q~~}\dfrac{\displaystyle\prod_{n}\mathbb{Z}}{\displaystyle\bigoplus_{n}\mathbb{Z}}\longrightarrow
+      0$$みたいな完全列が存在するとか（まあ \(q\) の写像では \(\text{Im}~\sigma\) は全部核まで落ちるよね、というのはうん）（見た目がゴツくてかっこいいな……ｗ）。</p>
+    <p>ざっくり、完全列は「割り算もどきを作るための操作」だと思っている……と思って聞いてみたら、</p>
+    <blockquote>
+      <p>「\(0 \to K \to A \to B \to 0\) からは\(B \cong A/K\) が作れて、それは\(A\) の中の \(K\) 方向をゼロ扱いしたものが\(B\) です</p>
+    </blockquote>
+    <p>とより詳しく教えてもらいました。通常の割り算自体にもそういうイメージを持つことは出来るだろうか？ splitのイメージはまだわからないけど、splitでない場合とは何かについて、</p>
+    <blockquote>
+      <p>「消される方向と残る方向が全体の中でうまくはがれず、奥行きとして絡みついている」</p>
+    </blockquote>
+    <p>くらいのイメージを持つのがいいとのことでした。線形独立じゃないってことなのかも。</p>
+    <br />
+    <h1>2026年9月5日</h1>
+    <p>一日だいぶ寝てしまった。実家片付けとかでちょっと疲れていたのだろうか。</p>
+    <h2>音律についての自習まとめ</h2>
+    <p>rank-n temperament の <u><b>mapping</b></u> とは、m-limit JIの monzo（純正音程）の張る格子 monzo lattice \(\mathbb{Z}^m\)
+      （＝自由アーベル群、ベクトル空間みたいなもの。ただし整数係数版）を、tempered interval lattice \(\mathbb{Z}^n\) へ写す群準同型であり、それは行列で書くことが出来て、各行を val
+      とみなせる。</p>
+    <p>「テンパーアウトされる」とは val によって零点へと縮退することであり、テンパーアウトされる音程はいわゆる核（kernel）。</p>
+    <p>テンパーアウトの過程は、短完全列みたいに捉えられるのではないかとのこと。</p>
+    <ul>
+      <li>\(K\) を\(\text{ker}~\phi\) ：テンパーアウトされるコンマの群</li>
+      <li>\(J\) を JI の純正音程格子</li>
+      <li>\(T\) を \(\text{im}~\phi\) ：tempered interval group、つまり n-rank temperamentで現れる音程の空間</li>
+    </ul>と考えた時に、$$0
+    \longrightarrow K \longrightarrow J \xrightarrow{~~\phi~~} T \longrightarrow
+    0$$で表現できるのではないかとのこと。5-limit JI なら monzo は \([~ a,b,c~\rangle\)で表され、\(J \cong \mathbb{Z}^3\) である。12edoのval
+    \(\langle~12,19,28~]\) を使うなら、$$\phi:\mathbb{Z}^3 \rightarrow \mathbb{Z}, ~~~ (a, b, c)
+    ~\longmapsto~12a + 19b +28c.$$となり、このとき \(K\) は、$$K = \text{ker}~\phi~=~\lbrace (a,b,c)\in\mathbb{Z}^3 : 12a +
+    19b + 28c = 0\rbrace.$$そして完全列$$0 \longrightarrow K \longrightarrow \mathbb{Z}^3<br>\xrightarrow{~~\phi~~}
+    \mathbb{Z} \longrightarrow 0$$が得られる、ということらしい。各場所で、$$\text{im}(前の写像) = \text{ker}(次の写像)$$が成り立っている、というのが大事らしい……。
+    <p>慌てずにもっと精密に検証してみたい。$$0 \xrightarrow{~~f_1~~} K \xrightarrow{~~f_2~~}
+      \mathbb{Z}^3 \xrightarrow{~~f_3~~} \mathbb{Z} \xrightarrow{~~f_4~~}
+      0$$とした時に、</p>
+    <ul>
+      <li>\(\text{im}(f_1) = 0 = \text{ker}(f_2) ~~~\in K\)
+        <ul>
+          <li>テンパーアウトされるコンマの群のうち、\(f_2\) で0に移るもの</li>
+          <li>12EDOなら、例えば <code>augment comma = [7 0 -3&gt;</code> とか、<code>syntonic comma = [-4 4 -1&gt;</code> とかが
+            \(K\) に属するが、ここで表されているのは、単なるユニゾン、完全一度の <code>[0 0 0&gt;</code> を指していると思う。</li>
+        </ul>
+      </li>
+      <li>\(\text{im}(f_2) = \text{ker}(f_3)~~~\in \mathbb{Z}^3\)
+        <ul>
+          <li>これはわかりやすく、\(f_3\) で \(0\) に移るものは、\(K\) の全体だ。</li>
+        </ul>
+      </li>
+      <li>\(\text{im}(f_3)=\ker(f_4)~~~\in \mathbb{Z}\)
+        <ul>
+          <li>これもわかりやすく、\(f_4\) はすべてを \(0\) に縮めるので、\(\mathbb{Z}\) ,
+            すなわち12EDO全体がここに含まれる。 </li>
+        </ul>
+      </li>
+    </ul>
+    <p>……という形で、確かに完全列を成していると思う。こうなると、第一同型定理によって、ある地点での空間を \(X\) とおいて、$$X / \text{ker}~f
+      \cong \text{im} f$$が言えるようになり、例えば$$\mathbb{Z}^3 / \text{ker}~f \cong \text{im}
+      f$$とかが言えるようになる……ということのようだ。つまり、$$\dfrac{\text{5-limit JI lattice}}{\text{12edoで消えるcommma lattice}} \cong
+      \text{12edo step lattice}$$という非常に美しい式になるという……。</p>
+
+    <p>ここから逆に、\(\mathbb{Z}^3 \cong \text{ker}~f~\times~\text{im}~f = \mathbb{Z}^2 \oplus \mathbb{Z}\)
+      、つまり$$\text{5-limit JI lattice} \cong \text{12edoで消えるcomma lattice} \times \text{12edo step lattice}$$
+      が言えると思うのだけど……と思ったけど、これは完全列において常に言えるわけではなく、<b><u>split exact sequence</u></b> というものにならなくてはならないらしい。今回は、
+    </p>
+    <blockquote>
+      <p>完全列の右端の \(\mathbb{Z}\) が自由アーベル群なので、1step（つまり1半音）を代表するmonzoを一個選べば \(s: \mathbb{Z} \to \mathbb{Z}^3\)
+        というセクションを作れるから</p>
+    </blockquote>
+    <p>という理由でそうなっているらしいのだが、まだちょっとよくわからない。まあ1,5,7,11半音とかでないと困ったことになるだろう（いわば完全巡回にならない）ことはわかるのだが……。とにかくやっていることは、<b><u>「syntonic
+          comma方向とaugmented
+          comma方向を丸ごと潰して、残った1方向だけをstep軸として読む」</u></b>ということなのだそうだ。（実際、<u><b>5-リミットJIは3次元空間なので2次元ぶん潰せば1次元残るよね</b></u>、くらいのざっくり理解をしている）
+    </p>
+    <p>完全列となると、ここから蛇の補題とかそういうものも出て来るということなのだろうか……（でも名前くらいしか聞いたことがない。高卒なので……💦）</p>
+    <h2>ラテン語</h2>
+    <p>「走ることを望むことをやめない」なら、<i lang="la">Currere velle non dēsinō.</i> 不定法はマトリョーシカになれるとのこと。これは <i lang="la">volō</i> や <i
+        lang="la">dēsinō</i> だけでなく、<i lang="la">dēbeō</i> や <i lang="la">possum</i> とかでもいけるらしい。流石に語順が大切になるらしく、</p>
+    <blockquote>
+      <i class="syntax syntax-3" lang="la"><i class="syntax syntax-2" lang="la"><i class="syntax syntax-1"
+            lang="la">Currere</i> velle</i> non dēsinō</i>
+    </blockquote>
+    <p>または英語っぽく I do not cease to want to run. らしく、</p>
+    <blockquote>
+      <i class="syntax syntax-3" lang="la">Non dēsinō <i class="syntax syntax-2" lang="la"> velle <i
+            class="syntax syntax-1" lang="la"> currere</i></i></i>
+    </blockquote>
+    <p>がいいのではないか、とのこと。</p>
+    <p>単語をそろそろ詰め込みたいので、Codexさんに必修単語をまとめてもらっています。古典ギリシャ語とかサンスクリットで意味が近い単語もまとめてもらっちゃったりして。語源に詳しくなれると嬉しいな。</p>
+    <p>ちなみにこの多重下線はcssの <code>border-bottom</code> でできました。わかりやすくていいかも。</p>
+    <h2>夢の話</h2>
+    <p>昼寝していたら、父の夢を見た。どこともつかない旅行先で父が亡くなりそうになり、それをみんなで見守る夢。（また死んでる！）</p>
+    <p>
+      しかも病院がわざわざビーチから300mくらいに沖合に離れたところに建っていて、そこまで着衣水泳しなければならない。海上は、コインやら加速リングやら敵キャラやら吊りジャングルジムやら他の観光客やらでカオス。私は泳いで向かう最中で財布を落としてむちゃくちゃ。
+    </p>
+    <p>しかも亡くなった父はストレッチするみたいに長座位で胸を足にくっつけるみたいな状態で黒い網に入れられていて、一族は「これはひどい！」と憤慨。病院関係者は「死体、飛行機、乗せられない。許してね」。</p>
+    <p>しかもまだ本人は動いている。「亡くなってないじゃないですか！」と私は猛抗議。しかし事情があるとのことで、聞いてみると、</p>
+    <p>「望み、ないわけじゃない。でも、今はない」<br>「！ なるほど！」<br>「そう」<br>「「コールドスリープ……！」」</p>
+    <p>そして私は納得して帰郷……。</p>
+    <p>
+      ……できるわけもなく、落とした財布を海底で探す（トホホ）。途中で「あっ、流石にこれは夢すぎる。つまり、財布は海底ではなく、起きたらそこにある……」となり起床。（洞窟のイドラか何か？ｗ）多分あの財布はステージ探索する観光客に拾われただろうな。
+    </p>
+    <p>観光客「オートマ限定だぜこれｗ」<br>私「むぎぃぃ！💦」</p>
+    <p>みたいな。</p>
+    <h2>歌詞の話</h2>
+    <blockquote>
+      <p>世の果てでは空と海が交じる - ポルノグラフティ『アゲハ蝶』</p>
+    </blockquote>
+    <p>
+      というかっこいい歌詞があり、時々口ずさみたくなる。実は結構色んなところでこの世界観は聞く。実際に海と空は青くて似ているし、条件によっては鏡面のようになる時もある。ので話自体はわかるのだけど、実際のところその果て付近まで行くとどういう風に混ざるのだろう？
+      と昔から思っていた。</p>
+    <ol style="font-weight: normal">
+      <li>進んでいると、いつの間にか水がなくなって空になっていて、船はその上を航行する。
+        <ul>
+          <li>『この世界のどこかでは、海そのものがあたかも亡霊のようになっていて、"水の亡霊"
+            が海の体積を占めており、その海域に入ると船ごと浮力を失って海底に叩きつけられる』……という怖い想像をしたことがあるが、超現実的な感じがちょっとそれに似ている。</li>
+          <li>その状態で港まで帰ってくることが出来る。港の人達は船底を下から見ることになる。</li>
+        </ul>
+      </li>
+      <li>
+        端が反り返っていて、海から空へと進む。船は上下逆さまになって港へと戻ってくることが出来る。船の人達は、あたかも港を『空の上の風景』のごとく体験する。港の人達は、船の人達を逆さまに貼りついたようにして見る。（ちょっとTOEかSSSS.グリッドマン風味）
+      </li>
+      <li>チャンク異常が起きていて、空の領域と海の領域が入り混じっている。上手く操舵すれば、海部分で高さを稼いだりしながら更に奥へと進むことが出来る。そこはいわゆるOut of Boundで、地球のデータ領域の状態を『空=0,
+        海=1』のバイナリ列で表現している。進みすぎるとフリーズ。</li>
+      <li>地平線が射影平面のように実在していて、『地平線領域』が存在する。通過した船は極を通り抜けるようにして左右反転して帰ってくる。つまり、右利きの人は左利きになって帰ってくる。しかも本人はそのことを理解していない。</li>
+    </ol>
+    <p>など、とりあえず4つの『エキゾチック・海』を想像した。自分は欲張りなので、これらの4つの『エチゾチック・海』に繋がる色んな場所があればいいなと思う。</p>
+    <p>人間はまだあらゆる航路を進んだわけではないだろうとは思うので、もしかすると地球上のどこかにはこういう航路もあるのかもしれない。宇宙から見ると地球は丸く見えるが、局所的に \(\mathbb{R}^3\)
+      だと体験されるというだけなのかもしれない。だから、変な航路を進んでいて、たとえば星座に異常を感じたりしたら、それは別チャートへの遷移なのだろう（？）</p>
+    <h2>今日の仏教用語</h2>
+    <p><i lang="skr">svabhāva</i> ：自性（じしょう）</p>
+    <ul>
+      <li>物それ自体の独自の本性、もの・ことが常に同一性と固有性とを保ち続け、それ自体で存在するという本体、もしくは独立し孤立している実体のこと。根本的な性質、存在の本質を表す。西洋哲学の自体に相応する概念である。- <a
+          href="https://ja.wikipedia.org/wiki/%E8%87%AA%E6%80%A7">wikipedia</a></li>
+      <li>（空を含む）あらゆるものには自性がないという。</li>
+      <li>sva - bhāva。a-stem
+        <ul>
+          <li><a href="https://en.wiktionary.org/wiki/%E0%A4%B8%E0%A5%8D%E0%A4%B5">sva</a> : his/her own, of self。
+            <ul>
+              <li>PIEの <i lang="pie">*swé</i> </li>
+              <li>ラテン語 : <i lang="la"><a href="https://en.wiktionary.org/wiki/suus#Latin">suus</a></i> と同根
+                <ul>
+                  <li>「<i lang="la">eius</i> を使うと別の人になるから <i lang="la">suus </i>にしましょう」で有名な <i
+                      lang="la">suus</i>。再帰所有形容詞。</li>
+                </ul>
+              </li>
+              <li>古代ギリシャ語 : <a href="https://en.wiktionary.org/wiki/%E1%BC%91%CF%8C%CF%82#Ancient_Greek">ἑός</a> と同根
+                <ul>
+                  <li><i lang="grc">…Ζεὺς δὲ ἑὸν πρὸς δῶμα…</i>（……そしてゼウスは自分自身の館（宮殿）へと……）</li>
+                </ul>
+              </li>
+            </ul>
+          </li>
+          <li><a href="https://en.wiktionary.org/wiki/%E0%A4%AD%E0%A4%B5#Sanskrit">bhāva</a> : becoming, being, ...
+            <ul>
+              <li><a href="https://en.wiktionary.org/wiki/%E0%A4%AD%E0%A5%82#Sanskrit">√bhū</a> : to be</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <h1>2026年9月4日</h1>
+    <p><ruby>衆生無辺請願度<rp>(</rp>
+        <rt>しゅじょうむへんせいがんど</rt>
+        <rp>)</rp>
+      </ruby> をChatGPTに梵語に移してもらい、</p>
+    <blockquote>
+      <i lang="skr">sattvāḥ anantāḥ, tān tārayitum praṇidadhāmi.</i>
+    </blockquote>
+    <p>を得た。</p>
+    <ul>
+      <li>sattvāḥ
+        <ul>
+          <li><b>衆生は、</b>（衆生）</li>
+          <li><a
+              href="https://en.wiktionary.org/wiki/%E0%A4%B8%E0%A4%A4%E0%A5%8D%E0%A4%A4%E0%A5%8D%E0%A4%B5#Sanskrit">sattva</a>
+            (existence, spirit, being, ...) , Noun, m, a-stem, Nom.Pl
+            <ul>
+              <li>wiktionaryによると中性らしいが、本来男性・中性の双方の用法がある。仏教語として「衆生」を指す場合、男性として扱われる例が多いらしい。</li>
+            </ul>
+          </li>
+          <li><a href="https://en.wiktionary.org/wiki/%E0%A4%B8%E0%A4%A4%E0%A5%8D#Sanskrit">sat</a> は動詞
+            √as「ある、存在する」の現在分詞で、印欧祖語の <i lang="pie">*h₁es-</i>「存在する」に遡る。
+            <ul>
+              <li>サンスクリット <i lang="skr">asti</i>「～である」</li>
+              <li>ギリシャ語 <i lang="grc">ἐστί</i></li>
+              <li>ラテン語 <i lang="la">est</i></li>
+              <li>英語 is</li>
+            </ul>
+          </li>
+          <li><a href="https://en.wiktionary.org/wiki/-%E0%A4%A4%E0%A5%8D%E0%A4%B5#Sanskrit:_abstract_noun">tva</a>
+            (-ness),
+            <ul>
+              <li>「～性、～であること」を作る接尾辞。ラテン語の -tāsなどと同じく、抽象名詞形成に寄与する。</li>
+              <li>スラブ系の -tvo</li>
+            </ul>
+          </li>
+          <li>男性 a 語幹の複数主格が <i lang="la">-āḥ</i> になるのはサンスクリットの基本パターンらしい。</li>
+        </ul>
+      </li>
+      <li>anantāḥ
+        <ul>
+          <li><b>無限である</b>（無辺）</li>
+          <li><a href="https://en.wiktionary.org/wiki/%E0%A4%85%E0%A4%A8%E0%A4%A8%E0%A5%8D%E0%A4%A4#Sanskrit">ananta</a>
+            (endless, boudless, eternal, infinite) Adj, m, a-stem, Nom.pl</li>
+          <li>an- は否定の接頭辞。</li>
+          <li><a href="https://en.wiktionary.org/wiki/%E0%A4%85%E0%A4%A8%E0%A5%8D%E0%A4%A4#Sanskrit">anta</a>
+            は端、境界、終わりを表す。印欧祖語では <i lang="pie">*h₂ent-</i> にさかのぼる。
+            <ul>
+              <li>英語 end</li>
+              <li>ギリシャ語 <i lang="grc">ἀντί</i></li>
+              <li>ラテン語 <i lang="la">ante</i></li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li>tān
+        <ul>
+          <li><b>彼らを</b></li>
+          <li><a href="https://en.wiktionary.org/wiki/%E0%A4%A4%E0%A4%A6%E0%A5%8D#Sanskrit">tad</a> は3人称代名詞、その Acc.pl,
+            m, a-stem。PIEの <a href="https://en.wiktionary.org/wiki/Reconstruction:Proto-Indo-European/s%C3%B3">só</a>
+            と関連するとか。
+            <ul>
+              <li>tad「それ、その」は古い印欧語の指示詞体系に由来する。ギリシャ語 ὁ, ἡ, τό も同じく古い指示詞に由来し、のちに冠詞化した。</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+      <li>tārayitum
+        <ul>
+          <li><b>渡らせるために</b>（度）</li>
+          <li><a
+              href="https://en.wiktionary.org/wiki/%E0%A4%A4%E0%A4%BE%E0%A4%B0%E0%A4%AF%E0%A4%A4%E0%A4%BF">tārayati</a>
+            (to carry or lead across, ...) Verb, third-singular indicative, Infinitive（不定詞 -tum）
+            <ul>
+              <li>ラテン語の不定詞の -tum と同じだ。</li>
+              <li><i lang="skr">√tṝ</i> : to pass（渡る、渡らせる）</li>
+              <li>ラテン語 <i lang="la">terminus</i>（境界）</li>
+              <li>英語 through</li>
+            </ul>
+          </li>
+          <li>Benedictive/Precativeとか、Conditionalとか、聞いたことない時制がいっぱいある！
+            <ul>
+              <li>Benedictive / Precativeは願望形で、「願わくば～せんことを」。</li>
+              <li>今回は「宣言」なのでこちらは使わない。</li>
+            </ul>
+          </li>
+          <li>接続法とかはあるんだろうか？
+            <ul>
+              <li>ヴェーダ語にはあったらしいが古典サンスクリットでは消えたらしい。</li>
+              <li>Optativeというのもあって、これは希求法というものらしい。「～ならば」「～すべき」「～であろう」などを担当する。</li>
+            </ul>
+          </li>
+          <li>現在形能動態単数の語尾が -mi, -si, -ti なのはラテン語っぽい。</li>
+        </ul>
+      </li>
+      <li>praṇidadhāmi
+        <ul>
+          <li><b>請願する。</b></li>
+          <li>pra-（前へ／強く）
+            <ul>
+              <li>PIE <i lang="pie">*pro</i></li>
+              <li>ギリシャ語 <i lang="grc">πρό</i></li>
+              <li>ラテン語 <i lang="la">prō</i></li>
+            </ul>
+          </li>
+          <li>ni-（下へ、内へ）
+            <ul>
+              <li>PIE <i lang="pie">*ni</i></li>
+              <li>英語 nether</li>
+              <li>ドイツ語 nieder</li>
+            </ul>
+          </li>
+          <li>dadhāmi（私は置く）
+            <ul>
+              <li><a href="https://en.wiktionary.org/wiki/%E0%A4%A6%E0%A4%A7%E0%A4%BE%E0%A4%A4%E0%A4%BF">dadhāti</a>（to
+                put）</li>
+              <li>PIE <i lang="pie">∗dheh1​−</i></li>
+              <li>ギリシャ語 τίθημι（置く）</li>
+              <li>ギリシャ語 θέσις（thesis, 置くこと、設定。）</li>
+              <li>ラテン語 <i lang="la">faciō</i></li>
+              <li>英語 do, deed</li>
+              <li>wiktionaryでは、サンスクリットの動詞は三人称現在単数が見出しなのかも。</li>
+            </ul>
+          </li>
+        </ul>
+      </li>
+    </ul>
+    <h1>2026年9月3日</h1>
+    <p>トップ絵で使っていたイラスト、なんか眼鏡のフレームが変だなと思っていたら、<code>red-framed eyewear</code> とすべきところ、<code>red-flamed eyewear</code>
+      となっていた。しかも<code>:2.4</code> 付き。ChatGPTに直してもらった（すごい！）</p>
+    <p>frameとflameはいつも綴り間違う。fireがF→Rの流れなので、それに引っ張られるのだろう。flameは、ラテン語 <i lang="la">flamma</i> から来ている。</p>
+    <p><i lang="la">ignis</i> は火、 <i lang="la">flamma</i> は燃え上がる炎、という感じの違いがある。</p>
+    <p>微分音について。こういうことはせっかくあるコラムページを使えとなると思うが、思いつきをまとめるためにMoSから別のMoSを作るためにWord Productの話を少しする。</p>
+    <h2>Word Product</h2>
+    <p>ざっくり、「二つの語から、一つの語を作る」方法。<br>2 2 1 2 2 2 1（イオニアン）と 2 2 2 1 2 2 1（リディアン）から、各項を足すと、4 4 3 3 4 4 2,
+      LLMMLLs（4L2M1s、イオニアンとリディアンの中間的音階に該当）が作れる。$$L = 200c,~~M = 150c~~s = 100c$$と考えれば、</p>
+    <pre><code>0
+200
+400
+550
+700
+900
+1100
+1200</code></pre>
+    <p>という24平均律の音階となる。</p>
+    <h2>メディアントとWord Product</h2>
+    <p>5L2sとある時に、次のように考えられる。<code>LLsLLLs</code> を例にとる。</p>
+    <pre><code>L:s = 1:0 = 1 1 0 1 1 1 0    // 5edo
+...
+L:s = 3:1 = 3 3 1 3 3 3 1    // 17edo
+L:s = 2:1 = 2 2 1 2 2 2 1    // 12edo
+L:s = 1:1 = 1 1 1 1 1 1 1    // 7edo</code></pre>
+    <p>nEDO上にある基準音を置き、その上のm番目のクロマ（ざっくり最小単位）を、 <code>m\n</code> と表記することにする。これは（二つの整数の引数を取ってセント数を返すという意味で）純正音程
+      <code>a/b</code> とニュアンスが近い。
+    </p>
+    <pre><code>1\5   = 240c   // 5edoの1番目の音。長二度よりだいぶ高い。
+3\5   = 720c   // 5edoの3番目の音。完全五度より少し高い。
+
+1\12  = 100c   // 12edoの1番目の音。半音。
+7\12  = 700c   // 12edoの7番目の音。完全五度。
+12\12 = 1200c  // 12edoの12番目の音。オクターブ。</code></pre>
+    <p>純正音程 \(\dfrac{a_1}{b_1} \geq \dfrac{a_2}{b_2}\) においては、 $$\dfrac{a_1}{b_1} \geq \dfrac{a_1 + a_2}{b_1 + b_2} \geq
+      \dfrac{a_2}{b_2}$$が成り立つ。これは純正音程に限らず一般の有理数について成り立つため、edo上においても同様に成り立つ。つまり、<code>a\b &gt; (a+c)\(b+d) &gt; c\d</code>。純正音程においてもEDOにおいても、この文献上では一律、この
+      $$\dfrac{分子ごとの和}{分母ごとの和}$$のことを「メディアント」（中間数……ここでは中間音の意）と呼ぶことにする。</p>
+    <p>例えば、<code>3\5 = 720.000c</code> と <code>4\7 = 685.714c</code> のメディアントは、<code>7\12 = 700c</code>となっている。</p>
+    <p>このメディアントは非常に面白い。上でやったような足し算を、MoS上の各列について行うことが出来る。これによって、MoS上のWord Productについて全部説明してしまうことが出来ると思う。</p>
+    <pre><code>// I. Meantone類とは7edoと5edoの間に生まれる
+
+   1 1 1 1 1 1 1    //  7edo,  4\7  = 685c
++) 1 1 0 1 1 1 0    //  5edo,  3\5  = 720c  
+------------------------------------------
+   2 2 1 2 2 2 1    // 12edo,  7\12 = 700c</code></pre>
+    <pre><code>// II. 700cをMeantone（7edo）寄りにしていく
+
+   2 2 1 2 2 2 1    // 12edo,  7\12 = 700c
++) 1 1 1 1 1 1 1    //  7edo,  4\7  = 685c
+------------------------------------------
+   3 3 2 3 3 3 2    // 19edo, 11\19 = 694c
+   
+   3 3 2 3 3 3 2    // 19edo, 11\19 = 694c
++) 1 1 1 1 1 1 1    //  7edo,  4\7  = 685c
+------------------------------------------
+   4 4 3 4 4 4 3    // 26edo, 15\26 = 692c
+   
+...</code></pre>
+    <pre><code>// III. 700cをSuperpyth（5edo）寄りにしていく
+
+   2 2 1 2 2 2 1    // 12edo,  7\12 = 700c
++) 1 1 0 1 1 1 0    //  5edo,  3\5  = 720c
+------------------------------------------
+   3 3 1 3 3 3 1    // 17edo, 10\17 = 705c
+
+   3 3 1 3 3 3 1    // 17edo, 10\17 = 705c
++) 1 1 0 1 1 1 0    //  5edo,  3\5  = 720c
+------------------------------------------
+   4 4 1 4 4 4 1    // 22edo, 13\22 = 709c
+
+...</code></pre>
+    <pre><code>// IV. フィボナッチ的にメディアントを反復する
+2 2 1 2 2 2 1       // 12edo,  7\12 = 700c
+3 3 2 3 3 3 2       // 19edo, 11\19 = 694c
+5 5 3 5 5 5 3       // 31edo, 18\31 = 696c
+8 8 5 8 8 8 5       // 50edo, 29\50 = 696c
+...</code></pre>
+    <h2>MoSのゆらぎ</h2>
+    <p>
+      このように、L:sの比率を変更していくことを考えるのは、色々な音階同士の繋がりを考える上でも有効だ。純正律を考える場合は大全音、小全音といったように音程が複雑化することもあり、自分は次のような記法を提案する。$$(K~\geq~)~L~\geq~M~\geq~N~\geq~\cdots~\geq~r~\geq~s$$このように書けば、例えば12平均律のハーモニックマイナーのような「増二度」を有する音階も表記しやすい。すなわち、<code>LsLLsKs</code>、すなわち
+      <code>1K3L2s</code> となる。
+    </p>
+    <p>これは面白い。<br>もしも <code>K=L</code> とすれば <code>LsLLsLs</code> 、すなわち <code>4L3s</code>（11EDOなどを代表とし、Orgone,
+      Hyperkleismic, Sixix,などで知られるシリーズ）へと接続し、またもしも <code>L=s</code> とすれば、<code>Kssssss → Lssssss</code>、すなわち
+      <code>1L6s</code>（8EDO,
+      15EDOなどを代表とし、NegriやPorcupineなどで知られるシリーズ）へと接続する。これは実地に作曲する場合においても役に立つ考察だと言えると思う。つまり、12EDOのMODMOSの一種と言えるハーモニックマイナーと、他のMoSとの関係が示唆されることになる。
+    </p>
+    <p>こうして見ていくと、「要するに与えられた7音（一般にはn音）をオクターブ内でそれぞれどうずらすか」の話になってきそうである。</p>
+    <p>また、5L2sの反対側には2L5sがいる。もう、Lとかsと言わずにここでは一旦抽象化してしまって、5a2bと呼ぶことにすると、</p>
+    <pre><code>a:b = 1:0          // 極限。5edo
+…
+   a:b = 3:1       // 17edo
+      a:b = 5:2    // 29edo
+   a:b = 2:1       // 12edo
+      a:b = 3:2    // 19edo
+a:b = 1:1          // 均衡点。7edo
+      a:b = 2:3    // 16edo
+   a:b = 1:2       // 9edo
+      a:b = 2:5    // 20edo
+   a:b = 1:3       // 11edo
+…
+a:b = 0:1          // 極限。2edo</code></pre>
+    <p>という系列を見ることが出来る。</p>
+    <p>Max/MSPやMTSなどを使えば、「楽曲中で連続的にピッチが変わる楽器」などを考えることも出来るだろう。</p>
+    <p>
+      となると、MoS、あるいは音階とは、「曲線的に変化していく7音の音高をある時刻tで切断した面」と考えることが出来る。
+      あるいは、もう一つ別次元の「語」として、ある音高軌跡同士が交差してしまうことを考えることも出来るかもしれない。
+      これは組み紐群のような運動を為し、また音楽としてはクセナキスのMetastasisのような図形楽譜との関係を示唆することが出来るだろう。
+      これは連続的変化に限る必要はなく、例えば組み紐の一本一本をセリーと見做すなどして、音列の演奏順序が時間によって置換していくといった拡張も可能かもしれない。
+    </p>
+    <p>また、複数の音高軌跡が一点で一致している場合、その点から時間の一方向だけを見れば、これを分岐と捉えることが出来る。
+      実際、5EDOから5Lnsによって7音（や任意の6音以上）を展開する際に起きる現象は、それと同等だと見做せると思う。
+      例えば、Diatonic 5L2sからAntiDiatonic（Mavila）2L5sへの運動は、5EDO→7EDO→2EDOという、分岐と収束の運動として捉えられる。
+      これもまたクセナキスのMetastasisを示唆するかもしれない。</p>
+    <br />
+    <h1>2026年9月2日</h1>
+    <p>今にして思うと「09月02日」という記法は少し気持ち悪いのではないか……？ と思ったので修正しました。</p>
+    <p>父のあれこれ仕事関係を閉鎖したりなんだり。</p>
+    <p>生き死にについて考えつつ、古典語についてChatGPTと話したりする毎日。ラテン語の絶対的奪格とかに少し挑戦したり……。</p>
+    <ul>
+      <li><i lang="la">Frātre īnsāniente, soror tacita fūgit.</i>
+        <ul>
+          <li>兄が狂気じみた行動をとるので、妹は無言で逃げ去った。</li>
+        </ul>
+      </li>
+      <li><i lang="la">Carnyce audītā, frāter territus armadillum simulāvit.</i>
+        <ul>
+          <li>カルニクスが聞こえてきたので、兄は怯えてアルマジロになりすました。</li>
+        </ul>
+      </li>
+      <li><i lang="la">Frātre clāmōsō rēbus mīlitāribus interveniēnte, illa fēlēs auriculās cēlāvit.</i>
+        <ul>
+          <li>兄が軍事にうるさく口を出すので、猫は耳を伏せた。</li>
+        </ul>
+      </li>
+    </ul>
+    <p>みたいなふざけた文を作ったり。（でも自分はその前にもっと地道に基礎的な文法をやった方がいいと思う）あと意外にわからなかったのが、カルニクスのラテン語の綴り。時代感のことはわからないんだけど、<a
+        href="https://en.wiktionary.org/wiki/carnyx">英語版wiktionary</a> には「Learned borrowing from Late Latin carnyx」とある。
+    </p>
+    <p><a href="https://melxen28.lsv.jp/jssproject/0026/index.html">0026 Multi-Keyboard Notepad</a>
+      は時々更新していて、古典ギリシャ語やサンスクリット語のアルファベット表記に対応するようにした。</p>
+    <p>ラテン語・古代ギリシャ語の第一変化名詞を並べて眺めてみたいなーと思っていたのだけど、
+      気が付くとサンスクリット語ā語幹まで並べてしまった。なぜに……。</p>
+    <div class="inner_wrapper">
+      <details>
+        <summary>活用表</summary>
+        <div class="table-scroll">
+          <table style="background-color: #ffffee;">
+            <thead>
+              <tr>
+                <th>格</th>
+                <th>Latin</th>
+                <th>Greek ᾱ</th>
+                <th>Greek η</th>
+                <th>Greek α</th>
+                <th>Sanskrit ā</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b>Nom.sg</b><br>（単数主格）<br>～は</td>
+                <td>-a<br>puella<br>rosa<br>aqua<br></td>
+                <td>-ᾱ<br>χώρᾱ<br>οἰκίᾱ<br>ἡμέρᾱ</td>
+                <td>-η<br>τιμή<br>ψυχή<br>ἀρχή</td>
+                <td>-α<br>δόξα<br>γλῶττα<br>θάλαττα</td>
+                <td>-ā<br>kanyā<br>kathā<br>mālā</td>
+              </tr>
+              <tr>
+                <td><b>Gen.sg</b><br>（単数属格）<br>～の</td>
+                <td>-ae<br>puellae<br>rosae<br>aquae</td>
+                <td>-ᾱς<br>χώρᾱς<br>οἰκίᾱς<br>ἡμέρᾱς</td>
+                <td>-ης<br>τιμῆς<br>ψυχῆς<br>ἀρχῆς</td>
+                <td>-ης<br>δόξης<br>γλώττης<br>θαλάττης</td>
+                <td>-āyāḥ<br>kanyāyāḥ<br>kathāyāḥ<br>mālāyāḥ</td>
+              </tr>
+              <tr>
+                <td><b>Dat.sg</b><br>（単数与格）<br>～に</td>
+                <td>-ae<br>puellae<br>rosae<br>aquae</td>
+                <td>-ᾳ<br>χώρᾳ<br>οἰκίᾳ<br>ἡμέρᾳ</td>
+                <td>-ῃ<br>τιμῇ<br>ψυχῇ<br>ἀρχῇ</td>
+                <td>-ῃ<br>δόξῃ<br>γλώττῃ<br>θαλάττῃ</td>
+                <td>-āyai<br>kanyāyai<br>kathāyai<br>mālāyai</td>
+              </tr>
+              <tr>
+                <td><b>Acc.sg</b><br>（単数対格）<br>～を</td>
+                <td>-am<br>puellam<br>rosam<br>aquam</td>
+                <td>-ᾱν<br>χώρᾱν<br>οἰκίᾱν<br>ἡμέρᾱν</td>
+                <td>-ην<br>τιμήν<br>ψυχήν<br>ἀρχήν</td>
+                <td>-αν<br>δόξαν<br>γλῶτταν<br>θάλατταν</td>
+                <td>-ām<br>kanyām<br>kathām<br>mālām</td>
+              </tr>
+              <tr>
+                <td><b>Abl.sg</b><br>（単数奪格）<br>～から<br>～によって<br>～で</td>
+                <td>-ā<br>puellā<br>rosā<br>aquā</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-āyāḥ<br>kanyāyāḥ<br>kathāyāḥ<br>mālāyāḥ</td>
+              </tr>
+              <tr>
+                <td><b>Voc.sg</b><br>（単数呼格）<br>～よ！</td>
+                <td>-a<br>puella<br>rosa<br>aqua</td>
+                <td>-ᾱ<br>χώρᾱ<br>οἰκίᾱ<br>ἡμέρᾱ</td>
+                <td>-η<br>τιμή<br>ψυχή<br>ἀρχή</td>
+                <td>-α<br>δόξα<br>γλῶττα<br>θάλαττα</td>
+                <td>-e<br>kanye<br>kathe<br>māle</td>
+              </tr>
+              <tr>
+                <td><b>Loc.sg</b><br>（単数処格）<br>～の場所で</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-āyām<br>kanyāyām<br>kathāyām<br>mālāyām</td>
+              </tr>
+              <tr>
+                <td><b>Inst.sg</b><br>（単数具格）<br>～を用いて</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-ayā<br>kanyayā<br>kathayā<br>mālayā</td>
+              </tr>
+              <tr>
+                <td><b>Nom.pl</b><br>（複数主格）<br>～達は</td>
+                <td>-ae<br>puellae<br>rosae<br>aquae</td>
+                <td>-αι<br>χῶραι<br>οἰκίαι<br>ἡμέραι</td>
+                <td>-αι<br>τιμαί<br>ψυχαί<br>ἀρχαί</td>
+                <td>-αι<br>δόξαι<br>γλῶτται<br>θάλατται</td>
+                <td>-āḥ<br>kanyāḥ<br>kathāḥ<br>mālāḥ</td>
+              </tr>
+              <tr>
+                <td><b>Gen.pl</b><br>（複数属格）<br>～達の</td>
+                <td>-ārum<br>puellārum<br>rosārum<br>aquārum</td>
+                <td>-ῶν<br>χωρῶν<br>οἰκίῶν<br>ἡμερῶν</td>
+                <td>-ῶν<br>τιμῶν<br>ψυχῶν<br>ἀρχῶν</td>
+                <td>-ῶν<br>δοξῶν<br>γλωττῶν<br>θαλαττῶν</td>
+                <td>-ānām<br>kanyānām<br>kathānām<br>mālānām<br></td>
+              </tr>
+              <tr>
+                <td><b>Dat.pl</b><br>（複数与格）<br>～達に</td>
+                <td>-īs<br>puellīs<br>rosīs<br>aquīs</td>
+                <td>-αις<br>χώραις<br>οἰκίαις<br>ἡμέραις</td>
+                <td>-αις<br>τιμαῖς<br>ψυχαῖς<br>ἀρχαῖς</td>
+                <td>-αις<br>δόξαις<br>γλώτταις<br>θαλάτταις</td>
+                <td>-ābhyaḥ<br>kanyābhyaḥ<br>kathābhyaḥ<br>mālābhyaḥ</td>
+              </tr>
+              <tr>
+                <td><b>Acc.pl</b><br>（複数対格）<br>～達を</td>
+                <td>-ās<br>puellās<br>rosās<br>aquās</td>
+                <td>-ᾱς<br>χώρᾱς<br>οἰκίᾱς<br>ἡμέρᾱς</td>
+                <td>-ᾱς<br>τιμᾱ́ς<br>ψυχᾱ́ς<br>ἀρχᾱ́ς</td>
+                <td>-ᾱς<br>δόξᾱς<br>γλώττᾱς<br>θαλάττᾱς</td>
+                <td>-āḥ<br>kanyāḥ<br>kathāḥ<br>mālāḥ</td>
+              </tr>
+              <tr>
+                <td><b>Abl.pl</b><br>（複数奪格）<br>～達から<br>～達によって<br>～達で</td>
+                <td>-īs<br>puellīs<br>rosīs<br>aquīs</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-ābhyaḥ<br>kanyābhyaḥ<br>kathābhyaḥ<br>mālābhyaḥ</td>
+              </tr>
+              <tr>
+                <td><b>Voc.pl</b><br>（複数呼格）<br>～達よ！</td>
+                <td>-ae<br>puellae<br>rosae<br>aquae</td>
+                <td>-αι<br>χῶραι<br>οἰκίαι<br>ἡμέραι</td>
+                <td>-αι<br>τιμαί<br>ψυχαί<br>ἀρχαί</td>
+                <td>-αι<br>δόξαι<br>γλῶτται<br>θάλατται</td>
+                <td>-āḥ<br>kanyāḥ<br>kathāḥ<br>mālāḥ</td>
+              </tr>
+              <tr>
+                <td><b>Loc.pl</b><br>（複数処格）<br>～達の場所で</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-āsu<br>kanyāsu<br>kathāsu<br>mālāsu</td>
+              </tr>
+              <tr>
+                <td><b>Inst.pl</b><br>（複数具格）<br>～達を用いて</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-ābhiḥ<br>kanyābhiḥ<br>kathābhiḥ<br>mālābhiḥ</td>
+              </tr>
+              <tr>
+                <td><b>Nom.Dual</b><br>（双数主格）</td>
+                <td>-----</td>
+                <td>-ᾱ<br>χώρᾱ<br>οἰκίᾱ<br>ἡμέρᾱ</td>
+                <td>-ᾱ<br>τιμᾱ́<br>ψυχᾱ́<br>ἀρχᾱ́</td>
+                <td>-ᾱ<br>δόξᾱ<br>γλώττᾱ<br>θαλάττᾱ</td>
+                <td>-e<br>kanye<br>kathe<br>māle</td>
+              </tr>
+              <tr>
+                <td><b>Gen.Dual</b><br>（双数属格）</td>
+                <td>-----</td>
+                <td>-αιν<br>χώραιν<br>οἰκίαιν<br>ἡμέραιν</td>
+                <td>-αιν<br>τιμαῖν<br>ψυχαῖν<br>ἀρχαῖν</td>
+                <td>-αιν<br>δόξαιν<br>γλώτταιν<br>θαλάτταιν</td>
+                <td>-ayoḥ<br>kanyayoḥ<br>kathayoḥ<br>mālayoḥ</td>
+              </tr>
+              <tr>
+                <td><b>Dat.Dual</b><br>（双数与格）</td>
+                <td>-----</td>
+                <td>-αιν<br>χώραιν<br>οἰκίαιν<br>ἡμέραιν</td>
+                <td>-αιν<br>τιμαῖν<br>ψυχαῖν<br>ἀρχαῖν</td>
+                <td>-αιν<br>δόξαιν<br>γλώτταιν<br>θαλάτταιν</td>
+                <td>-ābhyām<br>kanyābhyām<br>kathābhyām<br>mālābhyām<br></td>
+              </tr>
+              <tr>
+                <td><b>Acc.Dual</b><br>（双数対格）</td>
+                <td>-----</td>
+                <td>-ᾱ<br>χώρᾱ<br>οἰκίᾱ<br>ἡμέρᾱ</td>
+                <td>-ᾱ<br>τιμᾱ́<br>ψυχᾱ́<br>ἀρχᾱ́</td>
+                <td>-ᾱ<br>δόξᾱ<br>γλώττᾱ<br>θαλάττᾱ</td>
+                <td>-e<br>kanye<br>kathe<br>māle</td>
+              </tr>
+              <tr>
+                <td><b>Abl.Dual</b><br>（双数奪格）</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-ābhyām<br>kanyābhyām<br>kathābhyām<br>mālābhyām</td>
+              </tr>
+              <tr>
+                <td><b>Voc.Dual</b><br>（双数呼格）</td>
+                <td>-----</td>
+                <td>-ᾱ<br>χώρᾱ<br>οἰκίᾱ<br>ἡμέρᾱ</td>
+                <td>-ᾱ<br>τιμᾱ́<br>ψυχᾱ́<br>ἀρχᾱ́</td>
+                <td>-ᾱ<br>δόξᾱ<br>γλώττᾱ<br>θαλάττᾱ</td>
+                <td>-e<br>kanye<br>kathe<br>māle</td>
+              </tr>
+              <tr>
+                <td><b>Loc.Dual</b><br>（双数処格）</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-ayoḥ<br>kanyayoḥ<br>kathayoḥ<br>mālayoḥ</td>
+              </tr>
+              <tr>
+                <td><b>Inst.Dual</b><br>（双数具格）</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-----</td>
+                <td>-ābhyām<br>kanyābhyām<br>kathābhyām<br>mālābhyām</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+    <p>少女 <i lang="skr">kanyā</i> の複数形属格（少女たちの）および奪格（少女たちから）の <i lang="skr">kanyābhyaḥ</i> は、カニャー・ビャハに近い発音らしい。bhの部分は有気音の
+      [bʱ] で <b>「ブヒャ」とは読まない。</b></p>
+    <p><i lang="grc">ἄρχων</i>（アルコーン）と <i lang="grc">ἀρχή</i>（アルケー）は、
+      <i lang="grc">ἄρχω</i>（アルコー、始める／支配する）から来た親戚の言葉であること、monarchy, oligarchy, anarchy, hierarchy, architect, archdaemon
+      とかとも繋がりがあること……え、全員親戚だったの！？
+    </p>
+    <p>とか、<i lang="grc">τιμή</i>（ティメー、名誉／価値／尊敬）という単語から（もしかして～）と <i lang="grc">Τῑ́μαιος</i>
+      （ティマイオス、尊ばれる者みたいな意味の人名）に辿り着いたり……。</p>
+    <p>サンスクリットの <i lang="skr">devatā</i> がラテン語 <i lang="la">deus</i> や英語 divine と同一語根であること、サンスクリットの <i
+        lang="skr">vidyā</i>（＝知、知識、明）が、<i lang="skr">√vid</i> 「知る」に由来し、英語 wit, wisdomとか、ラテン語 <i lang="la">videō</i>
+      （見る）と親戚筋にあること（繋がるなあ）、逆に無明は <i lang="skr">avidyā</i> と書き、この a は、古い印欧語の否定辞で、ギリシャ語経由で英語の a- / an- にまで繋がるとか。お、面白っ……。
+    </p>
+    <div class="inner_wrapper">
+      <details>
+        <summary>活用表</summary>般若心経に出て来る ā 語根のいくつかの単語と玄奘訳。
+        <table>
+          <thead>
+            <tr>
+              <th>Sanskrit</th>
+              <th>形態</th>
+              <th>玄奘訳</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>prajñāpāramitāyāṃ</td>
+              <td>prajñāpāramitāの単数処格</td>
+              <td>般若波羅蜜多</td>
+            </tr>
+            <tr>
+              <td>caryāṃ</td>
+              <td>caryāの単数対格</td>
+              <td>行</td>
+            </tr>
+            <tr>
+              <td>śūnyatā</td>
+              <td>śūnyatāの単数主格</td>
+              <td>空</td>
+            </tr>
+            <tr>
+              <td>śūnyatāyāṃ</td>
+              <td>śūnyatāの単数処格</td>
+              <td>空中（空にて）</td>
+            </tr>
+            <tr>
+              <td>vedanā</td>
+              <td>vedanāの単数主格</td>
+              <td>受</td>
+            </tr>
+            <tr>
+              <td>saṃjñā</td>
+              <td>saṃjñāの単数主格</td>
+              <td>想</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>この <i lang="skr">prajñā</i> とか <i lang="skr">saṃjñā</i> の jñā の部分も実は *ǵneh₃- という印欧祖語の語源に繋がってて、
+          ここから <i lang="grc">γνῶσις</i> とか know とか ignore とかに繋がってるらしいですよ……（すごい）</p>
+    </div>
+
+    </details>
+    <p>Leanを少しやった。<br><code>constructor</code>, <code>left</code>, <code>right</code>, <code>cases - inl, inr</code>,
+      <code>rcases</code>について。<br><code>∧</code> や <code>∨</code> が右結合
+    </p>
+    <ul>
+      <li><code>P ∧ Q ∧ R = P ∧ (Q ∧ R)</code> のように。</li>
+    </ul>
+    であること。ほんの一瞬Haskellをやったおかげか、
+    <pre><code>example
+    (P Q R : Prop)
+    (h : P ∨ Q)
+    (hPR : P → R)
+    (hQR : Q → R) : R := by
+    cases h with
+    | inl hP =&gt;
+      exact hPR hP
+    | inr hQ =&gt;
+      exact hQR hQ</code></pre>
+    <p>とする時に、「<code>hPR</code> って、実は <code>P</code> についての証明を受け取って <code>R</code>
+      についての証明を返す関数ですよ」と言われた時に、「ああーだから引数として右側に書くのね」と納得できた。</p>
+    <p>物覚えは全然よくないが、なんかこういうことをやってそれなりに世界に納得していく人生にしたい。</p>
+    <br />
+    <h1>2026年8月29日</h1>
+    <p>結局皮膚科に行っていない。ラテン語ちょっと勉強。</p>
+    <p>古本を大量に廃棄したり、売りに出したり。郵送するものも出て来る。</p>
+    <br />
+    <h1>2026年8月26日</h1>
+    <p>久々に散髪した。リハビリだ遺品だ父の書類だなんだでなかなか来られなかったので、さっぱり。</p>
+    <p>明日は皮膚科かも。</p>
+    <br />
+    <h1>2026年8月22日</h1>
+    <p>実家の片づけ。<br>父が大量に開設だけして、入金もせず0円で触っていなかった謎の証券・外為口座に、ログインしたり整理したり。何してんねん親父ィ！💦</p>
+    <p>二年前の8月23日は、飼い猫の命日でもある。<br>多中心性リンパ腫で、数か月抗がん剤治療したが甲斐なく亡くなり、次の日に火葬した。夏は辛気臭い。</p>
+    <hr />
+    <p>父の本を片したりして土曜日を消費。<br>ブックオフを往復したり、買い取り不能の重たい段ボールをなんとか車内に運び込んだりして、「はぁそろそろ帰るか……」と思っていたら、「伯母さんに洗剤ギフト持って行って！」と祖母から入電。
+    </p>
+    <p>「えっ、四十九日終わってからじゃないの！？
+      そう言ってたじゃん！」<br>「色々アドバイス貰ってありがたかったから、明日持って行って！👵💦」<br>「……明後日じゃダメ？（←超絶休みたい）」<br>「明日持って行ってよぉ～……👵💦」</p>
+    <p>とのことなので、「じゃあもう」とのことで今日持って行った。ちなみに、</p>
+    <p>「ばあちゃんも行く？」<br>「行かねぇ！👵」</p>
+    <p>とのこと。こんにゃろめ。</p>
+    <hr />
+    <p>ユッケジャン麺を食べたり。そろそろ自炊してグラウンディングしたい気持ちもあり、一応また雑炊など作った。今度はナメコと生姜入り。次は葱も入れたい。</p>
+    <p>散髪とマッサージに行きたい。あと鍾乳洞。</p>
+    <br />
+    <h1>2026年8月19日</h1>
+    <p><span title="こっちのモンはこっちのモンだろテメー、
+人の物を片せってんなら方針決めろや、
+人の部屋に散々ものブチ込んでおいてよ！ｗ
+侵略者共め！ｗ">もう疲れたというか、注意力がなくなったので</span>、非常っぽい感じはやめることにします。ご心配をおかけしました。適当に書けそうです。
+    </p>
+    <p>普段と暮らすペースがちょっと異なるので疲労しています。</p>
+    <p>インドカレー食べに行く。うますぎ。また行きます。</p>
+    <p>
+      精神科予約しました……と言いつつ、しばらく悲嘆してたけど、逆に馬鹿馬鹿しくなってきたので段々良くなっていくかもしれません。
+      どっちかというと、この際、気にしいなところを少しペチペチと叩き直してもらいます。色々落ち着いたら、実家ラインとは距離を取って、ちょっと自由にやらしてもらいたい。
+    </p>
+    <br />
+    <h1>2026年8月17日</h1>
+    <p>父の仕事絡みで必要な電話をする。</p>
+    <p>また眠ることが出来ない。心療内科の予約を入れた。久しぶりなので、ほとんど初診扱いのようだ。</p>
+    <br />
+    <h1>2026年8月16日</h1>
+    <p>片付けを始める。小屋裏物入に、昔のソファなどが埃を被ってそのままだった。私も手持ちの本、特に漫画類はほとんど捨ててしまうことにする。</p>
+    <p>あまり眠ることが出来ない。夜が短く感じる。</p>
+    <br />
+    <h1>2026年8月15日</h1>
+    <p>12時半開始予定だが、12時より少し早く葬儀場に向かう。<br>故人の方針もあり、ほとんどお別れ会のようなものだ。開会前に少しだけ家族で話して、始まったら立ち上がって、献花とご焼香し、お花をお棺に入れ、<span title="どうでもいいのだが霊柩車の番号が90-00で、
+「レイとキュウで出来てるなあ」などと余計なことを考えた">お見送りし、火葬場まで同行。</span></p>
+    <p>父の身体を火葬場の人に託して、しばし、祖母と思い出話をしたり、母と今後のことなどを相談。参考にしているページを教えてもらったので、進捗管理が出来るようなシートをあとでCodexさんにお願いしてみようかと考えた。</p>
+    <p><span title="その瞬間は、「大腿骨はやっぱ長いな」「この手で働いていたんだなあ」
+などと考えながらやっていた……。
+
+のだが、焼き場の人がお骨をゴリゴリと粉砕しながら骨壺に納めていくのを見ると
+「これがほんとの粉骨砕身……」だとか、
+拾い終わったあと「ザオリク」とか「カドルト」とか余計なことが頭に浮かんでしまった。
+父はかなりのコマンド選択型RPG好きだったし……。
+
+骨自体が焼いたばかりだったのもあり、
+骨壺（今は木製みたいね）を抱いた時に温かく感じた時が、一番泣けた。">収骨し</span>、実家に寄る。今後の片づけや書類のことを話し合ったり、お弁当を食べて、帰ることにした。
+    </p>
+    <p>
+      少し寝て、中途覚醒してしまい（自分も齢なのかも……ｗ）、残っていたコンビニ弁当を食べながらCodexさんにそのシートを作ってもらっている。検討しながら、近い内に母に渡したい。一番辛いのは多分母だが、色々落ち着いたら自分もふらっと、安曇野か海津埋没林博物館にでも行って、水場で少し心を癒したりしたい。
+    </p>
+    <br />
+    <h1>2026年8月14日</h1>
+    <p>6時ごろ、ふと目が覚める。</p>
+    <p>ぼーっとしていたら心拍低下の連絡があり急ぎ向かう。<br>到着時は既に心停止。死亡診断は午前の7時5分。</p>
+    <p>
+      父との間には良くも悪くも色々な思い出があるが、自分の仕事の状況が落ち着いてからここ数年はなかなか、良い思い出を一緒に作ることのできる関係だったのではないかと思う（と言っても透析が始まっていてそこまで移動の自由が利かなかったので、一緒に食事に行くとか、世事にまつわる父の視点を聞いて楽しんだりとか、そういうことが大部分だが）
+    </p>
+    <p>今の自分があるのは、どう考えても第一に父のおかげだ。お疲れさまでした。日記を読んでる方も（心配いただいた方もおられたはずと思いますので）ありがとうございました。</p>
+    <p>葬儀場の手配、<span title="実は自分、パートナー、弟、と男性陣はみんな何故か、
+「あ、今日……」という予感とか予知夢みたいな、
+「現象学的な時間」の前景化現象みたいなものを感じていたようだ。
+男はこういう時、しばしばスピるのかもしれない。">遠方の弟の送迎、</span><span
+        title="遺影決めはアバター作成みたいだななどと不謹慎なことを">葬儀場での打合せ</span>など。<br>「病院から離れると距離加算」とか「葬儀場自体は別料金だよ」、「積み立ててないと高いよ」など色々あり、なかなか選ぶのも難しかったのだけど、短い時間の中でみんなでよく探すことができ、最終的にはうまくいったと思う。
+    </p>
+    <p>実家で少し話す。それぞれが色々と感情的になっている場面があり、<span title="（別に隠してるつもりもないのだけど）自分には同性パートナーがいるのだが、
+自分の中の感情を話し過ぎて、少し喧嘩になってしまったりもした。">自分も（自身のみではなく家族みんなの）今後の変化する生活に色んなことを感じさせられたり。</span>
+    </p>
+    <p>片付けについて少し考える。それと死後の整理の仕事について。</p>
+    <br />
+    <h1>2026年8月13日</h1>
+    <p>呼吸と心拍の低下の連絡があり、急ぎ向かう。</p>
+    <p>当人の入院前の意思のこともあり、今後の方針を伝える。同意書を書く。強心剤を打ってもらって、少し調子がいいようだ。</p>
+    <p>
+      祖母を家に帰したり、残していた仕事を少ししたり、妹を迎えに行ったり。病院の看護師さんたちの計らいで、花火大会をパソコンで父と見ることが出来た。当人に頻繁に面会に行ってあげてきたおかげかもしれない。リハビリも看護も施術も説明も、親切に本当にありがとうございます。<s>……Keyヒロインかよ！ｗ
+        泣いてしまったわ！ｗ</s></p>
+    <p>明日は弟が来る予定だが、関東は豪雨が直撃中らしい。飛行機は大丈夫だろうか？</p>
+    <p>コンビニのカシミールカレー。以前より辛いが、美味い。</p>
+    <br />
+    <h1>2026年8月12日</h1>
+    <p>母も一緒に、父に面会。<br>少し調子がいい。机から脚を降ろすリハビリをすることができた。</p>
+    <p>すき屋。</p>
+    <br />
+    <h1>2026年8月11日</h1>
+    <p>父に面会。<br>熱が出たようだ。痰多い。ずっと咳をしている。</p>
+    <p>その後、母に会いに行く。<span title="
+『何がどうあっても、自分らしさをどこまでも失っても、命だけは繋いでいる』
+という意味の“命”を我々は愛しているのか、それとも
+『最後には自分で、あるいは誰かが代理して何かを選び取る、あるいは助けてくれる』
+という意味の“命”を我々は愛しているのか？">今後の方針について話す。</span></p>
+    <p>帰ってきて少々休憩、ゲーム。この頃、夏はどこか辛気臭いように思えて、少し苦手だ。</p>
+    <br />
+    <h1>2026年8月10日</h1>
+    <p>父が死んで、実家の自室（今は父の荷物置き場になっている）で泣く夢を見た。<br>ぐったりと起きていたら、母から「無呼吸から一度、心拍や血圧が低下するところに行ってしまったようで」との連絡があり、しばらく話す。</p>
+    <p>その後、会いに行ったり、きょうだいと今後の方針について話したり。</p>
+    <br />
+    <h1>2026年8月9日</h1>
     <p>父に面会。熱は下がったらしい。</p>
     <p>体がだるく、ほとんど一日中寝てしまった。それでも何とか洗濯、桃を切ったりと。</p>
     <p>起きてから、自分用のダッシュボードをまた少し触る。</p>
     <br />
-    <h1>2026年08月08日</h1>
+    <h1>2026年8月8日</h1>
     <p>がっつり休む。<br>洗濯、ペットボトルの片づけ、洗い物。頭痛が強く昼寝してしまった。</p>
     <p>父について。<br>座れたとのこと。血圧の薬の量などはだいぶ減ってきている模様で、そういう点はOK。</p>
     <p>松屋で食べる。</p>
     <p><a href="../jssproject/0036/index.html">文字列から、冒頭16文字のUnicodeとWiktionaryへのリンクを調べるもの</a> を作った。</p>
     <br />
-    <h1>2026年08月07日</h1>
+    <h1>2026年8月7日</h1>
     <p>父に面会。車椅子に座れた。<br>どうも酸素マスクが嫌なのか、顔をしかめる。</p>
     <p>仕事が多めなので終わらせる。<br>へこみかけた時には甘いもの。</p>
     <p>少し数学談義をChatGPTと。</p>
     <p>余剰次元には通常距離を想定するものなの、ヘンな距離とか位相入ったらダメなの？みたいな話も。</p>
     <br />
-    <h1>2026年08月06日</h1>
+    <h1>2026年8月6日</h1>
     <p><a href="../jssproject/0035/index.html">数式を書いて波形をオシロスコープで見られるもの</a> をCodexさんと作りました。今のところ作りたいと思っていたものはこの辺で一旦終了かも。
     </p>
     <ul>
@@ -99,7 +1289,7 @@
     <p>どうでもいいのだけど、ローストビーフ丼を雑に冷笑していい風潮には強い反感を抱いている。「ホカホカの飯に冷たいものを乗っける」のは海鮮丼とかもそうだろ！
       良いもの食べておいて文句言ってんじゃねえ！（こういう考え方してるから一生バズらない）（バズなんか一生しなくていいよ別に）</p>
     <br />
-    <h1>2026年08月05日</h1>
+    <h1>2026年8月5日</h1>
     <p>朝食に雑炊2。</p>
     <p>父に面会。胃が荒れているためか若干の吐血があるらしいが、持続的なものではないとのこと。身体的ストレスなんでしょうね。</p>
     <p>実家の祖母から「桃もらったので取りに来て」と言われ、受け取りに行ったら「お中元返しにビール置いて来てあげて」と一万円を託された。「安いの持ってったら承知しないよ！
@@ -109,14 +1299,14 @@
       どうでもいいのだが、「贈り物をします。夏だから」というのは因果が通ってないといつも思う。そう思ってしまう自分の社会性の欠如については、自覚している……。まあ桃貰ったのはありがたいからあまり文句ばかり言うべきではない……（忘れないうちに切って食べなきゃ）
     </p>
     <br />
-    <h1>2026年08月04日</h1>
+    <h1>2026年8月4日</h1>
     <p>父に面会。行った時は血圧低めだったが、段々調子が良くなり、同様にベッド脇に座ることが出来た。</p>
     <p>仕事来てるのでちょっと片付ける。</p>
     <p>
       お惣菜。それと、三つ葉とうなぎと顆粒出汁を買ってきて、うなぎ雑炊を作った。実母が作ってくれたものなので、小学生のころ以来だと思う。鮭とか色々なもので作ってくれたっけ……。なめことかも入っていたかもしれない。思い出せないことも多い。
     </p>
     <br />
-    <h1>2026年08月03日</h1>
+    <h1>2026年8月3日</h1>
     <p>弟帰る日。</p>
     <p>父の透析の日だが、朝方はあまり血圧が高くなく、なかなかスムーズにいかなかったとのこと。我々が行った時には透析は終わっていて、リハビリに入ることが出来た。段々と、一般病棟に移る話も出て来るのではないか、と母と話す。</p>
     <p>仕事と面会終了後は家事。</p>
@@ -127,7 +1317,7 @@
       人間はしばしば赤木しげるみたいな生き方にどうしようもなく憧れてしまうけど、そこでただ生きて縁を繋ぐだけでも、我々は何かを「積む」ことをしてしまう。それは幸せなことだとも思うが、ある時、ふらりとどこでもないところへと行きたくなることもある。必死で耐える、というか見ないことにして、穏やかに生きていく、というのは実はそれだけで結構すごいことだと思う。
     </p>
     <br />
-    <h1>2026年08月02日</h1>
+    <h1>2026年8月2日</h1>
     <p>妹帰る日。</p>
     <p>父は胸部の水がだいぶ減ったらしく、抜管してドレナージを終了するかもとのこと。良かった。今日は我々はお休みをいただくことに。</p>
     <p>スプラトゥーンレイダースでひたすらシャケをしばく。<br>それなりにストーリーが進んだ。シャケは可愛いし、生き方がどことなく美しい。</p>
@@ -137,7 +1327,7 @@
     <p>少子化対策は現代社会においてはまず無理だと思ってるけど、信頼できる人間関係作りとかは、ある程度公営化できる面があるのかもしれない。</p>
     <p>スパゲティを食べる。</p>
     <br />
-    <h1>2026年08月01日</h1>
+    <h1>2026年8月1日</h1>
     <p>皮膚科に行った。<br>全身用クリーム、顔用の軟膏と、痒み止めの内服薬をもらう。飲んで塗る。心なしかもう調子が良い。</p>
     <p>弟妹と一緒に父の様子を見に行く。<br>今日は血圧低めなので、リハビリはおやすみ。妹にかっこいいところを見せてあげて欲しかったのだが、日によって体調は変わるので無理強いはできない。</p>
     <p>友人と通話していたのだが、少し「昨今のネットの難しさ」を実感させられた。私も彼も色々ものを考えているのは確かだが、なかなか噛み合わない。</p>
@@ -508,12 +1698,6 @@ done  </code></pre>
     <h1>2026年07月6日</h1>
     <ul>
       <li>父は段々と良くなってきている。そろそろピャッと起きて「あれぇ？」みたいに言ってくれたら嬉しいのだけどな。</li>
-      <li>
-        妹のことを結構ガチ目に愛しているのだが（ヤバ）、流石に連日家にいるとなると、お互い疲れるよね……へとへとだ。でも、ずっと謝りたかったことなどを謝ることも出来たし、逆にあんまり気負わずに生活をやっていくように話すことも出来たのではないかと思う。
-        <ul>
-          <li>「幸せってやっぱり突然降って湧くものだよね」「でも狙ってくものでもあるから」「でも思った通りにいかない場合もあるし」みたいなような話をした。</li>
-        </ul>
-      </li>
       <li>Codex氏がちょっと重たい。</li>
       <li>Antigravity氏はアプリの扱いに失敗し続けている。</li>
       <li>Claude Fable5氏は流石に使い道を思いつかない。ヘンテコなBABAを考えるとか……？
@@ -535,7 +1719,7 @@ done  </code></pre>
     <br />
     <hr />
     <p style="text-align: center">
-      <a href="20260406.htm">←2026年第二期</a>　　　　　　　2026年第四期→
+      <a href="20260406.htm">←2026年第二期</a>　　　　　　　<a href="20261012.htm">2026年第四期→</a>
     </p>
     <div style="text-align: center;">
       <a href="../index.html" class="rain-window-btn">

@@ -582,6 +582,61 @@ const CatTemplates = {
 
 // --- Builder ---
 class CatDiagramBuilder {
+  static parseImportJson(text) {
+    const data = JSON.parse(text.replace(/^\uFEFF/, ''));
+    const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+    if (!isObject(data) || !Array.isArray(data.nodes) || !Array.isArray(data.arrows)) {
+      throw new Error('nodes と arrows の配列が必要です。');
+    }
+    if (data.options !== undefined && !isObject(data.options)) throw new Error('options はオブジェクトにしてください。');
+    const options = data.options || {};
+    const layout = options.layout || 'grid';
+    if (!['manual', 'grid'].includes(layout)) throw new Error('layout は manual または grid にしてください。');
+    const grid = options.grid || {};
+    if (!isObject(grid)) throw new Error('grid はオブジェクトにしてください。');
+    for (const key of ['cellWidth', 'cellHeight', 'offsetX', 'offsetY']) {
+      if (grid[key] !== undefined && !Number.isFinite(grid[key])) throw new Error(`grid.${key} は数値にしてください。`);
+    }
+    const ids = new Set();
+    const addId = id => {
+      if (typeof id !== 'string' || !id.trim() || ids.has(id) || ['__proto__', 'constructor', 'prototype'].includes(id)) {
+        throw new Error('IDには重複のない空でない文字列を指定してください。');
+      }
+      ids.add(id);
+    };
+    for (const node of data.nodes) {
+      if (!isObject(node) || typeof node.label !== 'string') throw new Error('各ノードに文字列の label が必要です。');
+      addId(node.id);
+      if (layout === 'grid' && Number.isFinite(node.row) && Number.isFinite(node.col)) {
+        node.x = (grid.offsetX ?? 100) + node.col * (grid.cellWidth ?? 160);
+        node.y = (grid.offsetY ?? 100) + node.row * (grid.cellHeight ?? 120);
+      }
+      if (!Number.isFinite(node.x) || !Number.isFinite(node.y)) throw new Error('各ノードに数値の x, y（または grid の row, col）が必要です。');
+    }
+    for (const arrow of data.arrows) {
+      if (!isObject(arrow)) throw new Error('各矢印はオブジェクトにしてください。');
+      if (arrow.id !== undefined) addId(arrow.id);
+      if (arrow.label !== undefined && typeof arrow.label !== 'string') throw new Error('矢印の label は文字列にしてください。');
+      for (const key of ['curve', 'shift', 'labelOffsetX', 'labelOffsetY']) {
+        if (arrow[key] !== undefined && !Number.isFinite(arrow[key])) throw new Error(`矢印の ${key} は数値にしてください。`);
+      }
+    }
+    // Resolve arrow-to-arrow references too (natural transformations).
+    const resolved = new Set(data.nodes.map(node => node.id));
+    let pending = [...data.arrows];
+    while (pending.length) {
+      const remaining = pending.filter(arrow => {
+        if (!resolved.has(arrow.from) || !resolved.has(arrow.to)) return true;
+        if (arrow.id) resolved.add(arrow.id);
+        return false;
+      });
+      if (remaining.length === pending.length) throw new Error('矢印の接続先が存在しないか、矢印同士の参照が循環しています。');
+      pending = remaining;
+    }
+    data.options = { ...options, layout: 'manual' };
+    return data;
+  }
+
   constructor(containerSelector, options = {}) {
     this.container = document.querySelector(containerSelector);
     this.data = options.initialData || { nodes: [], arrows: [] };
@@ -626,6 +681,7 @@ class CatDiagramBuilder {
             <option value="natural_transformation">自然変換 (2-射)</option>
           </select>
           <button id="exportJson">JSONコピー</button>
+          <button id="importJson">JSON読み込み</button>
         </div>
         <div id="builder-main">
           <div id="${this.canvasId}" class="cat-diagram-container"></div>
@@ -637,6 +693,18 @@ class CatDiagramBuilder {
           </aside>
         </div>
       </div>
+      <dialog id="cat-import-dialog">
+        <h2>JSONから編集を再開</h2>
+        <p>JSONを貼り付けるか、JSONファイルを選んでください。現在の図を置き換えます（Ctrl+Zで戻せます）。</p>
+        <input id="cat-import-file" type="file" accept=".json,application/json" aria-label="JSONファイル">
+        <label for="cat-import-text">図式のJSON</label>
+        <textarea id="cat-import-text" rows="14" spellcheck="false"></textarea>
+        <p id="cat-import-error" role="alert"></p>
+        <div class="cat-import-actions">
+          <button id="cat-import-cancel" type="button">キャンセル</button>
+          <button id="cat-import-apply" type="button">読み込んで編集</button>
+        </div>
+      </dialog>
     `;
   }
 
@@ -682,7 +750,52 @@ class CatDiagramBuilder {
       alert("JSONをコピーしました");
     });
 
+    const importDialog = this.container.querySelector('#cat-import-dialog');
+    const importText = this.container.querySelector('#cat-import-text');
+    const importError = this.container.querySelector('#cat-import-error');
+    const importFile = this.container.querySelector('#cat-import-file');
+    this.container.querySelector('#importJson').addEventListener('click', () => {
+      importError.textContent = '';
+      importFile.value = '';
+      importDialog.showModal();
+      importText.focus();
+    });
+    this.container.querySelector('#cat-import-cancel').addEventListener('click', () => importDialog.close());
+    importFile.addEventListener('change', async () => {
+      const file = importFile.files[0];
+      if (!file) return;
+      try {
+        importText.value = await file.text();
+        importError.textContent = '';
+      } catch (error) {
+        importError.textContent = 'ファイルを読み込めませんでした。' + error.message;
+      }
+    });
+    this.container.querySelector('#cat-import-apply').addEventListener('click', async () => {
+      try {
+        const imported = CatDiagramBuilder.parseImportJson(importText.value);
+        if (window.MathJax?.startup?.promise) await window.MathJax.startup.promise;
+        this.data = imported;
+        this.selectedNodeIds.clear();
+        this.selectedArrowIdx = null;
+        this.pendingArrowStart = null;
+        this.isDrawingArrow = false;
+        this.isDraggingNode = false;
+        this.isSelectingBox = false;
+        this.dragStartPositions.clear();
+        this.currentTool = 'select';
+        tools.forEach(btn => btn.classList.toggle('active', btn.dataset.tool === 'select'));
+        this.saveHistory();
+        this.updateInspector();
+        await this.render();
+        importDialog.close();
+      } catch (error) {
+        importError.textContent = '読み込めませんでした：' + error.message;
+      }
+    });
+
     document.addEventListener('keydown', (e) => {
+      if (importDialog.open) return;
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {

@@ -1207,12 +1207,40 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
+    function normalizeDateValue(value) {
+        if (!value) return '';
+        const text = String(value).trim();
+        const match = text.match(/^(\d{4}-\d{2}-\d{2})/);
+        if (match) return match[1];
+        const date = new Date(text);
+        if (Number.isNaN(date.getTime())) return text;
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
+
+    function normalizeTimeValue(value) {
+        if (!value) return null;
+        const text = String(value).trim();
+        const match = text.match(/^(\d{2}:\d{2})/);
+        return match ? match[1] : text;
+    }
+
+    function normalizeCalendarEvent(event) {
+        return {
+            ...event,
+            event_date: normalizeDateValue(event.event_date || event.date),
+            start_time: normalizeTimeValue(event.start_time),
+            end_time: normalizeTimeValue(event.end_time),
+            memo: event.memo || null
+        };
+    }
+
     async function fetchEvents() {
         const data = await apiRequest('api/events_list.php');
         if (data && !data.fallback) {
-            AppState.events = data;
+            AppState.events = data.map(normalizeCalendarEvent);
+            localStorage.setItem('kazuno_events', JSON.stringify(AppState.events));
         } else {
-            AppState.events = JSON.parse(localStorage.getItem('kazuno_events') || '[]');
+            AppState.events = JSON.parse(localStorage.getItem('kazuno_events') || '[]').map(normalizeCalendarEvent);
         }
         renderCalendar();
     }
@@ -1294,7 +1322,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         const indicators = cell.querySelector('.day-indicators');
-        const hasEvent = AppState.events.some(e => e.event_date === dateStr);
+        const hasEvent = AppState.events.some(e => normalizeDateValue(e.event_date) === dateStr);
         const hasTodo = AppState.todos.some(t => t.due_date === dateStr && parseInt(t.done) === 0);
         const hasDone = getDoneItemsForDate(dateStr).length > 0;
 
@@ -1321,7 +1349,7 @@ document.addEventListener('DOMContentLoaded', () => {
         listEl.innerHTML = '';
         updateDoneTodayPanel(selectedStr);
 
-        const dayEvents = AppState.events.filter(e => e.event_date === selectedStr);
+        const dayEvents = AppState.events.filter(e => normalizeDateValue(e.event_date) === selectedStr);
         const dayTodos = AppState.todos.filter(t => t.due_date === selectedStr && parseInt(t.done) === 0);
 
         if (dayEvents.length === 0 && dayTodos.length === 0) {
@@ -1332,7 +1360,9 @@ document.addEventListener('DOMContentLoaded', () => {
         dayEvents.forEach(evt => {
             const item = document.createElement('div');
             item.className = 'cal-event-item';
-            const timeStr = evt.start_time ? `${evt.start_time.slice(0, 5)}${evt.end_time ? ` 〜 ${evt.end_time.slice(0, 5)}` : ''}` : '終日';
+            const startTime = normalizeTimeValue(evt.start_time);
+            const endTime = normalizeTimeValue(evt.end_time);
+            const timeStr = startTime ? `${startTime}${endTime ? ` 〜 ${endTime}` : ''}` : '終日';
             
             item.innerHTML = `
                 <div class="cal-event-info">
@@ -1904,13 +1934,17 @@ document.addEventListener('DOMContentLoaded', () => {
             urlInput.value = AppState.settings.default_video_url;
         }
 
-        playBtn.addEventListener('click', () => {
+        playBtn.addEventListener('click', async () => {
             const url = urlInput.value.trim();
-            if (url) playMediaUrl(url);
+            if (url) await playMediaUrl(url);
         });
 
         if (queuePrevBtn) {
             queuePrevBtn.addEventListener('click', async () => {
+                if (activeMediaSequence) {
+                    playPreviousMediaSequenceItem();
+                    return;
+                }
                 await ensureVfsReady();
                 await playPreviousQueueItem(activeQueuePlayback?.name || activeAutoQueueName || 'default');
             });
@@ -1918,6 +1952,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (queueNextBtn) {
             queueNextBtn.addEventListener('click', async () => {
+                if (activeMediaSequence) {
+                    playNextMediaSequenceItem();
+                    return;
+                }
                 await ensureVfsReady();
                 await playNextQueueItem(activeQueuePlayback?.name || activeAutoQueueName || 'default');
             });
@@ -1959,6 +1997,53 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const match = trimmed.match(/(?:nicovideo\.jp\/watch\/|nico\.ms\/|embed\.nicovideo\.jp\/watch\/)((?:sm|nm|so)\d+)/i);
         return match ? match[1].toLowerCase() : null;
+    }
+
+    function isNiconicoPlaylistUrl(url) {
+        const text = String(url || '').trim();
+        return /nicovideo\.jp\/(?:user\/\d+\/)?(?:series|mylist)\/\d+/i.test(text);
+    }
+
+    async function loadNiconicoPlaylist(url, options = {}) {
+        if (AppState.useLocalStorage) {
+            printCli('ニコニコのシリーズ/マイリスト展開にはPHP APIが必要です。Webサーバー上でログインしてからお試しください。', 'warning');
+            return null;
+        }
+
+        try {
+            const res = await fetch('api/niconico_playlist.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    url,
+                    order: options.order || 'old'
+                })
+            });
+
+            if (res.status === 401) {
+                location.reload();
+                return null;
+            }
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                throw new Error(data.error || `HTTP Error: ${res.status}`);
+            }
+
+            const mediaItems = (data.items || [])
+                .map(item => parseMediaRef(item.id || item.watchId || item.watch_id || ''))
+                .filter(Boolean);
+
+            if (mediaItems.length === 0) {
+                throw new Error('動画IDが見つかりませんでした');
+            }
+
+            return { ...data, mediaItems };
+        } catch (e) {
+            printCli(`ニコニコのシリーズ/マイリストを読み込めませんでした: ${e.message}`, 'danger');
+            window.say('ニコニコのリスト展開に失敗したみたい……URLかサーバー側の通信を確認してみてね。', 'angry');
+            return null;
+        }
     }
 
     function parseMediaRef(input) {
@@ -2170,11 +2255,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handleVideoEnded() {
         if (!activeAutoQueueName) {
-            if (activeMediaSequence && (activeMediaSequence.index < activeMediaSequence.items.length - 1 || activeMediaSequence.loop)) {
-                activeMediaSequence.index = activeMediaSequence.index < activeMediaSequence.items.length - 1 ? activeMediaSequence.index + 1 : 0;
-                const next = activeMediaSequence.items[activeMediaSequence.index];
-                playMediaItem(next, false, { keepAutoQueue: true, keepSequence: true });
-                printCli(`sequence next: ${next.original || next.label}`, 'muted');
+            if (playNextMediaSequenceItem({ fromAuto: true })) {
                 return;
             }
             videoPlaybackActive = false;
@@ -2238,7 +2319,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function playMediaUrl(url, saveHistory = true, options = {}) {
+    async function playMediaUrl(url, saveHistory = true, options = {}) {
+        if (isNiconicoPlaylistUrl(url)) {
+            const playlist = await loadNiconicoPlaylist(url, { order: options.order || 'old' });
+            if (!playlist) return false;
+            const label = `niconico:${playlist.type}:${playlist.id}`;
+            const played = playMediaItems(playlist.mediaItems, label, false, options);
+            if (played) {
+                printCli(`ニコニコ${playlist.type === 'series' ? 'シリーズ' : 'マイリスト'}を古い順で ${playlist.mediaItems.length} 件読み込みました。`, 'success');
+                if (saveHistory) {
+                    saveVideoToHistory(url);
+                    saveSetting('default_video_url', url);
+                }
+            }
+            return played;
+        }
+
         const playlistId = extractYoutubePlaylistId(url);
         if (playlistId && (/youtube\.com|youtu\.be/i.test(url) || /^(PL|UU|LL|FL|RD|WL)/.test(String(url).trim()))) {
             playYoutubeVideo(url, saveHistory, options);
@@ -2317,6 +2413,47 @@ document.addEventListener('DOMContentLoaded', () => {
         window.say(options.loop ? 'ニコニコ動画をループ再生で開くね。' : 'ニコニコ動画を開くね。コメントの海だ。', 'present');
     }
 
+    function playMediaSequenceAt(index, options = {}) {
+        if (!activeMediaSequence || !Array.isArray(activeMediaSequence.items) || activeMediaSequence.items.length === 0) {
+            return false;
+        }
+
+        const total = activeMediaSequence.items.length;
+        let nextIndex = index;
+        if (nextIndex < 0 || nextIndex >= total) {
+            if (!activeMediaSequence.loop) return false;
+            nextIndex = (nextIndex + total) % total;
+        }
+
+        activeMediaSequence.index = nextIndex;
+        const item = activeMediaSequence.items[nextIndex];
+        playMediaItem(item, false, { keepAutoQueue: true, keepSequence: true });
+        printCli(`sequence ${nextIndex + 1}/${total}: ${item.original || item.label}`, options.fromAuto ? 'muted' : 'success');
+        return true;
+    }
+
+    function playNextMediaSequenceItem(options = {}) {
+        if (!activeMediaSequence) return false;
+        const nextIndex = activeMediaSequence.index + 1;
+        if (!playMediaSequenceAt(nextIndex, options)) {
+            if (!options.fromAuto) {
+                printCli(`sequence "${activeMediaSequence.label || 'playlist'}" はこれより後の動画がありません。`, 'warning');
+            }
+            return false;
+        }
+        return true;
+    }
+
+    function playPreviousMediaSequenceItem() {
+        if (!activeMediaSequence) return false;
+        const previousIndex = activeMediaSequence.index - 1;
+        if (!playMediaSequenceAt(previousIndex)) {
+            printCli(`sequence "${activeMediaSequence.label || 'playlist'}" はこれより前の動画がありません。`, 'warning');
+            return false;
+        }
+        return true;
+    }
+
     function showVideoHelper(html) {
         const helper = document.getElementById('videoLocalLink');
         if (!helper) return;
@@ -2350,6 +2487,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         activeMediaSequence = items.length > 1 ? { items, index: 0, label, loop: !!options.loop } : null;
+        if (activeMediaSequence) {
+            activeQueuePlayback = null;
+        }
         const itemOptions = activeMediaSequence ? { ...options, loop: false, keepSequence: true } : options;
         playMediaItem(items[0], saveHistory, itemOptions);
         if (saveHistory && label) {
@@ -2363,24 +2503,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function playYoutubeVideoIds(videoIds, label = 'queue', saveHistory = true, options = {}) {
-        if (!Array.isArray(videoIds) || videoIds.length === 0) {
+        const normalizedIds = Array.isArray(videoIds) ? videoIds.filter(Boolean) : [];
+        if (normalizedIds.length === 0) {
             printCli('queue: 再生できる動画がありません。', 'danger');
             return;
         }
 
-        const firstId = videoIds[0];
-        const others = videoIds.slice(1).join(',');
+        const firstId = normalizedIds[0];
+        const playlistIds = normalizedIds.join(',');
         const isLocalFile = window.location.protocol === 'file:';
         const domain = isLocalFile ? 'https://www.youtube-nocookie.com' : 'https://www.youtube.com';
         let embedUrl = `${domain}/embed/${firstId}?autoplay=1`;
-        if (others) {
-            embedUrl += `&playlist=${others}`;
+        if (playlistIds) {
+            embedUrl += `&playlist=${playlistIds}`;
         }
         if (options.loop) {
             embedUrl += `&loop=1`;
-            if (!others) {
-                embedUrl += `&playlist=${firstId}`;
-            }
         }
         if (!isLocalFile) {
             embedUrl += `&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`;
@@ -2429,9 +2567,9 @@ document.addEventListener('DOMContentLoaded', () => {
             li.className = 'video-history-item';
             li.textContent = url;
             li.title = url;
-            li.addEventListener('click', () => {
+            li.addEventListener('click', async () => {
                 document.getElementById('videoUrlInput').value = url;
-                playMediaUrl(url, false);
+                await playMediaUrl(url, false);
             });
             list.appendChild(li);
         });
@@ -3098,7 +3236,7 @@ document.addEventListener('DOMContentLoaded', () => {
         printCli('cal add <日付> <予定>     - 予定を追加します。 (例: cal add 2026-06-28 請求確認)', 'muted');
         printCli('backup create/check/list  - ToDo/Calendar/できたこと/VFSのバックアップを作成・確認します。', 'muted');
         printCli('backup download <file>    - バックアップJSONをPCへ保存します。', 'muted');
-        printCli('play <URL|file>           - YouTube/ニコニコ動画、またはVFSプレイリストを再生します。', 'muted');
+        printCli('play <URL|file>           - YouTube/ニコニコ動画、ニコニコシリーズ/マイリスト、またはVFSプレイリストを再生します。', 'muted');
         printCli('play loop <URL|file>      - お気に入り用に、動画またはプレイリストをループ再生します。', 'muted');
         printCli('queue add <name> <URL>    - 名前付き再生キューへYouTube/ニコニコ動画を追加します。', 'muted');
         printCli('qplay <name>              - キューの先頭未再生を再生し、その行をコメントアウトします。', 'muted');
@@ -3330,7 +3468,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sub === 'today') {
             printCli('--- 今日の予定 ---', 'info');
             const todayStr = new Date().toISOString().split('T')[0];
-            const todayEvents = AppState.events.filter(e => e.event_date === todayStr);
+            const todayEvents = AppState.events.filter(e => normalizeDateValue(e.event_date) === todayStr);
             if (todayEvents.length === 0) {
                 printCli('今日の予定はありません。');
             } else {
@@ -3343,12 +3481,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (sub === 'month') {
             printCli('--- 今月の予定 ---', 'info');
             const currentYearMonth = getSelectedDateString().slice(0, 7);
-            const monthEvents = AppState.events.filter(e => e.event_date.startsWith(currentYearMonth));
+            const monthEvents = AppState.events.filter(e => normalizeDateValue(e.event_date).startsWith(currentYearMonth));
             if (monthEvents.length === 0) {
                 printCli('今月の予定はありません。');
             } else {
                 monthEvents.forEach(e => {
-                    printCli(`[${e.event_date}] ${e.title}`);
+                    printCli(`[${normalizeDateValue(e.event_date)}] ${e.title}`);
                 });
             }
             window.say('今月の予定の一覧だよ。', 'present');
@@ -3401,7 +3539,7 @@ document.addEventListener('DOMContentLoaded', () => {
             input = subArgs[1];
         }
         if (!input) {
-            printCli('エラー: 再生するYouTube/ニコニコURL、動画ID、またはプレイリストファイルを指定してください。 (例: play sm9, play loop playlist.txt)', 'danger');
+            printCli('エラー: 再生するYouTube/ニコニコURL、シリーズURL、動画ID、またはプレイリストファイルを指定してください。 (例: play sm9, play loop playlist.txt)', 'danger');
             return;
         }
 
@@ -3441,7 +3579,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             switchTab('video');
             saveSetting('last_tab', 'video');
-            const played = playMediaUrl(input, true, { loop });
+            const played = await playMediaUrl(input, true, { loop });
             if (played) {
                 printCli(`動画の埋め込み再生を開始しました: ${input}${loop ? ' (loop)' : ''}`, 'success');
             } else {

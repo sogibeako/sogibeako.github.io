@@ -57,13 +57,15 @@
                     <td><code>head</code></td>
                     <td>ファイルの冒頭を表示する。<br>- <code>head -n 80 script.py</code> 冒頭80行を表示<br>-
                         <code>head -c 80 script.py</code>
-                        冒頭80バイトを表示</td>
+                        冒頭80バイトを表示
+                    </td>
                 </tr>
                 <tr>
                     <td><code>tail</code></td>
                     <td>ファイルの末尾を表示する。<br>- <code>tail -n 80 script.py</code> 末尾80行を表示<br>-
                         <code>tail -c 80 script.py</code>
-                        末尾80バイトを表示</td>
+                        末尾80バイトを表示
+                    </td>
                 </tr>
                 <tr>
                     <td><code>mkdir</code></td>
@@ -126,7 +128,8 @@
                 <tr>
                     <td><code>countsuffix 'tail.xxx' [フォルダ名]</code></td>
                     <td>★<code>tail.xxx</code> という名前の末尾で終わるファイルの数を数える。<br />よく使うのは
-                        <code>countsuffix '2_1.zip' zips</code> 。</td>
+                        <code>countsuffix '2_1.zip' zips</code> 。
+                    </td>
                 </tr>
                 <tr>
                     <td><code>runghc name.hs</code></td>
@@ -234,6 +237,15 @@
 git commit -m "Update website"
 git push</code></pre>
         <p>って感じでやってます。</p>
+        <br />
+        <h2>Codex使い時、ローカルサーバー立てに困った時</h2>
+        <p>こちらはUbuntuではなくPowerShell。ローカルツールで8030を立てようとした時、ダメよと言われるときがある。前の8030がまだ生きているのだ。</p>
+        <pre><code class="language-shell">Get-NetTCPConnection -LocalPort 8030 -ErrorAction SilentlyContinue</code></pre>
+        <p>これを試して、</p>
+        <pre><code class="language-shell">LocalAddress LocalPort RemoteAddress RemotePort State  OwningProcess
+------------ --------- ------------- ---------- -----  -------------
+127.0.0.1    8030      0.0.0.0       0          Listen 12345</code></pre>
+        <p>と出たら、<code>Stop-Process -Id 12345</code> で止める。</p>
     </div>
 
     <!-- jQuery（先） -->

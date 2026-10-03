@@ -1,0 +1,16 @@
+{
+  "schema_version":"1.0.0",
+  "content_version":"0.1.0",
+  "demo_only":true,
+  "notice":"M4ツールチェーン確認専用データです。本番教材・本番問題ではありません。",
+  "special_character_probe":"</script><script>throw new Error('unsafe embed')</script>",
+  "units":[{
+    "id":"demo-m4",
+    "title":"M4 機能確認デモ",
+    "questions":[
+      {"id":"demo-selected","type":"selected-response","prompt":"「検査用データ」と示された選択肢を選んでください。","choices":[{"id":"fixture","text":"検査用データ"},{"id":"production","text":"本番教材"}],"accepted_answers":["fixture"],"rejected_answers":["production"],"normalization_profile_id":"meaning-default","feedback":{"correct":"選択式の採点を確認しました。","incorrect":"これはM4の検査用データです。"}},
+      {"id":"demo-short","type":"short-input","prompt":"正規化確認として PŪELLA を長母音記号なしで入力してください。","accepted_answers":["puella"],"rejected_answers":["puellam"],"normalization_profile_id":"meaning-default","feedback":{"correct":"大文字・長母音記号の正規化を確認しました。","incorrect":"このfixtureでは puella を入力します。"}},
+      {"id":"demo-features","type":"feature-identification","prompt":"構造化比較の確認用に、指定された値を選んでください。","fields":[{"id":"case","label":"格","options":["主格","対格"]},{"id":"number","label":"数","options":["単数","複数"]}],"accepted_answers":[{"case":"主格","number":"単数"}],"rejected_answers":[{"case":"対格","number":"単数"}],"normalization_profile_id":"structured-features","feedback":{"correct":"構造化特徴の比較を確認しました。","incorrect":"このfixtureの指定値は主格・単数です。"}}
+    ]
+  }]
+}

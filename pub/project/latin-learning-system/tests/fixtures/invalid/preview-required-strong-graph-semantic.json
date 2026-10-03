@@ -1,0 +1,47 @@
+{
+  "schema_status": "provisional-m2-json-compatible-yaml",
+  "version": "0.2.0",
+  "updated_on": "2026-08-25",
+  "scope": "fixture: DEC-0023修正前と同型の強い依存違反",
+  "model": {
+    "id_policy": "stable",
+    "requires": "strong",
+    "recommended_before": "recommended",
+    "co_requisites": "parallel",
+    "enables": "derived",
+    "learning_phases": ["introduce"],
+    "learning_phase_location": "curriculum",
+    "review_note": "legacy flags"
+  },
+  "domains_considered": ["syntax", "translation"],
+  "skills": [
+    {
+      "id": "syntax.predicate-adjective.preview",
+      "title_ja": "予告技能fixture",
+      "short_description": "省略可能な予告技能を表す構造検査用データ。",
+      "domain": "syntax",
+      "level": "introductory",
+      "requires": [],
+      "recommended_before": [],
+      "co_requisites": [],
+      "evidence_refs": ["design:DEC-0023"],
+      "introduced_in": "unit-02c",
+      "notes": "fixture",
+      "review": {"source_checked": false, "editorial_approved": false, "expert_reviewed": false}
+    },
+    {
+      "id": "translation.natural-japanese.basic",
+      "title_ja": "不正な依存fixture",
+      "short_description": "任意予告を強く要求する修正前と同型の負例。",
+      "domain": "translation",
+      "level": "introductory",
+      "requires": ["syntax.predicate-adjective.preview"],
+      "recommended_before": [],
+      "co_requisites": [],
+      "evidence_refs": ["design:DEC-0023"],
+      "introduced_in": "unit-03c",
+      "notes": "本番教材ではない。",
+      "review": {"source_checked": false, "editorial_approved": false, "expert_reviewed": false}
+    }
+  ]
+}

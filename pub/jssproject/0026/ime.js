@@ -25,13 +25,34 @@ const EL_DIALYTIKA_MAP = {
   'ι': 'ϊ', 'υ': 'ϋ', 'Ι': 'Ϊ', 'Υ': 'Ϋ'
 };
 
-const GRC_DIACRITICS = new Set(["\u0313", "\u0314", "\u0300", "\u0301", "\u0342", "\u0308", "\u0345", "\u0304"]);
+const GRC_DIACRITICS = new Set(["\u0313", "\u0314", "\u0300", "\u0301", "\u0342", "\u0308", "\u0345", "\u0304", "\u0306"]);
 const GRC_SPACING_MARKS = {
-  "\u0313": "᾿", "\u0314": "῾", "\u0300": "`", "\u0301": "´", "\u0342": "^", "\u0308": "¨", "\u0345": "ͅ", "\u0304": "-"
+  "\u0313": "᾿", "\u0314": "῾", "\u0300": "`", "\u0301": "´", "\u0342": "^", "\u0308": "¨", "\u0345": "ͅ", "\u0304": "-", "\u0306": "_"
 };
 const VI_TONES = { s: "\u0301", f: "\u0300", r: "\u0309", x: "\u0303", j: "\u0323" };
 const VI_TONE_MARKS = new Set(Object.values(VI_TONES));
 const VI_SHAPE_MARKS = new Set(["\u0302", "\u0306", "\u031B"]);
+const SA_LONG_VOWELS = {
+  a: "ā", i: "ī", u: "ū",
+  A: "Ā", I: "Ī", U: "Ū"
+};
+const SA_DOT_MAP = {
+  r: "ṛ", R: "Ṛ", "ṛ": "ṝ", "Ṛ": "Ṝ",
+  l: "ḷ", L: "Ḷ", "ḷ": "ḹ", "Ḷ": "Ḹ",
+  t: "ṭ", T: "Ṭ",
+  d: "ḍ", D: "Ḍ",
+  n: "ṇ", N: "Ṇ",
+  s: "ṣ", S: "Ṣ",
+  m: "ṃ", M: "Ṃ",
+  h: "ḥ", H: "Ḥ"
+};
+const SA_APOSTROPHE_MAP = {
+  s: "ś", S: "Ś",
+  n: "ṅ", N: "Ṅ"
+};
+const SA_TILDE_MAP = {
+  n: "ñ", N: "Ñ"
+};
 
 function isHangul(char) {
   if (!char) return false;
@@ -109,6 +130,14 @@ class IME {
   // ["가", "ㄱ"] means replace lastChar with "가" and insert "ㄱ" after it
   // [] means something went wrong, just insert the new key natively
   processKey(lastChar, code, shiftKey, eventKey, leftText = lastChar) {
+    if (this.mode === 'native') {
+      return null;
+    }
+
+    if (this.mode === 'saLatn') {
+      return this.processSanskritLatin(leftText, this.getMapping(code, shiftKey) || eventKey);
+    }
+
     if (this.mode === 'grcLatn') {
       return this.processGreekTransliteration(leftText, this.getMapping(code, shiftKey));
     }
@@ -165,6 +194,7 @@ class IME {
     if (this.mode === 'el') return /[\u0370-\u03FF\u1F00-\u1FFF]/.test(char);
     if (this.mode === 'grc') return /[\u0370-\u03FF\u1F00-\u1FFF]/.test(char);
     if (this.mode === 'vi') return /[A-Za-zÀ-ỹĐđ]/.test(char);
+    if (this.mode === 'saLatn') return /[A-Za-zĀ-žḀ-ỿ]/u.test(char);
     return false;
   }
 
@@ -195,10 +225,11 @@ class IME {
     if (mappedChar === "\u0300" || mappedChar === "\u0301" || mappedChar === "\u0342") marks = marks.filter(mark => mark !== "\u0300" && mark !== "\u0301" && mark !== "\u0342");
     if (mappedChar === "\u0308") marks = marks.filter(mark => mark !== "\u0313" && mark !== "\u0314" && mark !== "\u0308");
     if (mappedChar === "\u0345") marks = marks.filter(mark => mark !== "\u0345");
-    if (mappedChar === "\u0304") marks = marks.filter(mark => mark !== "\u0304" && mark !== "\u0342");
+    if (mappedChar === "\u0304") marks = marks.filter(mark => mark !== "\u0304" && mark !== "\u0306" && mark !== "\u0342");
+    if (mappedChar === "\u0306") marks = marks.filter(mark => mark !== "\u0304" && mark !== "\u0306" && mark !== "\u0342");
     if (mappedChar) marks.push(mappedChar);
 
-    const ordered = ["\u0304", "\u0308", "\u0313", "\u0314", "\u0300", "\u0301", "\u0342", "\u0345"]
+    const ordered = ["\u0304", "\u0306", "\u0308", "\u0313", "\u0314", "\u0300", "\u0301", "\u0342", "\u0345"]
       .filter(mark => marks.includes(mark));
     return { replaceLength: original.length, insertText: (base + ordered.join('')).normalize('NFC') };
   }
@@ -253,7 +284,7 @@ class IME {
 
   processGreekTransliteration(leftText, mappedChar) {
     if (!mappedChar) return null;
-    if (mappedChar !== '^' && mappedChar !== '-') {
+    if (mappedChar !== '^' && mappedChar !== '-' && mappedChar !== '_' && mappedChar !== ';') {
       return { replaceLength: 0, insertText: mappedChar };
     }
 
@@ -264,9 +295,52 @@ class IME {
     const base = parts.shift();
     if (!/[aeiouyAEIOUY]/.test(base)) return { replaceLength: 0, insertText: mappedChar };
 
-    const replacementMark = mappedChar === '^' ? "\u0302" : "\u0304";
-    const marks = parts.filter(mark => mark !== "\u0302" && mark !== "\u0304");
-    return { replaceLength: original.length, insertText: (base + replacementMark + marks.join('')).normalize('NFC') };
+    const replacementMark = ({ '^': "\u0302", '-': "\u0304", '_': "\u0306", ';': "\u0301" })[mappedChar];
+    let marks = parts;
+    if (replacementMark === "\u0302" || replacementMark === "\u0304" || replacementMark === "\u0306") {
+      marks = marks.filter(mark => mark !== "\u0302" && mark !== "\u0304" && mark !== "\u0306");
+    }
+    if (replacementMark === "\u0301") {
+      marks = marks.filter(mark => mark !== "\u0300" && mark !== "\u0301" && mark !== "\u0342");
+    }
+    const ordered = ["\u0304", "\u0306", "\u0302", "\u0300", "\u0301", "\u0342"]
+      .filter(mark => [...marks, replacementMark].includes(mark));
+    return { replaceLength: original.length, insertText: (base + ordered.join('')).normalize('NFC') };
+  }
+
+  processSanskritLatin(leftText, mappedChar) {
+    if (!mappedChar) return null;
+    const last = Array.from(leftText).pop() || "";
+
+    if (/[aiuAIU]/.test(mappedChar) && last && this.sanskritPlainBase(last) === mappedChar.toLowerCase()) {
+      return { replaceLength: last.length, insertText: this.sanskritMatchCase(SA_LONG_VOWELS[mappedChar.toLowerCase()], last, mappedChar) };
+    }
+
+    if (mappedChar === '.' && SA_DOT_MAP[last]) {
+      return { replaceLength: last.length, insertText: SA_DOT_MAP[last] };
+    }
+
+    if (mappedChar === "'" && SA_APOSTROPHE_MAP[last]) {
+      return { replaceLength: last.length, insertText: SA_APOSTROPHE_MAP[last] };
+    }
+
+    if (mappedChar === '~' && SA_TILDE_MAP[last]) {
+      return { replaceLength: last.length, insertText: SA_TILDE_MAP[last] };
+    }
+
+    return { replaceLength: 0, insertText: mappedChar };
+  }
+
+  sanskritPlainBase(char) {
+    if (!char) return "";
+    return char.normalize('NFD').charAt(0).toLowerCase();
+  }
+
+  sanskritMatchCase(lowerChar, previous, typed) {
+    if (previous === previous.toUpperCase() || typed === typed.toUpperCase()) {
+      return lowerChar.toUpperCase();
+    }
+    return lowerChar;
   }
 
   vietnameseBase(char) {

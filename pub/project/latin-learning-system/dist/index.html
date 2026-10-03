@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ラテン語学習システム M4 デモ</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#question-heading">問題へ移動</a>
+  <header><h1>ラテン語学習システム</h1><p>M4 最小ドリル実証版</p></header>
+  <main>
+    <aside class="notice" aria-labelledby="demo-notice-heading">
+      <h2 id="demo-notice-heading">検査専用デモ</h2>
+      <p id="demo-notice"></p>
+      <p id="storage-status" role="status"></p>
+    </aside>
+    <section aria-labelledby="unit-heading">
+      <h2 id="unit-heading">単元</h2>
+      <label for="unit-select">デモ単元を選択</label>
+      <select id="unit-select"></select>
+      <p id="progress" aria-live="polite"></p>
+    </section>
+    <section id="question-panel" aria-labelledby="question-heading">
+      <h2 id="question-heading" tabindex="-1">問題</h2>
+      <p id="prompt"></p>
+      <form id="answer-form">
+        <fieldset id="answer-fields"><legend>回答</legend><div id="answer-controls"></div></fieldset>
+        <button id="submit-button" type="submit">回答する</button>
+      </form>
+      <div id="result" class="result" role="status" aria-live="assertive" aria-atomic="true" tabindex="-1"></div>
+      <div class="actions">
+        <button id="retry-button" type="button" hidden>再挑戦</button>
+        <button id="next-button" type="button" hidden>次の問題</button>
+      </div>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">学習履歴</h2>
+      <button id="reset-button" type="button">履歴をリセット</button>
+      <div id="reset-confirmation" hidden>
+        <p>この端末のデモ履歴を削除しますか。</p>
+        <button id="reset-confirm-button" type="button">削除する</button>
+        <button id="reset-cancel-button" type="button">キャンセル</button>
+      </div>
+    </section>
+    <section id="fatal-error" class="error" role="alert" hidden><h2>データを読み込めません</h2><p id="fatal-message"></p></section>
+  </main>
+  <noscript><p class="error">このドリルの操作にはJavaScriptが必要です。</p></noscript>
+  <script type="application/json" id="normalization-profiles">{"comparison_form_persistence":false,"content_version":"1.0.0","normative_status":"operational-source-of-truth","profiles":[{"apostrophes":"remove-if-nonscored","case_handling":"fold","i_j":"fold-to-i","id":"meaning-default","input_kind":"text","internal_space":"collapse","macrons":"fold","ordered_steps":["unicode-nfc","trim-outer-space","collapse-space","case-fold","filter-nonscored-punctuation","fold-macrons","fold-i-j","fold-u-v"],"outer_space":"trim","preserve_other_letters":true,"punctuation":"remove-nonscored","u_v":"fold-to-u","unicode_normalization":"NFC"},{"apostrophes":"remove-if-nonscored","case_handling":"fold","i_j":"fold-to-i","id":"morphology-default","input_kind":"text","internal_space":"collapse","macrons":"fold","ordered_steps":["unicode-nfc","trim-outer-space","collapse-space","case-fold","filter-nonscored-punctuation","fold-macrons","fold-i-j","fold-u-v","preserve-endings"],"outer_space":"trim","preserve_other_letters":true,"punctuation":"remove-nonscored","u_v":"fold-to-u","unicode_normalization":"NFC"},{"apostrophes":"remove-if-nonscored","case_handling":"fold","i_j":"fold-to-i","id":"macron-sensitive","input_kind":"text","internal_space":"collapse","macrons":"preserve","ordered_steps":["unicode-nfc","trim-outer-space","collapse-space","case-fold","filter-nonscored-punctuation","preserve-macrons","fold-i-j","fold-u-v"],"outer_space":"trim","preserve_other_letters":true,"punctuation":"remove-nonscored","u_v":"fold-to-u","unicode_normalization":"NFC"},{"apostrophes":"preserve","case_handling":"preserve","i_j":"preserve","id":"orthography-strict","input_kind":"text","internal_space":"preserve","macrons":"preserve","ordered_steps":["unicode-nfc"],"outer_space":"preserve","preserve_other_letters":true,"punctuation":"preserve","u_v":"preserve","unicode_normalization":"NFC"},{"apostrophes":"not-applicable","case_handling":"not-applicable","i_j":"not-applicable","id":"structured-features","input_kind":"structured","internal_space":"not-applicable","macrons":"not-applicable","ordered_steps":["validate-enumerated-features","compare-feature-object"],"outer_space":"not-applicable","preserve_other_letters":true,"punctuation":"not-applicable","u_v":"not-applicable","unicode_normalization":"NFC"}],"schema_version":"1.0.0","updated_at":"2026-08-24T00:00:00+09:00"}</script>
+  <script type="application/json" id="normalization-vectors">{"cases":[{"expected":"puella","id":"meaning-case-macron","input":"PŪELLA","profile":"meaning-default"},{"expected":"puella","id":"meaning-combining-macron","input":"pūella","profile":"meaning-default"},{"expected":"iulius","id":"meaning-i-j","input":"Jūlius","profile":"meaning-default"},{"expected":"uultus","id":"meaning-u-v","input":"VVLTVS","profile":"meaning-default"},{"expected":"puella est","id":"meaning-space-punctuation","input":"  Puella,   est!  ","profile":"meaning-default"},{"expected":"puellam","id":"morphology-ending-preserved","input":"Puellam.","profile":"morphology-default"},{"expected":"pūella","id":"macron-sensitive-preserved","input":"PŪELLA","profile":"macron-sensitive"},{"expected":"puella","id":"macron-sensitive-short","input":"puella","profile":"macron-sensitive"},{"expected":" PŪELLA ","id":"strict-preserves-difference","input":" PŪELLA ","profile":"orthography-strict"},{"expected":"対格","id":"japanese-label","input":"  対格  ","profile":"meaning-default"},{"expected":{"case":"主格","number":"単数"},"id":"structured-features","input":{"case":"主格","number":"単数"},"profile":"structured-features"}],"inequality_cases":[{"id":"macron-sensitive-not-equal","left":"PŪELLA","profile":"macron-sensitive","right":"puella"},{"id":"strict-not-equal","left":"PŪELLA","profile":"orthography-strict","right":"puella"}],"note":"PythonとJavaScriptで共有するM4検査ベクトル。本番教材ではない。","schema_version":"1.0.0"}</script>
+  <script type="application/json" id="drill-data">{"content_version":"0.1.0","demo_only":true,"notice":"M4ツールチェーン確認専用データです。本番教材・本番問題ではありません。","schema_version":"1.0.0","special_character_probe":"\u003c/script\u003e\u003cscript\u003ethrow new Error('unsafe embed')\u003c/script\u003e","units":[{"id":"demo-m4","questions":[{"accepted_answers":["fixture"],"choices":[{"id":"fixture","text":"検査用データ"},{"id":"production","text":"本番教材"}],"feedback":{"correct":"選択式の採点を確認しました。","incorrect":"これはM4の検査用データです。"},"id":"demo-selected","normalization_profile_id":"meaning-default","prompt":"「検査用データ」と示された選択肢を選んでください。","rejected_answers":["production"],"type":"selected-response"},{"accepted_answers":["puella"],"feedback":{"correct":"大文字・長母音記号の正規化を確認しました。","incorrect":"このfixtureでは puella を入力します。"},"id":"demo-short","normalization_profile_id":"meaning-default","prompt":"正規化確認として PŪELLA を長母音記号なしで入力してください。","rejected_answers":["puellam"],"type":"short-input"},{"accepted_answers":[{"case":"主格","number":"単数"}],"feedback":{"correct":"構造化特徴の比較を確認しました。","incorrect":"このfixtureの指定値は主格・単数です。"},"fields":[{"id":"case","label":"格","options":["主格","対格"]},{"id":"number","label":"数","options":["単数","複数"]}],"id":"demo-features","normalization_profile_id":"structured-features","prompt":"構造化比較の確認用に、指定された値を選んでください。","rejected_answers":[{"case":"対格","number":"単数"}],"type":"feature-identification"}],"title":"M4 機能確認デモ"}]}</script>
+  <script src="assets/app.js" defer></script>
+</body>
+</html>

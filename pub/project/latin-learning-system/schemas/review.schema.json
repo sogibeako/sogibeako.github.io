@@ -1,0 +1,45 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"review.schema.json",
+  "title":"Review history and workflow",
+  "definitions":{
+    "reviewKind":{"enum":["source-checked","editorial-approved","expert-reviewed","automated-validation"]},
+    "reviewRecord":{
+      "type":"object","additionalProperties":false,
+      "required":["id","kind","result","reviewer_type","reviewed_at","reviewed_content_version","scope","notes","evidence_refs","active"],
+      "properties":{
+        "id":{"$ref":"common.schema.json#/definitions/reviewId"},
+        "kind":{"$ref":"#/definitions/reviewKind"},
+        "result":{"enum":["pass","fail","not-reviewed","stale"]},
+        "reviewer_type":{"enum":["human-source-checker","human-editor","human-expert","codex","automated-validator"]},
+        "reviewer_id":{"type":"string","minLength":1},
+        "reviewer_display_name":{"type":"string","minLength":1},
+        "reviewed_at":{"$ref":"common.schema.json#/definitions/isoDateTime"},
+        "reviewed_content_version":{"$ref":"common.schema.json#/definitions/semver"},
+        "scope":{"type":"array","minItems":1,"items":{"type":"string","minLength":1},"uniqueItems":true},
+        "notes":{"type":"string"},
+        "evidence_refs":{"type":"array","items":{"type":"string","minLength":1},"uniqueItems":true},
+        "active":{"type":"boolean"},
+        "supersedes":{"anyOf":[{"$ref":"common.schema.json#/definitions/reviewId"},{"type":"null"}]}
+      },
+      "anyOf":[{"required":["reviewer_id"]},{"required":["reviewer_display_name"]}],
+      "allOf":[
+        {"if":{"properties":{"kind":{"const":"expert-reviewed"},"result":{"const":"pass"}}},"then":{"properties":{"reviewer_type":{"const":"human-expert"}}}},
+        {"if":{"properties":{"kind":{"const":"source-checked"},"result":{"const":"pass"}}},"then":{"properties":{"reviewer_type":{"enum":["human-source-checker","human-expert","human-editor","codex"]}},"minProperties":11}},
+        {"if":{"properties":{"kind":{"const":"automated-validation"}}},"then":{"properties":{"reviewer_type":{"const":"automated-validator"}}}}
+      ]
+    },
+    "reviewBundle":{
+      "type":"object","additionalProperties":false,
+      "required":["draft_status","source_checked","editorial_approved","expert_reviewed","automated_validation"],
+      "properties":{
+        "draft_status":{"enum":["draft","ready-for-review","published-candidate","retired"]},
+        "source_checked":{"type":"array","items":{"allOf":[{"$ref":"#/definitions/reviewRecord"},{"properties":{"kind":{"const":"source-checked"}}}]}},
+        "editorial_approved":{"type":"array","items":{"allOf":[{"$ref":"#/definitions/reviewRecord"},{"properties":{"kind":{"const":"editorial-approved"}}}]}},
+        "expert_reviewed":{"type":"array","items":{"allOf":[{"$ref":"#/definitions/reviewRecord"},{"properties":{"kind":{"const":"expert-reviewed"}}}]}},
+        "automated_validation":{"type":"array","items":{"allOf":[{"$ref":"#/definitions/reviewRecord"},{"properties":{"kind":{"const":"automated-validation"}}}]}}
+      }
+    }
+  },
+  "$ref":"#/definitions/reviewBundle"
+}

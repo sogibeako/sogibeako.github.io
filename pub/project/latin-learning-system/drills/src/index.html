@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ラテン語学習システム M4 デモ</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#question-heading">問題へ移動</a>
+  <header><h1>ラテン語学習システム</h1><p>M4 最小ドリル実証版</p></header>
+  <main>
+    <aside class="notice" aria-labelledby="demo-notice-heading">
+      <h2 id="demo-notice-heading">検査専用デモ</h2>
+      <p id="demo-notice"></p>
+      <p id="storage-status" role="status"></p>
+    </aside>
+    <section aria-labelledby="unit-heading">
+      <h2 id="unit-heading">単元</h2>
+      <label for="unit-select">デモ単元を選択</label>
+      <select id="unit-select"></select>
+      <p id="progress" aria-live="polite"></p>
+    </section>
+    <section id="question-panel" aria-labelledby="question-heading">
+      <h2 id="question-heading" tabindex="-1">問題</h2>
+      <p id="prompt"></p>
+      <form id="answer-form">
+        <fieldset id="answer-fields"><legend>回答</legend><div id="answer-controls"></div></fieldset>
+        <button id="submit-button" type="submit">回答する</button>
+      </form>
+      <div id="result" class="result" role="status" aria-live="assertive" aria-atomic="true" tabindex="-1"></div>
+      <div class="actions">
+        <button id="retry-button" type="button" hidden>再挑戦</button>
+        <button id="next-button" type="button" hidden>次の問題</button>
+      </div>
+    </section>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">学習履歴</h2>
+      <button id="reset-button" type="button">履歴をリセット</button>
+      <div id="reset-confirmation" hidden>
+        <p>この端末のデモ履歴を削除しますか。</p>
+        <button id="reset-confirm-button" type="button">削除する</button>
+        <button id="reset-cancel-button" type="button">キャンセル</button>
+      </div>
+    </section>
+    <section id="fatal-error" class="error" role="alert" hidden><h2>データを読み込めません</h2><p id="fatal-message"></p></section>
+  </main>
+  <noscript><p class="error">このドリルの操作にはJavaScriptが必要です。</p></noscript>
+  <script type="application/json" id="normalization-profiles">__NORMALIZATION_PROFILES__</script>
+  <script type="application/json" id="normalization-vectors">__NORMALIZATION_VECTORS__</script>
+  <script type="application/json" id="drill-data">__DRILL_DATA__</script>
+  <script src="assets/app.js" defer></script>
+</body>
+</html>

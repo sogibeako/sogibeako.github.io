@@ -1,0 +1,29 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"source.schema.json",
+  "title":"Claim-level source reference",
+  "definitions":{
+  "sourceClaimReference":{
+  "type":"object","additionalProperties":false,
+  "required":["bibliography_id","claim_scope","quotation_used","verification_status","verification_note"],
+  "properties":{
+    "bibliography_id":{"$ref":"common.schema.json#/definitions/bibliographyId"},
+    "locator":{
+      "type":"object","additionalProperties":false,
+      "properties":{"page":{"type":["string","integer"]},"section":{"type":"string"},"paragraph":{"type":["string","integer"]},"url_fragment":{"type":"string","pattern":"^#"}},
+      "minProperties":1
+    },
+    "claim_scope":{"type":"string","minLength":1},
+    "quotation_used":{"type":"boolean"},
+    "verification_status":{"enum":["cited-only","metadata-only","relevant-section-verified","full-text-verified","user-supplied-excerpt","access-blocked"]},
+    "verification_note":{"type":"string","minLength":1},
+    "use_mode":{"enum":["quotation","summary","paraphrase","adaptation","data-derived","independent-design"]}
+  },
+  "allOf":[
+    {"if":{"properties":{"quotation_used":{"const":true}}},"then":{"required":["locator","use_mode"],"properties":{"use_mode":{"const":"quotation"}}}},
+    {"if":{"properties":{"verification_status":{"enum":["relevant-section-verified","full-text-verified","user-supplied-excerpt"]}}},"then":{"required":["locator"]}}
+  ]
+  }
+  },
+  "$ref":"#/definitions/sourceClaimReference"
+}

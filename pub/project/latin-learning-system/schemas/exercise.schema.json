@@ -1,0 +1,26 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"exercise.schema.json",
+  "title":"Exercise record",
+  "type":"object","additionalProperties":false,
+  "required":["id","schema_version","content_version","title","created_at","updated_at","unit_id","exercise_type","prompt","stimulus","skills","vocabulary","prerequisites","answer_mode","accepted_answers","rejected_answers","normalization_profile_id","collision_check","feedback","misconception_tags","evidence","source_refs","review","automatic_scoring","scoring_target","notes"],
+  "properties":{
+    "id":{"$ref":"common.schema.json#/definitions/exerciseId"},"schema_version":{"$ref":"common.schema.json#/definitions/semver"},"content_version":{"$ref":"common.schema.json#/definitions/semver"},"title":{"$ref":"common.schema.json#/definitions/nonEmptyString"},"created_at":{"$ref":"common.schema.json#/definitions/isoDateTime"},"updated_at":{"$ref":"common.schema.json#/definitions/isoDateTime"},"unit_id":{"$ref":"common.schema.json#/definitions/unitId"},
+    "exercise_type":{"enum":["feature-identification","inflection","fill-blank","matching","ordering","selected-response","short-input","reading-analysis","self-assessed-translation","self-assessed-composition","self-assessed-pronunciation"]},
+    "prompt":{"type":"string","minLength":1},"stimulus":{"type":"object"},"skills":{"$ref":"common.schema.json#/definitions/skillArray"},"vocabulary":{"$ref":"common.schema.json#/definitions/lexemeArray"},"prerequisites":{"$ref":"common.schema.json#/definitions/skillArray"},
+    "answer_mode":{"enum":["single-choice","multiple-choice","structured-features","normalized-text","ordered-items","self-assessment"]},
+    "accepted_answers":{"type":"array","items":{"type":["string","number","boolean","object","array"]}},"rejected_answers":{"type":"array","items":{"type":["string","number","boolean","object","array"]}},
+    "normalization_profile_id":{"enum":["meaning-default","morphology-default","macron-sensitive","orthography-strict","structured-features"]},
+    "collision_check":{"type":"object","additionalProperties":false,"required":["status","checked_content_version","note"],"properties":{"status":{"enum":["pass","fail","not-run","not-applicable"]},"checked_content_version":{"$ref":"common.schema.json#/definitions/semver"},"note":{"type":"string"}}},
+    "feedback":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["condition","message","review_skills"],"properties":{"condition":{"type":"string","minLength":1},"message":{"type":"string","minLength":1},"review_skills":{"$ref":"common.schema.json#/definitions/skillArray"}}}},
+    "misconception_tags":{"type":"array","uniqueItems":true,"items":{"type":"string","pattern":"^[a-z][a-z0-9-]*(?:\\.[a-z0-9-]+)*$"}},
+    "choices":{"type":"array","minItems":2,"items":{"type":"object","additionalProperties":false,"required":["choice_id","text","is_correct","misconception_tags"],"properties":{"choice_id":{"type":"string","pattern":"^[a-z][a-z0-9-]*$"},"text":{"type":"string","minLength":1},"is_correct":{"type":"boolean"},"misconception_tags":{"type":"array","items":{"type":"string"}}}}},
+    "evidence":{"$ref":"common.schema.json#/definitions/evidenceArray"},"source_refs":{"type":"array","items":{"$ref":"source.schema.json#/definitions/sourceClaimReference"}},"review":{"$ref":"review.schema.json#/definitions/reviewBundle"},"automatic_scoring":{"type":"boolean"},"scoring_target":{"enum":["meaning","morphology","macron","orthography","structured-features","translation","composition","pronunciation"]},"notes":{"type":"string"}
+  },
+  "allOf":[
+    {"if":{"properties":{"exercise_type":{"enum":["self-assessed-translation","self-assessed-composition","self-assessed-pronunciation"]}}},"then":{"properties":{"automatic_scoring":{"const":false},"answer_mode":{"const":"self-assessment"},"scoring_target":{"enum":["translation","composition","pronunciation"]}}}},
+    {"if":{"properties":{"automatic_scoring":{"const":true}}},"then":{"properties":{"accepted_answers":{"minItems":1},"collision_check":{"properties":{"status":{"const":"pass"}}},"scoring_target":{"enum":["meaning","morphology","macron","orthography","structured-features"]}}}},
+    {"if":{"properties":{"scoring_target":{"const":"macron"}}},"then":{"properties":{"normalization_profile_id":{"const":"macron-sensitive"}}}},
+    {"if":{"properties":{"exercise_type":{"const":"selected-response"}}},"then":{"required":["choices"],"properties":{"answer_mode":{"enum":["single-choice","multiple-choice"]}}}}
+  ]
+}

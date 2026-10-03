@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict'),M=require('./core.js');
+const g=M.createGame(M.createArchiveDemo());
+g.cognition.archives.push({nodes:new Map(g.cognition.archives[0].nodes)});
+const snapshot=()=>JSON.stringify({...g,archiveNotes:undefined},(_,v)=>v instanceof Map?[...v]:v instanceof Set?[...v]:v);
+const before=snapshot();
+assert.ok(M.setArchiveNote(g,0,'廊下\n目印1'));
+assert.ok(M.setArchiveNote(g,1,'別の探索'));
+assert.equal(g.archiveNotes.get(0),'廊下\n目印1');assert.equal(g.archiveNotes.get(1),'別の探索');
+assert.ok(M.setArchiveNote(g,0,'あ'.repeat(200)));
+for(const [index,text] of [[0,'あ'.repeat(201)],[0,null],[-1,'x'],[2,'x'],[.5,'x']])assert.equal(M.setArchiveNote(g,index,text),false);
+assert.equal(g.archiveNotes.get(0).length,200);
+assert.ok(M.setArchiveNote(g,0,''));assert.ok(!g.archiveNotes.has(0));assert.equal(g.archiveNotes.get(1),'別の探索');
+assert.equal(snapshot(),before);
+assert.equal(M.createGame(g.world).archiveNotes.size,0);
+console.log('PASS: independent archive notes, multiline/limit/invalid input, deletion, immutable exploration and originals, reset.');

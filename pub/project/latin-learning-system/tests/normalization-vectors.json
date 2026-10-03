@@ -1,0 +1,21 @@
+{
+  "schema_version":"1.0.0",
+  "note":"PythonとJavaScriptで共有するM4検査ベクトル。本番教材ではない。",
+  "cases":[
+    {"id":"meaning-case-macron","profile":"meaning-default","input":"PŪELLA","expected":"puella"},
+    {"id":"meaning-combining-macron","profile":"meaning-default","input":"pūella","expected":"puella"},
+    {"id":"meaning-i-j","profile":"meaning-default","input":"Jūlius","expected":"iulius"},
+    {"id":"meaning-u-v","profile":"meaning-default","input":"VVLTVS","expected":"uultus"},
+    {"id":"meaning-space-punctuation","profile":"meaning-default","input":"  Puella,   est!  ","expected":"puella est"},
+    {"id":"morphology-ending-preserved","profile":"morphology-default","input":"Puellam.","expected":"puellam"},
+    {"id":"macron-sensitive-preserved","profile":"macron-sensitive","input":"PŪELLA","expected":"pūella"},
+    {"id":"macron-sensitive-short","profile":"macron-sensitive","input":"puella","expected":"puella"},
+    {"id":"strict-preserves-difference","profile":"orthography-strict","input":" PŪELLA ","expected":" PŪELLA "},
+    {"id":"japanese-label","profile":"meaning-default","input":"  対格  ","expected":"対格"},
+    {"id":"structured-features","profile":"structured-features","input":{"number":"単数","case":"主格"},"expected":{"case":"主格","number":"単数"}}
+  ],
+  "inequality_cases":[
+    {"id":"macron-sensitive-not-equal","profile":"macron-sensitive","left":"PŪELLA","right":"puella"},
+    {"id":"strict-not-equal","profile":"orthography-strict","left":"PŪELLA","right":"puella"}
+  ]
+}

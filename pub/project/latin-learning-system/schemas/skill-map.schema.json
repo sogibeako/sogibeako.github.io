@@ -1,0 +1,13 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"skill-map.schema.json",
+  "title":"M2 Latin skill map",
+  "type":"object","additionalProperties":false,
+  "required":["schema_status","version","updated_on","scope","model","domains_considered","skills"],
+  "properties":{
+    "schema_status":{"const":"provisional-m2-json-compatible-yaml"},"version":{"$ref":"common.schema.json#/definitions/semver"},"updated_on":{"type":"string","format":"date"},"scope":{"type":"string","minLength":1},"model":{"type":"object","required":["id_policy","requires","recommended_before","co_requisites","enables","learning_phases","learning_phase_location","review_note"]},
+    "domains_considered":{"type":"array","uniqueItems":true,"items":{"enum":["orthography","phonology","vocabulary","morphology","syntax","reading","translation","composition","meter","register","dictionary-use"]}},
+    "skills":{"type":"array","minItems":1,"items":{"$ref":"#/definitions/skill"}}
+  },
+  "definitions":{"skill":{"type":"object","additionalProperties":false,"required":["id","title_ja","short_description","domain","level","requires","recommended_before","co_requisites","evidence_refs","introduced_in","notes","review"],"properties":{"id":{"$ref":"common.schema.json#/definitions/skillId"},"title_ja":{"type":"string","minLength":1},"short_description":{"type":"string","minLength":1},"domain":{"enum":["orthography","phonology","vocabulary","morphology","syntax","reading","translation","composition","meter","register","dictionary-use"]},"level":{"enum":["introductory","boundary"]},"requires":{"$ref":"common.schema.json#/definitions/skillArray"},"recommended_before":{"$ref":"common.schema.json#/definitions/skillArray"},"co_requisites":{"$ref":"common.schema.json#/definitions/skillArray"},"evidence_refs":{"type":"array","minItems":1,"items":{"type":"string","pattern":"^(?:design:DEC-[0-9]{4}|principle:LP-[0-9]{2}|src-[a-z0-9-]+)$"}},"introduced_in":{"anyOf":[{"$ref":"common.schema.json#/definitions/unitId"},{"type":"null"}]},"notes":{"type":"string"},"review":{"$ref":"common.schema.json#/definitions/m2ReviewFlags"}}}}
+}

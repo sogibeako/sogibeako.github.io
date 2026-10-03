@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07111f">
+  <meta name="description" content="2026年8月14日から2076年8月14日まで、50年間の経過と接触の解禁状況を刻む時計。">
+  <title>50年冷却時計</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"></div>
+  <main>
+    <header class="site-header">
+      <div class="brand-mark" aria-hidden="true"><span></span></div>
+      <div>
+        <p class="eyebrow">FIFTY-YEAR COOLING PERIOD</p>
+        <h1>50年冷却時計</h1>
+      </div>
+      <p class="timezone">JST / UTC+09:00</p>
+    </header>
+
+    <section class="temporal-quote" aria-labelledby="quote-label">
+      <span class="quote-glyph" aria-hidden="true">“</span>
+      <div class="quote-content" aria-live="polite">
+        <p class="section-label" id="quote-label">VOX TEMPORIS · 時の言葉</p>
+        <blockquote>
+          <p class="quote-latin" id="quoteLatin" lang="la">Tempus fugit.</p>
+          <footer class="quote-translation">
+            <span id="quoteJapanese">光陰矢の如し。</span>
+            <cite id="quoteSource"></cite>
+          </footer>
+        </blockquote>
+      </div>
+      <button class="quote-shuffle" id="quoteShuffle" type="button" aria-label="別の言葉をランダムに表示">
+        <span aria-hidden="true">↻</span> 別の言葉
+      </button>
+    </section>
+
+    <section class="hero" aria-labelledby="current-heading">
+      <div class="hero-copy">
+        <p class="section-label" id="current-heading">現在の解禁状況</p>
+        <div class="status-icon" id="statusIcon" aria-hidden="true">◇</div>
+        <h2 id="currentTitle">完全非接触</h2>
+        <p class="current-detail" id="currentDetail">偶然見かけても接近しない</p>
+        <p class="next-unlock" id="nextUnlock">次の解禁まで計算中…</p>
+      </div>
+
+      <div class="clock-panel" aria-labelledby="elapsed-heading">
+        <div class="clock-heading">
+          <p class="section-label" id="elapsed-heading">経過時間</p>
+          <span class="live-indicator"><i></i> LIVE</span>
+        </div>
+        <div class="mode-switch" role="group" aria-label="時計の表示方法">
+          <button type="button" class="mode-button active" data-mode="elapsed" aria-pressed="true">経過時間</button>
+          <button type="button" class="mode-button" data-mode="remaining" aria-pressed="false">残り時間</button>
+          <button type="button" class="mode-button" data-mode="conversion" aria-pressed="false">単位換算</button>
+        </div>
+        <div class="unit-switch" role="group" aria-label="換算する単位" hidden>
+          <button type="button" class="unit-button active" data-unit="years" aria-pressed="true">年換算</button>
+          <button type="button" class="unit-button" data-unit="months" aria-pressed="false">月換算</button>
+          <button type="button" class="unit-button" data-unit="days" aria-pressed="false">日換算</button>
+          <button type="button" class="unit-button" data-unit="hours" aria-pressed="false">時換算</button>
+          <button type="button" class="unit-button" data-unit="minutes" aria-pressed="false">分換算</button>
+          <button type="button" class="unit-button" data-unit="seconds" aria-pressed="false">秒換算</button>
+        </div>
+        <div class="time-grid" aria-live="off" aria-label="経過時間">
+          <div class="time-unit" data-unit-panel="years"><strong id="years">00</strong><span>年</span></div>
+          <div class="time-unit" data-unit-panel="months"><strong id="months">00</strong><span>月</span></div>
+          <div class="time-unit" data-unit-panel="days"><strong id="days">00</strong><span>日</span></div>
+          <div class="time-unit" data-unit-panel="hours"><strong id="hours">00</strong><span>時</span></div>
+          <div class="time-unit" data-unit-panel="minutes"><strong id="minutes">00</strong><span>分</span></div>
+          <div class="time-unit" data-unit-panel="seconds"><strong id="seconds">00</strong><span>秒</span></div>
+        </div>
+        <p class="mode-note" id="modeNote">開始からの経過を暦に沿って表示しています。うるう日は算入し、うるう秒は含みません。</p>
+
+        <div class="progress-block">
+          <div class="progress-meta">
+            <span>2026.08.14</span>
+            <strong id="progressText">0.000000%</strong>
+            <span>2076.08.14</span>
+          </div>
+          <div class="progress-track" role="progressbar" aria-label="50年間の進捗" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="progress-fill" id="progressFill"></div>
+            <div class="progress-pulse" id="progressPulse"></div>
+          </div>
+        </div>
+
+        <div class="date-range">
+          <div><span>冷却開始</span><time datetime="2026-08-14T00:00:00+09:00">2026年8月14日 00:00:00</time></div>
+          <div><span>完全解禁</span><time datetime="2076-08-14T00:00:00+09:00">2076年8月14日 00:00:00</time></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="distance-section" aria-labelledby="distance-heading">
+      <div class="distance-heading">
+        <div>
+          <p class="section-label">DISTANCE OVER FIFTY YEARS</p>
+          <h2 id="distance-heading">50年は、どこまで行ける時間か</h2>
+          <p>2026年8月14日から2076年8月14日まで、同じ速度で休まず進み続けた場合の目安です。</p>
+        </div>
+        <div class="hours-badge">
+          <strong>438,312</strong>
+          <span>時間</span>
+          <small>うるう日を含む全期間</small>
+        </div>
+      </div>
+
+      <div class="distance-table" role="table" aria-label="50年間に移動できる距離の比較">
+        <div class="distance-row distance-table-head" role="row">
+          <span role="columnheader">移動速度</span>
+          <span role="columnheader">進む距離</span>
+          <span role="columnheader">スケール感</span>
+        </div>
+        <div class="distance-row" role="row" data-journey="walk">
+          <span class="travel-mode" role="cell"><i>01</i><b>徒歩</b><small>5 km/h</small></span>
+          <strong role="cell">約219万 km</strong>
+          <span class="scale-note" role="cell">地球約55周、月まで約5.7回分</span>
+        </div>
+        <div class="distance-row" role="row" data-journey="bicycle">
+          <span class="travel-mode" role="cell"><i>02</i><b>自転車</b><small>20 km/h</small></span>
+          <strong role="cell">約877万 km</strong>
+          <span class="scale-note" role="cell">月まで約23回分</span>
+        </div>
+        <div class="distance-row" role="row" data-journey="car">
+          <span class="travel-mode" role="cell"><i>03</i><b>自動車</b><small>100 km/h</small></span>
+          <strong role="cell">約4,383万 km</strong>
+          <span class="scale-note" role="cell">地球から太陽までの約29%</span>
+        </div>
+        <div class="distance-row" role="row" data-journey="shinkansen">
+          <span class="travel-mode" role="cell"><i>04</i><b>新幹線</b><small>320 km/h</small></span>
+          <strong role="cell">約1億4,026万 km</strong>
+          <span class="scale-note" role="cell">約0.94 AU、ほぼ1天文単位</span>
+        </div>
+        <div class="distance-row" role="row" data-journey="airplane">
+          <span class="travel-mode" role="cell"><i>05</i><b>旅客機</b><small>900 km/h</small></span>
+          <strong role="cell">約3億9,448万 km</strong>
+          <span class="scale-note" role="cell">約2.64 AU、小惑星帯級</span>
+        </div>
+        <div class="distance-row" role="row" data-journey="sound">
+          <span class="travel-mode" role="cell"><i>06</i><b>音速</b><small>約1,235 km/h</small></span>
+          <strong role="cell">約5億4,132万 km</strong>
+          <span class="scale-note" role="cell">約3.62 AU</span>
+        </div>
+        <div class="distance-row" role="row" data-journey="iss">
+          <span class="travel-mode" role="cell"><i>07</i><b>ISS</b><small>約27,600 km/h</small></span>
+          <strong role="cell">約121億 km</strong>
+          <span class="scale-note" role="cell">約81 AU、冥王星軌道を越える</span>
+        </div>
+        <div class="distance-row" role="row" data-journey="voyager">
+          <span class="travel-mode" role="cell"><i>08</i><b>Voyager 1級</b><small>約61,000 km/h</small></span>
+          <strong role="cell">約267億 km</strong>
+          <span class="scale-note" role="cell">約179 AU</span>
+        </div>
+        <div class="distance-row light-row" role="row" data-journey="light">
+          <span class="travel-mode" role="cell"><i>09</i><b>光速</b><small>299,792 km/s</small></span>
+          <strong role="cell">約50光年</strong>
+          <span class="scale-note" role="cell">近傍恒星をいくつも通過し、星間空間の彼方へ</span>
+        </div>
+      </div>
+      <p class="distance-footnote">距離は438,312時間をもとにした概算です。月は地球からの平均距離、惑星・準惑星は太陽からの平均軌道距離、太陽系領域は太陽からの代表的な境界距離、恒星は地球からの距離を比較尺度として同じ横軸上に置いています。天体が実際に同じ方角へ並ぶことを示すものではありません。</p>
+    </section>
+
+    <section class="timeline-section" aria-labelledby="timeline-heading">
+      <div class="section-intro">
+        <div>
+          <p class="section-label">RELEASE SCHEDULE</p>
+          <h2 id="timeline-heading">接触解禁タイムライン</h2>
+        </div>
+        <p>時間の経過だけが、次の段階を開きます。</p>
+      </div>
+      <ol class="timeline" id="timeline"></ol>
+    </section>
+
+    <footer>
+      <p>この時計は端末の現在時刻をもとに、日本標準時で計算します。</p>
+      <p>COOLING SINCE 2026</p>
+    </footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

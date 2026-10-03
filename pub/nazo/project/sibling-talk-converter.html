@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>兄妹小話錬成釜</title>
+  <style>
+    :root {
+      --tool-bg: #111822;
+      --tool-panel: #1e293b;
+      --tool-border: #334155;
+      --tool-text: #e2e8f0;
+      --tool-muted: #94a3b8;
+      --tool-accent: #6290b1;
+      --paper: #ffffee;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--tool-bg);
+      color: var(--tool-text);
+      font: 14px/1.6 "Segoe UI", "Arial Unicode MS", "MS PGothic", sans-serif;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 20px;
+      align-items: end;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--tool-border);
+      background: var(--tool-panel);
+    }
+
+    header h1 {
+      margin: 0 auto 0 0;
+      font-size: 1.2rem;
+    }
+
+    .field {
+      display: grid;
+      gap: 3px;
+    }
+
+    .field span,
+    .pane-title {
+      color: var(--tool-muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .field input {
+      min-width: 160px;
+      padding: 6px 8px;
+      border: 1px solid var(--tool-border);
+      border-radius: 4px;
+      background: #0f172a;
+      color: var(--tool-text);
+    }
+
+    .field-title input {
+      width: min(34vw, 430px);
+    }
+
+    .field-tags input {
+      width: min(27vw, 360px);
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(320px, 1fr) minmax(360px, 1fr);
+      flex: 1;
+      min-height: 0;
+    }
+
+    .pane {
+      display: flex;
+      min-width: 0;
+      min-height: 0;
+      flex-direction: column;
+      border-right: 1px solid var(--tool-border);
+    }
+
+    .pane:last-child {
+      border-right: 0;
+    }
+
+    .pane-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--tool-border);
+      background: #0f172a;
+    }
+
+    textarea {
+      width: 100%;
+      border: 0;
+      outline: 0;
+      resize: none;
+      font: 0.95rem/1.6 "Source Code Pro", Consolas, "Courier New", monospace;
+    }
+
+    #source {
+      flex: 1;
+      min-height: 0;
+      padding: 15px;
+      background: var(--tool-bg);
+      color: #cbd5e1;
+    }
+
+    #preview-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 20px;
+    }
+
+    #preview {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #afd3e6;
+      color: #000;
+    }
+
+    #preview h2 {
+      margin: 0.83em 0;
+      padding: 0.2em;
+      background: #6290b1;
+      color: #000;
+      font-size: 1.5em;
+    }
+
+    #preview .inner_wrapper {
+      width: 90%;
+      max-width: 600px;
+      margin: 10px auto;
+      padding: 20px;
+      border: 1px solid #111;
+      background: var(--paper);
+    }
+
+    #preview summary {
+      font-weight: bold;
+      text-decoration: underline solid #000;
+      cursor: pointer;
+    }
+
+    #preview dt {
+      font-weight: bold;
+    }
+
+    #preview dd {
+      margin-inline-start: 40px;
+    }
+
+    #preview p {
+      margin: 1em 0;
+    }
+
+    #preview blockquote {
+      margin: 1em 0;
+      padding-left: 1.25em;
+      border-left: 4px solid rgba(17, 24, 34, .22);
+    }
+
+    #preview table {
+      width: 100%;
+      margin: 1em 0;
+      border-collapse: collapse;
+    }
+
+    #preview th,
+    #preview td {
+      padding: .4em .6em;
+      border: 1px solid #666;
+      text-align: left;
+    }
+
+    #preview pre,
+    #preview pre code {
+      display: block;
+      overflow-x: auto;
+      padding: .5em;
+      border-radius: 4px;
+      background: #bbb;
+      color: #000;
+    }
+
+    #preview code {
+      padding: .1em .3em;
+      border-radius: 3px;
+      background: #bbb;
+      color: #000;
+    }
+
+    #preview .del {
+      color: gray;
+      font-size: .75rem;
+      text-decoration: line-through;
+    }
+
+    #preview .seoremium {
+      font-family: "Seoremium_clg", sans-serif;
+    }
+
+    #preview img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .copy-bar {
+      display: flex;
+      justify-content: flex-end;
+      padding: .4rem 0 .8rem;
+    }
+
+    #preview .stage {
+      margin: 1.6em 0;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    #preview .route-label {
+      width: fit-content;
+      margin: 1.5em auto;
+      padding: 0.35em 1em;
+      border: 1px solid #609aa0;
+      border-radius: 999px;
+      background: #eef3f7;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    button {
+      padding: 7px 13px;
+      border: 0;
+      border-radius: 4px;
+      background: var(--tool-accent);
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover {
+      filter: brightness(1.12);
+    }
+
+    .copy-btn {
+      border: 1px solid #777;
+      background: #888;
+      color: #000;
+      font-size: .85rem;
+    }
+
+    footer {
+      display: flex;
+      min-height: 230px;
+      height: 30vh;
+      flex-direction: column;
+      border-top: 1px solid var(--tool-border);
+      background: var(--tool-panel);
+    }
+
+    #controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      align-items: center;
+      padding: 9px 20px;
+      border-bottom: 1px solid var(--tool-border);
+    }
+
+    #status {
+      color: #cbd5e1;
+    }
+
+    #output {
+      flex: 1;
+      min-height: 0;
+      padding: 10px 20px;
+      background: #0f172a;
+      color: #a5b4fc;
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      padding: 10px 20px;
+      border-radius: 4px;
+      background: #10b981;
+      color: #fff;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s;
+    }
+
+    @media (max-width: 820px) {
+      body {
+        overflow: auto;
+      }
+
+      header {
+        align-items: stretch;
+      }
+
+      .field,
+      .field input {
+        width: 100%;
+      }
+
+      main {
+        display: block;
+      }
+
+      .pane {
+        min-height: 55vh;
+        border-right: 0;
+        border-bottom: 1px solid var(--tool-border);
+      }
+
+      footer {
+        min-height: 320px;
+      }
+
+      #preview .inner_wrapper {
+        width: 100%;
+      }
+    }
+  </style>
+  <script>
+    window.MathJax = { tex: { packages: { '[+]': ['ams'] } } };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+  <header>
+    <h1>兄妹小話錬成釜</h1>
+    <label class="field">
+      <span>日付（必須）</span>
+      <input id="date" type="date" value="2026-03-29" />
+    </label>
+    <label class="field field-title">
+      <span>題（必須）</span>
+      <input id="title" type="text" placeholder="小話の見出し" />
+    </label>
+    <label class="field field-tags">
+      <span>タグ（任意・カンマ区切り）</span>
+      <input id="tags" type="text" placeholder="一彌,一埜,日常" />
+    </label>
+  </header>
+
+  <main>
+    <section class="pane">
+      <div class="pane-title">小話・Markdown入力 <span>Ctrl / Cmd + Enter で変換</span></div>
+      <textarea id="source" spellcheck="false"
+        placeholder="一彌「台詞です」&#10;一埜「この形で dt / dd になるよ！」&#10;&#10;　＊　＊　＊&#10;&#10;地の文はそのまま書けます。&#10;&#10;- リスト&#10;- **Markdown** も使えます&#10;&#10;| 項目 | 値 |&#10;|:--|:--|&#10;| 数式 | $x^2$ |"></textarea>
+    </section>
+    <section class="pane">
+      <div class="pane-title">
+        <span>『2026年兄妹小話』風プレビュー</span>
+        <button id="refresh-math" type="button">数式再描画</button>
+      </div>
+      <div id="preview-scroll">
+        <div id="preview"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div id="controls">
+      <button id="convert" type="button">変換</button>
+      <button id="copy" type="button">HTMLコピー</button>
+      <label><input id="wrap-p" type="checkbox" /> 地の文を &lt;p&gt; で囲む</label>
+      <label>リストインデント
+        <select id="indent-size">
+          <option value="2">2スペース</option>
+          <option value="4">4スペース</option>
+        </select>
+      </label>
+      <span id="status"></span>
+    </div>
+    <textarea id="output" readonly aria-label="変換後のHTML"></textarea>
+  </footer>
+  <div class="toast" id="toast">HTMLをコピーしました！</div>
+
+  <script>
+    const escapeHtml = text => String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    const escapeAttr = text => escapeHtml(text).replace(/"/g, '&quot;');
+
+    function parseInline(text) {
+      const math = [];
+      const keepMath = value => `\uE000${math.push(value) - 1}\uE001`;
+      text = String(text).replace(/\$\$[\s\S]*?\$\$/g, keepMath);
+      text = text.replace(/(^|[^$])\$([^$]+?)\$(?!\$)/g, (_, prefix, value) => prefix + keepMath(`\\(${value}\\)`));
+      text = text.replace(/`([^`]+)`/g, (_, code) => `<code>${escapeHtml(code)}</code>`);
+      text = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+      text = text.replace(/~~(.*?)~~/g, '<span class="del">$1</span>');
+      text = text.replace(/\{seo:(.*?)\}/g, '<span class="seoremium">$1</span>');
+      text = text.replace(/!\[(.*?)\]\((.*?)\)(?:\{([^}]+)\})?/g, (_, alt, url, cls) => {
+        const className = cls ? ` class="${escapeAttr(cls.replace(/^\./, ''))}"` : '';
+        return `<img src="${escapeAttr(url)}" alt="${escapeAttr(alt)}"${className}>`;
+      });
+      text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
+      return text.replace(/\uE000(\d+)\uE001/g, (_, index) => math[Number(index)]);
+    }
+
+    function isSpecialLine(line) {
+      return line.startsWith('```') || line.trim() === '$$' ||
+        ['::seo', ':::hidden', ':::inner'].includes(line.trim()) ||
+        line.startsWith('>') || line.startsWith('|') || /^(#{1,6})\s+/.test(line) ||
+        /^-{3,}$/.test(line.trim()) || /^(\s*)(-\s+|\d+\.\s+)/.test(line);
+    }
+
+    function parseList(lines, indentSize) {
+      const root = { type: 'root', children: [] };
+      const path = [{ indent: -1, node: root }];
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        const match = line.match(/^(\s*)(-\s+|\d+\.\s+)(.*)$/);
+        if (!match) {
+          const current = path[path.length - 1].node;
+          if (current.type === 'item') current.content.push(line.trim());
+          continue;
+        }
+        const indent = Math.floor(match[1].length / indentSize);
+        const type = /^\d/.test(match[2]) ? 'ol' : 'ul';
+        const item = { type: 'item', content: [match[3]], children: [] };
+        while (path.length > 1 && path[path.length - 1].indent >= indent) path.pop();
+        const parent = path[path.length - 1].node;
+        if (!parent.children.length || parent.children.at(-1).type !== type) parent.children.push({ type, items: [] });
+        parent.children.at(-1).items.push(item);
+        path.push({ indent, node: item });
+      }
+
+      function render(node) {
+        if (node.type === 'root') return node.children.map(render).join('\n');
+        if (node.type === 'ul' || node.type === 'ol') {
+          let html = `<${node.type}>\n`;
+          for (const item of node.items) {
+            html += `  <li>${parseInline(item.content.join('<br>'))}`;
+            if (item.children.length) html += '\n' + item.children.map(render).join('\n').replace(/^/gm, '    ');
+            html += '</li>\n';
+          }
+          return html + `</${node.type}>\n`;
+        }
+        return '';
+      }
+      return render(root);
+    }
+
+    function parseBlocks(lines, wrapP, indentSize) {
+      const blocks = [];
+      let i = 0;
+      while (i < lines.length) {
+        const line = lines[i];
+        if (line.startsWith('```')) {
+          const lang = line.slice(3).trim();
+          const content = [];
+          for (i++; i < lines.length && !lines[i].startsWith('```'); i++) content.push(lines[i]);
+          blocks.push({ type: 'code', lang, content: content.join('\n') });
+          i++;
+          continue;
+        }
+        if (line.trim() === '$$') {
+          const content = [];
+          for (i++; i < lines.length && lines[i].trim() !== '$$'; i++) content.push(lines[i]);
+          blocks.push({ type: 'math', content: content.join('\n') });
+          i++;
+          continue;
+        }
+        const custom = { '::seo': ['seo', '::'], ':::hidden': ['hidden', ':::'], ':::inner': ['inner', ':::'] }[line.trim()];
+        if (custom) {
+          const inner = [];
+          for (i++; i < lines.length && lines[i].trim() !== custom[1]; i++) inner.push(lines[i]);
+          blocks.push({ type: 'custom', subtype: custom[0], html: renderBlocks(parseBlocks(inner, wrapP, indentSize), wrapP, indentSize) });
+          i++;
+          continue;
+        }
+        if (line.startsWith('>')) {
+          const quote = [];
+          while (i < lines.length && lines[i].startsWith('>')) quote.push(lines[i++].replace(/^> ?/, ''));
+          blocks.push({ type: 'quote', html: renderBlocks(parseBlocks(quote, wrapP, indentSize), wrapP, indentSize) });
+          continue;
+        }
+        if (line.startsWith('|') && i + 1 < lines.length && /^\|\s*[:-]+\s*\|/.test(lines[i + 1])) {
+          const rows = [line];
+          i += 2;
+          while (i < lines.length && lines[i].startsWith('|')) rows.push(lines[i++]);
+          blocks.push({ type: 'table', header: rows[0], rows: rows.slice(1) });
+          continue;
+        }
+        const heading = line.match(/^(#{1,6})\s+(.*)$/);
+        if (heading) { blocks.push({ type: 'heading', level: heading[1].length, text: heading[2] }); i++; continue; }
+        if (/^-{3,}$/.test(line.trim())) { blocks.push({ type: 'hr' }); i++; continue; }
+        if (/^(\s*)(-\s+|\d+\.\s+)/.test(line)) {
+          const list = [];
+          while (i < lines.length) {
+            if (!lines[i].trim() && !(i + 1 < lines.length && (/^(\s*)(-\s+|\d+\.\s+)/.test(lines[i + 1]) || /^\s{2,}/.test(lines[i + 1])))) break;
+            if (lines[i].trim() && isSpecialLine(lines[i]) && !/^(\s*)(-\s+|\d+\.\s+)/.test(lines[i])) break;
+            list.push(lines[i++]);
+          }
+          blocks.push({ type: 'list', html: parseList(list, indentSize) });
+          continue;
+        }
+        if (!line.trim()) { i++; continue; }
+        if (line.trim().startsWith('<') && line.trim().endsWith('>')) {
+          const raw = [];
+          while (i < lines.length && lines[i].trim() && !isSpecialLine(lines[i])) raw.push(lines[i++]);
+          blocks.push({ type: 'raw', content: raw.join('\n') });
+          continue;
+        }
+        const paragraph = [line];
+        for (i++; i < lines.length && lines[i].trim() && !isSpecialLine(lines[i]); i++) paragraph.push(lines[i]);
+        blocks.push({ type: 'paragraph', lines: paragraph });
+      }
+      return blocks;
+    }
+
+    function tableCells(row) {
+      const parts = row.split('|');
+      if (row.startsWith('|')) parts.shift();
+      if (row.endsWith('|')) parts.pop();
+      return parts.map(cell => cell.trim());
+    }
+
+    function renderBlocks(blocks, wrapP, indentSize) {
+      let html = '';
+      for (const block of blocks) {
+        if (block.type === 'code') {
+          const cls = block.lang ? ` class="language-${escapeAttr(block.lang.toLowerCase())}"` : '';
+          html += `<pre><code${cls}>${escapeHtml(block.content)}</code></pre>\n`;
+        } else if (block.type === 'math') {
+          html += `<div class="eqwrap">\n\\[\n${block.content}\n\\]\n</div>\n`;
+        } else if (block.type === 'custom') {
+          const start = block.subtype === 'seo' ? '<div class="seoremium">' : block.subtype === 'hidden' ? '<div style="display: none;">' : '<div class="inner_wrapper">';
+          html += `${start}\n${block.html}</div>\n`;
+        } else if (block.type === 'table') {
+          html += '<table>\n  <thead>\n    <tr>\n';
+          for (const cell of tableCells(block.header)) html += `      <th>${parseInline(cell)}</th>\n`;
+          html += '    </tr>\n  </thead>\n  <tbody>\n';
+          for (const row of block.rows) {
+            html += '    <tr>\n';
+            for (const cell of tableCells(row)) html += `      <td>${parseInline(cell)}</td>\n`;
+            html += '    </tr>\n';
+          }
+          html += '  </tbody>\n</table>\n';
+        } else if (block.type === 'heading') html += `<h${block.level}>${parseInline(block.text)}</h${block.level}>\n`;
+        else if (block.type === 'hr') html += '<hr />\n';
+        else if (block.type === 'list') html += block.html;
+        else if (block.type === 'quote') html += `<blockquote>\n${block.html}</blockquote>\n`;
+        else if (block.type === 'raw') html += block.content + '\n';
+        else if (block.type === 'paragraph') {
+          const body = parseInline(block.lines.join('<br>'));
+          html += wrapP ? `<p>${body}</p>\n` : `${body}<br />\n`;
+        }
+      }
+      return html;
+    }
+
+    function speakerLine(line) {
+      const match = line.match(/^([^\s「『]{1,60})([「『][\s\S]*)$/);
+      return match ? { speaker: match[1], speech: match[2] } : null;
+    }
+
+    const isSceneBreak = line => /^\s*＊\s*＊\s*＊\s*$/.test(line);
+
+    function renderTalkBody(text, wrapP, indentSize) {
+      const lines = text.replace(/\r\n?/g, '\n').split('\n');
+      let html = '                            <dl>\n';
+      let prose = [];
+
+      const flushProse = () => {
+        while (prose.length && !prose[0].trim()) prose.shift();
+        while (prose.length && !prose.at(-1).trim()) prose.pop();
+        if (!prose.length) return;
+        const rendered = renderBlocks(parseBlocks(prose, wrapP, indentSize), wrapP, indentSize).trimEnd();
+        if (rendered) html += rendered.replace(/^/gm, '                                ') + '\n';
+        prose = [];
+      };
+
+      for (let i = 0; i < lines.length; i++) {
+        const dialogue = speakerLine(lines[i]);
+        if (dialogue) {
+          flushProse();
+          const continuations = [];
+          while (i + 1 < lines.length && /^\s+\S/.test(lines[i + 1]) && !isSceneBreak(lines[i + 1])) continuations.push(lines[++i].trim());
+          const speech = [dialogue.speech, ...continuations].map(parseInline).join('<br>');
+          html += `                                <dt>${parseInline(dialogue.speaker)}</dt>\n`;
+          html += `                                <dd>${speech}</dd>\n`;
+        } else if (isSceneBreak(lines[i])) {
+          flushProse();
+          html += '                                <br />\n';
+          html += '                                <dt>　＊　＊　＊</dt>\n';
+          html += '                                <br />\n';
+        } else {
+          prose.push(lines[i]);
+        }
+      }
+      flushProse();
+      return html + '                            </dl>';
+    }
+
+    function indent(text, spaces) {
+      const pad = ' '.repeat(spaces);
+      return text.split('\n').map(line => pad + line).join('\n');
+    }
+
+    function buildHtml() {
+      const rawDate = document.getElementById('date').value.trim();
+      const date = rawDate.replace(/\//g, '-');
+      const shownDate = date.replace(/-/g, '/');
+      const title = document.getElementById('title').value.trim();
+      const tags = document.getElementById('tags').value.trim();
+      const source = document.getElementById('source').value;
+      const wrapP = document.getElementById('wrap-p').checked;
+      const indentSize = Number(document.getElementById('indent-size').value);
+      const safeId = date.replace(/[^0-9A-Za-z_-]/g, '-') || 'date';
+      const body = renderTalkBody(source, wrapP, indentSize);
+
+      return `            <h2>${escapeHtml(shownDate)}</h2>\n` +
+        `            <div class="inner_wrapper">\n` +
+        `                <section class="talk-block" data-date="${escapeAttr(date)}" data-tags="${escapeAttr(tags)}"\n` +
+        `                    data-title="${escapeAttr(title)}">\n\n` +
+        `                    <div class="copy-bar copy-bar-local">\n` +
+        `                        <button class="copy-btn" data-copy-target="#talk-${escapeAttr(safeId)}">📋 この小話をコピー</button>\n` +
+        `                    </div>\n` +
+        `                    <details id="talk-${escapeAttr(safeId)}">\n` +
+        `                        <summary>${escapeHtml(title)}</summary>\n` +
+        `                        <article class="talk" id="talk-body-${escapeAttr(safeId)}">\n` +
+        `${body}\n` +
+        `                        </article>\n\n` +
+        `                    </details>\n` +
+        `                </section>\n` +
+        `            </div>`;
+    }
+
+    const elements = {
+      date: document.getElementById('date'),
+      title: document.getElementById('title'),
+      tags: document.getElementById('tags'),
+      source: document.getElementById('source'),
+      output: document.getElementById('output'),
+      preview: document.getElementById('preview'),
+      status: document.getElementById('status'),
+      toast: document.getElementById('toast')
+    };
+
+    function update() {
+      const html = buildHtml();
+      elements.output.value = html;
+      elements.preview.innerHTML = html;
+      elements.preview.querySelector('details')?.setAttribute('open', '');
+      elements.status.textContent = (!elements.date.value || !elements.title.value)
+        ? '日付と題を入力してください'
+        : `変換完了 ${new Date().toLocaleTimeString()}`;
+      if (window.MathJax?.typesetPromise) {
+        MathJax.typesetClear?.([elements.preview]);
+        MathJax.typesetPromise([elements.preview]).catch(console.error);
+      }
+    }
+
+    document.getElementById('convert').addEventListener('click', update);
+    document.getElementById('refresh-math').addEventListener('click', update);
+    document.getElementById('copy').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(elements.output.value);
+        elements.toast.style.opacity = '1';
+        setTimeout(() => elements.toast.style.opacity = '0', 1600);
+      } catch (error) {
+        elements.output.focus();
+        elements.output.select();
+        document.execCommand('copy');
+      }
+    });
+
+    elements.source.addEventListener('keydown', event => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') update();
+    });
+
+    [elements.date, elements.title, elements.tags, elements.source,
+    document.getElementById('wrap-p'), document.getElementById('indent-size')]
+      .forEach(element => element.addEventListener(element.matches('select,input[type="checkbox"]') ? 'change' : 'input', update));
+
+    update();
+  </script>
+</body>
+
+</html>

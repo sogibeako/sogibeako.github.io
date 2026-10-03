@@ -141,7 +141,7 @@ KEYBOARD_LAYOUTS.grc = {
   rows: [
     [
       { code: "Digit6", eng: "^", normal: "6", shift: "\u0342", display: "^ → ◌͂", displayShift: "^ → ◌͂", clickShift: true },
-      { code: "Minus", eng: "-", normal: "\u0304", shift: "_", display: "- → ◌̄", displayShift: "_" }
+      { code: "Minus", eng: "-", normal: "\u0304", shift: "\u0306", display: "- → ◌̄", displayShift: "_ → ◌̆" }
     ],
     ...KEYBOARD_LAYOUTS.el.rows.map(row => row.map(key => ({ ...key })))
   ]
@@ -187,11 +187,38 @@ KEYBOARD_LAYOUTS.grcLatn = {
   rows: [
     [
       { code: "Digit6", eng: "^", normal: "6", shift: "^", display: "^ → â ê î ô û", displayShift: "^ → â ê î ô û", clickShift: true },
-      { code: "Minus", eng: "-", normal: "-", shift: "_", display: "- → ā ē ī ō ū", displayShift: "_" }
+      { code: "Minus", eng: "-", normal: "-", shift: "_", display: "- → ā ē ī ō ū", displayShift: "_ → ĭ ŭ" }
     ],
     ...KEYBOARD_LAYOUTS.vi.rows.map(row => row.map(key => {
-      const hint = { a: "a / â ā", e: "e / ê ē", i: "i / î ī", o: "o / ô ō", u: "u / û ū", y: "y / ŷ ȳ" }[key.normal];
+      const hint = { a: "a / â ā ă", e: "e / ê ē ĕ", i: "i / î ī ĭ", o: "o / ô ō ŏ", u: "u / û ū ŭ", y: "y / ŷ ȳ y̆", ";": "; → ◌́" }[key.normal];
       return { ...key, display: hint || key.normal, displayShift: key.shift };
     }))
   ]
+};
+
+const SA_HINTS = {
+  a: "a / ā",
+  i: "i / ī",
+  u: "u / ū",
+  r: "r. → ṛ",
+  l: "l. → ḷ",
+  t: "t. → ṭ",
+  d: "d. → ḍ",
+  n: "n. ṇ / n' ṅ / n~ ñ",
+  s: "s. ṣ / s' ś",
+  m: "m. → ṃ",
+  h: "h. → ḥ",
+  ".": ". 下点",
+  "'": "' ś/ṅ",
+  "/": "/",
+  z: "z"
+};
+
+KEYBOARD_LAYOUTS.saLatn = {
+  name: "サンスクリット語・アルファベット表記",
+  rows: KEYBOARD_LAYOUTS.vi.rows.map(row => row.map(key => ({
+    ...key,
+    display: SA_HINTS[key.normal] || key.normal,
+    displayShift: key.shift
+  })))
 };

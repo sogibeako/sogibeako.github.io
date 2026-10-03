@@ -1,0 +1,41 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "$id":"vocabulary.schema.json",
+  "title":"Vocabulary record",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["id","lemma_id","schema_version","content_version","title","created_at","updated_at","lemma","canonical_form","display_form","macronized_form","accepted_orthographic_forms","part_of_speech","basic_senses","introduced_in","available_from","register","period","source_refs","evidence","review","notes"],
+  "properties":{
+    "id":{"$ref":"common.schema.json#/definitions/lexemeId"},
+    "lemma_id":{"$ref":"common.schema.json#/definitions/lexemeId"},
+    "schema_version":{"$ref":"common.schema.json#/definitions/semver"},
+    "content_version":{"$ref":"common.schema.json#/definitions/semver"},
+    "title":{"$ref":"common.schema.json#/definitions/nonEmptyString"},
+    "created_at":{"$ref":"common.schema.json#/definitions/isoDateTime"},
+    "updated_at":{"$ref":"common.schema.json#/definitions/isoDateTime"},
+    "lemma":{"type":"string","minLength":1},
+    "canonical_form":{"type":"string","minLength":1},
+    "display_form":{"type":"string","minLength":1},
+    "macronized_form":{"type":["string","null"]},
+    "accepted_orthographic_forms":{"type":"array","minItems":1,"uniqueItems":true,"items":{"type":"string","minLength":1}},
+    "part_of_speech":{"enum":["noun","adjective","verb","adverb","preposition","conjunction","particle","pronoun","numeral","interjection"]},
+    "inflection_class":{"type":["string","null"]},
+    "principal_parts":{"type":["object","null"],"additionalProperties":{"type":"string"}},
+    "gender":{"enum":["masculine","feminine","neuter","common",null]},
+    "basic_senses":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["gloss_ja","scope_note"],"properties":{"gloss_ja":{"type":"string","minLength":1},"scope_note":{"type":"string"}}}},
+    "introduced_in":{"anyOf":[{"$ref":"common.schema.json#/definitions/unitId"},{"type":"null"}]},
+    "available_from":{"anyOf":[{"$ref":"common.schema.json#/definitions/unitId"},{"type":"null"}]},
+    "register":{"type":"array","items":{"enum":["classical-prose","classical-poetry","late","ecclesiastical","medieval","unspecified"]},"uniqueItems":true},
+    "period":{"type":"array","items":{"enum":["classical","late-antique","medieval","modern","unspecified"]},"uniqueItems":true},
+    "source_refs":{"type":"array","items":{"$ref":"source.schema.json#/definitions/sourceClaimReference"}},
+    "evidence":{"$ref":"common.schema.json#/definitions/evidenceArray"},
+    "review":{"$ref":"review.schema.json#/definitions/reviewBundle"},
+    "notes":{"type":"string"}
+  },
+  "allOf":[
+    {"if":{"properties":{"part_of_speech":{"const":"noun"}}},"then":{"required":["inflection_class","principal_parts","gender"],"properties":{"principal_parts":{"type":"object","required":["genitive"],"properties":{"genitive":{"type":"string","minLength":1}}}}}},
+    {"if":{"properties":{"part_of_speech":{"const":"adjective"}}},"then":{"required":["inflection_class","principal_parts"],"properties":{"principal_parts":{"type":"object","minProperties":2}}}},
+    {"if":{"properties":{"part_of_speech":{"const":"verb"}}},"then":{"required":["inflection_class","principal_parts"],"properties":{"principal_parts":{"type":"object","required":["first_singular_present","present_infinitive"],"properties":{"first_singular_present":{"type":"string","minLength":1},"present_infinitive":{"type":"string","minLength":1}}}}}},
+    {"if":{"properties":{"part_of_speech":{"enum":["adverb","conjunction","particle","interjection"]}}},"then":{"properties":{"inflection_class":{"type":"null"},"principal_parts":{"type":"null"},"gender":{"type":"null"}}}}
+  ]
+}

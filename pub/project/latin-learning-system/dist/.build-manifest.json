@@ -1,0 +1,17 @@
+{
+  "generated_files": [
+    "assets/app.js",
+    "assets/styles.css",
+    "index.html",
+    "unit-01/drill.html",
+    "unit-01/index.html"
+  ],
+  "schema_version": "1.0.0",
+  "sha256": {
+    "assets/app.js": "c973528f12a05d26b111d2a8565890be3215038cebd06936168ff577dad6ca94",
+    "assets/styles.css": "7248490d246647ff670fb9e809bd9d89e8935a726f135ab08a4faac611d0e543",
+    "index.html": "f91d88104a14cd34aaf14af8305bdee5d8b5e96138aec4d788e139d9b3db4913",
+    "unit-01/drill.html": "652a664bb60d09827a2800994bccec2ba6df5ca288f0625fb5d954a4112f440b",
+    "unit-01/index.html": "7b855c8c68a74886a88253ade4b1afae87fb5e362f7ea5c2415437ecbb68f66e"
+  }
+}

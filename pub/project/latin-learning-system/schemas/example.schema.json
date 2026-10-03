@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "example.schema.json",
+  "title": "Annotated example sentence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "schema_version", "content_version", "title", "created_at", "updated_at", "latin", "vocabulary", "tokens", "skills", "required_reading_skills", "unanalyzed_elements", "treatment", "translations", "origin", "period", "register", "source_refs", "evidence", "review", "notes"],
+  "properties": {
+    "id": {"$ref": "common.schema.json#/definitions/exampleId"},
+    "schema_version": {"$ref": "common.schema.json#/definitions/semver"},
+    "content_version": {"$ref": "common.schema.json#/definitions/semver"},
+    "title": {"$ref": "common.schema.json#/definitions/nonEmptyString"},
+    "created_at": {"$ref": "common.schema.json#/definitions/isoDateTime"},
+    "updated_at": {"$ref": "common.schema.json#/definitions/isoDateTime"},
+    "latin": {"type": "object", "additionalProperties": false, "required": ["canonical_form", "display_form"], "properties": {"canonical_form": {"type": "string", "minLength": 1}, "display_form": {"type": "string", "minLength": 1}}},
+    "vocabulary": {"$ref": "common.schema.json#/definitions/lexemeArray"},
+    "tokens": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/token"}},
+    "skills": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["skill_id", "treatment"], "properties": {"skill_id": {"$ref": "common.schema.json#/definitions/skillId"}, "treatment": {"enum": ["introduce", "guided-practice", "independent-practice", "cumulative-use", "review", "assess", "preview"]}}}},
+    "required_reading_skills": {"$ref": "common.schema.json#/definitions/skillArray"},
+    "unanalyzed_elements": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["token_indexes", "reason", "support"], "properties": {"token_indexes": {"type": "array", "minItems": 1, "items": {"type": "integer", "minimum": 0}, "uniqueItems": true}, "reason": {"enum": ["preview", "fixed-form", "incidental", "proper-name"]}, "support": {"type": "string", "minLength": 1}}}},
+    "treatment": {"enum": ["introduce", "guided-practice", "independent-practice", "cumulative-use", "review", "assess", "preview"]},
+    "preview_constraints": {"type": "object", "additionalProperties": false, "required": ["counts_as_acquired", "requires_form_generation", "requires_full_rule"], "properties": {"counts_as_acquired": {"type": "boolean"}, "requires_form_generation": {"type": "boolean"}, "requires_full_rule": {"type": "boolean"}}},
+    "translations": {"type": "object", "additionalProperties": false, "required": ["structure_aligned", "natural"], "properties": {"word_annotations": {"type": "array", "items": {"type": "string"}}, "structure_aligned": {"type": "string", "minLength": 1}, "natural": {"type": "string", "minLength": 1}, "acceptable_alternatives": {"type": "array", "items": {"type": "string"}}}},
+    "origin": {"type": "object", "additionalProperties": false, "required": ["kind", "generated_statement"], "properties": {"kind": {"enum": ["generated", "quotation", "adaptation"]}, "generated_statement": {"type": "boolean"}, "work": {"type": ["string", "null"]}}},
+    "period": {"enum": ["classical", "late-antique", "medieval", "unspecified"]},
+    "register": {"enum": ["classical-prose", "classical-poetry", "late", "ecclesiastical", "unspecified"]},
+    "source_refs": {"type": "array", "items": {"$ref": "source.schema.json#/definitions/sourceClaimReference"}},
+    "evidence": {"$ref": "common.schema.json#/definitions/evidenceArray"},
+    "review": {"$ref": "review.schema.json#/definitions/reviewBundle"},
+    "notes": {"type": "string"}
+  },
+  "definitions": {
+    "analysis": {"type": "object", "additionalProperties": false, "required": ["morphology", "syntactic_function"], "properties": {"morphology": {"type": "object"}, "syntactic_function": {"type": "string", "minLength": 1}, "note": {"type": "string"}}},
+    "token": {
+      "type": "object", "additionalProperties": false,
+      "required": ["index", "kind", "surface", "trailing_punctuation"],
+      "properties": {"index": {"type": "integer", "minimum": 0}, "kind": {"enum": ["word", "punctuation"]}, "surface": {"type": "string", "minLength": 1}, "lemma_id": {"$ref": "common.schema.json#/definitions/lexemeId"}, "selected_analysis": {"$ref": "#/definitions/analysis"}, "alternative_analyses": {"type": "array", "items": {"$ref": "#/definitions/analysis"}}, "trailing_punctuation": {"type": "string"}},
+      "allOf": [
+        {"if": {"properties": {"kind": {"const": "word"}}}, "then": {"required": ["lemma_id", "selected_analysis"]}},
+        {"if": {"properties": {"kind": {"const": "punctuation"}}}, "then": {"not": {"anyOf": [{"required": ["lemma_id"]}, {"required": ["selected_analysis"]}]}}}
+      ]
+    }
+  },
+  "allOf": [
+    {"if": {"properties": {"treatment": {"const": "preview"}}}, "then": {"required": ["preview_constraints"], "properties": {"preview_constraints": {"properties": {"counts_as_acquired": {"const": false}, "requires_form_generation": {"const": false}, "requires_full_rule": {"const": false}}}, "unanalyzed_elements": {"minItems": 1}}}}
+  ]
+}

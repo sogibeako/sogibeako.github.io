@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>日記錬成釜 - Markdown to HTML Converter</title>
+
   <style>
     /* ========== Tool UI CSS ========== */
     :root {
@@ -14,7 +16,8 @@
       --tool-accent: #6290b1;
     }
 
-    html, body.tool-body {
+    html,
+    body.tool-body {
       margin: 0;
       padding: 0;
       height: 100vh;
@@ -57,7 +60,8 @@
       overflow: hidden;
     }
 
-    #pane-left, #pane-right {
+    #pane-left,
+    #pane-right {
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -66,7 +70,8 @@
 
     #pane-right {
       border-right: none;
-      background-color: #111822; /* Diary bg */
+      background-color: #111822;
+      /* Diary bg */
       overflow-y: auto;
     }
 
@@ -159,6 +164,7 @@
       src: url("../seoremium/seoremium41.ttf") format("truetype");
       font-display: swap;
     }
+
     @font-face {
       font-family: "Source Code Pro";
       src: url("../jssproject/SourceCodePro-VariableFont_wght.ttf");
@@ -168,7 +174,8 @@
     #preview-container .wrapper {
       max-width: 700px;
       width: 80%;
-      margin: 0 auto; /* preview mode, no top margin needed */
+      margin: 0 auto;
+      /* preview mode, no top margin needed */
       padding: 20px;
       border: 0px solid #111;
       background-color: #afd3e6;
@@ -248,18 +255,30 @@
       border-left: 4px solid rgba(17, 24, 34, 0.22);
     }
 
-    .wrapper blockquote > :first-child { margin-top: 0; }
-    .wrapper blockquote > :last-child { margin-bottom: 0; }
+    .wrapper blockquote> :first-child {
+      margin-top: 0;
+    }
 
-    .wrapper dt { font-weight: bold; }
+    .wrapper blockquote> :last-child {
+      margin-bottom: 0;
+    }
+
+    .wrapper dt {
+      font-weight: bold;
+    }
+
     .wrapper .seoremium {
       font-family: "Seoremium_clg";
       font-size: 1.0rem;
       font-weight: normal;
     }
-    .wrapper .br-sp { display: none; }
 
-    .wrapper pre, .wrapper pre code {
+    .wrapper .br-sp {
+      display: none;
+    }
+
+    .wrapper pre,
+    .wrapper pre code {
       background-color: #bbbbbb;
       color: #000;
       padding: 0.5em;
@@ -279,7 +298,10 @@
       line-height: 1.2;
     }
 
-    .wrapper .bold { font-weight: bold; }
+    .wrapper .bold {
+      font-weight: bold;
+    }
+
     .wrapper .del {
       text-decoration: line-through;
       text-decoration-color: gray;
@@ -293,16 +315,29 @@
       margin: 1em 0;
     }
 
-    .wrapper table th, .wrapper table td {
+    .wrapper table th,
+    .wrapper table td {
       border: 1px solid #666;
       padding: 0.4em 0.6em;
       text-align: left;
     }
 
-    .wrapper ol { font-weight: bold; }
-    .wrapper ul { font-weight: normal; }
-    .wrapper ul li, .wrapper ol li { font-weight: normal; }
-    .wrapper ol > li { font-weight: bold; }
+    .wrapper ol {
+      font-weight: bold;
+    }
+
+    .wrapper ul {
+      font-weight: normal;
+    }
+
+    .wrapper ul li,
+    .wrapper ol li {
+      font-weight: normal;
+    }
+
+    .wrapper ol>li {
+      font-weight: bold;
+    }
 
     .wrapper .rain-window-btn {
       position: relative;
@@ -322,7 +357,10 @@
 
     .wrapper .rain-window-btn canvas {
       position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
     }
 
     .wrapper .rain-window-btn .rw-label {
@@ -338,6 +376,7 @@
     }
 
     @media screen and (max-width: 600px) {
+
       #preview-container .wrapper,
       #preview-container .inner_wrapper {
         width: 95%;
@@ -345,18 +384,36 @@
         word-wrap: break-word;
         box-sizing: border-box;
       }
-      #tool-main { flex-direction: column; }
-      #pane-left, #pane-right { border-right: none; border-bottom: 1px solid var(--tool-border); }
+
+      #tool-main {
+        flex-direction: column;
+      }
+
+      #pane-left,
+      #pane-right {
+        border-right: none;
+        border-bottom: 1px solid var(--tool-border);
+      }
     }
   </style>
-  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        packages: { '[+]': ['ams'] }
+      }
+    };
+  </script>
+
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
 </head>
+
 <body class="tool-body">
   <div id="tool-header">
     <h1>日記錬成釜</h1>
     <div class="settings">
       <label><input type="checkbox" id="wrapPToggle" checked> 段落を &lt;p&gt; で囲む</label>
-      <label>リストインデント: 
+      <label>リストインデント:
         <select id="indentSize">
           <option value="2">2スペース</option>
           <option value="4">4スペース</option>
@@ -368,10 +425,13 @@
   <div id="tool-main">
     <div id="pane-left">
       <div class="pane-title">Markdown入力</div>
-      <textarea id="mdInput" spellcheck="false" placeholder="@title 2026年第二期 * 湫埜と雨滴 *&#10;&#10;# 2026年5月15日&#10;&#10;## UbuntuからHaskellの触り方&#10;&#10;本文……"></textarea>
+      <textarea id="mdInput" spellcheck="false"
+        placeholder="@title 2026年第二期 * 湫埜と雨滴 *&#10;&#10;# 2026年5月15日&#10;&#10;## UbuntuからHaskellの触り方&#10;&#10;本文……"></textarea>
     </div>
     <div id="pane-right">
-      <div class="pane-title">プレビュー <button id="btnRefreshMath" style="background:transparent; color:#94a3b8; border:1px solid #334155; cursor:pointer; font-size:0.8rem; border-radius:3px;">数式再描画</button></div>
+      <div class="pane-title">プレビュー <button id="btnRefreshMath"
+          style="background:transparent; color:#94a3b8; border:1px solid #334155; cursor:pointer; font-size:0.8rem; border-radius:3px;">数式再描画</button>
+      </div>
       <div id="preview-container">
         <div class="wrapper" id="preview"></div>
       </div>
@@ -491,13 +551,21 @@
 
     function escapeHtml(text) {
       return text.replace(/&/g, "&amp;")
-                 .replace(/</g, "&lt;")
-                 .replace(/>/g, "&gt;");
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
     }
 
     function parseInline(text) {
-      // 1. MathJax $...$ -> \( ... \)
-      text = text.replace(/(^|[^$])\$([^$]+?)\$(?!\$)/g, '$1\\($2\\)');
+      // 1. Protect MathJax expressions from Markdown-style inline replacements.
+      const mathSegments = [];
+      const protectMath = math => {
+        const index = mathSegments.push(math) - 1;
+        return `\uE000${index}\uE001`;
+      };
+      text = text.replace(/\$\$[\s\S]*?\$\$/g, match => protectMath(match));
+      text = text.replace(/(^|[^$])\$([^$]+?)\$(?!\$)/g, (match, prefix, math) => {
+        return prefix + protectMath(`\\(${math}\\)`);
+      });
       // 2. Inline code
       text = text.replace(/`([^`]+)`/g, (match, code) => `<code>${escapeHtml(code)}</code>`);
       // 3. Bold
@@ -508,12 +576,14 @@
       text = text.replace(/\{seo:(.*?)\}/g, '<span class="seoremium">$1</span>');
       // 6. Image ![alt](url){.class} or ![alt](url)
       text = text.replace(/!\[(.*?)\]\((.*?)\)(?:\{([^\}]+)\})?/g, (match, alt, url, cls) => {
-          let classAttr = cls ? ` class="${cls.replace(/^\./, '')}"` : '';
-          return `<img src="${url}" alt="${alt}"${classAttr}>`;
+        let classAttr = cls ? ` class="${cls.replace(/^\./, '')}"` : '';
+        return `<img src="${url}" alt="${alt}"${classAttr}>`;
       });
       // 7. Link
       text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
-      
+
+      text = text.replace(/\uE000(\d+)\uE001/g, (match, index) => mathSegments[Number(index)]);
+
       return text;
     }
 
@@ -544,20 +614,20 @@
           let content = match[3];
           let indentLevel = Math.floor(spaceStr.length / indentSize);
           let isOl = marker.match(/^\d/);
-          
+
           let item = { type: 'item', content: [content], children: [] };
-          
+
           while (path.length > 1 && path[path.length - 1].indent >= indentLevel) {
             path.pop();
           }
           let parentNode = path[path.length - 1].node;
-          
+
           if (parentNode.children.length === 0 || parentNode.children[parentNode.children.length - 1].type !== (isOl ? 'ol' : 'ul')) {
             parentNode.children.push({ type: isOl ? 'ol' : 'ul', items: [] });
           }
           let listContainer = parentNode.children[parentNode.children.length - 1];
           listContainer.items.push(item);
-          
+
           path.push({ indent: indentLevel, node: item });
         } else {
           let currentItem = path[path.length - 1].node;
@@ -566,7 +636,7 @@
           }
         }
       }
-      
+
       function renderListTree(node) {
         if (node.type === 'root') {
           return node.children.map(renderListTree).join('\n');
@@ -650,9 +720,9 @@
           continue;
         }
 
-        if (line.startsWith('|') && i + 1 < lines.length && lines[i+1].match(/^\|\s*[:-]+\s*\|/)) {
+        if (line.startsWith('|') && i + 1 < lines.length && lines[i + 1].match(/^\|\s*[:-]+\s*\|/)) {
           let tableLines = [line];
-          i += 2; 
+          i += 2;
           while (i < lines.length && lines[i].startsWith('|')) {
             tableLines.push(lines[i]);
             i++;
@@ -678,7 +748,7 @@
           let listLines = [];
           while (i < lines.length) {
             if (lines[i].trim() === '') {
-              if (i + 1 < lines.length && (lines[i+1].match(/^(\s*)(-\s+|\d+\.\s+)/) || lines[i+1].match(/^\s{2,}/))) {
+              if (i + 1 < lines.length && (lines[i + 1].match(/^(\s*)(-\s+|\d+\.\s+)/) || lines[i + 1].match(/^\s{2,}/))) {
                 // ignore
               } else {
                 break;
@@ -747,9 +817,9 @@
           for (let row of block.rows) {
             html += `    <tr>\n`;
             let cells = row.split('|').map(s => s.trim()).filter((s, idx, arr) => {
-               if (idx === 0 && row.startsWith('|')) return false;
-               if (idx === arr.length - 1 && row.endsWith('|')) return false;
-               return true;
+              if (idx === 0 && row.startsWith('|')) return false;
+              if (idx === arr.length - 1 && row.endsWith('|')) return false;
+              return true;
             });
             for (let cell of cells) {
               html += `      <td>${parseInline(cell)}</td>\n`;
@@ -782,7 +852,7 @@
       const lines = text.split('\n');
       let contentLines = [];
       let meta = { title: '', prev: '', prevText: '', next: '', nextText: '' };
-      
+
       for (let line of lines) {
         if (line.startsWith('@title ')) {
           meta.title = line.substring(7).trim();
@@ -848,7 +918,7 @@ ${navStr}
     }
 
     // --- Event Listeners ---
-    
+
     const els = {
       mdInput: document.getElementById('mdInput'),
       preview: document.getElementById('preview'),
@@ -878,7 +948,7 @@ ${navStr}
 
       // Update preview (always just body fragment, with MathJax processing)
       els.preview.innerHTML = bodyHtml;
-      
+
       if (window.MathJax) {
         window.MathJax.typesetPromise([els.preview]).catch(err => console.error(err));
       }
@@ -889,12 +959,12 @@ ${navStr}
       } else {
         els.htmlOutput.value = bodyHtml.trim();
       }
-      
+
       els.statusMessage.textContent = '変換完了 ' + new Date().toLocaleTimeString();
     }
 
     els.btnConvert.addEventListener('click', updateConversion);
-    
+
     // Auto-convert with Ctrl+Enter or Cmd+Enter
     els.mdInput.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -927,9 +997,10 @@ ${navStr}
         els.toast.style.opacity = '0';
       }, 2000);
     }
-    
+
     // Initial run
     updateConversion();
   </script>
 </body>
+
 </html>

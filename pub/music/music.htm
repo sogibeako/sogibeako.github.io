@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>* 音楽ページ * // 湫埜と雨滴</title>
+    <style>
+      /* 色は出来るだけ、SB Creative出版『日本の美しい色と言葉』から取っていく。 */
+      /* 当ページはp256『しとしと』 */
+      /* 氷雨 #e3e8f1 */
+      /* 俄雨 #6290b1 */
+      /* 長雨 #afd3e6 */
+      /* 秋雨 #609aa0 */
+      /* 五月雨 #9ec8d1 */
+      body {
+        font-size: 1rem;
+        background-color: #111822;
+        /* 青っぽい背景色 */
+        margin: 0;
+        padding: 0;
+        text-align: center;
+        line-height: 1.6;
+      }
+
+      h1 {
+        background-color: #609aa0;
+        /* 秋雨 */
+        color: black;
+        /* 文字は黒でよい */
+        padding: 0.5em;
+        /* 内側の余白で見た目よく */
+      }
+
+      h2 {
+        background-color: #609aa0;
+        /* 秋雨 */
+        color: black;
+        /* 文字は黒でよい */
+        padding: 0.5em;
+        /* 内側の余白で見た目よく */
+      }
+
+      .p_left {
+        text-align: left;
+      }
+
+      .wrapper {
+        max-width: 700px;
+        width: 80%;
+        margin: 50px auto;
+        padding: 20px;
+        border: 0px solid #111;
+        background-color: #afd3e6;
+        /* 長雨 */
+        font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+      }
+
+      .inner_wrapper {
+        width: 600px;
+        margin: 10px auto;
+        padding: 20px;
+        border: 1px solid #111;
+        background-color: #ffffee;
+        font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", sans-serif;
+      }
+
+      .grid-table {
+        display: grid;
+        grid-template-columns: 120px 1fr;
+        gap: 2px;
+      }
+
+      .grid-table2 {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        gap: 2px;
+      }
+
+      .cell {
+        border: 0px solid #ccc;
+        padding: 4px 8px;
+        line-break: strict;
+        /* 日本語の自然な改行ルールに従う */
+        word-break: break-word;
+        overflow-wrap: break-word;
+      }
+
+      img.top-image {
+        width: 100%;
+        max-width: 800px;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+      }
+
+      hr {
+        border-width: 2px 0 0 0;
+        /* 線の太さ */
+        border-style: dashed;
+        /* 線の種類 */
+        border-color: #609aa0;
+        /* 線の色 */
+      }
+
+      .br-sp {
+        display: none;
+      }
+      #webamp-container {
+        position: relative;
+        width: 350px; /* プレイヤーの横幅に近いサイズ */
+        height: 360px; /* メイン＋EQ＋プレイリスト分の高さ（お好みで調整） */
+        margin: 20px auto; /* 中央寄せ＋上に少し余白 */
+      }
+
+      @media screen and (max-width: 600px) {
+        body {
+          font-size: 0.7rem;
+        }
+
+        h1,
+        h2 {
+          font-size: 1rem;
+        }
+
+        .wrapper,
+        .inner_wrapper {
+          width: 95%;
+          padding: 10px;
+          word-wrap: break-word;
+          box-sizing: border-box;
+        }
+
+        .grid-table,
+        .grid-table2 {
+          grid-template-columns: 1fr;
+        }
+
+        .br-sp {
+          display: inline;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrapper">
+      <div class="p_left">
+        現在位置 : <a href="../index.html"><b>ホーム</b></a> ＞
+        <a href="music.htm"><b>音楽</b></a>
+      </div>
+      <h1>湫埜と雨滴　音楽ページ</h1>
+      <h3>このページは？</h3>
+      <hr />
+      私の作った音楽が集積されていきます。SunoAI利用もあります。<br />
+      二次利用、AI学習などについては（営利目的のものも含め）基本的に感知しません。<br />
+      サンプリングネタなどで引っかかる可能性にはご留意の上、お気軽にどうぞ。
+      <br />
+      <h2>Webampでまとめて聞く</h2>
+      <br />
+      <div id="webamp-container"></div>
+      <script src="https://unpkg.com/webamp/built/webamp.bundle.min.js"></script>
+
+      <script>
+        const webamp = new Webamp({
+          zIndex: 1000,
+          windowLayout: {
+            main: {
+              position: { top: 0, left: 0 },
+              closed: false,
+            },
+            equalizer: {
+              position: { top: 116, left: 0 }, // メインのすぐ下あたり
+              closed: false,
+            },
+            playlist: {
+              position: { top: 232, left: 0 }, // さらにその下
+              size: { extraHeight: 2, extraWidth: 0 },
+              closed: false,
+            },
+          },
+          initialTracks: [
+            {
+              url: "src/yofukashi.mp3",
+              metaData: { title: "♪夜更かしのワルツ" },
+            },
+            {
+              url: "src/seiya_ryousen.mp3",
+              metaData: { title: "♪聖夜稜線" },
+            },
+            {
+              url: "src/holy_place.mp3",
+              metaData: { title: "♪神聖な場所" },
+            },
+            {
+              url: "src/holy_place(Cover).mp3",
+              metaData: { title: "♪神聖な場所（Cover）" },
+            },
+            {
+              url: "src/holy_place(ElectroSwing).mp3",
+              metaData: { title: "♪神聖な場所（ElectroSwing）" },
+            },
+            {
+              url: "src/holy_place(vaporwave).mp3",
+              metaData: { title: "♪神聖な場所（vaporwave）" },
+            },
+            {
+              url: "src/asa.mp3",
+              metaData: { title: "♪朝" },
+            },
+            {
+              url: "src/chuku_no_kotoba_001.mp3",
+              metaData: { title: "♪宙空のコトバ、星屑に乗って" },
+            },
+            {
+              url: "src/moon_flower.mp3",
+              metaData: { title: "♪月とヒマワリ" },
+            },
+            {
+              url: "src/nero_no_yume_001.mp3",
+              metaData: { title: "♪ネロのゆめ　～つきのまち～" },
+            },
+            {
+              url: "src/nero_no_yume_001(vaporwave).mp3",
+              metaData: { title: "♪ネロのゆめ　～つきのまち～(vaporwave)" },
+            },
+            {
+              url: "src/nero_no_yume_002.mp3",
+              metaData: { title: "♪ネロのゆめ　～銀色放送局～" },
+            },
+            {
+              url: "src/for_your_happiness.mp3",
+              metaData: { title: "♪For your happiness" },
+            },
+            {
+              url: "src/kukeiha_juhyo.mp3",
+              metaData: { title: "♪矩形波樹氷" },
+            },
+            {
+              url: "src/bokurano_tentai.mp3",
+              metaData: { title: "♪ぼくらの天体望遠鏡" },
+            },
+            {
+              url: "src/bokurano_tentai(Cover1).mp3",
+              metaData: { title: "♪ぼくらの天体望遠鏡(Cover1)" },
+            },
+            {
+              url: "src/bokurano_tentai(Cover2).mp3",
+              metaData: { title: "♪ぼくらの天体望遠鏡(Cover2)" },
+            },
+            {
+              url: "src/drycurry_desert.mp3",
+              metaData: { title: "♪ドライカレ砂漠の一昼夜" },
+            },
+            {
+              url: "src/1st_impression.mp3",
+              metaData: { title: "♪思索印象論 part1" },
+            },
+            {
+              url: "src/meta_snowman.mp3",
+              metaData: { title: "♪meta_snowman" },
+            },
+            {
+              url: "src/moonbeam_fountain.mp3",
+              metaData: { title: "♪moonbeam_fountain" },
+            },
+            {
+              url: "src/moonbeam_fountain(vocal).mp3",
+              metaData: { title: "♪moonbeam_fountain(vocal)" },
+            },
+            {
+              url: "src/mousou_ryouiki.mp3",
+              metaData: { title: "♪妄想領域" },
+            },
+            {
+              url: "src/crimson_alice.mp3",
+              metaData: { title: "♪緋色のアリス" },
+            },
+            {
+              url: "src/crimson_alice(Cover).mp3",
+              metaData: { title: "♪緋色のアリス(Cover)" },
+            },
+            {
+              url: "src/kodomobeyano_shoujo.mp3",
+              metaData: { title: "♪子供部屋の少女" },
+            },
+            {
+              url: "src/mono_armed_sunflower.mp3",
+              metaData: { title: "♪mono_armed_sunflower" },
+            },
+            {
+              url: "src/mado(Cover).mp3",
+              metaData: { title: "♪ジョハリの窓（Cover）" },
+            },
+            {
+              url: "src/mado(Vocal).mp3",
+              metaData: { title: "♪ジョハリの窓（Vocal）" },
+            },
+            {
+              url: "src/sekiwan_shoujo.mp3",
+              metaData: { title: "♪隻腕少女 -dysfunction mix-" },
+            },
+            {
+              url: "src/gymnopedie.mp3",
+              metaData: { title: "♪月のジムノペディ" },
+            },
+            {
+              url: "src/arabesque.mp3",
+              metaData: { title: "♪アラベスク" },
+            },
+            {
+              url: "src/arabesque(ElectroSwing).mp3",
+              metaData: { title: "♪アラベスク(ElectroSwing)" },
+            },
+            {
+              url: "src/schwarzschild_pupil.mp3",
+              metaData: { title: "♪シュヴァルツシルトの瞳" },
+            },
+            {
+              url: "src/schwarzschild_pupil(Cover).mp3",
+              metaData: { title: "♪シュヴァルツシルトの瞳(Cover)" },
+            },
+            {
+              url: "src/schwarzschild_pupil(vocal).mp3",
+              metaData: { title: "♪シュヴァルツシルトの瞳(Vocal)" },
+            },
+            {
+              url: "src/rainy_circle.mp3",
+              metaData: { title: "♪Rainy Circle" },
+            },
+            {
+              url: "src/rainy_circle(Cover).mp3",
+              metaData: { title: "♪Rainy Circle(Cover)" },
+            },
+            {
+              url: "src/rainy_circle(vocal).mp3",
+              metaData: { title: "♪Rainy Circle(Vocal)" },
+            },
+            {
+              url: "src/seimeino_mori.mp3",
+              metaData: { title: "♪生命の森の夜" },
+            },
+            {
+              url: "src/kanojono_kioku.mp3",
+              metaData: { title: "♪彼女の記憶" },
+            },
+            {
+              url: "src/kanojono_kioku(lofi_hiphop).mp3",
+              metaData: { title: "♪彼女の記憶(Lo-Fi Hiphop)" },
+            },
+            {
+              url: "src/kanojono_tomurai.mp3",
+              metaData: { title: "♪彼女の弔いに" },
+            },
+            {
+              url: "src/ananas.mp3",
+              metaData: { title: "♪Ananas" },
+            },
+            {
+              url: "src/ananas(PianoEtude).mp3",
+              metaData: { title: "♪Ananas(PianoEtude)" },
+            },
+            {
+              url: "src/ananas(techno).mp3",
+              metaData: { title: "♪Ananas(techno)" },
+            },
+            {
+              url: "src/extended_light_force.mp3",
+              metaData: { title: "♪Extended Light Force" },
+            },
+            {
+              url: "src/root.mp3",
+              metaData: { title: "♪Root" },
+            },
+            {
+              url: "src/zaia_sword_dance.mp3",
+              metaData: { title: "♪ザイアの思念する剣舞" },
+            },
+            {
+              url: "src/zaia_sword_dance(cover).mp3",
+              metaData: { title: "♪ザイアの思念する剣舞(Cover)" },
+            },
+            {
+              url: "src/bacchus.mp3",
+              metaData: { title: "♪Bacchus" },
+            },
+            {
+              url: "src/borges.mp3",
+              metaData: { title: "♪Borges" },
+            },
+            {
+              url: "src/blue.mp3",
+              metaData: { title: "♪Blue" },
+            },
+            {
+              url: "src/sinfonia.mp3",
+              metaData: { title: "♪ポリスで鳴るシンフォニア" },
+            },
+            {
+              url: "src/sinfonia(techno).mp3",
+              metaData: { title: "♪ポリスで鳴るシンフォニア(Techno)" },
+            },
+            {
+              url: "src/1991_rabbit.mp3",
+              metaData: { title: "♪1991年の宇宙飛行とウサギのヴィヴァーチェ・ダンス" },
+            },
+            {
+              url: "src/1991_rabbit(Remix_Orchestral).mp3",
+              metaData: { title: "♪1991年の宇宙飛行とウサギのヴィヴァーチェ・ダンス(Orchestral Version)" },
+            },
+            {
+              url: "src/1991_rabbit(vocal).mp3",
+              metaData: { title: "♪1991年の宇宙飛行とウサギのヴィヴァーチェ・ダンス(Vocal)" },
+            },
+            {
+              url: "src/imaginary_wisdom.mp3",
+              metaData: { title: "♪Imaginary Wisdom" },
+            },
+            {
+              url: "src/imaginary_wisdom(GlitchHop).mp3",
+              metaData: { title: "♪Imaginary Wisdom(GlitchHop)" },
+            },
+            {
+              url: "src/fleurs.mp3",
+              metaData: { title: "♪Fleurs" },
+            },
+            {
+              url: "src/silver_radio_committee.mp3",
+              metaData: { title: "♪銀色ラジオ委員会" },
+            },
+            {
+              url: "src/5tet_piano_invention.mp3",
+              metaData: { title: "♪5TET piano invention" },
+            },
+            {
+              url: "src/small_semiosis.mp3",
+              metaData: { title: "♪小さな記号" },
+            },
+            {
+              url: "src/small_semiosis(Cover).mp3",
+              metaData: { title: "♪小さな記号(Cover)" },
+            },
+            {
+              url: "src/small_semiosis(ElectroSwing).mp3",
+              metaData: { title: "♪小さな記号(ElectroSwing)" },
+            },
+            {
+              url: "src/isroldynun-wirandam.mp3",
+              metaData: { title: "♪ロルディの街" },
+            },
+            {
+              url: "src/cyber_forest.mp3",
+              metaData: { title: "♪Running through Cyber Forest(15EDO)" },
+            },
+            {
+              url: "src/19-limit-ambient.mp3",
+              metaData: { title: "♪19-limit Ambient" },
+            },
+            {
+              url: "src/mosaic_ocean.mp3",
+              metaData: { title: "♪モザイクの海" },
+            },
+            {
+              url: "src/mosaic_ocean(chiptune).mp3",
+              metaData: { title: "♪モザイクの海(ChipTune)" },
+            },
+            {
+              url: "src/mosaic_ocean(fusion).mp3",
+              metaData: { title: "♪モザイクの海(fusion)" },
+            },
+            {
+              url: "src/mosaic_ocean(vocal).mp3",
+              metaData: { title: "♪モザイクの海(Vocal)" },
+            },
+            {
+              url: "src/woods_lakeside.mp3",
+              metaData: {
+                title: "♪A Shadow from the woods by a quiet lakeside（14EDO）",
+              },
+            },
+            {
+              url: "src/library.mp3",
+              metaData: { title: "♪封じられた書庫の暗い密みに" },
+            },
+            {
+              url: "src/perilune_2039.mp3",
+              metaData: { title: "♪Perilune_2039（13EDO）" },
+            },
+            {
+              url: "src/peryton_illusion.mp3",
+              metaData: { title: "♪ペリュトン幻想の淵" },
+            },
+            {
+              url: "src/violet_air.mp3",
+              metaData: { title: "♪in the violet air" },
+            },
+            {
+              url: "src/sakanano_hondana.mp3",
+              metaData: { title: "♪魚の本棚（10ED7/4）" },
+            },
+            {
+              url: "src/kanino_saikutsu.mp3",
+              metaData: { title: "♪蟹の採掘場跡（11EDO）" },
+            },
+            {
+              url: "src/november_quadrangle.mp3",
+              metaData: { title: "♪十一月の四角" },
+            },
+            {
+              url: "src/5edo_temple.mp3",
+              metaData: { title: "♪5平均律神社" },
+            },
+            {
+              url: "src/rain_fest.mp3",
+              metaData: { title: "♪雨の森／祝祭" },
+            },
+            {
+              url: "src/jingle_bells.mp3",
+              metaData: { title: "♪Jingle Bells" },
+            },
+            {
+              url: "src/7-limit-ji_forest.mp3",
+              metaData: { title: "♪森を弾み歩く（7-limit JI）" },
+            },
+            {
+              url: "src/quasicrystal_branch.mp3",
+              metaData: { title: "♪準結晶の枝" },
+            },
+            {
+              url: "src/quasicrystal_branch(techno).mp3",
+              metaData: { title: "♪準結晶の枝(techno)" },
+            },
+            {
+              url: "src/nobleheights.mp3",
+              metaData: { title: "♪▼▽Nobleheights自然派の夢▽▲" },
+            },
+            {
+              url: "src/c-cell.mp3",
+              metaData: { title: "♪c-cell" },
+            },
+            {
+              url: "src/c-cell(african).mp3",
+              metaData: { title: "♪c-cell(African)" },
+            },
+            {
+              url: "src/c-cell(vaporwave).mp3",
+              metaData: { title: "♪c-cell(vaporwave)" },
+            },
+            {
+              url: "src/chamomile_forest.mp3",
+              metaData: { title: "♪かもみーるのもり（きりのひ）" },
+            },
+            {
+              url: "src/chamomile_forest(Cover).mp3",
+              metaData: { title: "♪かもみーるのもり（Cover）" },
+            },
+            {
+              url: "src/chamomile_forest(African).mp3",
+              metaData: { title: "♪かもみーるのもり（African）" },
+            },
+            {
+              url: "src/kodomoto_seibutsu.mp3",
+              metaData: { title: "♪子供と静物" },
+            },
+            {
+              url: "src/koukihe_kieru.mp3",
+              metaData: { title: "♪光輝へ消える" },
+            },
+            {
+              url: "src/koukihe_kieru(cover).mp3",
+              metaData: { title: "♪光輝へ消える(Cover)" },
+            },
+            {
+              url: "src/fushigi_kiri.mp3",
+              metaData: { title: "♪フシギのハジマリは霧の中から" },
+            },
+            {
+              url: "src/protocol_omega.mp3",
+              metaData: { title: "♪Protocol-Ω(2,4)（16EDO）" },
+            },
+            {
+              url: "src/sukoshi_atarashi_asa.mp3",
+              metaData: { title: "♪すこしあたらしいあさ（11-limit JI）" },
+            },
+            {
+              url: "src/yakouka.mp3",
+              metaData: { title: "♪夜光花" },
+            },
+            {
+              url: "src/yakouka(cover).mp3",
+              metaData: { title: "♪夜光花(Cover)" },
+            },
+            {
+              url: "src/ripples_reciprocal.mp3",
+              metaData: { title: "♪ripples on reciprocal space（11EDO）" },
+            },
+            {
+              url: "src/flying_bug_galaxy.mp3",
+              metaData: { title: "♪飛行虫、銀河を行かば" },
+            },
+            {
+              url: "src/flying_bug_galaxy(Cover).mp3",
+              metaData: { title: "♪飛行虫、銀河を行かば(Cover)" },
+            },
+            {
+              url: "src/umiga_hirogaru.mp3",
+              metaData: { title: "♪海がひろがる" },
+            },
+            {
+              url: "src/umiga_hirogaru(Cover).mp3",
+              metaData: { title: "♪海がひろがる(Cover)" },
+            },
+            {
+              url: "src/umiga_hirogaru(African).mp3",
+              metaData: { title: "♪海がひろがる(African)" },
+            },
+            {
+              url: "src/umiga_hirogaru(vaporwave).mp3",
+              metaData: { title: "♪海がひろがる(vaporwave)" },
+            },
+            {
+              url: "src/chiisana_umi.mp3",
+              metaData: { title: "♪小さな海" },
+            },
+            {
+              url: "src/chiisana_umi(Cover).mp3",
+              metaData: { title: "♪小さな海(Cover)" },
+            },
+            {
+              url: "src/point_sequence.mp3",
+              metaData: { title: "♪point_sequence（19EDO）" },
+            },
+            {
+              url: "src/point_sequence(techno).mp3",
+              metaData: { title: "♪point_sequence（techno）" },
+            },
+            {
+              url: "src/point_sequence(TechnoAfrica).mp3",
+              metaData: { title: "♪point_sequence（TechnoAfrica）" },
+            },
+            {
+              url: "src/gnossienne.mp3",
+              metaData: { title: "♪Gnossienne（8ed5/3）" },
+            },
+          ],
+        });
+
+        webamp.renderWhenReady(document.getElementById("webamp-container"));
+      </script>
+      <br />
+      <h2>別々に聞いてみる</h2>
+      <h3>♪夜更かしのワルツ</h3>
+      <audio controls src="src/yofukashi.mp3" preload="none"></audio><br />
+      <b>"♪夜更かしのワルツ"</b> - 2004年<br />
+      2004年作曲。高1の頃、演劇部の先輩にフラれたことをきっかけに作曲を開始。<br />
+      優しいピアノ曲です。作った中では一番最初に近いです。<br />
+      <br />
+      <hr />
+      <h3>♪聖夜稜線</h3>
+      <audio controls src="src/seiya_ryousen.mp3" preload="none"></audio><br />
+      <b>"♪聖夜稜線"</b> - 2005年12月14日<br />
+      クリスマス記念で作った覚えがあります。<br />
+      paraokaのL9が好きだったので、半音進行しています。<br />
+      <br />
+      <hr />
+      <h3>♪神聖な場所</h3>
+      <audio controls src="src/holy_place.mp3" preload="none"></audio><br />
+      <b>"♪神聖な場所"</b> - 2006年4月16日<br />
+      メジャーセブンスってよく聞くけどなんやねん！ と思っていたのですが、<br />
+      RPGツクール2000の曲を分析していたら普通に使われていたので自分でも実験。<br />
+      アップロードするにあたり、だいぶ音を足しています。<br />
+      なので、何気に2025年11月現在において最新作寄り……の何かです（ｗ<br />
+      <div class="inner_wrapper">
+        <b>"♪神聖な場所" (Cover)</b>
+        - 2025年<br />
+        <audio controls src="src/holy_place(Cover).mp3" preload="none"></audio
+        ><br />
+        SunoAIでアレンジしたものです。音がより良くなっています！<br />
+        ストリングスがGood……ピアノはちょっと弾きすぎかも？（ｗ<br />
+      </div>
+      <div class="inner_wrapper">
+        <b>"♪神聖な場所" (ElectroSwing)</b>
+        - 2025年<br />
+        <audio
+          controls
+          src="src/holy_place(ElectroSwing).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        かなり意外なことになりましたが、ワブルベースがかっこいいからいいかな（ｗ<br />
+      </div>
+      <div class="inner_wrapper">
+        <b>"♪神聖な場所" (vaporwave)</b>
+        - 2025年<br />
+        <audio
+          controls
+          src="src/holy_place(vaporwave).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        Vaporwave……フィジのみずでも飲んでください……<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪朝</h3>
+      <audio controls src="src/asa.mp3" preload="none"></audio><br />
+      <b>"♪朝"</b> - 2006年4月22日<br />
+      エレクトロニカ調の曲です。ノイズが少しつんざくかも？<br />
+      ドラムトラックをピッチベンドしたものを、ピアノパートにも貼ったんだった気が。<br />
+      <br />
+      <hr />
+      <h3>♪宙空のコトバ、星屑に乗って</h3>
+      <audio controls src="src/chuku_no_kotoba_001.mp3" preload="none"></audio
+      ><br />
+      <b>"♪宙空のコトバ、星屑に乗って"</b> - 2007年6月8日<br />
+      ピアノ+エレピ+リコーダーで作った空間系の曲です。<br />
+      高3のころ深刻な気分になっていて「マジで死ぬかも……？」と思いながら<br />
+      頭に浮かんだ物語というか、何かの信念体系を曲にしたものです。<br />
+      意外と死なないので、色々ありますが、若者は死なずに生きてください（苦笑…）<br />
+      拙作「ネロのゆめ」のテーマ曲の一つです。<br />
+      以降の自分のメロディセンスの核になった曲でもあります。<br />
+      <br />
+      <audio controls src="src/moon_flower.mp3" preload="none"></audio><br />
+      <b>"♪月とヒマワリ"</b> - 2008年3月19日<br />
+      上の曲のアレンジです。マザー2が大好きなゲームで、その雰囲気、<br />
+      プラス「仙台白降りオーケストラ」さんが好きだったので少し真似しつつ。<br />
+      コピーキャット以下の何か？ そうかも……でも結構気に入ってます。<br />
+      ゆめにっきの「浅瀬」のイメージでもあります。<br />
+      <br />
+      <audio controls src="src/tenth_canon.mp3" preload="none"></audio><br />
+      <b>"♪10度のカノン"（⚠️現在工事中）</b><br />
+      同じくアレンジです。対位法の訓練にはまっていたのでスケッチ。<br />
+      訓練の場合、曲って別に短くてもいいんだな、とちょっと思ったり。<br />
+      <br />
+      <audio controls src="src/doggy_canon.mp3" preload="none"></audio><br />
+      <b>"♪犬のカノン"（⚠️現在工事中）</b><br />
+      いわゆる「蟹のカノン」を作ってみたら犬の譜面になったもの。<br />
+      飼い犬が死んだばっかりだったので、これを聞くと少しセンチになります。<br />
+      <br />
+      <hr />
+      <h3>♪ネロのゆめ　～つきのまち～</h3>
+      <audio controls src="src/nero_no_yume_001.mp3" preload="none"></audio
+      ><br />
+      <b>"♪ネロのゆめ　～つきのまち～"</b> - 2007年6月23日<br />
+      ピアノとシンセとビートで出来た優しめの曲。<br />
+      これは拙作「ネロのゆめ」のテーマ曲です。<br />
+      ドラムのピッチを落としてインダストリアルみたいにするのにはまってました。<br />
+      マイナーからbVII, bVIを借用してくるのは、<br />
+      当時どこかのサイトで「コナミコード」と名付けられてました。<br />
+      グラディウスのBGMで多用されていたからですね。<br />
+      <div class="inner_wrapper">
+        <b>"♪ネロのゆめ　～つきのまち～" (vaporwave)</b>
+        - 2025年<br />
+        <audio
+          controls
+          src="src/nero_no_yume_001(vaporwave).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        Chillしてください……。<br />
+      </div>
+      <br />
+      <audio controls src="src/nero_no_yume_002.mp3" preload="none"></audio
+      ><br />
+      <b>"♪ネロのゆめ　～銀色放送局～"</b><br />
+      上の曲のアレンジです。ラジオで救世放送をやってる釈迦少年のイメージ（何それ）<br />
+      当時、「子供は救いだ」と感じていたところがあったようです。<br />
+      「苦しみとは何か」を知らない対象と共に、自分も苦しみを失っていく……みたいな？<br />
+      シューゲイザー風味を試みて唸るノイズ、あとなんか喋ってる感じにしようとして<br />
+      ラップを入れたらちょっと不良っぽくなってしまいました。<br />
+      妹に聞かせたらやたら評判が悪かったのを覚えています（笑）<br />
+      <br />
+      <hr />
+      <h3>♪fragment</h3>
+      <audio controls src="src/fragment.mp3" preload="none"></audio><br />
+      <b>"♪fragment"（⚠️現在工事中）</b> - 2007年6月22日<br />
+      トランスですね。当時ビートマニアIIDXでdj TAKAさんが大好きだったので。<br />
+      冬っぽい曲を好んでいた感じです。<br />
+      <br />
+      <hr />
+      <h3>♪For your happiness</h3>
+      <audio controls src="src/for_your_happiness.mp3" preload="none"></audio
+      ><br />
+      <b>"♪For your happiness"</b> - 2007年6月23日<br />
+      ピアノ曲です。失恋続行中だったので、ちょい切ない感じの曲です。<br />
+      微妙にピアノの音程が四半音上がってるか下がってるかしてたはず。<br />
+      <br />
+      <hr />
+      <h3>♪樹氷に、追憶を重ねて</h3>
+      <audio controls src="src/juhyo.mp3" preload="none"></audio><br />
+      <b>"♪樹氷に、追憶を重ねて"（⚠️現在工事中）</b> - 2007年6月23日<br />
+      エレキギターとピアノのインストゥルメントです。<br />
+      リズムに拘り始めたのがこの曲で、確か5連フレーズが入っています。<br />
+      <br />
+      <audio controls src="src/kukeiha_juhyo.mp3" preload="none"></audio><br />
+      <b>"♪矩形波樹氷"</b> - 2016年3月23日<br />
+      上の曲のアレンジです。矩形波4声が絡み合いながら展開します。<br />
+      対位法を（インチキながら）勉強後、<br />
+      「おっ、これでファミコンっぽいもの作ったらどうなるかな？」と思って作りました。<br />
+      結構気に入っています。<br />
+      <br />
+      <hr />
+      <h3>♪ぼくらの天体望遠鏡</h3>
+      <audio controls src="src/bokurano_tentai.mp3" preload="none"></audio
+      ><br />
+      <b>"♪ぼくらの天体望遠鏡"</b> - 2007年8月27日<br />
+      ピアノ＋ビート＋リコーダー＋ほとんどノイズにしか聞こえないギターの曲です。<br />
+      同名の、（ちょっと悲しい）拙作のお話から取っています。<br />
+      wacの「moon_child」が気になっていてシューゲイザーにハマりはじめてて、<br />
+      それでギターノイズを足したくなったおぼえがあります。<br />
+      リコーダーもギターも収録したはいいけれど、当時DAWも持っていなかったので、<br />
+      確かSoundEngineで無理やり足すということをしました（笑）<br />
+      ソフトへの感度が低い人間なのですが、今はChatGPTとかで質問出来ていいですよね。<br />
+      <div class="inner_wrapper">
+        <b>"♪ぼくらの天体望遠鏡(Cover1)"</b>
+        - 2025年<br />
+        <audio
+          controls
+          src="src/bokurano_tentai(Cover1).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。アップテンポになっています。<br />
+        かなり最初の頃にアレンジしてもらったものです。どういうプロンプトだっけなあ。<br />
+        悲しい曲なので、こういう明るいアレンジも一味違っていいんじゃないかなと思います。
+      </div>
+      <div class="inner_wrapper">
+        <b>"♪ぼくらの天体望遠鏡(Cover2)"</b>
+        - 2025年<br />
+        <audio
+          controls
+          src="src/bokurano_tentai(Cover2).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        こちらはかなりイージーリスニングっぽくなっています。落ち着いて聞けていいかも。<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪ドライカレ砂漠の一昼夜</h3>
+      <audio controls src="src/drycurry_desert.mp3" preload="none"></audio
+      ><br />
+      <b>"♪ドライカレ砂漠の一昼夜"</b> - 2007年11月16日<br />
+      シタールとブラスとキーボード入りインスト曲って感じです。<br />
+      「ドライカレ砂漠」というネーミングセンスはマジカルバケーションから（笑）、<br />
+      曲想が変わっていくのは .hack のフィールド曲から影響を受けています。<br />
+      <br />
+      <hr />
+      <h3>♪思索印象論 part1</h3>
+      <audio controls src="src/1st_impression.mp3" preload="none"></audio><br />
+      <b>"♪思索印象論 part1"</b> - 2007年11月21日<br />
+      プログレを意識した曲です。<br />
+      色々ある音楽の中でもゲーム音楽を一番好むスーファミ大好きJS（？）なのですが、<br />
+      一時期そこからプログレにポロロッカしていました。<br />
+      <br />
+      <hr />
+      <h3>♪meta snowman</h3>
+      <audio controls src="src/meta_snowman.mp3" preload="none"></audio><br />
+      <b>"♪meta snowman"</b> - 2007年12月20日<br />
+      「ぼくらの天体望遠鏡」とかと同じく、ギターノイズ＋ピアノの曲です。
+      冒頭に色々ラジオから収録した声とかも入れてます。<br />
+      <br />
+      <hr />
+      <h3>♪moonbeam_fountain</h3>
+      <audio controls src="src/moonbeam_fountain.mp3" preload="none"></audio
+      ><br />
+      <b>"♪moonbeam_fountain"</b> - 2007年<br />
+      ギターとピアノとサックスがメインを張るジャズワルツの曲です。<br />
+      ちょっとドラムがドコドコしすぎかもしれませんね……ｗ<br />
+      でも、メロディがとても気に入っています。これも「ネロのゆめ」の曲の一つです。<br />
+      <div class="inner_wrapper">
+        <b>"♪moonbeam_fountain" (Vocal)</b> - 2025年<br />
+        <audio
+          controls
+          src="src/moonbeam_fountain(vocal).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIで歌を付けたものです。<br />
+        まさか自分の世界観をちゃんと歌詞で表現できる日が来ると思ってなかったです。<br />
+        ボカロにせよインディにせよ、歌をちゃんと完結させられる人って偉いですよね。<br />
+        <br />
+        <details>
+          <summary>＊ 歌詞 ＊</summary>
+          [Verse]<br />
+          ヒマワリ畑の夢を見ていた<br />
+          あれは未来の君？ それとも過去？<br />
+          深い夢の底から<br />
+          静かに目覚める時<br />
+          影と光の狭間で<br />
+          船が動き出す<br />
+          <br />
+          [Prechorus]<br />
+          月の船が揺れる音<br />
+          星たちの一斉の囁き声<br />
+          <br />
+          [guitar solo]<br />
+          <br />
+          [Chorus]<br />
+          銀河を駆ける小舟よ 青い星へと飛んで行け<br />
+          月の上の噴水から あなたのベッドへ帰る旅<br />
+          <br />
+          [saxophone solo]<br />
+          <br />
+          [Verse 2]<br />
+          夜空に散らばる光<br />
+          消えない記憶の粒<br />
+          眠りの中で踊る<br />
+          <br />
+          [Prechorus]<br />
+          風の声が導くよ<br />
+          夢見の主を抱いて<br />
+          <br />
+          [Chorus]<br />
+          銀河を駆ける小舟よ　青い星へと連れて行って<br />
+          月の上の噴水から　あなたのベッドへ帰る旅<br />
+        </details>
+        <br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪The Masquarade Hometown</h3>
+      <audio controls src="src/masquarade_hometown.mp3" preload="none"></audio
+      ><br />
+      <b>"The Masquarade Hometown"（⚠️現在工事中）</b> - 2008年<br />
+      初めて作ったフュージョンです。Jimmy Wecklとか好きです。<br />
+      友達の家で徹夜した帰りの街が朝霧でいっぱいで神秘的だった思い出。<br />
+      <br />
+      <hr />
+      <h3>♪妄想領域</h3>
+      <audio controls src="src/mousou_ryouiki.mp3" preload="none"></audio><br />
+      <b>"♪妄想領域"</b> - 2008年1月12日<br />
+      バイオリンを使ったテクノ（？）。サビが気に入っています。<br />
+      友人に依頼されて作ったシューティング用の曲です。<br />
+      <br />
+      <hr />
+      <h3>♪緋色のアリス</h3>
+      <audio controls src="src/crimson_alice.mp3" preload="none"></audio><br />
+      <b>"♪緋色のアリス"</b> - 2008年1月12日<br />
+      シンセとブラスで出来たプログレ？<br />
+      友人に依頼されて作ったシューティング用のボス曲です。<br />
+      今聞くと、ちょっと混沌としすぎていますね。<br />
+      <div class="inner_wrapper">
+        <b>"♪緋色のアリス(cover)"</b> - 2025年<br />
+        <audio
+          controls
+          src="src/crimson_alice(Cover).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        オルガン主体にしてもらいました。よりまとまってる感じです。<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪子供部屋の少女</h3>
+      <audio controls src="src/kodomobeyano_shoujo.mp3" preload="none"></audio
+      ><br />
+      <b>"♪子供部屋の少女"</b> - 2008年1月12日<br />
+      アコーディオンを使った3拍子の曲です。後半はリハモします。<br />
+      これも友人に依頼されて作ったシューティング（かわいいステージ）用の曲です。<br />
+      <br />
+      <hr />
+      <h3>♪mono armed sunflower</h3>
+      <audio controls src="src/mono_armed_sunflower.mp3" preload="none"></audio
+      ><br />
+      <b>"♪mono armed sunflower"</b> - 2008年6月13日<br />
+      オルゴールで出来た、9/8拍子の曲です。<br />
+      結構可愛らしいメロディで気に入っています。<br />
+      <br />
+      <b>"♪full armed sunflower"</b> - 2008年6月13日（⚠️現在工事中）<br />
+      <br />
+      <hr />
+      <h3>♪ジョハリの窓</h3>
+      <b>"♪ジョハリの窓"</b> - 2007年9月9日（⚠️現在工事中）<br />
+      6/8、ボサノバ、Lydian b7、プログレ……<br />
+      というテーマだったのですが、未完のため音源がありません。<br />
+      納得感のある展開を作れないから、プログレは大体完成させられないのです💦<br />
+      <div class="inner_wrapper">
+        <b>"♪ジョハリの窓" (Cover)</b> - 2025年<br />
+        <audio controls src="src/mado(Cover).mp3" preload="none"></audio><br />
+        そこで、SunoAIで途中までの音源をアレンジしてもらったものです。<br />
+        す、すげえ、しっかりできてる……！（←お前がやれ！ｗ<br />
+      </div>
+      <div class="inner_wrapper">
+        <b>"♪ジョハリの窓" (Vocal)</b> - 2025年<br />
+        <audio controls src="src/mado(Vocal).mp3" preload="none"></audio><br />
+        SunoAIで歌を付けたものです。<br />
+        自分の曲に歌詞をつけるのにはいつも抵抗があったのですが、<br />
+        つけてもらってみると……こう……嬉しいですね（ｗ<br />
+        <br />
+        <details>
+          <summary>＊ 歌詞 ＊</summary>
+          [Verse]<br />
+          ここは不思議なおうちの窓<br />
+          見たくもない自分が映る<br />
+          血みどろピエロが<br />
+          べろべろばあー<br />
+          この世界は鏡の向こう<br />
+          <br />
+          [Chorus]<br />
+          嫌いなあなたが　あなたに成り代わるよ<br />
+          砂一つない砂浜<br />
+          四角い（丸い）穴から　「おいでおいで」と手が招く<br />
+          気を抜けば　あなたは消えてしまう<br />
+          <br />
+          [electric guitar solo]<br />
+          <br />
+          [Verse 2]<br />
+          あなたは誰のものを盗んだの<br />
+          影を踏んで呪った相手は誰<br />
+          遠くで笑う声がする<br />
+          あなたは誰　私は誰<br />
+          夢かうつつか　もう分からない<br />
+          <br />
+          [Bridge]<br />
+          ひび割れたガラスの音　時間が止まる<br />
+          いえ、時間は絶対に止まらない<br />
+          穴の中から覗く瞳<br />
+          ひたひた　ひたひた　足音がする<br />
+          <br />
+          [Chorus]<br />
+          嫌いなあなたが　あなたに成り代わるよ<br />
+          砂一つない砂浜<br />
+          四角い（丸い）穴から　「おいでおいで」と手が招く<br />
+          気を抜けば　あなたは消えてしまう<br />
+          <br />
+          [Outro]<br />
+          ここは不思議なジョハリの窓<br />
+          あなたの中の影が踊る<br />
+          ひらひら　ひらひら　落ちる羽<br />
+          もう戻れない　あなたの窓<br />
+        </details>
+        <br />
+      </div>
+      <br />
+      <hr />
+      <br />
+      <h3>♪隻腕少女 -dysfunction mix-</h3>
+      <audio controls src="src/sekiwan_shoujo.mp3" preload="none"></audio><br />
+      <b>"♪隻腕少女 - dysfunction mix-"</b> - 2008年6月30日<br />
+      ドラムンベースに初挑戦？ 後半はアートコア気味になります。<br />
+      友人の曲のアレンジです。<br />
+      <br />
+      <hr />
+      <h3>♪月のジムノペディ</h3>
+      <audio controls src="src/gymnopedie.mp3" preload="none"></audio><br />
+      <b>"♪月のジムノペディ"</b> - 2008年8月21日<br />
+      印象派寄りなコード進行で作られたピアノ曲です。<br />
+      コナミコード + 四度堆積で和声感覚が解けていったような雰囲気です。<br />
+      <br />
+      <hr />
+      <h3>♪アラベスク</h3>
+      <audio controls src="src/arabesque.mp3" preload="none"></audio><br />
+      <b>"♪アラベスク"</b> - 2009年1月15日<br />
+      ブルグミュラーの「アラベスク」をジャズっぽくアレンジしました。<br />
+      当時はビル・エヴァンスとかトミー・フラナガンとかを聞いてた気がします。<br />
+      <div class="inner_wrapper">
+        <b>"♪アラベスク" (ElectroSwing)</b> - 2025年<br />
+        <audio
+          controls
+          src="src/arabesque(ElectroSwing).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIを利用してます。エレクトロスウィングにしてもらいました。<br />
+        中盤のワブルベースといい、これはかなり気に入ってます。<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪シュヴァルツシルトの瞳</h3>
+      <audio controls src="src/schwarzschild_pupil.mp3" preload="none"></audio
+      ><br />
+      <b>"♪シュヴァルツシルトの瞳"</b> - 2009年3月28日<br />
+      アコギ、リードオルガン、エレピなどで構成されたバラードです。<br />
+      拙作「ぼくらの天体望遠鏡」をテーマにした曲です。
+      メロディが結構うまくいきました。<br />
+      ハーフディミニッシュ利用の1736進行をやってみたかった。<br />
+      <div class="inner_wrapper">
+        <b>"♪シュヴァルツシルトの瞳 (Cover)"</b>
+        - 2025年<br />
+        <audio
+          controls
+          src="src/schwarzschild_pupil(Cover).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        かなり忠実にアレンジしていただきました。結構ガチャりました（ｗ<br />
+      </div>
+      <div class="inner_wrapper">
+        <b>"♪シュヴァルツシルトの瞳"（Vocal）</b>
+        - 2025年<br />
+        <audio
+          controls
+          src="src/schwarzschild_pupil(vocal).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        この曲に限っては実は最初から歌詞があったので、<br />
+        ようやく表に出来た感じです。<br />
+        でも、歌詞をメロディ上に思ったとおりにSunoで配置するのは大変でした。<br />
+        何せ単純なガチャですから……いずれ花隈千冬ちゃんでリベンジします（ｗ<br />
+        <br />
+        <details>
+          <summary>＊ 歌詞 ＊</summary>
+          [verse1]<br />
+          君のにおいの残る　屋根裏から<br />
+          照らす　君のいる夜空 月に駆けてゆく姿　手を伸ばした<br />
+          けれどもう　わかっていた<br />
+          <br />
+          [verse2]<br />
+          西の山の端　スピカが落ちて 君は醒めない　夢を見ている
+          凍る街並み　雪に閉ざされ ぼくの時間は止まる<br />
+          <br />
+          [chorus]<br />
+          シュヴァルツシルトの瞳の中<br />
+          君のなくしたものを見たような<br />
+          あの日の夕暮れ<br />
+          きっといつか帰る　その場所で　二人<br />
+          肩を並べ空を見上げて　歌を歌おう<br />
+          <br />
+          [cello solo]<br />
+          <br />
+          [verse2]<br />
+          西の山の端　スピカが落ちて 君は醒めない　夢を見ている
+          凍る街並み　雪に閉ざされ 君の時間は止まる<br />
+          <br />
+          [chorus]<br />
+          忘れ物はもう　見つかったのかな<br />
+          君の大事な物　忘れてきた宝物<br />
+          きっといつか行くよ　その場所で<br />
+          二人 肩を並べ空を見上げて　歌を歌おう<br />
+        </details>
+        <br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪Rainy Circle</h3>
+      <b>"♪Rainy Circle"</b> - 2009年8月27日<br />
+      <audio controls src="src/rainy_circle.mp3" preload="none"></audio><br />
+      アコースティックギター2本のアルペジオが雨のように叩きつける曲です。<br />
+      途中からはサックスが現れます。<br />
+      この時期から、図書館のバイトを始めたり、少しずつ生活が変わっていきます。<br />
+      <div class="inner_wrapper">
+        <b>"♪Rainy Circle(Cover)"</b> - 2025年<br />
+        <audio controls src="src/rainy_circle(Cover).mp3" preload="none"></audio
+        ><br />
+        SunoAIでアレンジしたものです。かなり気に入っています。<br />
+        ちょっとハイスピードというかスムースというかスッキリしてます。<br />
+      </div>
+      <div class="inner_wrapper">
+        <b>"♪Rainy Circle(Vocal)"</b> - 2025年<br />
+        <audio controls src="src/rainy_circle(vocal).mp3" preload="none"></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        歌詞付けの初チャレンジでしたが、それ以来SunoAIにますますメロメロです（ｗ<br />
+        <br />
+        <details>
+          <summary>＊ 歌詞 ＊</summary>
+          [intro with acoustic guitar]<br />
+          <br />
+          [Verse]<br />
+          影絵の街を彷徨う<br />
+          あなたの思い出<br />
+          辿り立ち止まる<br />
+          <br />
+          [Verse2]<br />
+          ぽつりと一粒　水玉<br />
+          今は抱かれていたい<br />
+          空の涙に<br />
+          <br />
+          [Chorus]<br />
+          雨よ　悲しみを洗い流して<br />
+          このまま　朝まで抱きしめていて<br />
+          思い出なんて幸せのぬけがら<br />
+          でもそれでいいの　幸せだったから<br />
+          <br />
+          [saxophone solo]<br />
+          <br />
+          [Chorus]<br />
+          雨よ　悲しみを洗い流して<br />
+          このまま　朝まで抱きしめていて<br />
+          思い出なんて幸せのぬけがら<br />
+          でもそれでいいの　幸せだったから<br />
+        </details>
+      </div>
+      <br />
+      <hr />
+      <h3>♪イノセントウォール</h3>
+      <b>"♪イノセントウォール"（⚠️現在工事中）</b> - 2010年2月26日<br />
+      <audio controls src="src/innocent_wall.mp3" preload="none"></audio><br />
+      雪山をイメージした、ストリングスとハープで作られた重々しい曲です。<br />
+      しばらく作曲をしない時期がありました。友人のMacでMIDIを打ってたかも？<br />
+      <br />
+      <hr />
+      <h3>♪生命の森の夜</h3>
+      <b>"♪生命の森の夜"</b> - 2010年5月17日<br />
+      <audio controls src="src/seimeino_mori.mp3" preload="none"></audio><br />
+      プログレを意識した曲です。笛とアコギとストリングスがメイン。<br />
+      拍子の変化、展開とかも含めて、結構気に入っています。<br />
+      <br />
+      <hr />
+      <h3>♪彼女の記憶</h3>
+      <b>"♪彼女の記憶"</b> - 2010年10月28日<br />
+      <audio controls src="src/kanojono_kioku.mp3" preload="none"></audio><br />
+      ピアノ曲です。友人から頼まれたギャルゲーBGM（タイトル画面）です。<br />
+      途中から、以前の「月のジムノペディ」風の印象派（？）の展開へ。<br />
+      <div class="inner_wrapper">
+        <b>"♪彼女の記憶(Lo-Fi Hiphop)"</b> - 2025年<br />
+        <audio
+          controls
+          src="src/kanojono_kioku(lofi_hiphop).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        ローファイ・ヒップホップになってます。Chillですね。<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪彼女の弔いに</h3>
+      <b>"♪彼女の弔いに"</b> - 2010年10月28日<br />
+      <audio controls src="src/kanojono_tomurai.mp3" preload="none"></audio
+      ><br />
+      ピアノ曲です。友人から頼まれたギャルゲーBGM（オープニング）です。<br />
+      ちょっと悲しい曲です。こういうのをさらっと作るのはちょっと得意です。<br />
+      <br />
+      <hr />
+      <h3>♪彼女と冬の朝</h3>
+      <audio controls src="src/kanojoto_winter.mp3" preload="none"></audio
+      ><br />
+      <b>"♪彼女と冬の朝"（⚠️現在工事中）</b> - 2010年10月28日<br />
+      リコーダーとオルゴールの曲です。友人から頼まれたギャルゲーBGM（明るい場面）です。<br />
+      モチーフを「彼女の記憶」と使いまわして……じゃなく、統一させています。<br />
+      <br />
+      <hr />
+      <h3>♪ムーンライダース</h3>
+      <audio controls src="src/moon_riders.mp3" preload="none"></audio><br />
+      <b>"♪ムーンライダース"（⚠️現在工事中）</b> - 2010年10月28日<br />
+      エレキギターの曲です。友人から頼まれたギャルゲーBGM（熱い場面）です。<br />
+      熱い場面と言っても泣きが出ちゃいます。<br />
+      イメージはSis bond
+      chitの「four-leaf」です。（ムーンライダースじゃないのかい）<br />
+      <br />
+      <hr />
+      <h3>♪光の神殿</h3>
+      <audio controls src="src/hikarino_shinden.mp3" preload="none"></audio
+      ><br />
+      <b>"♪光の神殿"（⚠️現在工事中）</b> - 2011年5月26日<br />
+      マリンバとオーボエだったっけ……（曖昧）<br />
+      しばらく作曲してなかったのですが、TOMOSUKEが興味深い和音をTwitterで紹介していたので。<br />
+      あれから14年も経ったの！？（驚愕）
+      Twitter（今はXですね）もサービス開始から長いですよね。<br />
+      <br />
+      <hr />
+      <h3>♪Ananas</h3>
+      <audio controls src="src/ananas.mp3" preload="none"></audio><br />
+      <b>"♪Ananas"</b> - 2011年5月27日<br />
+      ピアノで爽やかな感じ。ジャズというよりはコンテンポラリー？（区別がわからん）<br />
+      TOMOSUKEと言えば個人的にはmaquilxochitl。<br />
+      というわけで作ってみたのがこれ。途中拍子がなくなります。<br />
+      リミックスしてちょっと音を足しています。一瞬5連符使ったり（ｗ<br />
+      <br />
+      <div class="inner_wrapper">
+        <b>"♪Ananas" (PianoEtude)</b>
+        - 2025年<br />
+        <audio controls src="src/ananas(PianoEtude).mp3" preload="none"></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        リストとかカプースチンのエチュード風味で……とお願いした覚えが。<br />
+      </div>
+      <br />
+      <div class="inner_wrapper">
+        <b>"♪Ananas" (techno)</b>
+        - 2025年<br />
+        <audio controls src="src/ananas(techno).mp3" preload="none"></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        こちらは確かエレクトロスウィングっぽくお願いしたと思います。<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪Extended Light Force</h3>
+      <audio controls src="src/extended_light_force.mp3" preload="none"></audio
+      ><br />
+      <b>"♪Extended Light Force"</b> - 2011年7月27日<br />
+      ギターとオルガンとヴァイオリン。これがオレの「けいおん！」だ！（ちがうと思う）<br />
+      <br />
+      <hr />
+      <h3>♪Root</h3>
+      <b>"♪Root"</b> - 2012年2月8日<br />
+      <audio controls src="src/root.mp3" preload="none"></audio><br />
+      ピアノ＋タブラです。タブラはなんかのVSTiだったと思います。<br />
+      友人からゲームのために頼まれて作った曲。タイトル画面です。<br />
+      <br />
+      <hr />
+      <h3>♪ザイアの思念する剣舞</h3>
+      <audio controls src="src/zaia_sword_dance.mp3" preload="none"></audio
+      ><br />
+      <b>"♪ザイアの思念する剣舞"</b> - 2012年2月8日<br />
+      ピアノ＋ストリングスで爽やかな感じに。ちょっとレイストーム意識。<br />
+      友人からゲームのために頼まれて作った曲。戦闘画面です。<br />
+      <div class="inner_wrapper">
+        <b>"♪ザイアの思念する剣舞" (Cover)</b>
+        - 2025年<br />
+        <audio
+          controls
+          src="src/zaia_sword_dance(cover).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。ギターでよりゲーム音楽的に。<br />
+        ちょっとプログレ意識のプロンプトでした。かっこいいですね……。<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪Bacchus</h3>
+      <audio controls src="src/bacchus.mp3" preload="none"></audio><br />
+      <b>"♪Bacchus</b> - 2012年4月25日<br />
+      ピアノでジャズっぽい何か。OSTER
+      Projectとか佐々木博文とかを意識してた気がします。<br />
+      これも友人から頼まれて作った曲。<br />
+      📝ちょっとイコライジングを直したい<br />
+      <br />
+      <hr />
+      <h3>♪Borges</h3>
+      <audio controls src="src/borges.mp3" preload="none"></audio><br />
+      <b>"♪Borges"</b> - 2012年4月25日<br />
+      ピアノとホーンズでジャズ。こっちは不穏です。<br />
+      「お酒のグラスで物理演算するゲーム」とのことだったのですが、<br />
+      ネット環境がなくて参考楽曲が聞けなかった＋飲みの経験が皆無だったため、
+      <br />想像でこんな曲に。当時は本当にごめん！＞友人<br />
+      あとから作り直してますが、不条理な和音はちょっと気に入ってます。<br />
+      <br />
+      <hr />
+      <h3>♪Blue</h3>
+      <audio controls src="src/blue.mp3" preload="none"></audio><br />
+      <b>"♪Blue"</b> - 2012年5月9日<br />
+      ピアノとホーンズでジャズっぽい何か。<br />
+      ♪Borgesを作り直してもっと可愛らしくしました。ハイスピード版が採用されたはず。<br />
+      ホーンズがやたら豪華です。Independence
+      Freeとかだったんじゃなかったっけ。<br />
+      <br />
+      <hr />
+      <h3>♪ポリスで鳴るシンフォニア</h3>
+      <audio controls src="src/sinfonia.mp3" preload="none"></audio><br />
+      <b>"♪ポリスで鳴るシンフォニア"</b> - 2012年5月8日<br />
+      対位法っぽい何か（ｗ<br />
+      作曲やる感じになったので、確かSynth1か何かでハープシコードもどきを作りました。<br />
+      これはまだ対位法を（インチキですら）勉強してない段階なのでアヤシイですが、<br />
+      雰囲気だけは……それっぽいと嬉しいです（ｗ<br />
+      <div class="inner_wrapper">
+        <b>"♪ポリスで鳴るシンフォニア" (Techno)</b>
+        - 2025年<br />
+        <audio controls src="src/sinfonia(techno).mp3" preload="none"></audio
+        ><br />
+        SunoAIでアレンジしたものです。アップテンポになってドラムが入ってます。<br />
+        こういうの、結構可愛くて好きです。<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪1991年の宇宙飛行とウサギのヴィヴァーチェ・ダンス</h3>
+      <audio controls src="src/1991_rabbit.mp3" preload="none"></audio><br />
+      <b>"♪1991年の宇宙飛行とウサギのヴィヴァーチェ・ダンス"</b> -
+      2012年5月13日<br />
+      レトロフューチャーで可愛らしい曲です。後半早くなります。<br />
+      VOPMだったかみたいな、FMか波形を書けるシンセを使った覚えがあります。<br />
+      沙羅曼蛇の波形だったかも。<br />
+      <div class="inner_wrapper">
+        <b
+          >"♪1991年の宇宙飛行とウサギのヴィヴァーチェ・ダンス Orchestral
+          Version"</b
+        >
+        - 2025年<br />
+        <audio
+          controls
+          src="src/1991_rabbit(Remix_Orchestral).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        早くなる展開はないですが音とかベースがとてもいいです。<br />
+      </div>
+      <div class="inner_wrapper">
+        <b>"♪1991年の宇宙飛行とウサギのヴィヴァーチェ・ダンス" vocal Version</b>
+        - 2025年<br />
+        <audio controls src="src/1991_rabbit(vocal).mp3" preload="none"></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        歌が可愛い！<br />
+        <br />
+        <details>
+          <summary>＊ 歌詞 ＊</summary>
+          レトロな宇宙を　ロケットが飛ぶ<br />
+          星屑キラキラ　光の渦<br />
+          ウサギが現れ ピョンピョコピョン<br />
+          そのステップに 釘付けだよ<br />
+          <br />
+          [Prechorus]<br />
+          銀河のリズムが　聞こえるか<br />
+          ダンスフロアは　無重力さ<br />
+          <br />
+          [Chorus]<br />
+          ピョンピョコ　ピョンピョコ　宇宙ダンス<br />
+          ウサギと一緒に　ステップを刻む<br />
+          ピョンピョコ　ピョンピョコ 無限のリズム<br />
+          パイロットも夢中さ　宇宙のダンス<br />
+          <br />
+          [FM Synth solo]<br />
+          <br />
+          [Verse 2]<br />
+          宇宙服着た　パイロットが<br />
+          ビートに乗って　クルクル回る<br />
+          流星の光　背景にして<br />
+          みんなで踊る　星たちのパーティー<br />
+          <br />
+          [Bridge]<br />
+          ブラックホールも笑ってる<br />
+          土星の輪も揺れている<br />
+          宇宙の隅から隅まで<br />
+          踊りの波が広がっていく<br />
+          <br />
+          [FM synth solo]<br />
+          <br />
+          [Chorus]<br />
+          ピョンピョコ　ピョンピョコ　宇宙ダンス<br />
+          ウサギと一緒に　ステップを刻む<br />
+          ピョンピョコ　ピョンピョコ　無限のリズム<br />
+          パイロットも夢中さ　宇宙のダンス<br />
+          <br />
+          [Chorus]<br />
+          ピョンピョコ　ピョンピョコ　宇宙ダンス<br />
+          ダークマターも泡立ってる<br />
+          ピョンピョコ　ピョンピョコ　あら？ 何の音？<br />
+          酸素が切れても　無限のダンス<br />
+          <br />
+          [outroduction with synth solo]<br />
+        </details>
+        <br />
+      </div>
+      <br />
+      <br />
+      <hr />
+      <h3>♪Imaginary Wisdom</h3>
+      <audio controls src="src/imaginary_wisdom.mp3" preload="none"></audio
+      ><br />
+      <b>"♪Imaginary Wisdom"</b> - 2012年5月17日<br />
+      ドラムンベースっぽい何か。<br />
+      死んじゃった旦那と夢の中で会うために、夢を泳ぐ叡智を見に付けて、<br />
+      夢の番人全員を逆に眠らせて会いに行く女の人……みたいなことを想像していて、<br />
+      それで「Imaginary Wisdom」です。構想自体は結構長かったです。<br />
+      <div class="inner_wrapper">
+        <b>"♪Imaginary WIsdom" (GlitchHop)</b>
+        - 2025年<br />
+        <audio
+          controls
+          src="src/imaginary_wisdom(GlitchHop).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。デコデコした可愛いグリッチホップになりました。<br />
+        こ、こんなん自分じゃ絶対作れない！（←ガッツが足りない）<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪Fleurs</h3>
+      <audio controls src="src/fleurs.mp3" preload="none"></audio><br />
+      <b>"♪Fleurs"</b> - 2013年5月26日<br />
+      ピアノで作ったトランス。<br />
+      個人的には、現在同居している友人のテーマ曲です。「猫と花」みたいな雰囲気……。<br />
+      <br />
+      <hr />
+      <h3>♪銀色ラジオ委員会</h3>
+      <audio
+        controls
+        src="src/silver_radio_committee.mp3"
+        preload="none"
+      ></audio
+      ><br />
+      <b>"♪銀色ラジオ委員会"</b> - 2013年12月12日<br />
+      エレクトロニカです。<br />
+      いつもおなじみ「ネロのゆめ」のネロ君のテーマ曲その何番目かです。<br />
+      Glitch というVSTを使って、グリッチノイズを量産してみたりしてました。<br />
+      それっぽいようなまだ足りないような……（というわけでMax/MSPへの憧れが増した）<br />
+      <br />
+      <hr />
+      <h3>♪月夜の外套（24EDO）</h3>
+      <audio controls src="src/tsukiyono_gaitou.mp3" preload="none"></audio
+      ><br />
+      <b>"♪月夜の外套"（⚠️現在工事中）</b> - 2014年12月2日<br />
+      ユングとかシンギュラリティとかにやたら興味があった頃の曲です。<br />
+      「機械化によって感覚を拡張すれば、非12平均律を調和的に聞けるようになるのでは？」<br />
+      という着想があり調べてみたところ、<br />
+      「そんなことせんでもワールドミュージックで普通に使われとるやないかい！」<br />
+      となり、いよいよ微分音に興味を持ち始めました。そんなころの曲です。<br />
+      この頃には他にも色々実験作があるのですが、表に出せそうなのはこれくらいです（ｗ<br />
+      <br />
+      <hr />
+      <h3>♪Stream -blandnew-</h3>
+      <audio controls src="src/stream_blandnew.mp3" preload="none"></audio
+      ><br />
+      <b>"♪Stream -blandnew-"（⚠️現在工事中）</b> - 2015年1月21日<br />
+      未完成です。「音楽ありがとう」という気持ちが強まったので急に作りました。<br />
+      「うちの子たちがソロ回しをしながらどんどん盛り上がっていく……」みたいな。<br />
+      ダイアモンドマリンバをうちの子（蘇宜辺あこちゃんという眼鏡っ子）が叩くとこまで。<br />
+      確か建築士に受かるか何かして、そこから音楽との距離の置き方がだいぶ変わっていきます。<br />
+      <br />
+      <hr />
+      <h3>♪5TET piano invention</h3>
+      <audio controls src="src/5tet_piano_invention.mp3" preload="none"></audio
+      ><br />
+      <b>"♪5TET piano invention"</b> - 2017年1月6日<br />
+      5平均律で出来たピアノ曲です。バッハのインベンションを意識してます。<br />
+      <br />
+      <hr />
+      <h3>♪小さな記号</h3>
+      <audio controls src="src/small_semiosis.mp3" preload="none"></audio><br />
+      <b>"♪小さな記号"</b> - 2017年7月8日<br />
+      デートコース・ペンタゴン・ロイヤルガーデンを意識した3:5のポリリズム。<br />
+      このころ、東京に独りで講習に出かけることが多く、結構不安でした。<br />
+      <div class="inner_wrapper">
+        <b>"♪小さな記号" (Cover)</b> - 2025年<br />
+        <audio
+          controls
+          src="src/small_semiosis(Cover).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIを使い始めてかなり初期のものです。3.5か4だった覚え。<br />
+        何拍子に解釈されてるのか謎ですがなかなか面白いです。<br />
+        急に終わるのだけ残念です……（ｗ<br />
+      </div>
+      <div class="inner_wrapper">
+        <b>"♪小さな記号" (ElectroSwing)</b> - 2025年<br />
+        <audio
+          controls
+          src="src/small_semiosis(ElectroSwing).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        そこで、SunoAIで途中までの音源をアレンジしてもらったものです。<br />
+        す、すげえ、しっかりできてる……！（←お前がやれ！ｗ<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪ロルディの街</h3>
+      <audio controls src="src/isroldynun-wirandam.mp3" preload="none"></audio
+      ><br />
+      <b>"♪ロルディの街"</b> - 2018年4月13日<br />
+      盲腸の手術明けか何かだったかも。ゲーム曲。SFCのFFの街の曲を意識してます。<br />
+      後半ちょっと盛り上がりすぎるかもしれません（ｗ<br />
+      <br />
+      <hr />
+      <h3>♪Running through Cyber Forest（15EDO）</h3>
+      <audio controls src="src/cyber_forest.mp3" preload="none"></audio><br />
+      <b>"♪Running through Cyber Forest"</b> - 2018年4月14日<br />
+      15平均律、11拍子に4拍子や5拍子のポリリズムが絡んできます。<br />
+      <br />
+      <hr />
+      <h3>♪19-limit_Ambient</h3>
+      <audio controls src="src/19-limit-ambient.mp3" preload="none"></audio
+      ><br />
+      <b>"♪19-limit_Ambient"</b> - 2018年4月15日<br />
+      19-リミット純正律で作られたアンビエントです。<br />
+      <br />
+      <hr />
+      <h3>♪モザイクの海</h3>
+      <audio controls src="src/mosaic_ocean.mp3" preload="none"></audio><br />
+      <b>"♪モザイクの海"</b> - 2018年4月23日<br />
+      エレピとパーカッションとシンセサイザーで切なく。<br />
+      5拍子の前半3つを5個、後半2つを7個で再分割した曲です。<br />
+      <div class="inner_wrapper">
+        <b>"♪モザイクの海" (ChipTune)</b>
+        - 2025年<br />
+        <audio
+          controls
+          src="src/mosaic_ocean(chiptune).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。高速のチップチューン風味に。<br />
+        拍子がやたら複雑に再解釈されてて面白いです。<br />
+      </div>
+      <div class="inner_wrapper">
+        <b>"♪モザイクの海" (fusion)</b>
+        - 2025年<br />
+        <audio
+          controls
+          src="src/mosaic_ocean(fusion).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        フュージョンっていうか何なんでしょうね……4拍子になってます。<br />
+      </div>
+      <div class="inner_wrapper">
+        <b>"♪モザイクの海" (vocal)</b>
+        - 2025年<br />
+        <audio controls src="src/mosaic_ocean(vocal).mp3" preload="none"></audio
+        ><br />
+        SunoAIでアレンジしたものです。気に入っていたので歌をつけてもらいました。<br />
+        <br />
+        <details>
+          <summary>＊ 歌詞 ＊</summary>
+          [Verse]<br />
+          どこから来たのか 入口も出口もない　閉ざされた入江<br />
+          水深はバラバラのモザイク<br />
+          <br />
+          [Chorus]<br />
+          光と闇が交錯する　この不思議な海<br />
+          出口はない　ない<br />
+          ただ耳を澄ませ、『wave poly rhythm』<br />
+          光と闇が交錯する　この不思議な海<br />
+          君は溶けていく<br />
+          ばらばらになってく<br />
+          <br />
+          [Verse 2]<br />
+          波の声は低くうなり<br />
+          風の嘆きと一つになる<br />
+          ここは水の密林<br />
+          君はただ流されるだけ<br />
+          <br />
+          [Bridge]<br />
+          揺れる　揺れる<br />
+          リズムに抱かれて<br />
+          時間は溶けていく<br />
+          空、海、右、左、<br />
+          明日も昨日もなくなる<br />
+          ここはどこ？<br />
+          <br />
+          [Chorus]<br />
+          光と闇が交錯する　この不思議な海<br />
+          出口はない　ない<br />
+          ただ耳を澄ませ、『wave poly rhythm』<br />
+          光と闇が交錯する　この不思議な海<br />
+          君は溶けていく　ばらばらになってく<br />
+          <br />
+          [Outro]<br />
+          出口のない入り江　ねじれた海<br />
+          全てはここに消えていく<br />
+          裸になっていく<br />
+        </details>
+      </div>
+      <br />
+      <hr />
+      <h3>♪A Shadow from the woods by a quiet lakeside（14EDO）</h3>
+      <audio controls src="src/woods_lakeside.mp3" preload="none"></audio><br />
+      <b>"♪A Shadow from the woods by a quiet lakeside（14EDO）"</b> -
+      2018年6月29日<br />
+      14平均律で作られた、不穏な感じのアコースティック曲です。<br />
+      <br />
+      <hr />
+      <h3>♪封じられた書庫の暗い密みに</h3>
+      <audio controls src="src/library.mp3" preload="none"></audio><br />
+      <b>"♪封じられた書庫の暗い密みに"</b> - 2018年7月1日<br />
+      ピアノとパーカス。某東方STGを意識した9:7のポリリズムの曲です。<br />
+      <br />
+      <hr />
+      <h3>♪Perilune 2039（13EDO）</h3>
+      <audio controls src="src/perilune_2039.mp3" preload="none"></audio><br />
+      <b>"♪Perilune 2039（13EDO）"</b> - 2018年7月3日<br />
+      月の周りを回遊するような、切ない感じの6/8拍子の曲です。<br />
+      ハープと笛と鍵盤ハーモニカとピアノとPSG音源。<br />
+      13平均律で出来てます。展開が急なので、ビックリしないでください（ｗ<br />
+      <br />
+      <hr />
+      <h3>♪ペリュトン幻想の淵</h3>
+      <audio controls src="src/peryton_illusion.mp3" preload="none"></audio
+      ><br />
+      <b>"♪ペリュトン幻想の淵（1/3-meantone）"</b> - 2018年8月13日<br />
+      ダンジョンっぽい曲です。これも微妙に調律法を変えてます。<br />
+      <br />
+      <hr />
+      <h3>♪in the violet air（17EDO）</h3>
+      <audio controls src="src/violet_air.mp3" preload="none"></audio><br />
+      <b>"♪in the violet air"</b> - 2018年10月7日<br />
+      17平均律で出来たチルっぽい曲です。<br />
+      <br />
+      <hr />
+      <h3>♪魚の本棚（10ED7/4）</h3>
+      <audio controls src="src/sakanano_hondana.mp3" preload="none"></audio
+      ><br />
+      <b>"♪魚の本棚"</b> - 2018年10月29日<br />
+      水中ピアノ曲です。オクターブなんかなくても曲はできる！？（それはどうかなあ）<br />
+      オクターブではなく、純正音程7/4を10分割した調律法です。<br />
+      <br />
+      <hr />
+      <h3>♪蟹の採掘場跡（11EDO）</h3>
+      <audio controls src="src/kanino_saikutsu.mp3" preload="none"></audio
+      ><br />
+      <b>"♪蟹の採掘場跡（11EDO）"</b> - 2018年11月19日<br />
+      水中ピアノ曲です。11平均律で出来ています。<br />
+      二番煎じ感が強くなったため、このシリーズはここで終了（ｗ<br />
+      <br />
+      <hr />
+      <h3>♪十一月の四角</h3>
+      <audio controls src="src/november_quadrangle.mp3" preload="none"></audio
+      ><br />
+      <b>"♪十一月の四角"</b> - 2019年11月25日<br />
+      ピアノとドラムです。te_riやtipographicaを聞き始めたのでリズム遊び。<br />
+      <br />
+      <hr />
+      <h3>♪5平均律神社</h3>
+      <b>"♪5平均律神社"</b> - 2018年12月16日<br />
+      <audio controls src="src/5edo_temple.mp3" preload="none"></audio><br />
+      5平均律のピアノ曲です。二色連花蝶のアレンジのアレンジ。<br />
+      <br />
+      <hr />
+      <h3>♪雨の森／祝祭</h3>
+      <audio controls src="src/rain_fest.mp3" preload="none"></audio><br />
+      <b>"♪雨の森／祝祭"</b> - 2018年12月23日<br />
+      エレピでチルく始まってから、リズミカルな鍵盤ハーモニカソロに流れていきます。<br />
+      12平均律ですが、ポリモードを使っているのでヘンな感じです。<br />
+      <br />
+      <hr />
+      <h3>♪Jingle Bells</h3>
+      <audio controls src="src/jingle_bells.mp3" preload="none"></audio><br />
+      <b>"♪Jingle Bells"</b> - 2018年12月24日<br />
+      じんぐるべーる、な曲のピアノアレンジです。<br />
+      ジェイコブ・コリアーとか聞いていました。<br />
+      <br />
+      <hr />
+      <h3>♪森を弾み歩く（7-limit JI）</h3>
+      <audio controls src="src/7-limit-ji_forest.mp3" preload="none"></audio
+      ><br />
+      <b>"♪森を弾み歩く（7-limit JI）"</b> - 2019年5月20日<br />
+      7-リミット純正律の音階で作った、5連符主体の曲です。<br />
+      <br />
+      <hr />
+      <h3>♪準結晶の枝</h3>
+      <audio controls src="src/quasicrystal_branch.mp3" preload="none"></audio
+      ><br />
+      <b>"♪準結晶の枝"</b> - 2019年6月20日<br />
+      フュージョンコード C△/D を主体に作った、無機質な印象のピアノ曲です。<br />
+      <div class="inner_wrapper">
+        <b>"準結晶の枝(techno)"</b> - 2025年<br />
+        <audio
+          controls
+          src="src/quasicrystal_branch(techno).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。ドラム入り、楽器が豪華になってます。<br />
+        テクノっていうかフュージョンっていうか……？<br />
+        楽器の置き換え方とかすごく気に入ってます。<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪▼△Nobleheights自然派の夢▼△</h3>
+      <audio controls src="src/nobleheights.mp3" preload="none"></audio><br />
+      <b>"♪▼△Nobleheights自然派の夢▼△"</b> - 2019年6月20日<br />
+      同じくフュージョンコードを用いたヴェイパーウェイヴ意識の曲です。<br />
+      サンプリングとかをもっと上手く使えるようになりたいけど、<br />
+      それにはもっと音楽好きじゃないとですね……（ｗ<br />
+      <br />
+      <hr />
+      <h3>♪c-cell</h3>
+      <audio controls src="src/c-cell.mp3" preload="none"></audio><br />
+      <b>"♪c-cell"</b> - 2019年6月28日<br />
+      ネオチップチューン風のふわふわした曲です。<br />
+      4拍子ですが、後半で3:5が挟まるリズムです。<br />
+      途中でポリモードを挟んで不穏になりますが、それが気に入ってます。<br />
+      <br />
+      <div class="inner_wrapper">
+        <b>"♪c-cell" (african)</b>
+        - 2025年<br />
+        <audio controls src="src/c-cell(african).mp3" preload="none"></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        元々のヒネたリズムはちょっと和らいでますが、後半のリズムが好きです。<br />
+      </div>
+      <div class="inner_wrapper">
+        <b>"♪c-cell（vaporwave）"</b> - 2025年<br />
+        <audio controls src="src/c-cell(vaporwave).mp3" preload="none"></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        Vaporwaveです。ゆっくりChillしてください……。<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪かもみーるのもり（きりのひ）</h3>
+      <audio controls src="src/chamomile_forest.mp3" preload="none"></audio
+      ><br />
+      <b>"♪かもみーるのもり（きりのひ）"</b> - 2019年6月29日<br />
+      ピチカートとリコーダーとドラム。<br />
+      同じくフュージョンコード。このころはまってましたね。<br />
+      15/16拍子を3拍子と5拍子に分割するようなポリリズムです。<br />
+      ドラムがズンドコするのが気に入ってます。<br />
+      <div class="inner_wrapper">
+        <b>"♪かもみーるのもり" (Cover)</b> - 2025年<br />
+        <audio
+          controls
+          src="src/chamomile_forest(Cover).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIを利用してます。ドラムンベース風味になってるかも。<br />
+        4拍子と、元のひねくれたリズムとのせめぎあいがなかなか面白いです。<br />
+      </div>
+      <div class="inner_wrapper">
+        <b>"♪かもみーるのもり" (African)</b> - 2025年<br />
+        <audio
+          controls
+          src="src/chamomile_forest(African).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIを利用してます。アフリカン風味に？<br />
+        打楽器が心地いいです。<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪子供と静物</h3>
+      <audio controls src="src/kodomoto_seibutsu.mp3" preload="none"></audio
+      ><br />
+      <b>"♪子供と静物"</b> - 2019年7月16日<br />
+      シンセとドラムとサンプリングがガチャガチャした曲です。<br />
+      te_riっぽいメソッドを使いつつ……。<br />
+      版権回りが怪しいので、この曲の二次使用については特に注意（怒られたら下げます）<br />
+      以前コメント欄に「耳が痛くなった」と書かれたので、ちょっと音量下げてますｗ<br />
+      <br />
+      <hr />
+      <h3>♪光輝へ消える</h3>
+      <audio controls src="src/koukihe_kieru.mp3" preload="none"></audio><br />
+      <b>"♪光輝へ消える"</b> - 2019年7月18日<br />
+      爽やかなドラムンベース。ちょっとDeep Clear Eyesを意識してます。<br />
+      当時は仕事がありえないくらい忙しくてプレッシャーがすごかったので、<br />
+      「あーもう光輝へ消えたい……」くらいの気持ちで一晩で作りました（？）<br />
+      <div class="inner_wrapper">
+        <b>"光輝へ消える(cover)"</b> - 2025年<br />
+        <audio
+          controls
+          src="src/koukihe_kieru(cover).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        もともとサックスっぽい音色を意識したシンセが生サックスに！？<br />
+        なんかデビッドワイズとか連想しちゃいますね……。<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪フシギのハジマリは霧の中から</h3>
+      <audio controls src="src/fushigi_kiri.mp3" preload="none"></audio><br />
+      <b>"♪フシギのハジマリは霧の中から"</b> - 2019年8月12日<br />
+      Kontakt導入後初慣らしだったかな。ストリングスと笛とジャズギターと。<br />
+      なんとなくメイドインアビスのアビスの中を意識した曲です。<br />
+      <br />
+      <hr />
+      <h3>♪Protocol-Ω(2,4) (16EDO)</h3>
+      <audio controls src="src/protocol_omega.mp3" preload="none"></audio><br />
+      <b>"♪Protocol-Ω(2,4) (16DEDO)"</b> - 2019年8月16日<br />
+      16平均律のテクノです。タイトルはヌーソロジーか何かを意識したかも？（怪<br />
+      Gorgo[6]とかいう音階だった気がします。<br />
+      <br />
+      <hr />
+      <h3>♪すこしあたらしいあさ（11-limit JI）</h3>
+      <audio controls src="src/sukoshi_atarashi_asa.mp3" preload="none"></audio
+      ><br />
+      <b>"♪すこしあたらしいあさ（11-limit JI）"</b> - 2019年11月2日<br />
+      ローファイヒップホップみたいなのを作りたかったけど、<br />
+      音使いを知らなかったため結局いつもみたいな雰囲気に。<br />
+      11-リミット純正律で出来ています。<br />
+      <br />
+      <hr />
+      <h3>♪夜光花</h3>
+      <audio controls src="src/yakouka.mp3" preload="none"></audio><br />
+      <b>"♪夜光花"</b> - 2019年11月25日<br />
+      ちょっと静かで冷たい感じの曲です。<br />
+      なんとなく作らねば……と作ったものです。またポリモードみたいなことしてますね。<br />
+      <div class="inner_wrapper">
+        <b>"♪夜光花（Cover）"</b> - 2025年<br />
+        <audio controls src="src/yakouka(cover).mp3" preload="none"></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        より勢いのあるアレンジにしてくれてます。楽器も多彩で豪華です。<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪ripples on reciprocal space（11EDO）</h3>
+      <audio controls src="src/ripples_reciprocal.mp3" preload="none"></audio
+      ><br />
+      <b>"♪ripples on reciprocal space（11EDO）"</b> - 2020年7月14日<br />
+      Unbeltipo好きィ……の気持ちで現れた謎の音源です。<br />
+      <br />
+      <hr />
+      <h3>♪飛行虫、銀河を行かば</h3>
+      <audio controls src="src/flying_bug_galaxy.mp3" preload="none"></audio
+      ><br />
+      <b>"♪飛行虫、銀河を行かば"</b> - 2020年7月25日<br />
+      ヘンなコード進行を用いた、ゲームミュージック風味の曲です。<br />
+      途中でスピードチェンジ（メトリックモジュレーション）します。<br />
+      4:5のポリリズムを試みつつ、連符の入れ子を練習しようという感じでした。<br />]
+      <div class="inner_wrapper">
+        <b>"♪飛行虫、銀河を行かば（Cover）"</b> - 2025年<br />
+        <audio
+          controls
+          src="src/flying_bug_galaxy(Cover).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        ちょっとシンフォニックかつゆっくりなメタルフュージョンにしてくれてます。<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪海がひろがる</h3>
+      <audio controls src="src/umiga_hirogaru.mp3" preload="none"></audio><br />
+      <b>"♪海がひろがる"</b> - 2020年9月27日<br />
+      4:5:7のポリリズムとかいう無謀を試みたものです。<br />
+      それでもツインドラムとか展開とか結構気に入ってます。<br />
+      <div class="inner_wrapper">
+        <b>"♪海がひろがる(cover)"</b> - 2025年<br />
+        <audio
+          controls
+          src="src/umiga_hirogaru(Cover).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。アルペジオがピアノになってます。<br />
+        七拍子を強調するところはこっちの方がよっぽどいいですね……！（ｗ<br />
+      </div>
+      <div class="inner_wrapper">
+        <b>"♪海がひろがる(African)"</b> - 2025年<br />
+        <audio
+          controls
+          src="src/umiga_hirogaru(African).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        アフリカンにしていただきました。打楽器がいいですよね……。<br />
+      </div>
+      <div class="inner_wrapper">
+        <b>"♪海がひろがる(vaporwave)"</b> - 2025年<br />
+        <audio
+          controls
+          src="src/umiga_hirogaru(vaporwave).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        5拍子Vaporwaveとかいうヘンなものです。途中からそれも怪しくなるし……（ｗ<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪小さな海</h3>
+      <audio controls src="src/chiisana_umi.mp3" preload="none"></audio><br />
+      <b>"♪小さな海"</b> - 2020年9月27日<br />
+      ピアノ曲です。連符で手弾き感を強調していきました。<br />
+      「海が広がる」とは対です。<br />
+      <div class="inner_wrapper">
+        <b>"♪小さな海(techno)"</b> - 2025年<br />
+        <audio controls src="src/chiisana_umi(Cover).mp3" preload="none"></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        ストリングスとかエレギギターでいい感じに味付けてくれてます。<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪point sequence</h3>
+      <audio controls src="src/point_sequence.mp3" preload="none"></audio><br />
+      <b>"♪point_sequence(19EDO)"</b> - 2021年6月6日<br />
+      19平均律テクノ、かつ分母が2^nじゃないような拍子で作っている曲です。<br />
+      Unbeltipo好きィ……の気持ちと、<br />
+      当時ネットでケンカした相手がいたので「何クソくたばれ」感で作りました（ｗ<br />
+      <div class="inner_wrapper">
+        <b>"♪point_sequence(techno)"</b> - 2025年<br />
+        <audio
+          controls
+          src="src/point_sequence(techno).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        ちょっと可愛らしいテクノになっています。<br />
+      </div>
+      <div class="inner_wrapper">
+        <b>"♪point_sequence(TechnoAfrica)"</b> - 2025年<br />
+        <audio
+          controls
+          src="src/point_sequence(TechnoAfrica).mp3"
+          preload="none"
+        ></audio
+        ><br />
+        SunoAIでアレンジしたものです。<br />
+        ちょっとアフリカっぽいプロンプトで頼みました。<br />
+        メロディがブロークンになりましたが、ベースの解釈はむしろこっちが近いかも。<br />
+      </div>
+      <br />
+      <hr />
+      <h3>♪Gnossienne(8ed5/3)</h3>
+      <audio controls src="src/gnossienne.mp3" preload="none"></audio><br />
+      <b>"♪Gnossienne(8ed5/3)"</b> - 2022年4月9日<br />
+      5/3という純正音程を8等分する音階で作ったピアノ曲です。<br />
+      今のところ最新の曲です。この後、しばらく作らない時期が続きます。<br />
+      <br />
+    </div>
+  </body>
+</html>

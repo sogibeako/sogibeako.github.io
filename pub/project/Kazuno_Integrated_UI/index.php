@@ -372,7 +372,9 @@ $is_logged_in = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true
                     <div class="tab-panel" id="tab-video" role="tabpanel">
                         <div class="video-layout">
                             <div class="video-form">
-                                <input type="text" id="videoUrlInput" placeholder="YouTube URLを入力 (https://www.youtube.com/watch?v=xxxx)" class="input-text">
+                                <input type="text" id="videoUrlInput" placeholder="YouTube / ニコニコURL・シリーズURLを入力" class="input-text">
+                                <button id="queuePrevBtn" class="btn btn-text" type="button"><i class="fa-solid fa-backward-step"></i> 戻る</button>
+                                <button id="queueNextBtn" class="btn btn-text" type="button"><i class="fa-solid fa-forward-step"></i> 進む</button>
                                 <button id="playVideoBtn" class="btn btn-primary"><i class="fa-solid fa-circle-play"></i> 再生</button>
                             </div>
                             
@@ -380,7 +382,7 @@ $is_logged_in = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true
                                 <div class="video-player-container">
                                     <div id="videoPlaceholder" class="video-placeholder">
                                         <i class="fa-brands fa-youtube placeholder-icon"></i>
-                                        <p>YouTube URLを入力すると、ここで再生できます</p>
+                                        <p>YouTube / ニコニコURLを入力すると、ここで再生できます</p>
                                     </div>
                                     <div id="videoIframeWrapper" class="video-iframe-wrapper hide">
                                         <!-- iframeが動的に挿入されます -->
