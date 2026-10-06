@@ -47,3 +47,9 @@ summary:focus-visible { outline:2px solid #e0bb79; outline-offset:3px; }
 .random-group-actions{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}.random-group-actions button{padding:5px 9px;font-size:.8rem}#randomRevert{margin:6px 0 6px 6px}
 
 #mapPngPreview[hidden]{display:none}#mapPngImage{display:block;max-width:100%;height:auto;margin:10px 0}#mapPngDownload{color:var(--text);text-decoration:underline}
+
+#journeyCurrentDetails { white-space: pre-line; overflow-wrap: anywhere; }
+
+#archiveMatchList { list-style: none; padding: 0; max-height: 20rem; overflow-y: auto; }
+#archiveMatchList li { margin: .4rem 0; }
+#archiveMatchList button { width: 100%; text-align: left; white-space: normal; }

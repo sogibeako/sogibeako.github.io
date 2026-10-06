@@ -21,5 +21,6 @@ for(let trial=0;trial<12;trial++){
   assert.equal(next.journey.completed,stage+1);assert.equal(next.journey.steps,g.journey.steps+g.steps);g=next;
  }
 }
-assert.equal(counts.size,3);assert.equal(algorithms.size,4);
-console.log('PASS: 72 transitions and 84 exits; all 3 key targets and 4 algorithms, required ordered keys, deterministic generation, fresh inventory/doors and retained progress.');
+assert.deepEqual([...counts].sort(),[1,2,3]);
+assert.deepEqual([...algorithms].sort(),['dfs','prim','division','rooms','wilson','kruskal','hunt','growing','eller'].sort());
+console.log('PASS: 72 transitions and 84 exits; all 3 key targets and 9 algorithms, required ordered keys, deterministic generation, fresh inventory/doors and retained progress.');

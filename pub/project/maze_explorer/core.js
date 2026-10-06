@@ -1328,10 +1328,15 @@
   }
   // Register observed landmarks modulo learned periods only, to a fixed point.
   // Preview uses detached maps; neither preview nor apply observes new terrain.
-  function matchRecordedMaps(game,apply=false) {
-    if(game.rotationMatcher)return game.rotationMatcher(game,apply);
+  function matchRecordedMaps(game,apply=false,reasons=null) {
+    if(game.rotationMatcher){
+      const result=game.rotationMatcher(game,apply,reasons);
+      if(reasons)game.cognition.archives.forEach((_,i)=>reasons[i]??=result.includes(i)?'ready':game.cognition.matchedArchives.has(i)?'matched':'orientation');
+      return result;
+    }
     const {world,cognition:c}=game;
-    if(!world.separateMaps)return [];
+    if(!world.separateMaps){if(reasons)c.archives.forEach((_,i)=>reasons[i]='disabled');return [];}
+    if(reasons)c.archives.forEach((_,i)=>reasons[i]=c.matchedArchives.has(i)?'matched':'no-common');
     let memory=new Map(c.memory_nodes);
     const matched=new Set(c.matchedArchives),result=[];
     const anchors=nodes=>{
@@ -1355,16 +1360,16 @@
       for(let i=0;i<c.archives.length;i++){
         if(matched.has(i))continue;
         const archive=c.archives[i],live=anchors(memory),saved=anchors(archive.nodes);
-        let offset=null,conflict=false;
+        let offset=null,conflict=false,reason='no-common';
         for(const [key,a] of saved){
           if(!live.has(key))continue;
           const b=live.get(key);
-          if(!a||!b||a.world_id!==b.world_id){conflict=true;break;}
+          if(!a||!b||a.world_id!==b.world_id){conflict=true;reason='ambiguous';break;}
           const candidate=cognitivePosition(game,b.x-a.x,b.y-a.y);
-          if(offset&&(offset.x!==candidate.x||offset.y!==candidate.y)){conflict=true;break;}
+          if(offset&&(offset.x!==candidate.x||offset.y!==candidate.y)){conflict=true;reason='offset';break;}
           offset=candidate;
         }
-        if(!offset||conflict)continue;
+        if(!offset||conflict){if(reasons)reasons[i]=reason;continue;}
         const combined=new Map(memory);
         for(const node of archive.nodes.values()){
           const {x,y}=cognitivePosition(game,node.x+offset.x,node.y+offset.y),id=cognitiveId(world,x,y),old=combined.get(id);
@@ -1372,12 +1377,24 @@
           const latest=!old||(node.seenAt??0)>(old.seenAt??0)?node:old;
           combined.set(id,{...latest,x,y,firstSeen:Math.min(old?.firstSeen??Infinity,node.firstSeen??Infinity)});
         }
-        if(conflict)continue;
+        if(conflict){if(reasons)reasons[i]='terrain';continue;}
+        if(reasons)reasons[i]='ready';
         memory=combined;matched.add(i);result.push(i);changed=true;
       }
     }
     if(apply&&result.length){c.memory_nodes=memory;c.matchedArchives=matched;}
     return result;
+  }
+  function inspectRecordedMatching(game){
+    const reasons=[];
+    const matches=matchRecordedMaps(game,false,reasons);
+    // A saved integrated chart also carries its explicitly recorded originals.
+    // Use the same source closure as the atlas, without changing matching state.
+    const connected=g=>archiveGroups(g).filter(group=>group.live).flatMap(group=>group.members);
+    const preview={...game,cognition:{...game.cognition,matchedArchives:new Set([...game.cognition.matchedArchives,...matches])}};
+    for(const index of connected(preview))reasons[index]='ready';
+    for(const index of connected(game))reasons[index]='matched';
+    return {matches,reasons};
   }
   function relocatePlayer(game,to,kind) {
     const world=game.world,from=game.player.world_position;
@@ -1511,7 +1528,7 @@
     return game.cognition.archives.flatMap((archive, index) =>
       [...archive.nodes.values()].some(node => node.world_id === entry[0] && node.feature === label) ? [index] : []);
   }
-  const api = { warpArrowRecords, exportWarpArrowNotes, resetWarpArrowCurve, curveWarpArrow, eraseWarpArrow, rememberWarpArrow, knownWarpAnchor, eraseZeroMark, placeRemoteZeroMark, placeZeroMark, continueExploring, archiveDisplayCells, matchRecordedMaps, archiveTransfers, archiveGroups, inspectWarpConnectivity, createWarpDemo, exportTrueMap, exportArchiveNotes, setArchiveNote, markerArchives, markerTitle, nameMarker, currentLandmark, inspectLandmarkMemory, matchLandmarkMaps, placeMarker, createArchiveDemo, archiveCells, inspectEntranceMemory, matchEntranceMaps, knowledgeSummary, selfRaySegments, periodicPosition, periodicId, windingOf, deckVector, DIRS, random, generate, createTorusDemo, inspectTorus, cognitivePosition, subjectiveCells, transition, ruleTransition, solvePuzzle, featureAt, reachable, lineOfSight, createGame, observe, move, waitTurn, inspectBird };
+  const api = { warpArrowRecords, exportWarpArrowNotes, resetWarpArrowCurve, curveWarpArrow, eraseWarpArrow, rememberWarpArrow, knownWarpAnchor, eraseZeroMark, placeRemoteZeroMark, placeZeroMark, continueExploring, archiveDisplayCells, inspectRecordedMatching, matchRecordedMaps, archiveTransfers, archiveGroups, inspectWarpConnectivity, createWarpDemo, exportTrueMap, exportArchiveNotes, setArchiveNote, markerArchives, markerTitle, nameMarker, currentLandmark, inspectLandmarkMemory, matchLandmarkMaps, placeMarker, createArchiveDemo, archiveCells, inspectEntranceMemory, matchEntranceMaps, knowledgeSummary, selfRaySegments, periodicPosition, periodicId, windingOf, deckVector, DIRS, random, generate, createTorusDemo, inspectTorus, cognitivePosition, subjectiveCells, transition, ruleTransition, solvePuzzle, featureAt, reachable, lineOfSight, createGame, observe, move, waitTurn, inspectBird };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MazeCore = api;
 })(globalThis);

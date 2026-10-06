@@ -133,6 +133,47 @@ function openTransferArchive(side) {
 $('transferChoice').addEventListener('change',renderTransferHistory);
 $('transferFrom').addEventListener('click',()=>openTransferArchive('from'));
 $('transferTo').addEventListener('click',()=>openTransferArchive('to'));
+function recordedMatchExplanation(reason){
+ return ({
+  ready:'この記録は、現在の記録や照合できる他の記録をたどってつなげられます。Cキーで照合できます。',
+  matched:'この記録は現在の地図につながっています。照合した統合記録に含まれる原本も、この状態になります。',
+  'no-common':'照合に使える共通の入口・番号目印・確認済みのワープ端点が、現在つながる記録との間にありません。同じ手掛かりを別の地図でも観測すると、照合できる場合があります。',
+  ambiguous:'共通の手掛かりが複数の場所に残り、対応を一つに定められません。周期を理解すると、同じ場所として整理できる場合があります。',
+  offset:'共通の手掛かりから求めた地図の位置関係が一致していません。未知の周期などが残っている可能性があります。',
+  terrain:'手掛かりを合わせると、記録した地形や場所が重なる部分で食い違うため保留しています。',
+  'orientation-multiple':'共通の手掛かりを合わせても、観測済みの地形に合う位置・向きが複数残っています。手掛かりの周りをさらに観測すると、候補を絞れる場合があります。',
+  'orientation-anchors':'共通の入口・目印・確認済みワープ端点の記録が複数の場所にあり、対応を一つに定められません。',
+  'orientation-conflict':'回転・反転の候補を調べましたが、共通の手掛かりと観測済みの地形に同時に合う配置が見つからないため保留しています。',
+  orientation:'回転・反転を含めて照合を試しましたが、位置と向きを確定できていません。共通の入口・番号目印・確認済みのワープ端点と、その周囲の地形を観測すると絞れる場合があります。',
+  disabled:'この迷路では、転移ごとに地図を分ける設定が無効です。'
+ })[reason]||'この記録の照合状況を確認できません。';
+}
+function openMatchRecord(index){
+ if(!Number.isInteger(index)||!game.cognition.archives[index])return;
+ $('archiveOriginals').checked=true;renderArchive();
+ $('archiveChoice').value=String(index);renderArchive();
+ $('archiveChoice').focus();
+}
+function renderMatchingOverview(reasons){
+ const labels={ready:'照合できます',matched:'照合済み','no-common':'共通の手掛かりなし',ambiguous:'印の対応が複数',offset:'位置関係が不一致',terrain:'重なる記録が不一致',
+  'orientation-multiple':'位置・向きの候補が複数','orientation-anchors':'印の対応が複数','orientation-conflict':'条件に合う配置なし',orientation:'位置・向きが未確定',disabled:'照合は無効'};
+ const ready=reasons.filter(r=>r==='ready').length,matched=reasons.filter(r=>r==='matched').length;
+ const summary=`保存 ${reasons.length}冊 / 照合済み ${matched}冊 / 照合可能 ${ready}冊 / 保留 ${reasons.length-matched-ready}冊`;
+ if($('archiveMatchSummary').textContent!==summary)$('archiveMatchSummary').textContent=summary;
+ const filter=$('archiveMatchFilter').value||'all';
+ const visible=reasons.map((reason,index)=>({reason,index})).filter(({reason})=>filter==='all'||(filter==='pending'? !['ready','matched'].includes(reason):reason===filter));
+ const signature=JSON.stringify([filter,reasons]);
+ if(renderMatchingOverview.game===game&&renderMatchingOverview.signature===signature)return;
+ const list=$('archiveMatchList');list.replaceChildren();
+ $('archiveMatchEmpty').hidden=visible.length>0;
+ $('archiveMatchEmpty').textContent=filter==='pending'?'保留中の記録はありません。':filter==='ready'?'今、照合できる未照合の記録はありません。':filter==='matched'?'現在の地図につながった記録はまだありません。':'保存された記録はまだありません。';
+ visible.forEach(({reason,index})=>{
+  const item=document.createElement('li'),button=document.createElement('button');
+  button.type='button';button.textContent=`記録 ${index+1}：${labels[reason]||'状況を確認できません'} — 原本を見る`;
+  button.addEventListener('click',()=>openMatchRecord(index));item.append(button);list.append(item);
+ });
+ renderMatchingOverview.game=game;renderMatchingOverview.signature=signature;
+}
 function renderArchive() {
   renderArchive.zeroPoints=[];renderArchive.arrowHits=[];
   renderTransferHistory();
@@ -190,9 +231,11 @@ function renderArchive() {
   const landmarkLabel=landmark?.label || '入口';
   $('matchEntrance').textContent=landmark ? `${landmark.label}で地図を照合` : '入口・目印で地図を照合';
   $('matchEntrance').disabled=!matches.length;
-  const recordedMatches=MazeCore.matchRecordedMaps(game);
+  const diagnosis=MazeCore.inspectRecordedMatching(game),recordedMatches=diagnosis.matches;
+  $('archiveMatchReason').textContent=recordedMatchExplanation(diagnosis.reasons[index]);
+  renderMatchingOverview(diagnosis.reasons);
   $('matchRecorded').disabled=!recordedMatches.length;
-  $('matchRecordedHint').textContent=recordedMatches.length ? `記録した入口・番号目印から、${recordedMatches.length}冊を連鎖的につなげられます。現在地が目印の上でなくても照合できます。`
+  $('matchRecordedHint').textContent=recordedMatches.length ? `記録した入口・番号目印・確認済みのワープ矢印から、${recordedMatches.length}冊を連鎖的につなげられます。現在地が目印の上でなくても照合できます。`
     : '両方の地図に記録した同じ入口・番号目印を手がかりにします。理解済みの周期だけで整理し、印が複数の場所に残る地図・共通の印がない地図・位置関係が食い違う地図は保留します。';
   $('matchHint').textContent=!landmark ? '入口または番号付き目印の上で、その印を記録した地図帳を照合できます。閲覧・照合では時間は進みません。' : matches.length ? `${matches.length}冊を${landmarkLabel}の位置で照合できます。その印を記録していない地図・対応する像が一つに定まらない地図は保留します。` : '今照合できる地図はありません。周回を理解すると、保留した地図を照合できる場合があります。';
   if(game.viewFrame)$('matchHint').textContent='回転・反転した地図は、共通の入口・目印と観測した地形で向きを絞ります。情報不足や対称な形で候補が複数ある場合は保留します。';
@@ -259,6 +302,20 @@ $('saveTrueMapText').addEventListener('click',()=>{
   link.href=url;link.download='maze-explorer-map.txt';document.body.append(link);link.click();link.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
+function annotatedMapPng(target,archive){
+ const output=document.createElement('canvas'),scale=target.width/(target.clientWidth||target.width),padding=12*scale,lineHeight=18*scale;
+ output.width=target.width;
+ const g=output.getContext('2d');g.font=`${12*scale}px sans-serif`;
+ const w=game.world,label=archive?'地図帳':view===1?'真世界':'主観世界';
+ const texts=[`迷路のアトリエ — ${label} / ${game.turns}行動目`, `シード: ${w.seed}`, `${w.topology==='torus'?'トーラス':'平面'} / ${w.width} × ${w.height} / ${w.algorithm}`, '表示範囲の記録です。探索再開には途中セーブを使用してください。'];
+ const lines=[],available=Math.max(1,output.width-padding*2);
+ for(const text of texts){let line='';for(const ch of text){if(line&&g.measureText(line+ch).width>available){lines.push(line);line='';}line+=ch;}lines.push(line);}
+ output.height=target.height+Math.ceil(padding*2+lines.length*lineHeight);
+ g.fillStyle='#0b181e';g.fillRect(0,0,output.width,output.height);g.drawImage(target,0,0);
+ g.font=`${12*scale}px sans-serif`;g.fillStyle='#d7e8e7';g.textBaseline='top';
+ lines.forEach((line,i)=>g.fillText(line,padding,target.height+padding+i*lineHeight));
+ return output;
+}
 function exportMapPng(archive){
  const status=$('mapPngStatus');
  if(archive&&$('mapArchive').hidden){status.textContent='保存できる地図帳がありません。';return;}
@@ -266,11 +323,12 @@ function exportMapPng(archive){
   render();
   const target=archive?$('archiveMap'):canvas;
   if(!target.width||!target.height)throw Error('地図がまだ表示されていません。');
-  const data=target.toDataURL('image/png');if(!data.startsWith('data:image/png'))throw Error('画像を作成できませんでした。');
+  const output=$('annotateMapPng').checked?annotatedMapPng(target,archive):target;
+  const data=output.toDataURL('image/png');if(!data.startsWith('data:image/png'))throw Error('画像を作成できませんでした。');
   const seed=String(game.world.seed||'maze').replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,60);
   const kind=archive?'archive':view===1?'truth':'subjective';
   const link=document.createElement('a');link.href=data;link.download=`maze-${seed}-${kind}-${game.turns}.png`;
-  const caption=`${archive?'地図帳':view===1?'真世界':'主観世界'} / シード: ${game.world.seed} / ${game.turns}行動目 / ${target.width} × ${target.height}px`;
+  const caption=`${archive?'地図帳':view===1?'真世界':'主観世界'} / シード: ${game.world.seed} / ${game.turns}行動目 / ${output.width} × ${output.height}px`;
   $('mapPngImage').src=data;$('mapPngImage').alt=caption;
   $('mapPngDownload').href=data;$('mapPngDownload').download=link.download;
   $('mapPngCaption').textContent=caption;$('mapPngPreview').hidden=false;
@@ -300,25 +358,33 @@ $('showWarpLinks').addEventListener('change',render);
 $('warpDebugGroup').addEventListener('change',render);
 $('archiveOriginals').addEventListener('change',renderArchive);
 $('archiveChoice').addEventListener('change',renderArchive);
+$('archiveMatchFilter').addEventListener('change',renderArchive);
 $('archiveKnowledge').addEventListener('change',renderArchive);
+function matchingResultMessage(matches){
+ const total=game.cognition.archives.length;
+ if(!total)return '保存された地図帳はまだありません。転移後に残る記録を照合できます。';
+ const linked=new Set(MazeCore.archiveGroups(game).filter(group=>group.live).flatMap(group=>group.members)).size;
+ const remaining=total-linked;
+ const result=matches.length?`地図帳 ${matches.map(i=>i+1).join('・')} を現在の地図へつなぎました。`:'今回、新しくつながる記録はありません。';
+ return remaining?`${result} 保存 ${total}冊のうち ${linked}冊が現在の地図につながり、${remaining}冊は保留中です。「全記録の照合状況を見る」で手掛かりを確認できます。`
+  :matches.length?`${result} 保存された ${total}冊すべてが現在の地図につながっています。`
+  :`保存された ${total}冊すべてが、すでに現在の地図につながっています。`;
+}
 function matchAvailableMaps() {
-  if(!game)return;
-  const matches=[...new Set([...MazeSession.act(game,'landmark'),...MazeSession.act(game,'recorded')])];
-  $('status').textContent=matches.length
-    ? `地図帳 ${matches.map(i=>i+1).join('・')} を現在の地図へつなぎました。`
-    : '今照合できる地図はありません。入口・目印の記録、確認できたワープ矢印、周期の理解が増えたら再び C キーで照合できます。';
-  render();
+ if(!game)return;
+ const matches=[...new Set([...MazeSession.act(game,'landmark'),...MazeSession.act(game,'recorded')])];
+ $('status').textContent=matchingResultMessage(matches);
+ render();
 }
 $('matchAll').addEventListener('click',matchAvailableMaps);
 $('matchRecorded').addEventListener('click',()=>{
   const matches=MazeSession.act(game,'recorded');
-  if(matches.length)$('status').textContent=`記録した目印をたどり、地図帳 ${matches.map(i=>i+1).join('・')} を現在の地図へつなぎました。`;
+  $('status').textContent=matchingResultMessage(matches);
   render();
 });
 $('matchEntrance').addEventListener('click',()=>{
-  const landmark=MazeCore.currentLandmark(game);
   const matched=MazeSession.act(game,'landmark');
-  if(matched.length) $('status').textContent=`${landmark.label}を手がかりに、地図帳 ${matched.map(i=>i+1).join('・')} を現在の地図へつなぎました。`;
+  $('status').textContent=matchingResultMessage(matched);
   render();
 });
 function render() {
@@ -779,6 +845,23 @@ $('beginJourney').addEventListener('click',()=>{
   } catch(error) { $('status').textContent=`旅を開始できませんでした。${error.message}`; }
 });
 
+function currentGenerationDetails(g){
+ const w=g.world,o=g.generationOptions||{},lines=[`シード：${w.seed}`];
+ if(w.algorithm==='rooms'){
+  lines.push(`部屋の配置：${{bsp:'領域分割',scatter:'散らして配置',grid:'格子状に配置'}[w.roomPlacement]||w.roomPlacement}`);
+  lines.push(`部屋のつなぎ方：${{tree:'短い通路でつなぐ',chain:'順につなぐ',ring:'環状につなぐ',hub:'入口の部屋を中心につなぐ'}[w.connectionStyle]||w.connectionStyle}`);
+  lines.push(`部屋数：目標 ${w.requestedRoomCount}室 / 生成 ${w.rooms.length}室`);
+ }
+ if(w.algorithm==='growing')lines.push(`長い道を伸ばす割合：${w.newestBias}%`);
+ if(w.warpMode)lines.push(`ワープの組数：目標 ${o.warpCount??w.warpCount}組 / 配置 ${w.warpCount}組`);
+ if(w.puzzle)lines.push(`鍵と扉：目標 ${o.keyCount??w.puzzle.locks.length}組 / 配置 ${w.puzzle.locks.length}組`);
+ if(w.birdMode){
+  lines.push(`鳥人間：目標 ${o.birdCount??g.birds.length}体 / 配置 ${g.birds.length}体`);
+  lines.push(`鳥人間の転移先：${{far:'遠くを優先',known:'見覚えのある場所を優先',unseen:'まだ見ていない場所を優先'}[w.teleportPolicy]||w.teleportPolicy}`);
+ }
+ lines.push('現在の迷路の条件です。次の迷路用に変更した候補とは別です。');
+ return lines.join('\n');
+}
 function renderJourneyOverview() {
   renderRandomSettings();
   renderRandomPending();
@@ -799,6 +882,8 @@ function renderJourneyOverview() {
   if(!w.warpMode&&!w.puzzle&&!w.birdMode)parts.push('通常探索');
   renderJourneyHistory();
   $('journeyCurrent').textContent='今の迷路：'+parts.join(' · ');
+  const details=currentGenerationDetails(game);
+  if($('journeyCurrentDetails').textContent!==details)$('journeyCurrentDetails').textContent=details;
   const course=$('journeyCourse').value;
   for(const button of document.querySelectorAll('[data-course]')){const selected=button.dataset.course===course;button.setAttribute('aria-pressed',String(selected));button.textContent=selected?'選択中':'選ぶ';}
   $('journeySize').value=game.journey?.size||'standard';$('journeySize').disabled=course==='same'||course==='random';
@@ -890,7 +975,18 @@ function focusedWarpArrows(arrows,selection,enabled,status='all'){
 function drawWarpAnnotations(context,points,w,h){
  const selection=$('editZeroMark').getAttribute('aria-pressed')==='true'?renderWarpNotes.selection:null,hits=[];
  const filtered=[...focusedWarpArrows(game.warpArrows||[],selection,$('focusWarpArrows').checked,$('warpArrowStatusFilter').value||'all')].sort((a,b)=>Number(sameArrow(selection,a))-Number(sameArrow(selection,b)));
- const closest=id=>(points||[]).filter(p=>p.id===id).sort((a,b)=>Math.hypot(a.x-w/2,a.y-h/2)-Math.hypot(b.x-w/2,b.y-h/2))[0];
+ // Build once per drawing: repeated images of each floor share one nearest endpoint.
+ let nearest;
+ const closest=id=>{
+  if(!nearest){
+   nearest=new Map();
+   for(const p of points||[]){
+    const key=p.id,distance=Math.hypot(p.x-w/2,p.y-h/2),previous=nearest.get(key);
+    if(!previous||distance<previous.distance)nearest.set(key,{point:p,distance});
+   }
+  }
+  return nearest.get(id)?.point;
+ };
  context.save();
  if($('showKnownArrows').checked&&Number($('arrowTransparency').value)<100){
   for(const a of filtered){
@@ -925,14 +1021,37 @@ function drawWarpAnnotations(context,points,w,h){
 function renderWarpNotes(context,w,h){
  $('warpNotes').hidden=!game.world.warps?.size;
  if(renderWarpNotes.game!==game){abortArrowDrag();renderWarpNotes.game=game;renderWarpNotes.from=null;renderWarpNotes.selection=null;$('editZeroMark').setAttribute('aria-pressed','false');$('zeroMarkStatus').textContent='';$('editWarpArrow').setAttribute('aria-pressed','false');$('warpArrowStatus').textContent='';}
- const arrows=game.warpArrows||[],records=MazeCore.warpArrowRecords(game),list=$('warpArrowList');list.replaceChildren();
- $('warpArrowNotesText').value=MazeCore.exportWarpArrowNotes(game);
+ const arrows=game.warpArrows||[],list=$('warpArrowList');
+ const signature=JSON.stringify(arrows);
+ if(renderWarpNotes.notesGame!==game||renderWarpNotes.notesSignature!==signature){
+  $('warpArrowNotesText').value=MazeCore.exportWarpArrowNotes(game);
+  renderWarpNotes.records=MazeCore.warpArrowRecords(game);
+  renderWarpNotes.notesGame=game;renderWarpNotes.notesSignature=signature;
+ }
+ const records=renderWarpNotes.records;
+ const structure=JSON.stringify(arrows.map(a=>[a.from,a.to]));
+ if(renderWarpNotes.listGame!==game||renderWarpNotes.listStructure!==structure){
+  list.replaceChildren();
+  renderWarpNotes.buttons=arrows.map(a=>{
+   const button=document.createElement('button');button.type='button';
+   const endpoint={type:'arrow',from:a.from,to:a.to};
+   button.addEventListener('click',()=>{selectAnnotation(sameArrow(renderWarpNotes.selection,endpoint)?null:{...endpoint});$('zeroMarkStatus').textContent=renderWarpNotes.selection?'矢印を選択しました。Deleteで消去できます。':'矢印の選択を解除しました。';});
+   list.append(button);return button;
+  });
+  renderWarpNotes.listGame=game;renderWarpNotes.listStructure=structure;
+ }
  $('warpArrowCounts').textContent=`全${arrows.length}本 / 未確認 ${arrows.filter(a=>a.status==='hypothesis').length} / 確認済み ${arrows.filter(a=>a.status==='confirmed').length} / 不一致 ${arrows.filter(a=>a.status==='contradicted').length}`;
  const selected=$('editZeroMark').getAttribute('aria-pressed')==='true'&&arrows.find(a=>sameArrow(renderWarpNotes.selection,a));
  $('straightenWarpArrow').disabled=$('resetWarpArrowCurve').disabled=!selected;
  $('reverseWarpArrow').disabled=!selected||game.won;
  const history=MazeSession.arrowHistoryInfo(game);$('undoWarpArrow').disabled=!history.undo;$('redoWarpArrow').disabled=!history.redo;
- arrows.forEach((a,i)=>{const button=document.createElement('button');button.type='button';button.textContent=`矢印 ${i+1}：${records[i].from} → ${records[i].to} / ${{hypothesis:'予想（未確認）',confirmed:'実際のワープと一致・照合に使用',contradicted:'違うのでは？ ワープ先が不一致'}[a.status]}`;button.disabled=$('editZeroMark').getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(sameArrow(renderWarpNotes.selection,a)));button.addEventListener('click',()=>{selectAnnotation(sameArrow(renderWarpNotes.selection,a)?null:{type:'arrow',from:a.from,to:a.to});$('zeroMarkStatus').textContent=renderWarpNotes.selection?'矢印を選択しました。Deleteで消去できます。':'矢印の選択を解除しました。';});list.append(button);});
+ arrows.forEach((a,i)=>{
+  const button=renderWarpNotes.buttons[i],text=`矢印 ${i+1}：${records[i].from} → ${records[i].to} / ${{hypothesis:'予想（未確認）',confirmed:'実際のワープと一致・照合に使用',contradicted:'違うのでは？ ワープ先が不一致'}[a.status]}`;
+  const disabled=$('editZeroMark').getAttribute('aria-pressed')!=='true',pressed=String(sameArrow(renderWarpNotes.selection,a));
+  if(button.textContent!==text)button.textContent=text;
+  if(button.disabled!==disabled)button.disabled=disabled;
+  if(button.getAttribute('aria-pressed')!==pressed)button.setAttribute('aria-pressed',pressed);
+ });
  render.arrowHits=drawWarpAnnotations(context,render.warpPoints,w,h);
 }
 $('editWarpArrow').addEventListener('click',()=>{

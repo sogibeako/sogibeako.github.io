@@ -7,9 +7,31 @@ for(let id=0;id<g.world.cells.length;id++)if(g.world.cells[id]){const p=pathTo(i
 if(g.won)S.act(g,'continue');
 const [from,to]=[...g.world.warps][0],known=new Set([...g.cognition.memory_nodes.values(),...g.cognition.archives.flatMap(a=>[...a.nodes.values()])].filter(n=>n.terrain).map(n=>n.world_id));assert(known.has(from)&&known.has(to));const wrong=[...known].find(id=>id!==from&&id!==to);
 assert(S.act(g,'arrow',from,to));assert(S.act(g,'arrow',from,wrong));assert.equal(g.warpArrows[0].status,'hypothesis');assert.equal(M.knownWarpAnchor(g,{world_id:from}),null);
+// Edit before travelling so undo must preserve observations acquired later.
+assert(S.act(g,'curveArrow',from,to,0.75));
 let approach;for(let id=0;id<g.world.cells.length&&!approach;id++)if(g.world.cells[id])for(const d of Object.keys(M.DIRS)){const e=M.ruleTransition(g.world,{...g.player,world_position:id},d);if(e?.to===from){const p=pathTo(id);if(p)approach=[...p,d];}}
 assert(approach);walk(approach);assert.equal(g.lastTransition.kind,'warp');assert.deepEqual(g.warpArrows.map(a=>a.status),['confirmed','contradicted']);assert(M.knownWarpAnchor(g,{world_id:from}));assert.equal(M.knownWarpAnchor(g,{world_id:wrong}),null);
 const record=S.encode(g,'same');assert.equal(S.encode(S.decode(record).game,'same'),record);
+// Real traversal, undo/redo, chart matching and save restoration share one action history.
+assert(g.cognition.archives.length>0);
+assert(S.act(g,'undoArrow'));assert.equal(g.warpArrows[0].status,'confirmed');assert(!Object.hasOwn(g.warpArrows[0],'curve'));
+let integratedSave=S.encode(g,'same'),integrated=S.decode(integratedSave).game;
+assert.equal(S.encode(integrated,'same'),integratedSave);
+assert.deepEqual(S.arrowHistoryInfo(integrated),S.arrowHistoryInfo(g));
+assert(S.act(integrated,'redoArrow'));assert.equal(integrated.warpArrows[0].curve,0.75);assert.equal(integrated.warpArrows[0].status,'confirmed');
+S.act(integrated,'recorded');
+assert(S.act(integrated,'eraseArrow',from,to));assert.equal(M.knownWarpAnchor(integrated,{world_id:to}),null);
+assert(S.act(integrated,'undoArrow'));assert.equal(integrated.warpArrows[0].status,'confirmed');assert.equal(integrated.warpArrows[0].curve,0.75);
+assert(M.knownWarpAnchor(integrated,{world_id:to}));
+integratedSave=S.encode(integrated,'same');
+const afterMatch=S.decode(integratedSave).game;
+assert.equal(S.encode(afterMatch,'same'),integratedSave);
+assert.deepEqual(afterMatch.cognition,integrated.cognition);
+assert.deepEqual(S.arrowHistoryInfo(afterMatch),S.arrowHistoryInfo(integrated));
+assert(S.act(afterMatch,'redoArrow'));assert.equal(M.knownWarpAnchor(afterMatch,{world_id:to}),null);
+const afterRedo=S.encode(afterMatch,'same');assert.equal(S.encode(S.decode(afterRedo).game,'same'),afterRedo);
+console.log('PASS: actual warp observations survive curve undo, save/resume, redo, chart matching and deletion undo/redo, including restored edit stacks.');
+
 // Confirmed endpoints can align remembered maps, hypotheses cannot.
 const p=M.createGame(g.world);p.cognition.memory_nodes=new Map([['C2,2',{x:2,y:2,world_id:from,terrain:1,feature:'0'}]]);p.cognition.archives=[{nodes:new Map([['C1,1',{x:1,y:1,world_id:from,terrain:1,feature:'0'}]]),sources:[]}];p.warpArrows=[{from,to,status:'hypothesis'}];assert.deepEqual(M.matchRecordedMaps(p),[]);p.warpArrows[0].status='confirmed';assert.deepEqual(M.matchRecordedMaps(p,true),[0]);
 console.log('PASS: manually recorded correct/wrong hypotheses verified by actual traversal, no premature anchors, confirmed-only matching and exact session replay.');

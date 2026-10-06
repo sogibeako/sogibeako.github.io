@@ -5,11 +5,19 @@ const M=typeof module==='object'?require('./core.js'):root.MazeCore;
 const O=typeof module==='object'?require('./orientation.js'):root.MazeOrientation;
 function project(frame,x,y){return O.apply(O.inverse(frame||O.identity()),x,y);}
 function nodesInFrame(nodes,frame){return new Map([...nodes.values()].map(n=>{const [x,y]=project(frame,n.x,n.y);return [`${x},${y}`,{...n,x,y}];}));}
-function match(game,apply=false){
+function match(game,apply=false,reasons=null){
  const c=game.cognition,f=game.viewFrame;
  const evidence=(nodes,frame)=>new Map([...nodesInFrame(nodes,frame)].map(([k,n])=>{const anchor=M.knownWarpAnchor(game,n);if(anchor)return [k,{...n,warpAnchor:anchor}];if(n.warpAnchor){const {warpAnchor,...rest}=n;return [k,rest];}return [k,n];}));
  const adapter={history:[],chart:{nodes:evidence(c.memory_nodes,f),matches:new Set(c.matchedArchives)},archives:c.archives.map(a=>({nodes:evidence(a.nodes,a.viewFrame),matches:new Set(a.sources||[])}))};
- const result=O.matchAll(adapter).matched;
+ const report=O.matchAll(adapter),result=report.matched;
+ if(reasons){
+  c.archives.forEach((_,i)=>reasons[i]=result.includes(i)?'ready':c.matchedArchives.has(i)?'matched':'orientation');
+  for(const pending of report.pending){
+   reasons[pending.index]=pending.status==='no-landmarks'?'no-common'
+    :pending.status==='conflict'?'orientation-conflict'
+    :pending.status==='ambiguous'?(pending.candidates.length?'orientation-multiple':'orientation-anchors'):'orientation';
+  }
+ }
  if(apply&&result.length){
   c.memory_nodes=new Map([...adapter.chart.nodes.values()].map(n=>{const [x,y]=O.apply(f,n.x,n.y);return [`C${x},${y}`,{...n,x,y}];}));
   c.matchedArchives=adapter.chart.matches;
