@@ -114,7 +114,7 @@ wave*0.8</code></pre>
     <h3>1周期ごとに正弦波と矩形波が切り替わる波形</h3>
     <hr />
     <a
-      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIAuBDAdgCwBQGYBUWATHlBgLQCMAlFSADQgDOKAZmEgJ4JMD2LS9EABMAxggoMA5igCWaBAAYAdIQCsDRiJQAbMNwoLlAHTSFDSkznMmALNbSr7ANnsB2ewA57ATnsG--hZoFGbKggBGKIxgABIAXgg2dgwAbjIwSADKAEqJXoYMUCgZMjoA6igpeoio4bqCRSU6jNwAxDAoSDI8AAQoALZQJhQ9FCathD3Kqj09gKdygNBygM0MgIcMgM8MgBMMgEUMgGUMG4C0coBADICQ5oCdSoDWDIDqDID6DIAiDIAsGoAQKoD2DK2ASQyAUkqAJmnjOFNKOBw4xs-zU4xmykI4yc-wornGrlhNnGHlhahAAF8gA">
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIAUUAWACAPOgDAOgFYBKdAfnQGcBLAOyQBYAqKK51E+dJFDbfAdmJl0ARnScAtCKIgANCAoBDAGZgALgE8ECgPbK1ckABMAxghzyA5otrm8AJgLyKJxQBsw2kTnwAdGvY+eP4AzEH+9OE0BFEAbFH8UQAcUQCcUd4ZmcE0IoH4hgBGihRgABIAXgj0kfIAblQwagDKAErVKT7yUIpNVO4A6op1nohqioUehj197hTaAMQwimpUOuiKALZQ-mIi-gv2uITo6ICncoDQcoDNDICHDIDPDIATDIBFDIBlDA+AtHKAQAyAkOaAnUqA1gyAdQZAPoMgBEGQAsGoAIFUA9gwLQBJDIApJUAJmkHELHEIhA70Y6OA4EHEHWLHET8A78Yn0A5JYmOEAAXyAA">
       <img src="waveform_museum_src/sin_square_alt.png" , class="yokonaga-image" /></a>
     <pre class="codebox"><code>(ph < 0.5) ? sin(4*pi*ph) : ((ph < 0.75) ? 1 : -1)</code></pre>
     ひとこと：想像されているよりもかなり複雑な倍音が出ます。<br />
@@ -123,7 +123,7 @@ wave*0.8</code></pre>
     <h3>1周期ごとに正弦波とノコギリ波が切り替わる波形</h3>
     <hr />
     <a
-      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIAuBDAdgCwBQGYBUWATHlBgLQCMAlFSADQgDOKAZmEgJ4JMD2LS9EABMAxggoMA5igCWaBAAYAdIQCsDRiJQAbMNwoLlAHTSFDSkznMmALNbSr7ANnsB2ewA57ATnsG--hZoFGbKggBGKIxgABIAXgg2dgwAbjIwSADKAEqJXoYMUCgZMjoA6igpeoio4bqCRSU6jNwAxDAoSDI8AAQoALZQJhQ9FCathD3Kqj09gKdygNBygM0MgIcMgM8MgBMMgEUMgGUMG4C0coBADICQ5oCdSoDWDIDqDID6DIAiDIAsGoAQKoD2DK2ASQyAUkqAJmnjOFNKOBw4xs-zU4xmykI4yc-wornGrlhNnGHlhahAAF8gA">
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIAUUAWACAPOgDAOgFYBKdAfnQGcBLAOyQBYAqKK51E+dJAJkaX65oAtPmKNu6EgGpchEgFJ0ARhJDlREABoQFAIYAzMABcAngh0B7fUa0gAJgGMES7QHNdtBPm4FtFB7oANmDmSjj4ADo03OF4UQDMsVH0STQEqQBsqQDsqQAcqQCcqWElpXE0SjH4tgBGuhRgABIAXgj0KdoAblQwRgDKAErtBeHaULp9VEEA6rpdIYhGurXBthNTQRTmAMQwukZUFui6ALZQUUrKUTsSoujogKdygNBygM0MgIcMgM8MgBMMgEUMgGUM30AtHKAIAZAJDmgE6lQDWDIB1BkA+gyAEQZACwagAgVQD2DDtAEkMgCklQAmaTd4rJ4vEbvRZD4bgRyTcMrIlNkbtk6fQbnk6T4QABfIA">
       <img src="waveform_museum_src/sin_saw_alt.png" , class="yokonaga-image" /></a>
     <pre class="codebox"><code>(ph < 0.5) ? sin(4*pi*ph) : (2*((( (ph-0.5)*2 ) + 0.5) % 1) - 1)</code></pre>
     ひとこと：こちらも同じく。<br />
@@ -312,7 +312,7 @@ wave*0.15</code></pre>
     <h3>位相を粗くサンプリングする階段波</h3>
     <hr />
     <a
-      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIAqACAvCgTAKigS1wAsAdAOzIHcBDANzHRSoCMBnAChb1LYAYA6AKzYkAShFkyEBtTqVaYbPwAcIADQgWVAGZgALgE8EGgPZbdakABMAxgh7qA5lS52+mAepbWqAGzBGARh5+MkxgvjIAZnCyABYY0gEEgDYEgHYEpQSATgSgvPyI0gCw-gsmKhYwAAkALwRY+PUaPBhdAGUAJQas4IBfIA">
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIByACAvCgjAJgDoDsBHdFAMwBsB7SmACigAsAqJASgHokCBnAS31rYmUXk0KsQAGhDcAhqTAAXAJ4IZlUoqkgAJgGMEABmkBzWfyMA6bAFZp3PbPJg1mQ4csFs7z-gDMPgQALIH4NqEAbKEA7KEAHKEAnKFuKam+OD7aAEay3GAAEgBeCEEh0gBuvDCKAMoASqUJ7tJQsjW8TgDqshUuiIqy2c7abR1O3GoAxDCyiryUKLIAtlAEmFgEU9goHjYoKICncoDQcoDNDICHDIDPDIATDIBFDIBlDNeAtHKAQAyAkOaAnUqA1gyA6gyA+gyAEQZACwagAgVQD2DFNAEkMgCklQAmaVs-LtLH4-FsgkjbFt9h48PgphEkZholtooSgls4oTbCAAL5AA">
       <img src="waveform_museum_src/stairway.png" , class="yokonaga-image">
     </a>
     <pre class="codebox"><code>N = 12
@@ -324,7 +324,7 @@ sin(2*pi*q)</code></pre>
     <h3>正弦波からサンプル点を線形補完する</h3>
     <hr />
     <a
-      href=../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIByACAvCgrAHQHYFd0UoALAKiTwEsiAzAGwHtGYAKfASjwEMiBnKrlYAmMlCplWVAPRIOXXACN+gkWImspAagCMHWfLy0ihALQoqPFFpStFp7hzK0QAGhB9utMABcAngggAMb0VFBuIAAmQQgADO4A5tyCcQB0wpjufEHc9GCBOrGxqXjCRSW4AMzleAAsNbiYDQBsDQDsDQAcDQCcDYX9AxU6ZcURitx8YAASAF4ItfXuAG5UMD4AygBKC91F7lDc61S5AOrcy-mIPtyKeRGHx7l8gQDEMNw+VIwo3AC2UDwOhQOjwr2EKGKmBQKEAp3KAaDlAM0MgEOGQDPDIAJhkARQyAMoZ0YBaOUAQAyASHNAJ1KgGsGQDqDIB9BkAIgyAFg1ABAqgHsGV6AJIZAFJKgBM0sGVSGpSqVMG1PkZMHQ4rCMHNPk6Npgtoy2pgzoyjIgAC+QA">
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIByACAvCgrAHQHYFd0UoALAKiTwEsiAzAGwHtGYAKfASjwEMiBnKrlYAmMlCplWVAPRIOXXACN+gkWImspAagCMHWfLy0ihALQoqPFFpStFp7hzK0QAGhB9utMABcAngggAMb0VFBuIAAmQQgADO4A5tyCcQB0wpjufEHc9GCBOrGxqXjCRSW4AMzleAAsNbiYDQBsDQDsDQAcDQCcDYX9AxU6ZcURitx8YAASAF4ItfXuAG5UMD4AygBKC91F7lDc61S5AOrcy-mIPtyKeRGHx7l8gQDEMNw+VIwo3AC2UDwOhQOjwr2EKGKmBQKEAp3KAaDlAM0MgEOGQDPDIAJhkARQyAMoZ0YBaOUAQAyASHNAJ1KgGsGQDqDIB9BkAIgyAFg1ABAqgHsGV6AJIZAFJKgBM0sGVSGpSqVMG1PkZMHQ4rCMHNPk6Npgtoy2pgzoyjIgAC+QA">
       <img src="waveform_museum_src/linear_interpolation.png" , class="yokonaga-image">
     </a>
     <pre class="codebox"><code>N = 5
@@ -340,7 +340,7 @@ a + (b-a)*f</code></pre>
     <h3>ホールドと線形補完の中間</h3>
     <hr />
     <a
-      href=../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIDmBDALmABAXkwZwygAo8BLAOyICYAqKUmgZjoAsBKTAWkwAYA6KgFY2AHXJlKteqw41MqDCAA0IPCgBmYNAE8EIAMYAbUlGUgAJvoQ8VqCtYGCVefSkNg9ARh78xVH3xijAFiACwh5IIRAGwRAOwRABwRAJwR3ukZgeSe-vxmAEYoeGAAEgBeCKHhKgBupDBoAMoASlXJPipQKI2kbgDqKLUeiGgoBe5m3b1ueHoAxDDopAD2mCgAtlBinpieYvNUvHyCmJiAp3KA0HKAzQyAhwyAzwyAEwyARQyAZQyPgLRygEAMgJDmgJ1KgGsGQDqDIB9BkAIgyAFg1ABAqgHsGeaAJIZAFJKgBM0g6MY6MRgHULHIQHU78KgHaLHTxxA5xUmhA6JUlCEAAXyAA">
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIByACAvCgjABgDoDsBXdFKACwCokCBLEgMwBsB7ZmACkIEoD6TiAtChoEAhiQDONfOwBMFKDQrsaAeiRce+AEaTpchUvYqA1Ji7rNBALY0IJbADoAzAFYCZZowAmJUQUZpPxQTFHZtAVEuCnoPL29lTAFbCC4QlED8ChSQABoQCVF6MAAXAE8EEABjQKg8kG8qhGx8gHNRaWbHWVd8iSrRRjBKnCcCWWwx-GdJxwIAFlmCVyX8ADZVgHZVgA5VgE5V0anMUbn8TAmneu1RCTAACQAvBHnF-IA3GhgSgGUAJVee0m+Sgoh+NEGAHVRB9hogSqJtEN6mCIYMJJUAMQwUQlGjMFCiaxQAiYLAELGyFBOVwoFCAU7lANBygGaGQCHDIBnhkAEwyAIoZAGUMXMAtHKAIAZAJDmgE6lQDWDIB1BkA+gyAEQZACwagAgVQD2DFjAEkMgCklQAmaZTnDSXM5KfNDT1KXSnLJKWtDZhNpTNnb5pSdnaeiAAL5AA">
       <img src="waveform_museum_src/hold_linear_mix.png" , class="yokonaga-image">
     </a>
     <pre class="codebox"><code>N = 10
@@ -374,7 +374,7 @@ sin(2*pi*ph) * gate</code></pre>
     <h3>トリガーでサンプリングしたような段階的変調</h3>
     <hr />
     <a
-      href=../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIDmBDALmABAXkwZwygAo8BLAOyICYAqKUmgZjoAsBKTAWkwAYA6KgFY2AHXJlKteqw41MqDCAA0IPCgBmYNAE8EIAMYAbUlGUgAJvoQ8VqCtYGCVefSkNg9ARh78xVH3xijAFiACwh5IIRAGwRAOwRABwRAJwR3ukZgeSe-vxmAEYoeGAAEgBeCKHhKgBupDBoAMoASlXJPipQKI2kbgDqKLUeiGgoBe5m3b1ueHoAxDDopAD2mCgAtlBinpieYvNUvHyCmJiAp3KA0HKAzQyAhwyAzwyAEwyARQyAZQyPgLRygEAMgJDmgJ1KgGsGQDqDIB9BkAIgyAFg1ABAqgHsGeaAJIZAFJKgBM0g6MY6MRgHULHIQHU78KgHaLHTxxA5xUmhA6JUlCEAAXyAA">
+      href="../../jssproject/0007_formulaSynth.htm#v1=N4IgpgHgDgTiBcIByACAvCg7AHQHYGt0UAzAGwHtyYAKKACwCokBKPOsUgEyIGcBLXNQBMDKHwbV8AehYMAzK1z9BIsaLrMUDFNQAMAOgCsKANQoDhhuy7MQAGhA8AhsTAAXAJ4IQAY1J8oexBOHwRdBwBzJwEw-SFDBx4fJ1IwbwBGXQM8ISz9PDk8vAAWItxDMoA2MswygA4ygE4yzJbW-Nx03IMggCMnHjAACQAvBGLShwA3Phg3AGUAJXGGrIcoJzm+FIB1Jym0xDcnXtSgja2Unm8AYhgnNz5yFCcAWyg8dJR0vBuhcyMKBQgFO5QDQcoBmhkAhwyAZ4ZABMMgCKGQBlDLDALRygCAGQCQ5oBOpUA1gyAdQZAPoMgBEGQAsGoAIFUA9gw3QBJDIApJUAJmm-OQAuRyX7FAHxX7GAxCX6VAHpHC4G6YQXFX51QXxEAAXyAA">
       <img src="waveform_museum_src/trigger_stepwise_mod.png" , class="yokonaga-image">
     </a>
     <pre class="codebox"><code>N = 7

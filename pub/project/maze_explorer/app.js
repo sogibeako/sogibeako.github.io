@@ -99,7 +99,7 @@ $('findMarkerArchive').addEventListener('click',()=>{
 $('markerChoice').addEventListener('change',loadMarkerName);
 $('saveMarkerName').addEventListener('click',()=>{
   const label=$('markerChoice').value;
-  if(!MazeSession.act(game,'name',label,$('markerName').value)){$('markerNameStatus').textContent='名前は改行なしで24文字以内にしてください。';return;}
+  if(!MazeSession.act(game,'name',label,$('markerName').value)){renderSessionInfo();$('markerNameStatus').textContent='名前は改行なしで24文字以内にしてください。';return;}
   loadMarkerName();$('markerNameStatus').textContent=`${MazeCore.markerTitle(game,label)}として記録しました。`;render();
 });
 function markHere() {
@@ -134,6 +134,7 @@ $('transferChoice').addEventListener('change',renderTransferHistory);
 $('transferFrom').addEventListener('click',()=>openTransferArchive('from'));
 $('transferTo').addEventListener('click',()=>openTransferArchive('to'));
 function renderArchive() {
+  renderArchive.zeroPoints=[];renderArchive.arrowHits=[];
   renderTransferHistory();
   const archives=game.cognition.archives, select=$('archiveChoice');
   $('mapArchive').hidden=!archives.length;
@@ -217,11 +218,13 @@ function renderArchive() {
   for(const n of nodes){
     const x=ox+(n.x-minX)*tile,y=oy+(n.y-minY)*tile;
     if(x+tile<0||y+tile<0||x>w||y>h)continue;
-    const entrance=n.world_id===game.world.start,marker=/^[1-9]$/.test(n.feature)||n.feature==='O';
+    if(n.terrain)renderArchive.zeroPoints.push({id:n.world_id,x:x+tile/2,y:y+tile/2,tile});
+    const entrance=n.world_id===game.world.start,marker=/^[0-9]$/.test(n.feature)||n.feature==='O';
     g.fillStyle=entrance?'#f1c583':marker?'#8be1ee':n.terrain?'#36534e':'#77918e';
     if(ascii&&tile>=7){g.font=`${tile}px monospace`;g.textAlign='center';g.textBaseline='middle';g.fillText(entrance?'<':marker?n.feature:n.terrain?'.':'#',x+tile/2,y+tile/2);}
     else {g.fillRect(x,y,Math.max(.5,tile-1),Math.max(.5,tile-1));if(marker&&tile>=9){g.fillStyle='#0b161c';g.font=`${tile*.8}px monospace`;g.textAlign='center';g.textBaseline='middle';g.fillText(n.feature,x+tile/2,y+tile/2);}}
   }
+  renderArchive.arrowHits=drawWarpAnnotations(g,renderArchive.zeroPoints,w,h);
   // Draw after all cells so nearby tiles cannot cover the selected marker's outline.
   if(highlight){
     g.strokeStyle='#ffffff';g.lineWidth=1.5;
@@ -243,7 +246,7 @@ $('archiveZoom').addEventListener('change',()=>{
   $('archiveViewport').scrollTo(0,0);renderArchive();
 });
 $('archiveViewport').addEventListener('scroll',renderArchive,{passive:true});
-$('archiveViewport').addEventListener('keydown',event=>{if(event.key.toLowerCase()!=='c')event.stopPropagation();});
+$('archiveViewport').addEventListener('keydown',event=>{if(!['c','z','y','delete','escape'].includes(event.key.toLowerCase()))event.stopPropagation();});
 $('highlightArchiveMarker').addEventListener('change',renderArchive);
 $('showTrueMapText').addEventListener('click',()=>{
   $('trueMapText').value=MazeCore.exportTrueMap(game);
@@ -256,6 +259,29 @@ $('saveTrueMapText').addEventListener('click',()=>{
   link.href=url;link.download='maze-explorer-map.txt';document.body.append(link);link.click();link.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
+function exportMapPng(archive){
+ const status=$('mapPngStatus');
+ if(archive&&$('mapArchive').hidden){status.textContent='保存できる地図帳がありません。';return;}
+ try{
+  render();
+  const target=archive?$('archiveMap'):canvas;
+  if(!target.width||!target.height)throw Error('地図がまだ表示されていません。');
+  const data=target.toDataURL('image/png');if(!data.startsWith('data:image/png'))throw Error('画像を作成できませんでした。');
+  const seed=String(game.world.seed||'maze').replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,60);
+  const kind=archive?'archive':view===1?'truth':'subjective';
+  const link=document.createElement('a');link.href=data;link.download=`maze-${seed}-${kind}-${game.turns}.png`;
+  const caption=`${archive?'地図帳':view===1?'真世界':'主観世界'} / シード: ${game.world.seed} / ${game.turns}行動目 / ${target.width} × ${target.height}px`;
+  $('mapPngImage').src=data;$('mapPngImage').alt=caption;
+  $('mapPngDownload').href=data;$('mapPngDownload').download=link.download;
+  $('mapPngCaption').textContent=caption;$('mapPngPreview').hidden=false;
+  if($('autoDownloadMapPng').checked){
+   document.body.append(link);try{link.click();}finally{link.remove();}
+   status.textContent='PNG保存を開始しました。始まらない場合はプレビュー下の「このPNGを保存」を使ってください。';
+  }else status.textContent='PNGを作成しました。プレビューを確認して「このPNGを保存」を押してください。';
+ }catch(error){status.textContent=`画像を保存できませんでした：${error.message}`;}
+}
+$('exportMapPng').addEventListener('click',()=>exportMapPng(false));
+$('exportArchivePng').addEventListener('click',()=>exportMapPng(true));
 $('exportArchiveNotes').addEventListener('click',()=>{
   const text=MazeCore.exportArchiveNotes(game);
   $('archiveExportText').value=text;$('archiveExportResult').hidden=false;
@@ -267,7 +293,7 @@ $('exportArchiveNotes').addEventListener('click',()=>{
 $('archiveNote').addEventListener('input',()=>{
   const text=$('archiveNote').value;
   if($('archiveNote').readOnly)return;
-  const saved=MazeCore.setArchiveNote(game,Number($('archiveChoice').value),text);
+  const saved=MazeSession.act(game,'note',Number($('archiveChoice').value),text);renderSessionInfo();
   $('archiveNoteStatus').textContent=saved ? (text ? `地図帳 ${Number($('archiveChoice').value)+1} に記録しました。` : 'この地図帳のメモを消しました。') : 'メモは200文字以内にしてください。';
 });
 $('showWarpLinks').addEventListener('change',render);
@@ -277,21 +303,21 @@ $('archiveChoice').addEventListener('change',renderArchive);
 $('archiveKnowledge').addEventListener('change',renderArchive);
 function matchAvailableMaps() {
   if(!game)return;
-  const matches=[...new Set([...MazeCore.matchLandmarkMaps(game,true),...MazeCore.matchRecordedMaps(game,true)])];
+  const matches=[...new Set([...MazeSession.act(game,'landmark'),...MazeSession.act(game,'recorded')])];
   $('status').textContent=matches.length
     ? `地図帳 ${matches.map(i=>i+1).join('・')} を現在の地図へつなぎました。`
-    : '今照合できる地図はありません。入口・目印の記録や、周期の理解が増えたら再び C キーで照合できます。';
+    : '今照合できる地図はありません。入口・目印の記録、確認できたワープ矢印、周期の理解が増えたら再び C キーで照合できます。';
   render();
 }
 $('matchAll').addEventListener('click',matchAvailableMaps);
 $('matchRecorded').addEventListener('click',()=>{
-  const matches=MazeCore.matchRecordedMaps(game,true);
+  const matches=MazeSession.act(game,'recorded');
   if(matches.length)$('status').textContent=`記録した目印をたどり、地図帳 ${matches.map(i=>i+1).join('・')} を現在の地図へつなぎました。`;
   render();
 });
 $('matchEntrance').addEventListener('click',()=>{
   const landmark=MazeCore.currentLandmark(game);
-  const matched=MazeCore.matchLandmarkMaps(game,true);
+  const matched=MazeSession.act(game,'landmark');
   if(matched.length) $('status').textContent=`${landmark.label}を手がかりに、地図帳 ${matched.map(i=>i+1).join('・')} を現在の地図へつなぎました。`;
   render();
 });
@@ -310,6 +336,7 @@ function render() {
   const py = view ? Math.floor(player.world_position / world.width) : perceived.y;
   const ox = view ? (w - world.width * tile) / 2 : w / 2 - (px + .5) * tile;
   const oy = view ? (h - world.height * tile) / 2 : h / 2 - (py + .5) * tile;
+  render.warpPoints=[];
   const featureColor = symbol => /^[1-9]$/.test(symbol) ? '#8be1ee' : ['V','W'].includes(symbol) && game.bird ? (symbol === 'V' ? '#ef9eaf' : '#8be1ee') : ({ a: '#f1c583', b: '#8bd3e6', c: '#d0a5e8' }[symbol?.toLowerCase()] || '#f1c583');
   function cell(x, y, terrain, visible, worldId, feature, familiar = false) {
     if(!view&&game.viewFrame){const p=MazeRotationBridge.project(game.viewFrame,x-px,y-py);x=px+p[0];y=py+p[1];}
@@ -317,6 +344,7 @@ function render() {
     if (bird) feature = bird.symbol;
     const sx = ox + x * tile, sy = oy + y * tile;
     if (sx + tile < 0 || sy + tile < 0 || sx > w || sy > h) return;
+    if(terrain)render.warpPoints.push({id:worldId,x:sx+tile/2,y:sy+tile/2,tile});
     if (ascii) {
       const symbol = x === px && y === py ? '@' : feature || (terrain ? '.' : '#');
       ctx.fillStyle = symbol === '@' ? '#ceeac3' : feature && feature !== '<' ? featureColor(feature) : terrain ? (familiar ? '#ceeac3' : '#b3ccc5') : '#94b0b0';
@@ -342,6 +370,7 @@ function render() {
     for (const node of MazeCore.subjectiveCells(game, bounds)) cell(node.x, node.y, node.terrain, node.visible, node.world_id, node.feature, node.familiar);
   }
   else for (const [id, node] of cognition.memory_nodes) cell(node.x, node.y, node.terrain, cognition.visible_cells.has(id), node.world_id, node.feature);
+  renderWarpNotes(ctx,w,h);
   if (world.topology === 'torus' && !continuous && !world.lattice) {
     const memoryFloor = (x, y) => cognition.memory_nodes.get(`C${x},${y}`)?.terrain;
     const ys = view ? Array.from({ length: world.height }, (_, i) => i) : [...new Set([...cognition.memory_nodes.values()].map(n => n.y))];
@@ -504,13 +533,15 @@ function render() {
   $('steps').textContent = `${game.steps} / ${game.turns}`;
   renderJourneyOverview();
   $('journeyControls').hidden=!game.journey;
-  $('sessionExport').disabled=!MazeSession.supported(game);
-  $('sessionSupport').textContent=MazeSession.supported(game)?'現在の迷路は途中セーブに対応しています。':'現在の迷路は途中セーブ未対応です。入口再開用の記録は利用できます。';
+  renderSessionInfo();
   $('checkpointExport').disabled=!game.generationOptions;
   $('checkpointDownload').disabled=!game.generationOptions;
   $('journeyInfo').hidden=!game.journey;
   $('journeyInfo').textContent=game.journey?`第${game.journey.completed+1}迷路 · 踏破済み ${game.journey.completed+Number(game.won||!!game.exploringAfterExit)} · 累計 ${game.journey.steps+game.steps}歩（現在の迷路を含む）`:'';
   $('nextMaze').hidden=!game.generationOptions;
+  $('exitSave').hidden=!MazeSession.supported(game);$('exitSaveHint').hidden=!MazeSession.supported(game);
+  if(game.exploringAfterExit)$('exitSaveHint').textContent='探索継続中の現在地と旅の累計を保存できます。保存欄を開いて .json の保存またはJSONのコピーを済ませてください。次の迷路へ進むには出口へ戻って > を押します。';
+  else $('exitSaveHint').textContent='この迷路の出口到達状態と旅の累計を保存できます。ボタンは保存欄を開きます。.json の保存またはJSONのコピーを済ませると、後日ここから > で旅を続けられます。';
   $('nextMaze').disabled=!MazeMainJourney.canAdvance(game);
   $('exitContinuePanel').hidden=!(game.won||game.exploringAfterExit);
   $('continueExploring').hidden=!game.won;
@@ -518,6 +549,7 @@ function render() {
   $('waitTurn').disabled = game.won;
   renderMarkerNames();
   $('placeMarker').disabled=game.won;
+  $('placeZeroMark').hidden=!world.warpInvisible;$('editZeroMark').hidden=$('zeroMarkHint').hidden=$('zeroMarkStatus').hidden=!world.warps?.size;$('editZeroMark').textContent=world.warpInvisible?'0・矢印を編集（Z）':'矢印を編集（Z）';$('placeZeroMark').disabled=game.won;
   $('markerInfo').textContent=`目印 ${game.markers.size} / 9個。${game.markers.has(player.world_position) ? `足元は${MazeCore.markerTitle(game,game.markers.get(player.world_position))}。` : ''} Mキーで普通の床に置けます。設置で時間は進みません。`;
   const remembered = [...cognition.memory_nodes.values()].filter(n => n.terrain);
   const known = new Set([cognition.memory_nodes,...cognition.archives.map(a=>a.nodes)].flatMap(nodes=>[...nodes.values()].filter(n=>n.terrain).map(n=>n.world_id))).size;
@@ -586,6 +618,7 @@ function step(direction) {
     $('status').textContent = recognized ? `${name}方向の周回を理解しました！ その方向の重複した記憶をつなぎ直しました。` : `${name}方向の周回を経験しました（${count} / ${game.world.learningLaps ?? 5}）。`;
   }
   announceSelfVision();
+  if(game.lastTransition?.kind==='warp'&&game.lastEvent==='warp'&&game.warpArrows?.some(a=>a.from===game.lastTransition.from&&a.status==='contradicted'))$('status').textContent+=' 記入したワープ先と違うのでは？ 実際の到着先が矢印の予想と一致しません。';
   render();
 }
 function updateGeneratorControls() {
@@ -659,7 +692,15 @@ $('tiles').addEventListener('click', () => setAscii(false)); $('ascii').addEvent
 for (const button of document.querySelectorAll('[data-dir]')) button.addEventListener('click', () => step(button.dataset.dir));
 canvas.addEventListener('pointerdown', () => canvas.focus());
 document.addEventListener('keydown', e => {
-  if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || /INPUT|SELECT|TEXTAREA/.test(e.target.tagName) || e.target.isContentEditable) return;
+  if (e.isComposing || /INPUT|SELECT|TEXTAREA/.test(e.target.tagName) || e.target.isContentEditable) return;
+  if (e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && ['z','y'].includes(e.key.toLowerCase()) && game.world.warps?.size) {
+    e.preventDefault();if(!e.repeat)undoRedoArrow(e.key.toLowerCase()==='y');return;
+  }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === 'Escape' && (warpCurveDrag.state || renderWarpNotes.selection || renderWarpNotes.from!=null)) { e.preventDefault(); if(!e.repeat)cancelArrowInteraction(); return; }
+  if (e.key === 'Delete' && $('editZeroMark').getAttribute('aria-pressed')==='true') { e.preventDefault(); if(!e.repeat) deleteAnnotationSelection(); return; }
+  if (e.key.toLowerCase() === 'z' && game.world.warps?.size) { e.preventDefault(); if(!e.repeat) $('editZeroMark').click(); return; }
+  if (e.key.toLowerCase() === 'e' && game.won) { e.preventDefault(); if(!e.repeat) continueExploration(); return; }
   if (e.key === '>') { e.preventDefault(); if(!e.repeat) nextMaze(); return; }
   if (e.key.toLowerCase() === 'c') { e.preventDefault(); if(!e.repeat) matchAvailableMaps(); return; }
   if (e.key.toLowerCase() === 'm') { e.preventDefault(); if(!e.repeat) markHere(); return; }
@@ -697,7 +738,8 @@ $('birdDebugTarget').addEventListener('change', render);
 
 $('warpStyle').addEventListener('change',updateGeneratorControls);
 
-$('continueExploring').addEventListener('click',()=>{if(MazeSession.act(game,'continue')){$('status').textContent='出口への到達を記録したまま探索を再開しました。';render();canvas.focus();}});
+function continueExploration(){if(game.won&&MazeSession.act(game,'continue')){$('status').textContent='出口への到達を記録したまま探索を再開しました。';render();canvas.focus();}}
+$('continueExploring').addEventListener('click',continueExploration);
 
 function nextMaze() {
   if(!MazeMainJourney.canAdvance(game)) { $('status').textContent='次の迷路へ進むには、出口 > の上に戻ってください。実験用の部屋は対象外です。';return; }
@@ -738,6 +780,8 @@ $('beginJourney').addEventListener('click',()=>{
 });
 
 function renderJourneyOverview() {
+  renderRandomSettings();
+  renderRandomPending();
   const w=game.world,o=game.generationOptions||w;
   const names={dfs:'DFS',prim:'Prim',division:'壁で領域分割',rooms:'部屋と通路',eller:'Eller',wilson:'Wilson',kruskal:'Kruskal',hunt:'Hunt-and-Kill',growing:'Growing Tree'};
   const parts=[w.topology==='torus'?'トーラス':'平面',`${o.width} × ${o.height}`,names[w.algorithm]||w.algorithm];
@@ -753,13 +797,17 @@ function renderJourneyOverview() {
   if(w.puzzle)parts.push(`鍵と扉 ${w.puzzle.locks.length}組`);
   if(w.birdMode)parts.push(`鳥人間 ${game.birds.length}体`);
   if(!w.warpMode&&!w.puzzle&&!w.birdMode)parts.push('通常探索');
+  renderJourneyHistory();
   $('journeyCurrent').textContent='今の迷路：'+parts.join(' · ');
   const course=$('journeyCourse').value;
-  const destination=course==='same'?'現在と同じ生成条件の別シード':course==='plain'?'平面の通常迷路（方式とサイズを選び直す）':course==='variety'?(w.warpMode?'平面の通常迷路':'可視ワープの迷路（接続と向きも選び直す）'):course==='torus'?(w.topology==='torus'?'平面の通常迷路':'トーラスの迷路（境界のずれを選び直す・3周で理解）'):course==='keys'?(w.puzzle?'平面の通常迷路':'鍵と扉の迷路（目標1〜3組）'):course==='birds'?(w.birdMode?'平面の通常迷路':'鳥人間が1体いる迷路（転移ごとに地図を記録）'):'';
-  const nextText='出口で > を押すと：'+destination+'。';
+  for(const button of document.querySelectorAll('[data-course]')){const selected=button.dataset.course===course;button.setAttribute('aria-pressed',String(selected));button.textContent=selected?'選択中':'選ぶ';}
+  $('journeySize').value=game.journey?.size||'standard';$('journeySize').disabled=course==='same'||course==='random';
+  $('journeyLayout').value=game.journey?.layout||'all';$('journeyLayout').disabled=course==='same'||course==='random';
+  const destination=course==='random'?'選んだ候補からランダムに生成':course==='same'?'現在と同じ生成条件の別シード':course==='plain'?'平面の通常迷路（方式とサイズを選び直す）':course==='variety'?(w.warpMode?'平面の通常迷路':'可視ワープの迷路（接続と向きも選び直す）'):course==='torus'?(w.topology==='torus'?'平面の通常迷路':'トーラスの迷路（境界のずれを選び直す・3周で理解）'):course==='keys'?(w.puzzle?'平面の通常迷路':'鍵と扉の迷路（目標1〜3組）'):course==='birds'?(w.birdMode?'平面の通常迷路':'鳥人間が1体いる迷路（転移ごとに地図を記録）'):'';
+  const nextText='出口で > を押すと：'+destination+'。'+(course==='random'?randomRangeText()+`適用済みの候補：${MazeRandomJourney.inspect(game.journey?.random||MazeRandomJourney.defaults).count}組。` :course==='same'?'サイズも現在の条件を引き継ぎます。':`地形：${{all:'すべて',corridors:'通路型だけ',rooms:'部屋と通路だけ'}[game.journey?.layout||'all']}。規模：${{small:'小さめ',standard:'標準',large:'大きめ'}[game.journey?.size||'standard']}。`);
   if($('journeyNext').textContent!==nextText)$('journeyNext').textContent=nextText;
 }
-$('journeyCourse').addEventListener('change',renderJourneyOverview);
+$('journeyCourse').addEventListener('change',()=>{renderJourneyOverview();renderSessionInfo();});
 
 let checkpointReadVersion=0;
 $('checkpointText').addEventListener('input',()=>{checkpointReadVersion++;});
@@ -801,16 +849,469 @@ $('checkpointFile').addEventListener('change',async()=>{
  }catch(error){if(version===checkpointReadVersion)$('checkpointStatus').textContent='ファイルを読み込めませんでした。現在の探索と欄内の記録は保持しています。'+error.message;}
 });
 
+$('placeZeroMark').addEventListener('click',()=>{
+ const result=MazeSession.act(game,'zero');
+ $('status').textContent={placed:'この床に 0 を刻印しました。離れると印が見えます。',existing:'この床には既に 0 があります。',blocked:'入口・出口・番号付き目印・鍵・扉以外の床に刻印できます。',unavailable:'不可視ワープの迷路で使えます。',won:'Eキーで探索を再開してから刻印できます。'}[result.status];
+ render();canvas.focus();
+});
+
+function selectAnnotation(selection){renderWarpNotes.selection=selection;render();}
+function sameArrow(a,b){return a?.type==='arrow'&&a.from===b.from&&a.to===b.to;}
+function preferredArrowHit(hits,selection){
+ const eligible=hits.filter(a=>a.distance<=7);
+ if(!eligible.length)return null;
+ const nearest=eligible.reduce((a,b)=>a.distance<=b.distance?a:b);
+ return eligible.find(a=>sameArrow(selection,a)&&a.distance<=nearest.distance+1)||nearest;
+}
+function arrowLineDistance(point,samples){
+ let best=Infinity;
+ for(let i=1;i<samples.length;i++){
+  const a=samples[i-1],b=samples[i],dx=b.x-a.x,dy=b.y-a.y;
+  const t=Math.max(0,Math.min(1,((point.x-a.x)*dx+(point.y-a.y)*dy)/(dx*dx+dy*dy||1)));
+  best=Math.min(best,Math.hypot(point.x-a.x-t*dx,point.y-a.y-t*dy));
+ }
+ return best;
+}
+function arrowCurveSamples(start,control,end){
+ const points=[start],mid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
+ const divide=(a,c,b,depth)=>{
+  // Bound the curve's deviation from each chord to half a CSS pixel.
+  if(depth>=12||arrowLineDistance(c,[a,b])<=0.5){points.push(b);return;}
+  const ac=mid(a,c),cb=mid(c,b),center=mid(ac,cb);
+  divide(a,ac,center,depth+1);divide(center,cb,b,depth+1);
+ };
+ divide(start,control,end,0);return points;
+}
+function focusedWarpArrows(arrows,selection,enabled,status='all'){
+ if(status!=='all')arrows=arrows.filter(a=>a.status===status);
+ if(!enabled||!selection)return arrows;
+ return arrows.filter(a=>selection.type==='arrow'?sameArrow(selection,a):a.from===selection.id||a.to===selection.id);
+}
+function drawWarpAnnotations(context,points,w,h){
+ const selection=$('editZeroMark').getAttribute('aria-pressed')==='true'?renderWarpNotes.selection:null,hits=[];
+ const filtered=[...focusedWarpArrows(game.warpArrows||[],selection,$('focusWarpArrows').checked,$('warpArrowStatusFilter').value||'all')].sort((a,b)=>Number(sameArrow(selection,a))-Number(sameArrow(selection,b)));
+ const closest=id=>(points||[]).filter(p=>p.id===id).sort((a,b)=>Math.hypot(a.x-w/2,a.y-h/2)-Math.hypot(b.x-w/2,b.y-h/2))[0];
+ context.save();
+ if($('showKnownArrows').checked&&Number($('arrowTransparency').value)<100){
+  for(const a of filtered){
+   const from=closest(a.from),to=closest(a.to);if(!from||!to)continue;
+   const dx=to.x-from.x,dy=to.y-from.y,len=Math.hypot(dx,dy);if(!len)continue;
+   const preview=warpCurveDrag.state,curve=preview?.moved&&preview.game===game&&preview.from===a.from&&preview.to===a.to?preview.curve:a.curve;
+   const bend=Number.isFinite(curve)?curve*len:Math.min(22,len/5),cx=(from.x+to.x)/2-dy/len*bend,cy=(from.y+to.y)/2+dx/len*bend;
+   const length=Math.hypot(to.x-cx,to.y-cy),ux=(to.x-cx)/length,uy=(to.y-cy)/length,x=to.x-ux*to.tile*.35,y=to.y-uy*to.tile*.35;
+   const selected=sameArrow(selection,a);context.globalAlpha=selected?1:1-Number($('arrowTransparency').value)/100;context.lineWidth=selected?4:2;
+   context.strokeStyle=context.fillStyle=selected?'#ffffff':{hypothesis:'#edba72',confirmed:'#8cd69c',contradicted:'#ef8290'}[a.status];
+   context.setLineDash(a.status==='hypothesis'&&!selected?[5,4]:[]);context.beginPath();context.moveTo(from.x,from.y);context.quadraticCurveTo(cx,cy,x,y);context.stroke();context.setLineDash([]);
+   context.beginPath();context.moveTo(x,y);context.lineTo(x-ux*8-uy*4,y-uy*8+ux*4);context.lineTo(x-ux*8+uy*4,y-uy*8-ux*4);context.closePath();context.fill();
+   const samples=arrowCurveSamples(from,{x:cx,y:cy},{x,y});hits.push({from:a.from,to:a.to,samples,dx,dy,len,curve:Number.isFinite(curve)?curve:bend/len});
+  }
+ }
+ if(selection?.type==='arrow'&&$('showKnownArrows').checked&&Number($('arrowTransparency').value)<100){
+  const index=(game.warpArrows||[]).findIndex(a=>sameArrow(selection,a)),record=MazeCore.warpArrowRecords(game)[index];
+  if(record&&filtered.some(a=>sameArrow(selection,a))){
+   context.globalAlpha=1;context.font='12px sans-serif';context.textAlign='left';context.textBaseline='middle';context.lineWidth=2;context.setLineDash([]);
+   for(const [id,label,departure] of [[selection.from,record.from,true],[selection.to,record.to,false]]){
+    const p=closest(id);if(!p||p.x<0||p.x>w||p.y<0||p.y>h)continue;
+    const text=`${label} ${departure?'出発':'到着'}`,width=context.measureText(text).width+12;
+    const x=Math.max(2,Math.min(w-width-2,p.x+8)),y=Math.max(2,Math.min(h-24,p.y+(departure?-p.tile/2-26:p.tile/2+4)));
+    context.strokeStyle=departure?'#edba72':'#8cd69c';context.strokeRect(p.x-p.tile/2,p.y-p.tile/2,p.tile,p.tile);
+    context.fillStyle='#0b181e';context.fillRect(x,y,width,22);context.strokeRect(x,y,width,22);context.fillStyle='#ffffff';context.fillText(text,x+6,y+11);
+   }
+  }
+ }
+ if(selection?.type==='zero'||selection?.type==='floor'){context.globalAlpha=1;context.strokeStyle='#ffffff';context.lineWidth=3;for(const p of points||[])if(p.id===selection.id)context.strokeRect(p.x-p.tile/2,p.y-p.tile/2,p.tile,p.tile);}
+ context.restore();return hits;
+}
+function renderWarpNotes(context,w,h){
+ $('warpNotes').hidden=!game.world.warps?.size;
+ if(renderWarpNotes.game!==game){abortArrowDrag();renderWarpNotes.game=game;renderWarpNotes.from=null;renderWarpNotes.selection=null;$('editZeroMark').setAttribute('aria-pressed','false');$('zeroMarkStatus').textContent='';$('editWarpArrow').setAttribute('aria-pressed','false');$('warpArrowStatus').textContent='';}
+ const arrows=game.warpArrows||[],records=MazeCore.warpArrowRecords(game),list=$('warpArrowList');list.replaceChildren();
+ $('warpArrowNotesText').value=MazeCore.exportWarpArrowNotes(game);
+ $('warpArrowCounts').textContent=`全${arrows.length}本 / 未確認 ${arrows.filter(a=>a.status==='hypothesis').length} / 確認済み ${arrows.filter(a=>a.status==='confirmed').length} / 不一致 ${arrows.filter(a=>a.status==='contradicted').length}`;
+ const selected=$('editZeroMark').getAttribute('aria-pressed')==='true'&&arrows.find(a=>sameArrow(renderWarpNotes.selection,a));
+ $('straightenWarpArrow').disabled=$('resetWarpArrowCurve').disabled=!selected;
+ $('reverseWarpArrow').disabled=!selected||game.won;
+ const history=MazeSession.arrowHistoryInfo(game);$('undoWarpArrow').disabled=!history.undo;$('redoWarpArrow').disabled=!history.redo;
+ arrows.forEach((a,i)=>{const button=document.createElement('button');button.type='button';button.textContent=`矢印 ${i+1}：${records[i].from} → ${records[i].to} / ${{hypothesis:'予想（未確認）',confirmed:'実際のワープと一致・照合に使用',contradicted:'違うのでは？ ワープ先が不一致'}[a.status]}`;button.disabled=$('editZeroMark').getAttribute('aria-pressed')!=='true';button.setAttribute('aria-pressed',String(sameArrow(renderWarpNotes.selection,a)));button.addEventListener('click',()=>{selectAnnotation(sameArrow(renderWarpNotes.selection,a)?null:{type:'arrow',from:a.from,to:a.to});$('zeroMarkStatus').textContent=renderWarpNotes.selection?'矢印を選択しました。Deleteで消去できます。':'矢印の選択を解除しました。';});list.append(button);});
+ render.arrowHits=drawWarpAnnotations(context,render.warpPoints,w,h);
+}
+$('editWarpArrow').addEventListener('click',()=>{
+ abortArrowDrag();
+ $('editZeroMark').setAttribute('aria-pressed','false');renderWarpNotes.selection=null;
+ const active=$('editWarpArrow').getAttribute('aria-pressed')!=='true';$('editWarpArrow').setAttribute('aria-pressed',String(active));renderWarpNotes.from=null;
+ $('warpArrowStatus').textContent=active?'予想する出発床をクリックしてください。':'矢印の記入を終了しました。';render();
+});
+function abortArrowDrag(){
+ const drag=warpCurveDrag.state;
+ warpCurveDrag.state=null;
+ if(drag){
+  warpCurveDrag.suppress=drag.target;
+  if(drag.target.hasPointerCapture(drag.pointerId))drag.target.releasePointerCapture(drag.pointerId);
+ }
+ return drag;
+}
+function cancelArrowInteraction(){
+ const drag=abortArrowDrag();
+ renderWarpNotes.selection=null;renderWarpNotes.from=null;
+ $('zeroMarkStatus').textContent=drag?.moved?'ドラッグをキャンセルし、元の曲がりに戻しました。':'選択を解除しました。編集モードはそのまま続けられます。';
+ $('warpArrowStatus').textContent='';render();
+}
+function undoRedoArrow(redo){
+ if(warpCurveDrag.state)return;
+ const ok=MazeSession.act(game,redo?'redoArrow':'undoArrow');
+ if(ok){renderWarpNotes.selection=null;renderWarpNotes.from=null;}
+ $('zeroMarkStatus').textContent=ok?(redo?'矢印の編集をやり直しました。':'矢印の編集を取り消しました。'):(redo?'やり直せる矢印の編集はありません。':'取り消せる矢印の編集はありません。');
+ render();
+}
+$('undoWarpArrow').addEventListener('click',()=>undoRedoArrow(false));
+$('redoWarpArrow').addEventListener('click',()=>undoRedoArrow(true));
+function addReverseArrow(){
+ const selected=renderWarpNotes.selection;
+ if($('editZeroMark').getAttribute('aria-pressed')!=='true'||selected?.type!=='arrow'||game.won)return;
+ const source=game.warpArrows?.find(a=>sameArrow(selected,a));if(!source)return;
+ const existing=game.warpArrows.find(a=>a.from===source.to&&a.to===source.from);
+ if(!existing&&!MazeSession.act(game,'arrow',source.to,source.from)){$('zeroMarkStatus').textContent='逆向きの予想を追加できません。矢印の上限や探索記録を確認してください。';return;}
+ abortArrowDrag();renderWarpNotes.selection={type:'arrow',from:source.to,to:source.from};
+ $('warpArrowStatusFilter').value='all';$('showKnownArrows').checked=true;
+ $('zeroMarkStatus').textContent=existing?'既存の逆向きの矢印を選択しました。確認結果・曲率は保持します。':'逆向きの予想を追加しました。往復できるかは、実際のワープで確認してください。';
+ render();
+}
+$('reverseWarpArrow').addEventListener('click',addReverseArrow);
+function setSelectedArrowCurve(reset){
+ const selected=renderWarpNotes.selection;
+ if($('editZeroMark').getAttribute('aria-pressed')!=='true'||selected?.type!=='arrow')return;
+ const ok=reset?MazeSession.act(game,'resetArrowCurve',selected.from,selected.to):MazeSession.act(game,'curveArrow',selected.from,selected.to,0);
+ if(ok)$('zeroMarkStatus').textContent=reset?'選択した矢印を標準の曲がりに戻しました。':'選択した矢印を直線にしました。';
+ render();
+}
+$('straightenWarpArrow').addEventListener('click',()=>setSelectedArrowCurve(false));
+$('resetWarpArrowCurve').addEventListener('click',()=>setSelectedArrowCurve(true));
+$('showKnownArrows').addEventListener('change',render);
+$('focusWarpArrows').addEventListener('change',render);
+$('warpArrowStatusFilter').addEventListener('change',render);
+$('arrowTransparency').addEventListener('input',()=>{$('arrowOpacityValue').textContent=$('arrowTransparency').value+'%';render();});
+canvas.addEventListener('click',event=>{
+ if($('editZeroMark').getAttribute('aria-pressed')==='true'){editAnnotationFromClick(canvas,render.warpPoints,render.arrowHits,event);return;}
+ if($('editWarpArrow').getAttribute('aria-pressed')!=='true')return;
+ const rect=canvas.getBoundingClientRect(),x=(event.clientX-rect.left)*canvas.clientWidth/rect.width,y=(event.clientY-rect.top)*canvas.clientHeight/rect.height;
+ const point=(render.warpPoints||[]).find(p=>Math.abs(p.x-x)<p.tile/2&&Math.abs(p.y-y)<p.tile/2);
+ const known=point&&[...game.cognition.memory_nodes.values(),...game.cognition.archives.flatMap(a=>[...a.nodes.values()])].some(n=>n.world_id===point.id&&n.terrain);
+ if(!known){$('warpArrowStatus').textContent='探索して記録した床を選んでください。';return;}
+ if(renderWarpNotes.from===null){renderWarpNotes.from=point.id;$('warpArrowStatus').textContent='次に、予想する到着床をクリックしてください。';return;}
+ const ok=MazeSession.act(game,'arrow',renderWarpNotes.from,point.id);renderWarpNotes.from=null;
+ $('warpArrowStatus').textContent=ok?'矢印を予想として記録しました。続けて別の出発床を選べます。':'記入できません。同じ床・上限・出口到達状態を確認してください。';render();
+});
+
+$('editZeroMark').addEventListener('click',()=>{
+ abortArrowDrag();
+ const active=$('editZeroMark').getAttribute('aria-pressed')!=='true';$('editZeroMark').setAttribute('aria-pressed',String(active));
+ $('editWarpArrow').setAttribute('aria-pressed','false');renderWarpNotes.from=null;renderWarpNotes.selection=null;
+ $('zeroMarkStatus').textContent=active?(game.world.warpInvisible?'床をクリックで0を記入。0を選択→別の0で矢印。再クリックで選択解除。Deleteで選択を消去。':'記憶済みの床を選択→別の床で矢印。再クリックで選択解除。矢印を選択しDeleteで消去。'):'0・矢印の編集を終了しました。';render();
+});
+function deleteAnnotationSelection(){
+ const selected=renderWarpNotes.selection;if(!selected)return;
+ if(selected.type==='floor'){$('zeroMarkStatus').textContent='床そのものは消せません。消したい矢印をクリックして選択してください。';return;}
+ const result=selected.type==='zero'?MazeSession.act(game,'eraseZeroAt',selected.id):MazeSession.act(game,'eraseArrow',selected.from,selected.to);
+ const ok=selected.type==='zero'?result.status==='erased':result;
+ $('zeroMarkStatus').textContent=ok?(selected.type==='zero'?'選択した0を消しました。矢印は残ります。':'選択した矢印を消しました。'):'消去できません。出口到達後はEで探索を再開してください。';
+ if(ok)renderWarpNotes.selection=null;render();
+}
+function editAnnotationFromClick(target,points,hits,event){
+ const rect=target.getBoundingClientRect(),x=(event.clientX-rect.left)*target.clientWidth/rect.width,y=(event.clientY-rect.top)*target.clientHeight/rect.height;
+ const point=(points||[]).find(p=>Math.abs(p.x-x)<p.tile/2&&Math.abs(p.y-y)<p.tile/2),selected=renderWarpNotes.selection;
+ if(point&&game.zeroMarks?.has(point.id)){
+  if(selected?.type==='zero'&&selected.id===point.id){renderWarpNotes.selection=null;$('zeroMarkStatus').textContent='0の選択を解除しました。';}
+  else if(selected?.type==='zero'){
+   const ok=MazeSession.act(game,'arrow',selected.id,point.id);
+   if(ok){renderWarpNotes.selection={type:'arrow',from:selected.id,to:point.id};$('showKnownArrows').checked=true;$('zeroMarkStatus').textContent='選択元の0から矢印を記入・選択しました。Deleteで消去できます。';}
+   else $('zeroMarkStatus').textContent='矢印を記入できません。上限や出口到達状態を確認してください。';
+  }else{renderWarpNotes.selection={type:'zero',id:point.id};$('zeroMarkStatus').textContent='0を選択しました。再クリックで解除、別の0で矢印、Deleteで消去。';}
+  render();return;
+ }
+
+ const arrow=preferredArrowHit((hits||[]).filter(a=>game.world.warpInvisible||!point||(a.from!==point.id&&a.to!==point.id)).map(a=>({...a,distance:arrowLineDistance({x,y},a.samples)})),selected);
+ if(arrow){renderWarpNotes.selection=sameArrow(selected,arrow)?null:{type:'arrow',from:arrow.from,to:arrow.to};$('zeroMarkStatus').textContent=renderWarpNotes.selection?'矢印を選択しました。Deleteで消去できます。':'矢印の選択を解除しました。';render();return;}
+ if(!point){$('zeroMarkStatus').textContent='記憶済みの床・0・矢印をクリックしてください。';return;}
+ if(!game.world.warpInvisible){
+  const known=[game.cognition.memory_nodes,...game.cognition.archives.map(a=>a.nodes)].some(nodes=>[...nodes.values()].some(n=>n.world_id===point.id&&n.terrain));
+  if(!known){$('zeroMarkStatus').textContent='記憶済みの床を選んでください。';return;}
+  if(selected?.type==='floor'&&selected.id===point.id){renderWarpNotes.selection=null;$('zeroMarkStatus').textContent='床の選択を解除しました。';}
+  else if(selected?.type==='floor'){
+   if(MazeSession.act(game,'arrow',selected.id,point.id)){renderWarpNotes.selection={type:'arrow',from:selected.id,to:point.id};$('showKnownArrows').checked=true;$('zeroMarkStatus').textContent='矢印を記入・選択しました。Deleteで消去できます。';}
+   else $('zeroMarkStatus').textContent='矢印を記入できません。上限や出口到達状態を確認してください。';
+  }else{renderWarpNotes.selection={type:'floor',id:point.id};$('zeroMarkStatus').textContent='床を選択しました。別の床で矢印、同じ床で選択解除。';}
+  render();return;
+ }
+
+ const result=MazeSession.act(game,'zeroAt',point.id);
+ if(result.status==='placed'){renderWarpNotes.selection={type:'zero',id:point.id};$('zeroMarkStatus').textContent='0を記入・選択しました。別の0で矢印、Deleteで消去できます。';}
+ else $('zeroMarkStatus').textContent='この床には記入できません。未探索・入口・出口・目印・鍵・扉、または出口到達状態を確認してください。';render();
+}
+$('archiveMap').addEventListener('click',event=>{if($('editZeroMark').getAttribute('aria-pressed')==='true')editAnnotationFromClick($('archiveMap'),renderArchive.zeroPoints,renderArchive.arrowHits,event);});
+// Preview in screen space; commit a single replayable edit only on pointer release.
+function warpCurveDrag(target,getHits){
+ const position=e=>{const r=target.getBoundingClientRect();return {x:(e.clientX-r.left)*target.clientWidth/r.width,y:(e.clientY-r.top)*target.clientHeight/r.height};};
+ target.addEventListener('pointerdown',e=>{
+  warpCurveDrag.suppress=null;
+  if(e.button!==0||$('editZeroMark').getAttribute('aria-pressed')!=='true')return;
+  const p=position(e),hit=preferredArrowHit((getHits()||[]).filter(a=>[a.samples[0],a.samples.at(-1)].every(q=>Math.hypot(q.x-p.x,q.y-p.y)>8)).map(a=>({...a,distance:arrowLineDistance(p,a.samples)})),renderWarpNotes.selection);
+  if(!hit)return;
+  warpCurveDrag.state={...hit,game,target,pointerId:e.pointerId,start:p,moved:false,initial:hit.curve};target.setPointerCapture(e.pointerId);
+ });
+ target.addEventListener('pointermove',e=>{
+  const d=warpCurveDrag.state;if(!d||d.target!==target||d.pointerId!==e.pointerId)return;
+  const p=position(e);if(Math.hypot(p.x-d.start.x,p.y-d.start.y)<5&&!d.moved)return;
+  if(d.game!==game||$('editZeroMark').getAttribute('aria-pressed')!=='true'){abortArrowDrag();return;}
+  d.moved=true;d.curve=Math.round(Math.max(-3,Math.min(3,d.initial+2*((p.x-d.start.x)*(-d.dy)+(p.y-d.start.y)*d.dx)/(d.len*d.len)))*1000)/1000;
+  renderWarpNotes.selection={type:'arrow',from:d.from,to:d.to};e.preventDefault();render();
+ });
+ const finish=(e,cancel)=>{
+  const d=warpCurveDrag.state;if(!d||d.target!==target||d.pointerId!==e.pointerId)return;
+  warpCurveDrag.state=null;
+  if(target.hasPointerCapture(e.pointerId))target.releasePointerCapture(e.pointerId);
+  if(d.moved){warpCurveDrag.suppress=target;if(!cancel&&d.game===game&&$('editZeroMark').getAttribute('aria-pressed')==='true'){MazeSession.act(game,'curveArrow',d.from,d.to,d.curve);$('zeroMarkStatus').textContent='矢印の曲がり具合を変更しました。途中セーブにも記録します。';}render();}
+ };
+ target.addEventListener('pointerup',e=>finish(e,false));
+ target.addEventListener('pointercancel',e=>finish(e,true));
+ target.addEventListener('lostpointercapture',e=>finish(e,true));
+ target.addEventListener('click',e=>{if(warpCurveDrag.suppress===target){warpCurveDrag.suppress=null;e.preventDefault();e.stopImmediatePropagation();}},true);
+}
+warpCurveDrag(canvas,()=>render.arrowHits);
+warpCurveDrag($('archiveMap'),()=>renderArchive.arrowHits);
+
+
+let sessionReadVersion=0,sessionActiveRead=null;
+$('sessionText').addEventListener('input',()=>{sessionReadVersion++;});
 $('sessionExport').addEventListener('click',()=>{
- try{$('sessionText').value=MazeSession.encode(game,$('journeyCourse').value);$('sessionStatus').textContent='途中セーブを表示しました。全文をコピーして保管してください。';}
+ sessionReadVersion++;
+ try{$('sessionText').value=MazeSession.encode(game,$('journeyCourse').value);$('sessionJson').open=true;MazeSession.markExport(game,$('journeyCourse').value);renderSessionInfo();$('sessionStatus').textContent='途中セーブを表示しました。全文をコピーして保管してください。';}
  catch(error){$('sessionStatus').textContent=error.message;}
 });
-$('sessionImport').addEventListener('click',()=>{
+$('sessionImport').addEventListener('click',async()=>{
+ const version=++sessionReadVersion,original=game,revision=MazeSession.info(game).revision,course=$('journeyCourse').value,size=game.journey?.size,layout=game.journey?.layout,random=JSON.stringify(game.journey?.random);
+ const changed=()=>JSON.stringify(game.journey?.random)!==random||game!==original||game.journey?.layout!==layout||game.journey?.size!==size||MazeSession.info(game).revision!==revision||$('journeyCourse').value!==course;
  try{
-  const restored=MazeSession.decode($('sessionText').value);
+  const restored=await readSessionAsync($('sessionText').value,version,changed);
+  if(version!==sessionReadVersion)return;
+  if(changed())throw Error('読み込み中に探索が変わったため、再開を中止しました。');
   applyJourneySettings(restored.game);$('journeyCourse').value=restored.course;
   newWorld(false,restored.game);$('seed').value=restored.game.generationOptions.seed;
   $('status').textContent=game.won?'出口到達時の探索を復元しました。':'保存した途中の探索を復元しました。';
-  $('sessionStatus').textContent='位置・探索記憶・目印・鍵と扉・周回の理解・歩数を復元しました。';canvas.focus();
- }catch(error){$('sessionStatus').textContent='再開できませんでした。現在の探索は保持しています。'+error.message;}
+  $('sessionStatus').textContent='保存した探索状態と地図帳を復元しました。';canvas.focus();
+ }catch(error){if(version===sessionReadVersion)$('sessionStatus').textContent='再開できませんでした。現在の探索は保持しています。'+error.message;}
 });
+
+$('sessionDownload').addEventListener('click',()=>{
+ sessionReadVersion++;
+ try {
+  const text=MazeSession.encode(game,$('journeyCourse').value);
+  $('sessionText').value=text;
+  const blob=new Blob([text],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download=`maze-session-${game.journey.completed+1}-${game.turns}.json`;
+  document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  MazeSession.markExport(game,$('journeyCourse').value);renderSessionInfo();$('sessionStatus').textContent='ファイル保存を開始しました。保存されない場合は、欄の全文をコピーして保管してください。';
+ }catch(error){$('sessionStatus').textContent=error.message;}
+});
+$('sessionFile').addEventListener('change',async()=>{
+ const file=$('sessionFile').files[0],version=++sessionReadVersion;
+ $('sessionFile').value='';if(!file)return;
+ try {
+  if(file.size>6000000)throw Error('途中セーブは6MB以内にしてください。');
+  const text=(await file.text()).replace(/^\uFEFF/,'');if(version!==sessionReadVersion)return;
+  const restored=await readSessionAsync(text,version);if(version!==sessionReadVersion)return;
+  $('sessionText').value=text;
+  $('sessionStatus').textContent=`第${restored.game.journey.completed+1}迷路・${restored.game.turns}行動目の途中セーブを読み込みました。現在の探索は変えていません。「この途中セーブから再開」で適用できます。`;
+ }catch(error){if(version===sessionReadVersion)$('sessionStatus').textContent='ファイルを読み込めませんでした。現在の探索と欄内の記録は保持しています。'+error.message;}
+});
+
+function renderSessionInfo(){
+ const state=MazeSession.info(game,$('journeyCourse').value);
+ const available=state.supported&&state.tracked&&!state.overflow;
+ $('sessionExport').disabled=!available;$('sessionDownload').disabled=!available;
+ let text=!state.supported?'実験用の地形は途中セーブの対象外です。':!state.tracked?'途中セーブに必要な操作履歴がありません。':state.overflow?'保存上限を超えたため、現在の探索は途中セーブできません。上限前に保管した記録は利用できます。':
+  `記録した操作：${state.count.toLocaleString()} / ${state.limit.toLocaleString()}（残り ${state.remaining.toLocaleString()}）。`+
+  (state.remaining<=2000?' 保存上限が近づいています。早めに記録を保管してください。':'')+
+  (state.current?' 最後に書き出した、または読み込んだ記録と同じ段階です。':state.exported?' 前回の記録から操作または旅の設定が変わっています。':' この探索はまだ書き出していません。');
+ if($('sessionSupport').textContent!==text)$('sessionSupport').textContent=text;
+}
+
+$('sessionCancel').addEventListener('click',()=>{if(sessionActiveRead===null)return;sessionReadVersion++;sessionActiveRead=null;$('sessionCancel').disabled=true;$('sessionStatus').textContent='読み込みを中止しました。現在の探索と欄内の記録は保持しています。';});
+async function readSessionAsync(text,version,changed=()=>false){
+ sessionActiveRead=version;$('sessionCancel').disabled=false;
+ $('sessionStatus').textContent='途中セーブを検証しています…';
+ try{return await MazeSession.decodeAsync(text,{
+  cancelled:()=>version!==sessionReadVersion||changed(),
+  onProgress:({done,total})=>{if(version===sessionReadVersion)$('sessionStatus').textContent=`操作履歴を確認中：${done.toLocaleString()} / ${total.toLocaleString()}。`;}
+ });}finally{if(sessionActiveRead===version){sessionActiveRead=null;$('sessionCancel').disabled=true;}}
+}
+
+$('sessionReturn').addEventListener('click',()=>{
+ sessionReadVersion++;
+ if(sessionActiveRead!==null){sessionActiveRead=null;$('sessionCancel').disabled=true;$('sessionStatus').textContent='読み込みを中止しました。現在の探索と欄内の記録は保持しています。';}
+ $('sessionPanel').open=false;
+ canvas.focus({preventScroll:true});canvas.scrollIntoView({block:'center'});
+});
+
+$('exitSave').addEventListener('click',()=>{
+ if(!MazeSession.supported(game))return;
+ sessionReadVersion++;sessionActiveRead=null;$('sessionCancel').disabled=true;
+ $('sessionPanel').open=true;renderSessionInfo();
+ $('sessionStatus').textContent='現在の探索を保管するには「現在の途中セーブを .json で保存」、または「途中セーブを表示」で全文をコピーしてください。';
+ const target=$('sessionDownload').disabled?$('sessionReturn'):$('sessionDownload');
+ target.focus({preventScroll:true});$('sessionPanel').scrollIntoView({block:'center'});
+});
+
+for(const button of document.querySelectorAll('[data-course]'))button.addEventListener('click',()=>{
+ $('journeyCourse').value=button.dataset.course;
+ renderJourneyOverview();renderSessionInfo();
+});
+
+$('journeySize').addEventListener('change',()=>{
+ if(!game.journey)return;
+ game.journey.size=$('journeySize').value;
+ renderJourneyOverview();renderSessionInfo();
+});
+
+$('journeyLayout').addEventListener('change',()=>{
+ if(!game.journey)return;
+ game.journey.layout=$('journeyLayout').value;
+ renderJourneyOverview();renderSessionInfo();
+});
+
+$('journeyReturn').addEventListener('click',()=>{
+ $('journeySettings').open=false;
+ canvas.focus({preventScroll:true});canvas.scrollIntoView({block:'center'});
+});
+
+function renderJourneyHistory(){
+ const history=game.journey?.history||[];
+ const names={dfs:'DFS',prim:'Prim',division:'領域分割',rooms:'部屋と通路',wilson:'Wilson',kruskal:'Kruskal',hunt:'Hunt-and-Kill',growing:'Growing Tree',eller:'Eller'};
+ const rules={plain:'通常探索',warp:'ワープ',keys:'鍵と扉',birds:'鳥人間','bird-keys':'鳥人間＋鍵と扉'};
+ const lines=history.slice().reverse().map(h=>`第${h.number}迷路 · ${names[h.algorithm]} · ${h.topology==='torus'?'トーラス':'平面'} ${h.width}×${h.height} · ${rules[h.rule]}
+初回踏破 ${h.clearSteps}歩 / 次の迷路へ進むまで ${h.steps}歩
+シード：${h.seed}`);
+ const text=lines.length?lines.join('\n\n'):'次の迷路へ進むと、ここに記録されます。';
+ if($('journeyHistoryText').textContent!==text)$('journeyHistoryText').textContent=text;
+}
+
+function randomRangeText(){const c=game.journey?.random||MazeRandomJourney.defaults;return `横幅 ${c.minWidth}〜${c.maxWidth} / 高さ ${c.minHeight}〜${c.maxHeight}。`;}
+function renderRandomSettings(){
+ const active=$('journeyCourse').value==='random';$('journeyRandom').checked=active;$('journeyRandomBounds').hidden=!active;
+ if(renderRandomSettings.game===game)return;
+ renderRandomSettings.game=game;
+ const c=game.journey?.random||MazeRandomJourney.defaults;
+ for(const k of ['minWidth','maxWidth','minHeight','maxHeight'])$('random'+k[0].toUpperCase()+k.slice(1)).value=c[k];
+ const names={algorithms:'生成方式',topologies:'空間',rules:'ルール',warpVisibility:'ワープ床の見え方',visible:'見える床',invisible:'不可視の床',warpStyles:'ワープの接続方式（ワープ選択時）',warpRotations:'ワープの向き（平面のみ）',none:'変化なし',right:'時計回り90°',left:'反時計回り90°',half:'180°',mirror:'左右反転',mixed:'組ごとに混在',pair:'相互',oneway:'一方通行',cycle3:'3地点の輪',cycle4:'4地点の輪',dfs:'DFS',prim:'Prim',division:'領域分割',rooms:'部屋と通路',wilson:'Wilson',kruskal:'Kruskal',hunt:'Hunt-and-Kill',growing:'Growing Tree',eller:'Eller',plane:'平面',torus:'トーラス',plain:'通常探索',warp:'ワープ',keys:'鍵と扉',birds:'鳥人間','bird-keys':'鍵と扉＋鳥人間'};
+ const box=$('randomCandidates');box.replaceChildren();
+ for(const [group,values] of Object.entries(MazeRandomJourney.catalog)){
+  const field=document.createElement('fieldset'),legend=document.createElement('legend');legend.textContent=names[group];field.append(legend);
+  const actions=document.createElement('div');actions.className='random-group-actions';
+  for(const enabled of [true,false]){
+   const button=document.createElement('button');button.type='button';button.textContent=enabled?'すべてON':'すべてOFF';button.setAttribute('aria-label',names[group]+'を'+button.textContent);
+   button.addEventListener('click',()=>{for(const input of field.querySelectorAll('input[type="checkbox"]'))input.checked=enabled;randomDraftChanged();});actions.append(button);
+  }
+  field.append(actions);
+  for(const v of values){const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.dataset.randomGroup=group;input.value=v;input.checked=(c[group]||MazeRandomJourney.defaults[group]).includes(v);label.append(input,document.createTextNode(' '+names[v]));field.append(label);}
+  box.append(field);
+ }
+ $('randomStatus').textContent='適用中：'+randomRangeText();
+ renderRandomPreview();
+}
+function readRandomDraft(){
+ const config={};for(const k of ['minWidth','maxWidth','minHeight','maxHeight'])config[k]=Number($('random'+k[0].toUpperCase()+k.slice(1)).value);
+ for(const group of Object.keys(MazeRandomJourney.catalog))config[group]=Array.from(document.querySelectorAll('[data-random-group="'+group+'"]:checked'),x=>x.value);
+ return config;
+}
+function randomSizeSummary(values){return values.length===1?String(values[0]):`${values[0]}〜${values[values.length-1]}（2刻み・${values.length}候補）`;}
+function renderRandomPreview(){
+ try{
+  const draft=readRandomDraft(),report=MazeRandomJourney.inspect(draft);
+  const lines=[`編集中の候補：${report.count}組（生成方式 × 空間 × ルール）`];
+  for(const row of report.spaces){
+   const name=row.topology==='torus'?'トーラス':'平面';
+   lines.push(`${name}：${row.count}組`+(row.count?` / 横幅 ${randomSizeSummary(row.widths)} / 高さ ${randomSizeSummary(row.heights)}`:' / 抽選対象なし'));
+   for(const reason of row.reasons)lines.push(reason);
+  }
+  if(draft.rules.includes('warp'))lines.push('ワープの接続方式：'+draft.warpStyles.map(v=>({pair:'相互',oneway:'一方通行',cycle3:'3地点の輪',cycle4:'4地点の輪'}[v])).join('・')+'。ワープが選ばれた後に、この中から等確率で抽選します。');
+  if(draft.rules.includes('warp')){
+   lines.push('ワープ床：'+draft.warpVisibility.map(v=>v==='visible'?'見える床':'不可視の床').join('・')+'。両方を選ぶと迷路ごとに等確率で抽選します。');
+   if(draft.topologies.includes('plane'))lines.push('平面ワープの向き：'+draft.warpRotations.map(v=>({none:'変化なし',right:'時計回り90°',left:'反時計回り90°',half:'180°',mirror:'左右反転',mixed:'組ごとに混在'}[v])).join('・')+'。平面ワープが選ばれた後に等確率で抽選します。');
+   if(draft.topologies.includes('torus'))lines.push('トーラスのワープは、上の向きの候補によらず「変化なし」です。');
+  }
+  lines.push(report.count?'各組合せを同じ確率で抽選します。空間やルール単独の登場率は、対応する組合せ数に応じて変わります。':'候補またはサイズ範囲を変更してください。この設定は適用できません。');
+  $('randomPreview').textContent=lines.join('\n');
+ }catch(error){$('randomPreview').textContent=error.message;}
+}
+function applyRandomSettings(){
+ const checked=MazeRandomJourney.validate(readRandomDraft());
+ game.journey=game.journey||{completed:0,steps:0};game.journey.random=checked;
+ $('randomStatus').textContent='適用しました。次の迷路から '+randomRangeText();renderJourneyOverview();renderSessionInfo();
+}
+$('randomApply').addEventListener('click',()=>{try{applyRandomSettings();}catch(error){$('randomStatus').textContent=error.message+' 適用中の設定を保持しています。';}});
+$('journeyRandom').addEventListener('change',()=>{$('journeyCourse').value=$('journeyRandom').checked?'random':'same';renderJourneyOverview();renderSessionInfo();});
+function randomDraftIsPending(){
+ const draft=readRandomDraft(),saved=game.journey?.random||MazeRandomJourney.defaults;
+ return ['minWidth','maxWidth','minHeight','maxHeight'].some(k=>draft[k]!==saved[k])||Object.keys(MazeRandomJourney.catalog).some(k=>draft[k].length!==(saved[k]||MazeRandomJourney.defaults[k]).length||draft[k].some(v=>!(saved[k]||MazeRandomJourney.defaults[k]).includes(v)));
+}
+function renderRandomPending(){
+ const pending=randomDraftIsPending(),active=$('journeyCourse').value==='random';
+ $('randomPending').hidden=!pending;
+ $('randomPending').textContent=pending?'ランダム設定に未適用の変更があります。'+(active?'次の迷路は適用済みの設定で生成します。':'現在は別のコースが選ばれています。')+'変更を使うには旅の設定で「候補と範囲を適用」を押してください。途中セーブには適用済みの設定だけを保存します。':'';
+}
+function randomDraftChanged(){renderRandomPreview();renderRandomPending();$('randomStatus').textContent=randomDraftIsPending()?'変更は未適用です。「候補と範囲を適用」を押してください。':'適用中の設定と同じです。';}
+$('journeyRandomBounds').addEventListener('input',randomDraftChanged);
+$('randomRevert').addEventListener('click',()=>{renderRandomSettings.game=null;renderRandomSettings();renderRandomPending();$('randomStatus').textContent='編集を取り消し、適用中の候補とサイズ範囲に戻しました。';});
+
+for(const button of document.querySelectorAll('[data-random-preset]'))button.addEventListener('click',()=>{
+ const presets={paths:{topologies:['plane'],rules:['plain']},topology:{topologies:['plane','torus'],rules:['plain']},warps:{topologies:['plane','torus'],rules:['warp']},all:MazeRandomJourney.catalog};
+ const preset=presets[button.dataset.randomPreset];if(!preset)return;
+ for(const group of Object.keys(MazeRandomJourney.catalog)){
+  const selected=preset[group]||MazeRandomJourney.defaults[group];
+  for(const input of document.querySelectorAll('[data-random-group="'+group+'"]'))input.checked=selected.includes(input.value);
+ }
+ randomDraftChanged();
+ $('randomStatus').textContent='「'+button.textContent+'」の候補を選びました。サイズ範囲は保持しています。'+(randomDraftIsPending()?'変更は未適用です。「候補と範囲を適用」を押してください。':'適用中の設定と同じです。');
+});
+
+let randomSettingsReadVersion=0;
+$('randomSettingsText').addEventListener('input',()=>{randomSettingsReadVersion++;});
+$('randomSettingsExport').addEventListener('click',()=>{
+ randomSettingsReadVersion++;
+ try{
+  $('randomSettingsText').value=MazeRandomJourney.exportSettings(game.journey?.random||MazeRandomJourney.defaults);
+  $('randomSettingsRecordStatus').textContent='適用済みの候補とサイズ範囲を書き出しました。未適用の編集は含みません。全文をコピーして保管してください。';
+ }catch(error){$('randomSettingsRecordStatus').textContent=error.message;}
+});
+$('randomSettingsImport').addEventListener('click',()=>{
+ randomSettingsReadVersion++;
+ try{
+  const config=MazeRandomJourney.importSettings($('randomSettingsText').value);
+  for(const k of ['minWidth','maxWidth','minHeight','maxHeight'])$('random'+k[0].toUpperCase()+k.slice(1)).value=config[k];
+  for(const group of Object.keys(MazeRandomJourney.catalog))for(const input of document.querySelectorAll('[data-random-group="'+group+'"]'))input.checked=(config[group]||MazeRandomJourney.defaults[group]).includes(input.value);
+  randomDraftChanged();
+  $('randomSettingsRecordStatus').textContent='編集欄へ読み込みました。内容を確認して「候補と範囲を適用」を押してください。編集欄が閉じている場合はランダムスイッチをONにしてください。';
+ }catch(error){$('randomSettingsRecordStatus').textContent='読み込めませんでした。編集欄と適用済み設定を保持しています。'+error.message;}
+});
+
+$('randomSettingsDownload').addEventListener('click',()=>{
+ randomSettingsReadVersion++;
+ try{
+  const text=MazeRandomJourney.exportSettings(game.journey?.random||MazeRandomJourney.defaults);
+  $('randomSettingsText').value=text;
+  const blob=new Blob([text],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download='maze-random-settings.json';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  $('randomSettingsRecordStatus').textContent='適用済み設定のファイル保存を開始しました。未適用の編集は含みません。保存されない場合はテキスト欄の全文をコピーしてください。';
+ }catch(error){$('randomSettingsRecordStatus').textContent=error.message;}
+});
+$('randomSettingsFile').addEventListener('change',async()=>{
+ const file=$('randomSettingsFile').files[0],version=++randomSettingsReadVersion;
+ $('randomSettingsFile').value='';if(!file)return;
+ try{
+  if(file.size>30000)throw Error('ランダム設定のファイルは30KB以内にしてください。');
+  const text=await file.text();if(version!==randomSettingsReadVersion)return;
+  const config=MazeRandomJourney.importSettings(text);
+  $('randomSettingsText').value=MazeRandomJourney.exportSettings(config);
+  $('randomSettingsRecordStatus').textContent='ファイルを検証してテキスト欄に表示しました。「テキストを編集欄に読み込む」で確認できます。現在の候補と探索は変更していません。';
+ }catch(error){if(version===randomSettingsReadVersion)$('randomSettingsRecordStatus').textContent='ファイルを読み込めませんでした。欄内の記録と現在の設定を保持しています。'+error.message;}
+});
+

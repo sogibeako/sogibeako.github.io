@@ -20,6 +20,6 @@ for(const algorithm of ['dfs','prim','division','rooms','eller','wilson','kruska
  const corrupt=JSON.parse(S.encode(fresh,'same'));corrupt.actions.pop();assert.throws(()=>S.decode(JSON.stringify(corrupt)));
  corrupt.actions=[['bad']];assert.throws(()=>S.decode(JSON.stringify(corrupt)));
 }
-for(const options of [{warpMode:true},{birdMode:true}]){const g=J.start({width:21,height:17,seed:'unsupported',...options});assert(!S.supported(g));assert.throws(()=>S.encode(g,'same'));}
+{const g=M.createGame(M.generate({seed:'demo'}));assert(!S.supported(g));assert.throws(()=>S.encode(g,'same'));}
 assert.throws(()=>S.decode('null'));assert.throws(()=>S.decode('x'.repeat(2000001)));
 console.log('PASS: 9 generators with mid-route/exit/post-exit replay, markers, names, waits, exact memory and progress; unsupported/corrupt input rejected.');

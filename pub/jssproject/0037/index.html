@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>文字バグ工房 — 見え方テストとJavaScript配布</title><meta name="description" content="spanタグで指定する文字バグ表示。10種類の加工を試して、依存ライブラリ不要のJavaScriptをダウンロードできます。"><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23101d35'/%3E%3Cpath d='M7 7h18v6H13v6h12v6H7z' fill='%2335e2b5'/%3E%3Cpath d='M20 13h7v4h-7z' fill='%23ffbf69'/%3E%3C/svg%3E"><link rel="stylesheet" href="style.css"><script src="glitch-text.js" defer></script><script src="page.js" defer></script></head>
+<body><header><a class="brand" href="#">文字バグ工房 <small>GlitchText 1.0.0</small></a><nav aria-label="ページ内リンク"><a href="#test">見え方テスト</a><a href="#usage">組み込み方</a><a href="glitch-text.js" download>JSをダウンロード</a></nav></header>
+<main><section id="test"><div class="section-head"><div><p class="eyebrow">TEXT GLITCH / PLAYGROUND</p><h1>文字を、一文字ずつバグらせる。</h1><p>10種類の加工を混ぜて試せます。設定した書式を、そのまま自分のHTMLへ。</p></div><a class="button" href="glitch-text.js" download>glitch-text.js を保存</a></div>
+<div class="workbench"><div class="settings"><label for="source">表示する文字</label><input id="source" type="text" value="文字がバグった！ ﾉｽｼｨﾉｽｼｨ" maxlength="240"><div class="slider-row"><label for="rate">加工する文字の割合</label><output id="rateOut">85%</output></div><input id="rate" type="range" min="0" max="100" value="85"><div class="slider-row"><label for="size">文字サイズ</label><output id="sizeOut">48px</output></div><input id="size" type="range" min="24" max="90" value="48"><fieldset><legend>使う加工方法（複数選択可）</legend><div id="methods" class="methods"></div></fieldset><div class="toggles"><label><input id="checker" type="checkbox" checked> 市松模様</label><label><input id="dark" type="checkbox"> 暗い背景</label></div><button id="reroll" type="button">バグを再生成</button></div><div class="results"><p class="panel-label">選んだ加工をランダムに使用</p><div id="previewBox" class="preview checker"><span id="preview" data-glitch-method="all" data-glitch-rate="85">文字がバグった！ ﾉｽｼｨﾉｽｼｨ</span></div><p class="panel-label">通常表示</p><div id="normal" class="normal">文字がバグった！ ﾉｽｼｨﾉｽｼｨ</div><div class="code-head"><span>この設定のspan</span><button id="copy" class="secondary" type="button">コピー</button></div><pre><code id="generated"></code></pre><p id="copyStatus" class="hint" role="status"></p><p class="hint">①②が覆う領域は一文字枠の60〜80％。「加工割合」は、加工する文字の数の割合です。</p></div></div>
+<details class="compare" open><summary>10種類を見比べる</summary><div id="comparisons" class="comparison-grid"></div></details></section>
+<section id="usage" class="usage"><p class="eyebrow">DROP IN / NO DEPENDENCIES</p><h2>組み込みは、JSとspanだけ。</h2><p>JavaScriptをHTMLと同じフォルダーに置き、次のように読み込みます。加工対象は、文字列を囲んだspanです。</p><pre><code>&lt;script src="glitch-text.js" defer&gt;&lt;/script&gt;
+
+&lt;span data-glitch-method="1,4,7" data-glitch-rate="70"&gt;
+  この文字をバグらせる
+&lt;/span&gt;</code></pre><p>この例では70％の文字を加工し、各文字に①④⑦のいずれかを使います。フォント・文字サイズ・色は、そのspanのCSSを引き継ぎます。CSSファイルの追加は不要です。</p>
+<div class="download-row"><a class="button" href="glitch-text.js" download>JavaScriptをダウンロード</a><a class="button secondary" href="glitch-text-package.zip" download>配布ページと使用例をまとめて保存</a><a class="text-link" href="example.html">最小の使用例を開く</a></div>
+<div class="table-wrap"><table><caption>spanで指定できる属性</caption><thead><tr><th>属性</th><th>値と動作</th><th>省略時</th></tr></thead><tbody><tr><td><code>data-glitch-method</code></td><td><code>1</code>〜<code>10</code>。複数は<code>1,4,7</code>。<code>all</code>で全種類から選択。</td><td>加工対象にするため必須</td></tr><tr><td><code>data-glitch-rate</code></td><td><code>0</code>〜<code>100</code>。加工する文字の割合（％）。</td><td>100</td></tr><tr><td><code>data-glitch-seed</code></td><td>任意の文字列。同じ条件・値で配置を再現できます。</td><td>ランダム</td></tr></tbody></table></div>
+<div class="table-wrap"><table><caption>加工方法の番号</caption><thead><tr><th>番号</th><th>加工</th></tr></thead><tbody id="methodTable"></tbody></table></div>
+<details><summary>後から文章や属性を変更する場合</summary><p>属性を変更したら<code>refresh()</code>を呼びます。文章の変更には<code>setText()</code>を使います。</p><pre><code>const span = document.querySelector('#my-glitch');
+span.dataset.glitchMethod = '5,6';
+span.dataset.glitchRate = '50';
+GlitchText.refresh(span);
+
+GlitchText.setText(span, '新しい文章');
+GlitchText.reroll(span); // 配置を再生成（seed指定時は固定）
+GlitchText.init(container); // 後から追加したspanを初期化
+GlitchText.destroy(span); // 元の通常表示へ戻す</code></pre></details>
+<p class="hint">一文字分の枠の幅・高さを保って加工します。空白は加工しません。文字の分割はIntl.Segmenter対応ブラウザでは絵文字・結合文字をまとめて扱います。リンクやルビなどを含めず、文字列だけをspanで囲んでください。</p></section></main><footer>文字バグ工房 · GlitchText 1.0.0 · 外部ライブラリ・通信なし</footer></body></html>

@@ -106,8 +106,9 @@ function inspectMatch(state,index){
  if(state.chart.matches.has(index))return {status:'matched',candidates:[],shared:0};
  const landmarks=chart=>{
   const result=new Map();
-  for(const n of chart.nodes.values())if(n.feature==='<'||/^[1-9]$/.test(n.feature)){
-   if(result.has(n.feature))result.set(n.feature,null);else result.set(n.feature,n);
+  for(const n of chart.nodes.values())if(n.warpAnchor||n.feature==='<'||/^[1-9]$/.test(n.feature)){
+   const key=n.warpAnchor||n.feature;
+   if(result.has(key))result.set(key,null);else result.set(key,n);
   }
   return result;
  };

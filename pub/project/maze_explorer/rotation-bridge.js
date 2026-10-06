@@ -7,7 +7,8 @@ function project(frame,x,y){return O.apply(O.inverse(frame||O.identity()),x,y);}
 function nodesInFrame(nodes,frame){return new Map([...nodes.values()].map(n=>{const [x,y]=project(frame,n.x,n.y);return [`${x},${y}`,{...n,x,y}];}));}
 function match(game,apply=false){
  const c=game.cognition,f=game.viewFrame;
- const adapter={history:[],chart:{nodes:nodesInFrame(c.memory_nodes,f),matches:new Set(c.matchedArchives)},archives:c.archives.map(a=>({nodes:nodesInFrame(a.nodes,a.viewFrame),matches:new Set(a.sources||[])}))};
+ const evidence=(nodes,frame)=>new Map([...nodesInFrame(nodes,frame)].map(([k,n])=>{const anchor=M.knownWarpAnchor(game,n);if(anchor)return [k,{...n,warpAnchor:anchor}];if(n.warpAnchor){const {warpAnchor,...rest}=n;return [k,rest];}return [k,n];}));
+ const adapter={history:[],chart:{nodes:evidence(c.memory_nodes,f),matches:new Set(c.matchedArchives)},archives:c.archives.map(a=>({nodes:evidence(a.nodes,a.viewFrame),matches:new Set(a.sources||[])}))};
  const result=O.matchAll(adapter).matched;
  if(apply&&result.length){
   c.memory_nodes=new Map([...adapter.chart.nodes.values()].map(n=>{const [x,y]=O.apply(f,n.x,n.y);return [`C${x},${y}`,{...n,x,y}];}));

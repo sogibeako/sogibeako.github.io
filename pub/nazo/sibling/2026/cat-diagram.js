@@ -3,7 +3,6 @@
  * 圏論図式の表示・編集・ASCII出力を行うモジュール。
  */
 
-const catDiagramAssetBase = new URL('.', document.currentScript.src).href;
 const CatDiagram = (() => {
   // --- Geometry Utilities ---
   
@@ -583,82 +582,6 @@ const CatTemplates = {
 
 // --- Builder ---
 class CatDiagramBuilder {
-  static parseImport(text) {
-    text = text.replace(/^\uFEFF/, '').trim();
-    if (text.startsWith('{')) return this.parseImportJson(text);
-    // Only JSON objects are accepted. Never execute the pasted JavaScript.
-    const sources = /<script\b/i.test(text)
-      ? Array.from(text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi), match => match[1])
-      : [text];
-    const candidates = [];
-    for (const source of sources) {
-      for (const match of source.matchAll(/\b(?:const|let|var)\s+[\w$]+\s*=\s*(\{)/g)) {
-        const start = match.index + match[0].length - 1;
-        let depth = 0, quoted = false, escaped = false;
-        for (let i = start; i < source.length; i++) {
-          const ch = source[i];
-          if (quoted) {
-            if (escaped) escaped = false;
-            else if (ch === '\\') escaped = true;
-            else if (ch === '"') quoted = false;
-          } else if (ch === '"') quoted = true;
-          else if (ch === '{') depth++;
-          else if (ch === '}' && --depth === 0) {
-            try {
-              const value = JSON.parse(source.slice(start, i + 1));
-              if (value && Array.isArray(value.nodes) && Array.isArray(value.arrows)) candidates.push(value);
-            } catch (_) { /* Not a JSON data declaration. */ }
-            break;
-          }
-        }
-      }
-    }
-    if (candidates.length !== 1) throw new Error(candidates.length
-      ? '複数の図式があります。復元したい図式のスクリプトだけを貼り付けてください。'
-      : '図式のJSONが見つかりません。出力したHTML、または const data = {...} を含むスクリプトを指定してください。');
-    return this.parseImportJson(JSON.stringify(candidates[0]));
-  }
-
-  static exportHtml(data, assetBase = catDiagramAssetBase) {
-    const id = 'cat-embed-' + Math.random().toString(36).slice(2, 11);
-    const safeJson = value => JSON.stringify(value, null, 2).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
-    const cssUrl = new URL('style.css?v=20261005', assetBase).href.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-    return `<link rel="stylesheet" href="${cssUrl}">
-<div style="text-align: center; overflow-x: auto;">
-  <div id="${id}"></div>
-</div>
-<script>
-(() => {
-  const data = ${safeJson(data)};
-  const target = ${safeJson('#' + id)};
-  const loadScript = (src) => new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = src;
-    script.onload = resolve;
-    script.onerror = () => reject(new Error('読み込めませんでした: ' + src));
-    document.head.appendChild(script);
-  });
-  async function draw() {
-    try {
-      if (!window.MathJax?.startup?.promise) {
-        await (window.catEmbedMathJaxReady ||= loadScript('https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'));
-      }
-      await window.MathJax.startup.promise;
-      if (!window.CatDiagram) {
-        await (window.catEmbedRendererReady ||= loadScript(${safeJson(new URL('cat-diagram.js?v=20261005', assetBase).href)}));
-      }
-      await window.CatDiagram.render(target, data);
-    } catch (error) {
-      document.querySelector(target).textContent = '図式を表示できませんでした。CSS・JavaScriptの配置と通信状態を確認してください。';
-      console.error(error);
-    }
-  }
-  if (document.readyState === 'complete') draw();
-  else window.addEventListener('load', draw, { once: true });
-})();
-</script>`;
-  }
-
   static parseImportJson(text) {
     const data = JSON.parse(text.replace(/^\uFEFF/, ''));
     const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -757,8 +680,8 @@ class CatDiagramBuilder {
             <option value="monoidal_triangle">モノイダル・三角形</option>
             <option value="natural_transformation">自然変換 (2-射)</option>
           </select>
-          <button id="exportHtml">HTML・スクリプト出力</button>
-          <button id="importJson">HTML / JSON読み込み</button>
+          <button id="exportJson">JSONコピー</button>
+          <button id="importJson">JSON読み込み</button>
         </div>
         <div id="builder-main">
           <div id="${this.canvasId}" class="cat-diagram-container"></div>
@@ -771,26 +694,15 @@ class CatDiagramBuilder {
         </div>
       </div>
       <dialog id="cat-import-dialog">
-        <h2>HTML / JSONから編集を再開</h2>
-        <p>出力したHTML、図式のスクリプト、またはJSONを貼り付けてください。ファイルも選べます。現在の図を置き換えます（Ctrl+Zで戻せます）。</p>
-        <input id="cat-import-file" type="file" accept=".json,.html,.htm,.js,application/json,text/html,text/javascript" aria-label="HTML・JavaScript・JSONファイル">
-        <label for="cat-import-text">図式のHTML・スクリプト・JSON</label>
+        <h2>JSONから編集を再開</h2>
+        <p>JSONを貼り付けるか、JSONファイルを選んでください。現在の図を置き換えます（Ctrl+Zで戻せます）。</p>
+        <input id="cat-import-file" type="file" accept=".json,application/json" aria-label="JSONファイル">
+        <label for="cat-import-text">図式のJSON</label>
         <textarea id="cat-import-text" rows="14" spellcheck="false"></textarea>
         <p id="cat-import-error" role="alert"></p>
         <div class="cat-import-actions">
           <button id="cat-import-cancel" type="button">キャンセル</button>
           <button id="cat-import-apply" type="button">読み込んで編集</button>
-        </div>
-      </dialog>
-      <dialog id="cat-export-dialog">
-        <h2>HTMLに貼り付けるコード</h2>
-        <p>全文をコピーして、HTMLの図式を表示したい場所に貼り付けてください。MathJaxの準備が完了してから描画します。</p>
-        <p>CSSと描画用JavaScriptは、このビルダーと同じ場所を参照します。Webで使うコードは、Webにアップしたビルダーで出力してください。</p>
-        <textarea id="cat-export-text" rows="16" readonly spellcheck="false" aria-label="埋め込みHTML"></textarea>
-        <p id="cat-export-status" role="status"></p>
-        <div class="cat-import-actions">
-          <button id="cat-export-close" type="button">閉じる</button>
-          <button id="cat-export-copy" type="button">HTMLをコピー</button>
         </div>
       </dialog>
     `;
@@ -833,24 +745,9 @@ class CatDiagramBuilder {
       }
     });
 
-    const exportDialog = this.container.querySelector('#cat-export-dialog');
-    const exportText = this.container.querySelector('#cat-export-text');
-    const exportStatus = this.container.querySelector('#cat-export-status');
-    this.container.querySelector('#exportHtml').addEventListener('click', () => {
-      exportText.value = CatDiagramBuilder.exportHtml(this.data);
-      exportStatus.textContent = '';
-      exportDialog.showModal();
-    });
-    this.container.querySelector('#cat-export-close').addEventListener('click', () => exportDialog.close());
-    this.container.querySelector('#cat-export-copy').addEventListener('click', async () => {
-      try {
-        await navigator.clipboard.writeText(exportText.value);
-        exportStatus.textContent = 'HTMLをコピーしました。';
-      } catch (_) {
-        exportText.focus();
-        exportText.select();
-        exportStatus.textContent = '自動コピーを利用できません。選択中のコードをCtrl+C（Macでは⌘C）でコピーしてください。';
-      }
+    this.container.querySelector('#exportJson').addEventListener('click', () => {
+      navigator.clipboard.writeText(JSON.stringify(this.data, null, 2));
+      alert("JSONをコピーしました");
     });
 
     const importDialog = this.container.querySelector('#cat-import-dialog');
@@ -876,7 +773,7 @@ class CatDiagramBuilder {
     });
     this.container.querySelector('#cat-import-apply').addEventListener('click', async () => {
       try {
-        const imported = CatDiagramBuilder.parseImport(importText.value);
+        const imported = CatDiagramBuilder.parseImportJson(importText.value);
         if (window.MathJax?.startup?.promise) await window.MathJax.startup.promise;
         this.data = imported;
         this.selectedNodeIds.clear();
@@ -898,7 +795,7 @@ class CatDiagramBuilder {
     });
 
     document.addEventListener('keydown', (e) => {
-      if (importDialog.open || exportDialog.open) return;
+      if (importDialog.open) return;
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {

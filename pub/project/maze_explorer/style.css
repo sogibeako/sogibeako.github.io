@@ -28,3 +28,22 @@ summary:focus-visible { outline:2px solid #e0bb79; outline-offset:3px; }
 #experimentTools button { display:block; width:100%; margin-top:8px; }
 
 #archiveViewport{height:200px;overflow:auto;background:#0b161c;overscroll-behavior:contain}#archiveViewport:focus-visible{outline:2px solid #e0bb79;outline-offset:2px}#archiveExtent{position:relative;min-width:100%;min-height:100%}#archiveMap{position:sticky;top:0;left:0}
+
+.course-comparison{overflow-x:auto;margin:12px 0}
+.course-comparison table{width:100%;border-collapse:collapse;font-size:12px;line-height:1.6}
+.course-comparison caption{text-align:left;margin-bottom:8px;color:var(--accent)}
+.course-comparison th,.course-comparison td{padding:9px 7px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.course-comparison th[scope=row]{min-width:6em}
+.course-comparison button{white-space:nowrap}
+.course-comparison button[aria-pressed=true]{border-color:var(--accent);color:var(--accent)}
+
+#journeySettings > summary{cursor:pointer;color:var(--accent);padding:6px 0}
+#journeySettings[open] > summary{margin-bottom:12px}
+#journeySettings > label{display:block;margin-top:10px}
+#journeyReturn{margin-top:12px}
+
+.random-bounds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.random-bounds input{width:100%;box-sizing:border-box}#randomCandidates fieldset{margin:8px 0;border:1px solid #385157}#randomCandidates label{display:inline-flex;align-items:center;margin:4px 12px 4px 0;gap:4px}#randomCandidates input{width:auto}
+
+.random-group-actions{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}.random-group-actions button{padding:5px 9px;font-size:.8rem}#randomRevert{margin:6px 0 6px 6px}
+
+#mapPngPreview[hidden]{display:none}#mapPngImage{display:block;max-width:100%;height:auto;margin:10px 0}#mapPngDownload{color:var(--text);text-decoration:underline}

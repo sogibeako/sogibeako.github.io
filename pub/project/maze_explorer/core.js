@@ -1015,6 +1015,17 @@
       label:archive.transferKind==='warp'?'ワープ床':archive.transferKind==='bird'?'鳥人間との接触':'突然の転移'
     }] : []);
   }
+  function warpArrowRecords(game){
+    const labels=new Map();
+    const label=id=>{if(!labels.has(id))labels.set(id,`地点${labels.size+1}`);return labels.get(id);};
+    return (game.warpArrows||[]).map((a,i)=>({number:i+1,from:label(a.from),to:label(a.to),status:{hypothesis:'予想（未確認）',confirmed:'実際のワープと一致',contradicted:'ワープ先が不一致'}[a.status],curve:Object.hasOwn(a,'curve')?(a.curve===0?'直線':`調整済み ${a.curve}`):'標準（自動）'}));
+  }
+  function exportWarpArrowNotes(game){
+    const records=warpArrowRecords(game);
+    return ['--- 手動で記入したワープの矢印 ---',...(records.length?records.map(a=>`矢印 ${a.number}: ${a.from} → ${a.to} / ${a.status} / 曲がり: ${a.curve}`):['（矢印なし）']),
+      '地点番号は現在の矢印一覧内の端点ラベルです。床の0・番号付き目印とは別で、矢印の削除後は番号が変わることがあります。',
+      '予想は実際の接続を保証しません。逆方向は別の矢印です。真世界の座標や未記入のワープ先は含めません。'].join('\n');
+  }
   function exportArchiveNotes(game) {
     const w=game.world;
     const lines=['迷路のアトリエ — 地図帳のメモ',
@@ -1031,6 +1042,7 @@
         `記録した目印: ${labels.length?labels.map(label=>markerTitle(game,label)).join(' / '):'なし'}`,
         'メモ:',game.archiveNotes.get(index)||'（メモなし）','');
     });
+    if(game.warpArrows?.length)lines.push(exportWarpArrowNotes(game),'');
     const transfers=archiveTransfers(game);
     if(transfers.length)lines.push('--- 経験した転移 ---',...transfers.map(t=>`${t.turn}行動目：記録 ${t.from+1} → 記録 ${t.to+1}${t.to===game.cognition.archives.length?'（現在の探索）':''} / ${t.label}`),'転移の履歴は、場所の同一性や逆方向の接続を証明するものではありません。');
     return lines.join('\n');
@@ -1067,6 +1079,71 @@
     }
     return {status:'placed',label};
   }
+  function rememberWarpArrow(game,from,to) {
+    if(game.won||!game.world.warps?.size||from===to)return false;
+    const known=new Set([...game.cognition.memory_nodes.values(),...game.cognition.archives.flatMap(a=>[...a.nodes.values()])].filter(n=>n.terrain).map(n=>n.world_id));
+    if(!Number.isInteger(from)||!Number.isInteger(to)||!known.has(from)||!known.has(to))return false;
+    if(!game.warpArrows)game.warpArrows=[];
+    const old=game.warpArrows.find(a=>a.from===from&&a.to===to);
+    if(old)return true;
+    if(game.warpArrows.length>=100)return false;
+    game.warpArrows.push({from,to,status:'hypothesis'});return true;
+  }
+  function resetWarpArrowCurve(game,from,to){
+    const arrow=game.warpArrows?.find(a=>a.from===from&&a.to===to);if(!arrow)return false;
+    delete arrow.curve;return true;
+  }
+  function curveWarpArrow(game,from,to,curve){
+    if(!Number.isFinite(curve)||Math.abs(curve)>3)return false;
+    const arrow=game.warpArrows?.find(a=>a.from===from&&a.to===to);if(!arrow)return false;
+    arrow.curve=Math.round(curve*1000)/1000;return true;
+  }
+  function eraseWarpArrow(game,from,to){
+    if(game.won||!game.warpArrows)return false;
+    const index=game.warpArrows.findIndex(a=>a.from===from&&a.to===to);
+    if(index<0)return false;
+    game.warpArrows.splice(index,1);return true;
+  }
+  function knownWarpAnchor(game,node){
+    return game.warpArrows?.some(a=>a.status==='confirmed'&&(a.from===node.world_id||a.to===node.world_id))?'warp:'+node.world_id:null;
+  }
+  function verifyWarpArrows(game,from,to){
+    if(!game.warpArrows)return;
+    for(const arrow of game.warpArrows)if(arrow.from===from)arrow.status=arrow.to===to?'confirmed':'contradicted';
+  }
+  function placeZeroMark(game) {
+    const id=game.player.world_position,w=game.world;
+    if(game.won)return {status:'won'};
+    if(!w.warpInvisible)return {status:'unavailable'};
+    if(!w.cells[id]||id===w.start||id===w.exit||game.markers.has(id)||(w.puzzle?.locks||[]).some(lock=>lock.key===id||lock.door===id))return {status:'blocked'};
+    if(game.zeroMarks?.has(id))return {status:'existing'};
+    if(!game.zeroMarks)game.zeroMarks=new Set();
+    game.zeroMarks.add(id);
+    for(const key of game.cognition.visible_cells){const node=game.cognition.memory_nodes.get(key);if(node?.world_id===id)game.cognition.memory_nodes.set(key,{...node,feature:'0'});}
+    return {status:'placed'};
+  }
+  function placeRemoteZeroMark(game,id){
+    const w=game.world;
+    if(game.won)return {status:'won'};
+    if(!w.warpInvisible)return {status:'unavailable'};
+    const maps=[game.cognition.memory_nodes,...game.cognition.archives.map(a=>a.nodes)];
+    if(!Number.isInteger(id)||!maps.some(nodes=>[...nodes.values()].some(n=>n.world_id===id&&n.terrain)))return {status:'unknown'};
+    if(id===w.start||id===w.exit||game.markers.has(id)||(w.puzzle?.locks||[]).some(lock=>lock.key===id||lock.door===id))return {status:'blocked'};
+    if(!game.zeroMarks)game.zeroMarks=new Set();game.zeroMarks.add(id);
+    // Explicit map annotation: update already recorded images, never discover new cells.
+    for(const nodes of maps)for(const [key,node] of nodes)if(node.world_id===id&&node.terrain)nodes.set(key,{...node,feature:'0'});
+    return {status:'placed'};
+  }
+  function eraseZeroMark(game,id){
+    if(game.won)return {status:'won'};
+    if(!game.world.warpInvisible)return {status:'unavailable'};
+    const maps=[game.cognition.memory_nodes,...game.cognition.archives.map(a=>a.nodes)];
+    if(!Number.isInteger(id)||!maps.some(nodes=>[...nodes.values()].some(n=>n.world_id===id&&n.terrain)))return {status:'unknown'};
+    if(!game.zeroMarks?.has(id))return {status:'absent'};
+    game.zeroMarks.delete(id);
+    for(const nodes of maps)for(const [key,node] of nodes)if(node.world_id===id&&node.feature==='0')nodes.set(key,{...node,feature:null});
+    return {status:'erased'};
+  }
   function featureAt(game, id) {
     const puzzle = game.world.puzzle;
     const door = puzzle?.locks.find(lock => lock.door === id);
@@ -1077,7 +1154,7 @@
     if (door && game.openedDoors.has(door.keyId)) return '/';
     if (id === game.world.start) return '<';
     if(game.world.warps?.has(id)&&!game.world.warpInvisible)return 'O';
-    return game.markers.get(id) || null;
+    return game.markers.get(id) || (game.zeroMarks?.has(id)?'0':null);
   }
   // A bird receives the player's location only when the shared sight test succeeds.
   // SEARCH follows the last observation; its destination is never refreshed unseen.
@@ -1260,8 +1337,9 @@
     const anchors=nodes=>{
       const found=new Map();
       for(const n of nodes.values()){
-        if(!(/^[1-9]$/.test(n.feature)||(n.feature==='<'&&n.world_id===world.start)))continue;
-        const key=n.feature;
+        const warpAnchor=knownWarpAnchor(game,n);
+        if(!warpAnchor&&!(/^[1-9]$/.test(n.feature)||(n.feature==='<'&&n.world_id===world.start)))continue;
+        const key=warpAnchor||n.feature;
         const position=cognitivePosition(game,n.x,n.y),anchor={...n,...position};
         if(!found.has(key))found.set(key,anchor);
         else {
@@ -1319,6 +1397,7 @@
     for(const loop of game.cognition.compositeLoops.values())loop.lastAward=game.steps;
     game.lastLoopEvent=null;
     if(kind==='warp'&&game.afterWarp)game.afterWarp(from);
+    if(kind==='warp')verifyWarpArrows(game,from,to);
     game.lastTransition={from,to,kind,direction:game.player.direction,orientation:1,sheet:0};
     game.lastEvent=kind;
   }
@@ -1432,7 +1511,7 @@
     return game.cognition.archives.flatMap((archive, index) =>
       [...archive.nodes.values()].some(node => node.world_id === entry[0] && node.feature === label) ? [index] : []);
   }
-  const api = { continueExploring, archiveDisplayCells, matchRecordedMaps, archiveTransfers, archiveGroups, inspectWarpConnectivity, createWarpDemo, exportTrueMap, exportArchiveNotes, setArchiveNote, markerArchives, markerTitle, nameMarker, currentLandmark, inspectLandmarkMemory, matchLandmarkMaps, placeMarker, createArchiveDemo, archiveCells, inspectEntranceMemory, matchEntranceMaps, knowledgeSummary, selfRaySegments, periodicPosition, periodicId, windingOf, deckVector, DIRS, random, generate, createTorusDemo, inspectTorus, cognitivePosition, subjectiveCells, transition, ruleTransition, solvePuzzle, featureAt, reachable, lineOfSight, createGame, observe, move, waitTurn, inspectBird };
+  const api = { warpArrowRecords, exportWarpArrowNotes, resetWarpArrowCurve, curveWarpArrow, eraseWarpArrow, rememberWarpArrow, knownWarpAnchor, eraseZeroMark, placeRemoteZeroMark, placeZeroMark, continueExploring, archiveDisplayCells, matchRecordedMaps, archiveTransfers, archiveGroups, inspectWarpConnectivity, createWarpDemo, exportTrueMap, exportArchiveNotes, setArchiveNote, markerArchives, markerTitle, nameMarker, currentLandmark, inspectLandmarkMemory, matchLandmarkMaps, placeMarker, createArchiveDemo, archiveCells, inspectEntranceMemory, matchEntranceMaps, knowledgeSummary, selfRaySegments, periodicPosition, periodicId, windingOf, deckVector, DIRS, random, generate, createTorusDemo, inspectTorus, cognitivePosition, subjectiveCells, transition, ruleTransition, solvePuzzle, featureAt, reachable, lineOfSight, createGame, observe, move, waitTurn, inspectBird };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MazeCore = api;
 })(globalThis);

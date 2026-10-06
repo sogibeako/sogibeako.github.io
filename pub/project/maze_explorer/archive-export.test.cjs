@@ -13,3 +13,12 @@ assert.ok(!text.includes('未記録の秘密'));
 assert.ok(text.includes('シード: '+g.world.seed));assert.equal(snapshot(),before);
 assert.ok(M.exportArchiveNotes(M.createGame(M.generate())).includes('保存地図帳: 0冊'));
 console.log('PASS: all notebook notes, multiline Japanese, observed markers only, deduplication, matched state, seed, no mutation, empty archives.');
+
+g.warpArrows=[{from:12345,to:54321,status:'hypothesis'},{from:54321,to:12345,status:'confirmed',curve:0},{from:12345,to:99999,status:'contradicted',curve:-0.75}];
+const arrowsBefore=snapshot(),notes=M.exportWarpArrowNotes(g);
+assert(notes.includes('地点1 → 地点2 / 予想（未確認）'));assert(notes.includes('地点2 → 地点1 / 実際のワープと一致 / 曲がり: 直線'));assert(notes.includes('地点1 → 地点3 / ワープ先が不一致 / 曲がり: 調整済み -0.75'));
+for(const secret of ['12345','54321','99999'])assert(!notes.includes(secret));
+assert(M.exportArchiveNotes(g).includes(notes));assert.equal(snapshot(),arrowsBefore);
+assert.equal(M.warpArrowRecords(g)[0].from,M.warpArrowRecords(g)[2].from);
+g.warpArrows=[];assert(M.exportWarpArrowNotes(g).includes('（矢印なし）'));assert(!M.exportArchiveNotes(g).includes('--- 手動で記入した'));
+console.log('PASS: arrow directions, shared endpoint labels, statuses, curves, no world IDs, immutable export, empty list.');

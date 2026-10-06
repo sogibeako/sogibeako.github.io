@@ -145,7 +145,6 @@
 }
 
 #cat-inspector label {
-  min-width: 0;
   display: flex;
   flex-direction: column;
   font-size: 12px;
@@ -154,11 +153,7 @@
 }
 
 #cat-inspector input[type="text"],
-#cat-inspector input[type="number"],
 #cat-inspector select {
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 0;
   padding: 6px;
   font-size: 14px;
   border: 1px solid #ccc;
@@ -172,17 +167,3 @@
   pointer-events: none;
   z-index: 1000;
 }
-
-#cat-export-dialog {
-  width: min(760px, 85vw);
-  max-height: 85vh;
-  overflow: auto;
-  border: 1px solid #aaa;
-  border-radius: 8px;
-  padding: 24px;
-  font-family: sans-serif;
-}
-#cat-export-dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
-#cat-export-text { width: 100%; box-sizing: border-box; font-family: monospace; }
-#cat-inspector { flex: 0 0 250px; }
-#builder-main > .cat-diagram-container { min-width: 0; flex: 1; }
