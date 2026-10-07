@@ -15,9 +15,9 @@ function draw(){
  const archived=walkingMode&&!full&&browsedChart?walkingBook.charts.find(c=>c.number===browsedChart):null;
  let bounds=null;if(archived){const points=[...archived.cells.values()];bounds={minX:Math.min(...points.map(p=>p.x))-1,minY:Math.min(...points.map(p=>p.y))-1,maxX:Math.max(...points.map(p=>p.x))+1,maxY:Math.max(...points.map(p=>p.y))+1};}
  const width=canvas.clientWidth,height=canvas.clientHeight,dpr=window.devicePixelRatio||1;canvas.width=width*dpr;canvas.height=height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#0b161c';ctx.fillRect(0,0,width,height);
- const layouts=state.world.layouts||Array.from({length:state.world.sheets},(_,i)=>({width:8,height:8,offset:i*64})),starts=[];let total=0;for(const l of layouts){starts.push(total);total+=l.width+1;}
+ const layouts=state.world.layouts?.slice(0,state.world.sheets)||Array.from({length:state.world.sheets},(_,i)=>({width:8,height:8,offset:i*64})),starts=[];let total=0;for(const l of layouts){starts.push(total);total+=l.width+1;}
  const four=['branch4','branch3'].includes(state.world.mode),columns=bounds?bounds.maxX-bounds.minX+1:full?total:four?8:17,rows=bounds?bounds.maxY-bounds.minY+1:full?Math.max(...layouts.map(l=>l.height))+2:four?8:17,tile=Math.min((width-24)/columns,(height-30)/rows),ox=(width-columns*tile)/2,oy=(height-rows*tile)/2;
- function cell(x,y,id,player=false,selfImage=false,remembered=false){if(x<0||x>=columns||y<0||y>=rows)return;if(full&&state.world.holes.has(id))return;if(atlas&&!atlasMemory.has(id))return;ctx.globalAlpha=(remembered||atlas&&!visible.has(id))?.42:1;const branch=['branch','branch4','branch3'].includes(state.world.mode),wall=!state.world.cells[id],sheet=['underpass','underpassMaze'].includes(state.world.mode)?0:S.position(state.world,id).sheet;ctx.fillStyle=player?'#b9dbc6':wall?'#738887':['#284443','#453251','#234b64'][sheet]||'#284443';ctx.fillRect(ox+x*tile,oy+y*tile,tile-1,tile-1);ctx.font=`${tile*.7}px monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=player?'#10252b':'#edba72';const mark=player?'@':wall?'#':selfImage?'@':id===state.world.exit?'>':state.world.stairs?.has(id)?(sheet===0?'△':'▽'):state.world.crossings?.has(id)?(['underpass','underpassMaze'].includes(state.world.mode)?(S.position(state.world,id).sheet===1?'║':'═'):(sheet===0?'═':'║')):id===state.world.start?'<':branch&&id%64===20?'ABC'[sheet]:'';if(mark)ctx.fillText(mark,ox+(x+.5)*tile,oy+(y+.5)*tile);ctx.globalAlpha=1;}
+ function cell(x,y,id,player=false,selfImage=false,remembered=false){if(x<0||x>=columns||y<0||y>=rows)return;if(full&&state.world.holes.has(id))return;if(atlas&&!atlasMemory.has(id))return;ctx.globalAlpha=(remembered||atlas&&!visible.has(id))?.42:1;const branch=['branch','branch4','branch3'].includes(state.world.mode),wall=!state.world.cells[id],sheet=S.groundSheet(state.world,id);ctx.fillStyle=player?'#b9dbc6':wall?'#738887':['#284443','#453251','#234b64'][sheet]||'#284443';ctx.fillRect(ox+x*tile,oy+y*tile,tile-1,tile-1);ctx.font=`${tile*.7}px monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=player?'#10252b':'#edba72';const mark=player?'@':wall?'#':selfImage?'@':id===state.world.exit?'>':state.world.stairs?.has(id)?(sheet===0?'△':'▽'):state.world.passages?.some(p=>p.vertical===id)?'║':state.world.passages?.some(p=>p.horizontal===id)?'═':state.world.crossings?.has(id)?(['underpass','underpassMaze'].includes(state.world.mode)?(S.position(state.world,id).sheet===1?'║':'═'):(sheet===0?'═':'║')):id===state.world.start?'<':branch&&id%64===20?'ABC'[sheet]:'';if(mark)ctx.fillText(mark,ox+(x+.5)*tile,oy+(y+.5)*tile);ctx.globalAlpha=1;}
  if(['underpass','underpassMaze'].includes(state.world.mode)&&truth){
   // Two local cross-sections of the same shared ground, not separate full sheets.
   for(let section=0;section<2;section++){ctx.fillStyle='#b9dbc6';ctx.font='14px sans-serif';ctx.textAlign='left';ctx.fillText(section?'真世界 · 交差の縦道':'真世界 · 交差の横道',ox+starts[section]*tile,oy+tile*.5);
@@ -31,7 +31,7 @@ function draw(){
  }else if(archived){for(const p of archived.cells.values())cell(p.x-bounds.minX,p.y-bounds.minY,p.id);}
  else if(full){for(let sheet=0;sheet<state.world.sheets;sheet++){
   ctx.fillStyle='#b9dbc6';ctx.font='14px sans-serif';ctx.textAlign='left';ctx.fillText(`${['crossing','crossingMaze'].includes(state.world.mode)?(sheet===0?'上層 · 東西の橋':'下層 · 南北の通路'):'シート '+ 'ABC'[sheet]} · ${layouts[sheet].width}×${layouts[sheet].height}`,ox+starts[sheet]*tile,oy+tile*.5);
-  const l=layouts[sheet];for(let id=l.offset;id<l.offset+l.width*l.height;id++){const p=S.position(state.world,id);cell(starts[sheet]+p.x,1+p.y,id,id===state.id);}
+  const l=layouts[sheet];for(let id=l.offset;id<l.offset+l.width*l.height;id++){const p=S.position(state.world,id);const local=state.world.passages?.find(c=>c.horizontal===id);const display=local&&(state.id===local.vertical||atlas&&!atlasMemory.has(id)&&atlasMemory.has(local.vertical))?local.vertical:id;cell(starts[sheet]+p.x,1+p.y,display,display===state.id);}
   if(['branch','branch4','branch3'].includes(state.world.mode)){
    ctx.strokeStyle='#edba72';ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(ox+(starts[sheet]+(four?0:4))*tile,oy+5*tile);ctx.lineTo(ox+(starts[sheet]+(four?3:8))*tile,oy+5*tile);ctx.stroke();ctx.setLineDash([]);
   }
@@ -61,8 +61,9 @@ function draw(){
  if(atlasMode&&!atlas&&!truth)$('spaceViewHint').textContent='明るい範囲は現在の視界、暗い部分はこの地図の記憶です。風景が記憶と矛盾すると別の地図へ切り替えます。Mで上下層の探索地図を確認できます。';
  $('spaceDescription').textContent=descriptions[state.world.mode];$('spaceSubjective').setAttribute('aria-pressed',String(!truth&&!atlas&&!archived));$('spaceTruth').setAttribute('aria-pressed',String(truth));
  if(atlas)$('spaceViewHint').textContent='探索地図：明るいマスは現在の周辺表示、暗いマスは記憶。未探索は空白です。上下層は別々に記録します。Mで周辺表示に戻ります。';
+ if(state.world.floorUnderpasses&&!truth&&!atlas&&!archived)$('spaceViewHint').textContent='明るい範囲は視界、暗い範囲は記憶です。同じ階のアンダーパスによる見え方の違いは自動統合します。階段で移った別の階とは分けて記録します。';
  if(archived)$('spaceViewHint').textContent=`主観地図 ${archived.number} の記録全体を閲覧中です。現在の視界や @ は重ねません。0 または「探索に戻る」で戻れます。移動キーは探索へ戻って1歩進みます。`;
- const here=S.position(state.world,state.id);
+ const here={...S.position(state.world,state.id),sheet:S.groundSheet(state.world,state.id)};
  $('spaceStatus').textContent=`${state.steps}歩 / シート ${here.sheet+1} / 真世界 ${here.x+1}列・${here.y+1}行 / 主観 (${state.x}, ${state.y})。主観の上は真世界の${['上','右','下','左'][state.frame[0]]}、主観の右は真世界の${['上','右','下','左'][state.frame[1]]}です。`;
  if(archived)$('spaceStatus').textContent+=` 閲覧中：主観地図 ${archived.number}。記録した床 ${[...archived.cells.values()].filter(p=>!p.wall).length}マス。`;
  if(walking)$('spaceStatus').textContent+=` 主観地図 ${walking.chart.number} / ${walking.book.charts.length}枚。`;
@@ -71,6 +72,7 @@ function draw(){
  if(['underpass','underpassMaze'].includes(state.world.mode)){$('spaceStatus').textContent+=` 基準の交差は${S.underpassAxis(state)==='vertical'?'縦道':'横道'}を優先表示。`;$('spaceViewHint').textContent=truth?'同じ真世界を、交差の横道・縦道に分けて表示します。交差の金色の線は、その通路から曲がれない方向です。外側の床は共通です。':'中央の3×3は近い入口側の通路を表示します。交差点では直進・引き返しだけができます。';}
  if(['underpass','underpassMaze'].includes(state.world.mode)&&!truth)$('spaceViewHint').textContent=archived?`主観地図 ${archived.number} の記録です。0で探索へ戻ります。`:'明るい範囲は現在の視界、暗い範囲は記憶です。アンダーパスの見え方だけが違う部分は同じ地図として扱い、交差は新しい観測で更新します。地図の選択欄で見返せます。';
  if(state.world.mode==='underpassMaze')$('spaceStatus').textContent+=` シード ${state.world.seed} / ${{dfs:'DFS型',frontier:'各所から枝道',growing:'Growing Tree型',hunt:'Hunt-and-Kill型',prim:'Prim型'}[state.world.growth]} / 交差 ${state.world.passages.length}か所（目標 ${state.world.requestedCount}） / ${state.world.route==='required'?'縦→大回り→横の通過が必須':'周回路あり'}。${state.id===state.world.exit?'出口に到達しました！ > で次の迷路へ。移動すれば探索を続けられます。':''}`;
+ if(state.world.floorUnderpasses)$('spaceStatus').textContent+=` 各階内のアンダーパス：上層 ${state.world.passages.filter(p=>p.baseSheet===0).length} / 下層 ${state.world.passages.filter(p=>p.baseSheet===1).length}（各階目標 ${state.world.floorUnderpasses}）。`;
  if(state.world.holeSize)$('spaceStatus').textContent+=` 穴 ${state.world.holeSize}×${state.world.holeSize}。`;
  if(preview)$('spaceStatus').textContent+=` 周辺4歩：候補状態 ${metrics.states}件 / 表示 ${metrics.tiles}マス / 別の位置の自分 ${candidates.filter(p=>!p.wall&&p.selfCandidate&&(p.x!==0||p.y!==0)).length}体。`;
  if(four&&$('spaceOcclusion').checked)$('spaceStatus').textContent+=' 視線ごとに柱の切れ目をたどり、見えるシートを選びます。';
@@ -82,8 +84,8 @@ function draw(){
 function reset(){
  const mode=$('spaceMode').value,options={walls:true,seed:$('crossingSeed').value};
  if(['double','triple'].includes(mode))options.dimensions=['A','B','C'].slice(0,mode==='triple'?3:2).map(n=>[Number($('size'+n+'Width').value),Number($('size'+n+'Height').value)]);
- if(mode==='underpassMaze'){options.growth=$('underpassGrowth').value;options.count=Number($('underpassCount').value);options.route=$('underpassRoute').value;options.seed=$('underpassSeed').value;options.width=Number($('underpassWidth').value);options.height=Number($('underpassHeight').value);}
- if(mode==='crossingMaze'){options.growth=$('crossingGrowth').value;options.newestBias=Number($('crossingBias').value);options.wallStyle=$('crossingWallStyle').value;options.width=Number($('crossingWidth').value);options.height=Number($('crossingHeight').value);}
+ if(mode==='underpassMaze'){options.variety=$('underpassVariety').value;options.growth=$('underpassGrowth').value;options.count=Number($('underpassCount').value);options.route=$('underpassRoute').value;options.seed=$('underpassSeed').value;options.width=Number($('underpassWidth').value);options.height=Number($('underpassHeight').value);}
+ if(mode==='crossingMaze'){options.floorUnderpasses=$('floorUnderpassesEnabled').checked?Number($('floorUnderpassesCount').value):0;options.growth=$('crossingGrowth').value;options.newestBias=Number($('crossingBias').value);options.wallStyle=$('crossingWallStyle').value;options.width=Number($('crossingWidth').value);options.height=Number($('crossingHeight').value);}
  if(options.dimensions)options.holeSize=$('holeSize').value==='auto'?'auto':Number($('holeSize').value);
  try{const next=S.create(mode,options);state=next;atlasMemory=new Set();walkingBook={charts:[],active:-1};browsedChart=0;$('sizeError').textContent='';draw();canvas.focus();}catch(error){$('spaceMode').value=state.world.mode;$('sizeError').textContent=error.message;}
 }
@@ -101,7 +103,7 @@ function advanceUnderpass(){
  if(state.id!==state.world.exit){$('spaceStatus').textContent+=' 次の迷路へは出口 > の上で > を押してください。';return;}
  const world=state.world;
  $('underpassWidth').value=world.layouts[0].width;$('underpassHeight').value=world.layouts[0].height;
- $('underpassGrowth').value=world.growth;$('underpassCount').value=world.requestedCount;$('underpassRoute').value=world.route;
+ $('underpassVariety').value=world.variety;$('underpassGrowth').value=world.growth;$('underpassCount').value=world.requestedCount;$('underpassRoute').value=world.route;
  truth=false;atlasShown=false;nextUnderpass();
 }
 $('underpassExitNext').addEventListener('click',advanceUnderpass);

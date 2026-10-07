@@ -4,7 +4,7 @@ const directions=[[0,-1],[1,0],[0,1],[-1,0]],names={underpassMaze:'アンダー�
 const identity=[0,1,2,3],flip=[2,1,0,3],cw=[1,2,3,0];
 function generate(mode,options={}){
  if(!Object.hasOwn(names,mode))throw Error('Unknown space');
- if(mode==='crossingMaze'){const style=options.wallStyle??'dense';if(!['dense','grid'].includes(style))throw Error('未対応の壁の配置です。');return style==='grid'?gridCrossing(options):crossingMaze(options.seed??'bridge-1',options.width??8,options.height??8,options.growth??'frontier',options.newestBias??70);}
+ if(mode==='crossingMaze'){const style=options.wallStyle??'dense';if(!['dense','grid'].includes(style))throw Error('未対応の壁の配置です。');return addFloorUnderpasses(style==='grid'?gridCrossing(options):crossingMaze(options.seed??'bridge-1',options.width??8,options.height??8,options.growth??'frontier',options.newestBias??70),options.floorUnderpasses??0);}
  if(mode==='underpassMaze')return underpassWorld(options);
  if(mode==='underpass')return underpassWorld();
  if(mode==='crossing')return crossingWorld();
@@ -73,7 +73,8 @@ function underpassWorld(options=null){
  const seed=String(options?.seed??'underpass-1');let value=2166136261;for(const c of seed)value=Math.imul(value^c.charCodeAt(0),16777619);
  const rng=()=>{value+=0x6D2B79F5;let t=Math.imul(value^value>>>15,1|value);t^=t+Math.imul(t^t>>>7,61|t);return ((t^t>>>14)>>>0)/4294967296;};
  const cx=options?4+Math.floor(rng()*(width-8)):4,cy=options?4+Math.floor(rng()*(height-8)):4,area=width*height,cells=new Uint8Array(area*2),edges=new Map(),candidates=new Map(),horizontal=cy*width+cx,vertical=area+horizontal;
- const growth=options?.growth??'dfs',requested=options?.count??3;
+ const growth=options?.growth??'dfs',requested=options?.count??3,variety=options?.variety??'mixed';
+ if(!['mixed','links'].includes(variety))throw Error('未対応の交差の行き先です。');
  if(!['dfs','frontier','growing','hunt','prim'].includes(growth))throw Error('未対応の枝道生成方式です。');
  if(!Number.isInteger(requested)||requested<1||requested>6)throw Error('交差数は1〜6にしてください。');
  const route=options?.route??'required';if(options&&!['required','loop'].includes(route))throw Error('未対応の交差経路です。');
@@ -119,12 +120,22 @@ function underpassWorld(options=null){
    if(passages.some(p=>Math.max(Math.abs(p.cx-x),Math.abs(p.cy-y))<4))continue;
    const h=y*width+x,v=area+h;
    // Tunnel under a straight corridor, joining existing floors two cells away.
-   const horizontalRoad=cells[h]&&cells[h-1]&&cells[h+1]&&!cells[h-width]&&!cells[h+width]&&cells[h-2*width]&&cells[h+2*width];
-   const verticalRoad=cells[h]&&cells[h-width]&&cells[h+width]&&!cells[h-1]&&!cells[h+1]&&cells[h-2]&&cells[h+2];
+   const horizontalRoad=cells[h]&&cells[h-1]&&cells[h+1]&&!cells[h-width]&&!cells[h+width]&&(cells[h-2*width]||cells[h+2*width]);
+   const verticalRoad=cells[h]&&cells[h-width]&&cells[h+width]&&!cells[h-1]&&!cells[h+1]&&(cells[h-2]||cells[h+2]);
    if(!horizontalRoad&&!verticalRoad)continue;
    if([-width-1,-width+1,width-1,width+1].some(d=>cells[h+d]))continue;
-   const added=horizontalRoad?[h-width,h+width]:[h-1,h+1];
+   const delta=horizontalRoad?width:1,ends=[h-2*delta,h+2*delta];
+   let role=ends.every(id=>cells[id])?'link':'deadend',removed=-1;
+   // A saturated maze has no empty pocket here. A disposable terminal floor
+   // can become the end wall, without disconnecting any remaining floor.
+   if(variety==='mixed'&&role==='link'){
+    const leaves=ends.filter(id=>id!==start&&id!==exit&&!passages.some(p=>Math.max(Math.abs(p.cx-id%width),Math.abs(p.cy-Math.floor(id/width)))<=1)&&directions.filter((_,d)=>edges.has(`${id}:${d}`)).length===1);
+    if(leaves.length&&rng()<.65){removed=leaves[Math.floor(rng()*leaves.length)];role='deadend';}
+   }
+   if(variety==='links'&&role==='deadend')continue;
+   const added=[h-delta,h+delta];
    const savedEdges=new Map(edges),savedCandidates=new Map(candidates);
+   if(removed>=0){cells[removed]=0;for(const [key,e] of edges)if(Number(key.split(':')[0])===removed||e.to===removed)edges.delete(key);for(const key of candidates.keys())if(Number(key.split(':')[0])===removed)candidates.delete(key);}
    for(const id of [...added,v])cells[id]=1;
    const local=[h,v,...added,...[h-width,h+width,h-1,h+1,h-2*width,h+2*width,h-2,h+2]];
    for(const id of new Set(local))if(cells[id])for(let d=0;d<4;d++){
@@ -135,13 +146,50 @@ function underpassWorld(options=null){
     candidates.set(`${id}:${d}`,e);if(cells[target])edges.set(`${id}:${d}`,e);
    }
    if(search(start).seen.size!==cells.reduce((a,b)=>a+b,0)||required&&(search(start,vertical).seen.has(exit)||search(start,horizontal).seen.has(exit))){
-    for(const id of [...added,v])cells[id]=0;edges.clear();candidates.clear();for(const [k,e] of savedEdges)edges.set(k,e);for(const [k,e] of savedCandidates)candidates.set(k,e);continue;
+    for(const id of [...added,v])cells[id]=0;if(removed>=0)cells[removed]=1;edges.clear();candidates.clear();for(const [k,e] of savedEdges)edges.set(k,e);for(const [k,e] of savedCandidates)candidates.set(k,e);continue;
    }
-   passages.push({cx:x,cy:y,horizontal:h,vertical:v});
+   passages.push({cx:x,cy:y,horizontal:h,vertical:v,role,tunnel:horizontalRoad?v:h});
   }
  }
 
- return {mode:options?'underpassMaze':'underpass',seed,growth,requestedCount:options?requested:1,passages,route:required?'required':'loop',size:width,sheets:2,layouts:[{width,height,offset:0},{width,height,offset:area}],cells,edges,candidates,holes:new Set(),crossings:new Set(passages.flatMap(p=>[p.horizontal,p.vertical])),stairs:new Set(),directed:false,start,exit,horizontal,vertical,cx,cy};
+ return {mode:options?'underpassMaze':'underpass',seed,growth,variety,requestedCount:options?requested:1,passages,route:required?'required':'loop',size:width,sheets:2,layouts:[{width,height,offset:0},{width,height,offset:area}],cells,edges,candidates,holes:new Set(),crossings:new Set(passages.flatMap(p=>[p.horizontal,p.vertical])),stairs:new Set(),directed:false,start,exit,horizontal,vertical,cx,cy};
+}
+// Local virtual cells belong to their originating floor, never to the other floor.
+function groundSheet(world,id){const p=world.passages?.find(p=>p.vertical===id);return p?(p.baseSheet??0):position(world,id).sheet;}
+function addFloorUnderpasses(world,count){
+ if(!Number.isInteger(count)||count<0||count>6)throw Error('各階のアンダーパス目標数は0〜6にしてください。');
+ if(!count)return world;
+ const {width,height}=world.layouts[0],area=width*height,cells=new Uint8Array(area*4);cells.set(world.cells);world.cells=cells;
+ world.layouts.push({width,height,offset:2*area},{width,height,offset:3*area});world.floorUnderpasses=count;world.passages=[];
+ const {edges,candidates}=world;let value=2166136261;for(const c of world.seed+'-floor-underpasses')value=Math.imul(value^c.charCodeAt(0),16777619);
+ const rng=()=>{value+=0x6D2B79F5;let t=Math.imul(value^value>>>15,1|value);t^=t+Math.imul(t^t>>>7,61|t);return ((t^t>>>14)>>>0)/4294967296;};
+ const protectedCells=[world.start,world.exit,...world.stairs,...world.crossings];
+ for(let sheet=0;sheet<2;sheet++){
+  const possible=[];for(let y=2;y<height-2;y++)for(let x=2;x<width-2;x++)possible.push({x,y});
+  for(let i=possible.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[possible[i],possible[j]]=[possible[j],possible[i]];}
+  let placed=0;for(const {x,y} of possible){if(placed>=count)break;
+   if(protectedCells.some(id=>{const p=position(world,id);return p.sheet===sheet&&Math.max(Math.abs(p.x-x),Math.abs(p.y-y))<3;})||world.passages.some(p=>p.baseSheet===sheet&&Math.max(Math.abs(p.cx-x),Math.abs(p.cy-y))<4))continue;
+   const h=sheet*area+y*width+x,v=(sheet+2)*area+y*width+x;
+   const eastWest=cells[h]&&cells[h-1]&&cells[h+1]&&!cells[h-width]&&!cells[h+width]&&(cells[h-2*width]||cells[h+2*width]);
+   const northSouth=cells[h]&&cells[h-width]&&cells[h+width]&&!cells[h-1]&&!cells[h+1]&&(cells[h-2]||cells[h+2]);
+   if(!eastWest&&!northSouth||[-width-1,-width+1,width-1,width+1].some(d=>cells[h+d]))continue;
+   const delta=eastWest?width:1,ends=[h-2*delta,h+2*delta],added=[h-delta,h+delta];let removed=-1,role=ends.every(id=>cells[id])?'link':'deadend';
+   const leaves=ends.filter(id=>!protectedCells.includes(id)&&!world.passages.some(p=>p.baseSheet===sheet&&Math.max(Math.abs(p.cx-position(world,id).x),Math.abs(p.cy-position(world,id).y))<=1)&&directions.filter((_,d)=>edges.has(`${id}:${d}`)).length===1);
+   if(role==='link'&&leaves.length&&rng()<.65){removed=leaves[Math.floor(rng()*leaves.length)];role='deadend';}
+   const oldEdges=new Map(edges),oldCandidates=new Map(candidates);
+   if(removed>=0){cells[removed]=0;for(const [k,e] of edges)if(Number(k.split(':')[0])===removed||e.to===removed)edges.delete(k);for(const k of candidates.keys())if(Number(k.split(':')[0])===removed)candidates.delete(k);}
+   for(const id of [...added,v])cells[id]=1;
+   for(const id of new Set([h,v,...added,h-width,h+width,h-1,h+1,...ends]))if(cells[id])for(let d=0;d<4;d++){
+    edges.delete(`${id}:${d}`);candidates.delete(`${id}:${d}`);if(id===h&&d%2===0||id===v&&d%2===1)continue;
+    const [dx,dy]=directions[d],to=(id===v?h:id)+dy*width+dx,target=to===h&&d%2===0?v:to,e={to:target,transform:[...identity],kind:id===v||target===v?'underpass':'normal'};
+    candidates.set(`${id}:${d}`,e);if(cells[target])edges.set(`${id}:${d}`,e);
+   }
+   const q=[world.start],seen=new Set(q);for(const id of q)for(let d=0;d<4;d++){const e=edges.get(`${id}:${d}`);if(e&&!seen.has(e.to)){seen.add(e.to);q.push(e.to);}}
+   if(seen.size!==cells.reduce((a,b)=>a+b,0)){for(const id of [...added,v])cells[id]=0;if(removed>=0)cells[removed]=1;edges.clear();candidates.clear();for(const [k,e] of oldEdges)edges.set(k,e);for(const [k,e] of oldCandidates)candidates.set(k,e);continue;}
+   world.passages.push({cx:x,cy:y,horizontal:h,vertical:v,baseSheet:sheet,role});placed++;
+  }
+ }
+ return world;
 }
 function underpassAxis(state,passage=null){
  if(passage)state={...state,world:{...state.world,...passage}};
@@ -151,7 +199,7 @@ function underpassAxis(state,passage=null){
  return Math.abs(p.y-state.world.cy)>Math.abs(p.x-state.world.cx)?'vertical':'horizontal';
 }
 function underpassHidden(world,id,axis){
- const p=position(world,id);if(Math.abs(p.x-world.cx)>1||Math.abs(p.y-world.cy)>1)return false;
+ const p=position(world,id);if(world.baseSheet!==undefined&&groundSheet(world,id)!==world.baseSheet)return false;if(Math.abs(p.x-world.cx)>1||Math.abs(p.y-world.cy)>1)return false;
  return axis==='vertical'?p.x!==world.cx||id===world.horizontal:p.y!==world.cy||id===world.vertical;
 }
 function crossingWorld(width=8,height=8){
@@ -387,7 +435,7 @@ function nearestView(state,radius=4,metrics=null){
  if(!Number.isInteger(radius)||radius<0||radius>6)throw Error('Invalid preview radius');
  if(['double','triple'].includes(state.world.mode))return holeView(state,radius,metrics);
  const queue=[{x:0,y:0,id:state.id,frame:state.frame,depth:0}],tiles=new Map(),seen=new Set();
- const underpass=['underpass','underpassMaze'].includes(state.world.mode),passages=underpass?(state.world.passages||[state.world]):[];
+ const underpass=Boolean(state.world.passages?.length),passages=underpass?(state.world.passages||[state.world]):[];
  for(const p of queue){
   if(underpass&&p.id>=0&&passages.some(c=>underpassHidden({...state.world,...c},p.id,underpassAxis(state,c))))p.id=-1;
   const key=`${p.x},${p.y}`,signature=`${key}:${p.id}:${p.frame}`;if(seen.has(signature))continue;seen.add(signature);
@@ -412,21 +460,21 @@ function observeAtlas(state,memory=new Set()){
 }
 // Keep charts consistent with observed appearances, without erasing conflicting memories.
 function observeWalkingMap(state,book={charts:[],active:-1},view=nearestView(state)){
- const sheet=position(state.world,state.id).sheet,underpass=['underpass','underpassMaze'].includes(state.world.mode);
+ const sheet=groundSheet(state.world,state.id),underpass=Boolean(state.world.passages?.length),standalone=['underpass','underpassMaze'].includes(state.world.mode);
  // Across-stair glimpses stay in the live view; archive the layer being explored.
  const here=position(state.world,state.id);
- const observations=view.filter(p=>underpass||p.id<0||position(state.world,p.id).sheet===sheet).map(p=>{
-  const record={...p,x:p.x+state.x,y:p.y+state.y,signature:p.wall?'wall':`floor:${underpass?0:position(state.world,p.id).sheet}`};
+ const observations=view.filter(p=>standalone||p.id<0||groundSheet(state.world,p.id)===sheet).map(p=>{
+  const record={...p,x:p.x+state.x,y:p.y+state.y,signature:p.wall?'wall':`floor:${standalone?0:groundSheet(state.world,p.id)}`};
   if(underpass){const right=directions[state.frame[1]],down=directions[state.frame[2]];
    record.groundX=here.x+p.x*right[0]+p.y*down[0];record.groundY=here.y+p.x*right[1]+p.y*down[1];
-   record.underpassProjection=state.world.passages.some(c=>Math.abs(record.groundX-c.cx)<=1&&Math.abs(record.groundY-c.cy)<=1);
+   record.groundSheet=sheet;record.underpassProjection=state.world.passages.some(c=>(c.baseSheet??0)===sheet&&Math.abs(record.groundX-c.cx)<=1&&Math.abs(record.groundY-c.cy)<=1);
   }return record;
  });
  // Only certified local underpass appearances may disagree. Different coordinate
  // registrations (e.g. a displaced chart) are never merged by this exception.
  const compatible=(a,b)=>{
   if(!underpass)return a.signature===b.signature;
-  if(a.groundX!==b.groundX||a.groundY!==b.groundY)return false;
+  if(a.groundSheet!==b.groundSheet||a.groundX!==b.groundX||a.groundY!==b.groundY)return false;
   return a.signature===b.signature||Boolean(a.underpassProjection&&b.underpassProjection);
  };
  const fits=chart=>observations.every(p=>{const old=chart.cells.get(`${p.x},${p.y}`);return !old||compatible(old,p);});
@@ -466,5 +514,5 @@ function crossingStats(world){
  for(const id of queue)for(let d=0;d<4;d++){const edge=world.edges.get(`${id}:${d}`);if(edge&&!distances.has(edge.to)){distances.set(edge.to,distances.get(id)+1);queue.push(edge.to);}}
  return {floors,deadEnds,junctions,reachable:distances.size,exitSteps:distances.get(world.exit)??null};
 }
-const api={underpassAxis,crossingStats,observeWalkingMap,observeAtlas,holeLimit,position,names,directions,generate,create,move,quadrantSheets,branchView,branchRayView,candidateView,nearestView};if(typeof module==='object')module.exports=api;else root.ConnectionSpace=api;
+const api={groundSheet,underpassAxis,crossingStats,observeWalkingMap,observeAtlas,holeLimit,position,names,directions,generate,create,move,quadrantSheets,branchView,branchRayView,candidateView,nearestView};if(typeof module==='object')module.exports=api;else root.ConnectionSpace=api;
 })(typeof globalThis==='object'?globalThis:this);
