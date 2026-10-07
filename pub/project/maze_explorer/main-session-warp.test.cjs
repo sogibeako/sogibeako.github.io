@@ -1,7 +1,15 @@
 const assert=require('node:assert/strict'),M=require('./core.js'),J=require('./main-journey.js'),S=require('./main-session.js');
 function toWarp(g){const q=[[g.player.world_position,[]]],seen=new Set();for(const [id,p]of q){if(seen.has(id))continue;seen.add(id);for(const d of Object.keys(M.DIRS)){const e=M.transition(g.world,{world_position:id},d);if(!e)continue;if(g.world.warps.has(e.to))return [...p,d];q.push([e.to,[...p,d]]);}}throw Error('no warp');}
 let replays=0,archives=0,matched=0;
-function restore(g){const text=S.encode(g,'variety'),r=S.decode(text).game;assert.deepEqual(r.player,g.player);assert.deepEqual(r.viewFrame,g.viewFrame);assert.deepEqual(r.cognition,g.cognition);assert.deepEqual(r.archiveNotes,g.archiveNotes);assert.equal(S.encode(r,'variety'),text);replays++;return r;}
+function restore(g){
+ const text=S.encode(g,'variety'),diagnosis=M.inspectRecordedMatching(g);
+ assert.deepEqual(M.inspectRecordedMatching(g),diagnosis,'repeated previews agree');
+ assert.equal(S.encode(g,'variety'),text,'diagnostics do not alter save state or action history');
+ const r=S.decode(text).game;
+ assert.deepEqual(r.player,g.player);assert.deepEqual(r.viewFrame,g.viewFrame);assert.deepEqual(r.cognition,g.cognition);assert.deepEqual(r.archiveNotes,g.archiveNotes);
+ assert.deepEqual(M.inspectRecordedMatching(r),diagnosis,'freshly restored observations give identical matching reasons');
+ assert.equal(S.encode(r,'variety'),text);replays++;return r;
+}
 for(const warpStyle of ['pair','oneway','cycle3','cycle4'])for(const rotation of ['none','right','mirror','mixed'])for(const invisible of [false,true]){
  let g=S.attach(J.start({width:21,height:17,algorithm:'rooms',seed:'warp-save-'+warpStyle,warpMode:true,warpCount:2,warpStyle,warpInvisible:invisible,separateMaps:true},rotation));g.journey={completed:2,steps:80};
  for(const d of toWarp(g)){if(g.won)S.act(g,'continue');assert(S.act(g,'move',d));}
@@ -21,4 +29,4 @@ for(const [shiftX,shiftY]of [[0,0],[2,-2]]){
  for(const d of toWarp(g)){if(g.won)S.act(g,'continue');S.act(g,'move',d);}assert(g.cognition.archives.length);S.act(g,'note',0,'周期の中で転移');restore(g);
 }
 assert(matched>0);
-console.log(`PASS: 34 warp conditions / ${replays} replays, ${archives} archived charts and ${matched} successful matches; all connections, frames, invisibility, torus, notes and further play.`);
+console.log(`PASS: 34 warp conditions / ${replays} replays, ${archives} archived charts and ${matched} successful matches; all connections, frames, invisibility, torus, notes, diagnostic purity/restoration and further play.`);

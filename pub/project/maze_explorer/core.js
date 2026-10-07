@@ -1354,12 +1354,17 @@
       }
       return found;
     };
-    let changed=true;
+    // Only this call owns these indexes: fresh observations/knowledge rebuild them next time.
+    const savedAnchors=new Map();
+    let live=null,changed=true;
     while(changed){
       changed=false;
       for(let i=0;i<c.archives.length;i++){
         if(matched.has(i))continue;
-        const archive=c.archives[i],live=anchors(memory),saved=anchors(archive.nodes);
+        const archive=c.archives[i];
+        if(!savedAnchors.has(i))savedAnchors.set(i,anchors(archive.nodes));
+        const saved=savedAnchors.get(i);
+        if(!live)live=anchors(memory);
         let offset=null,conflict=false,reason='no-common';
         for(const [key,a] of saved){
           if(!live.has(key))continue;
@@ -1379,7 +1384,7 @@
         }
         if(conflict){if(reasons)reasons[i]='terrain';continue;}
         if(reasons)reasons[i]='ready';
-        memory=combined;matched.add(i);result.push(i);changed=true;
+        memory=combined;live=null;matched.add(i);result.push(i);changed=true;
       }
     }
     if(apply&&result.length){c.memory_nodes=memory;c.matchedArchives=matched;}

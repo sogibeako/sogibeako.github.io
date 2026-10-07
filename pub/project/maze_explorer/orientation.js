@@ -100,16 +100,18 @@ function continueExploring(state){
  state.history.push(['continue']);return true;
 }
 function placeMarker(state){const result=M.placeMarker(state.game);observe(state);state.history.push(['mark']);return result;}
-function inspectMatch(state,index){
+function inspectMatch(state,index,landmarkCache=null){
  const archive=state.archives[index];
  if(!archive)return {status:'missing',candidates:[],shared:0};
  if(state.chart.matches.has(index))return {status:'matched',candidates:[],shared:0};
  const landmarks=chart=>{
+  if(landmarkCache?.has(chart.nodes))return landmarkCache.get(chart.nodes);
   const result=new Map();
   for(const n of chart.nodes.values())if(n.warpAnchor||n.feature==='<'||/^[1-9]$/.test(n.feature)){
    const key=n.warpAnchor||n.feature;
    if(result.has(key))result.set(key,null);else result.set(key,n);
   }
+  if(landmarkCache)landmarkCache.set(chart.nodes,result);
   return result;
  };
  const a=landmarks(archive),b=landmarks(state.chart),pairs=[];
@@ -140,8 +142,8 @@ function inspectMatch(state,index){
  if(consistent.length!==1)return {status:consistent.length?'ambiguous':'conflict',candidates:consistent,shared:pairs.length};
  return {status:'ready',candidates:consistent,shared:pairs.length};
 }
-function matchArchive(state,index){
- const result=inspectMatch(state,index);if(result.status!=='ready')return result;
+function matchArchive(state,index,landmarkCache=null){
+ const result=inspectMatch(state,index,landmarkCache);if(result.status!=='ready')return result;
  const {matrix,offset}=result.candidates[0],nodes=new Map(state.chart.nodes);
  for(const n of state.archives[index].nodes.values()){
   const p=apply(matrix,n.x,n.y),x=p[0]+offset[0],y=p[1]+offset[1],key=`${x},${y}`,old=nodes.get(key);
@@ -155,15 +157,15 @@ function matchArchive(state,index){
 }
 // Revisit earlier records when a later record supplies new landmark evidence.
 function matchAll(state){
- const before=new Set(state.chart.matches);let changed;
+ const before=new Set(state.chart.matches),landmarkCache=new WeakMap();let changed;
  do{
   changed=false;
   for(let i=0;i<state.archives.length;i++){
    if(state.chart.matches.has(i))continue;
-   if(matchArchive(state,i).status==='matched'){changed=true;}
+   if(matchArchive(state,i,landmarkCache).status==='matched'){changed=true;}
   }
  }while(changed);
- return {matched:[...state.chart.matches].filter(i=>!before.has(i)),pending:state.archives.map((_,index)=>({index,...inspectMatch(state,index)})).filter(r=>r.status!=='matched')};
+ return {matched:[...state.chart.matches].filter(i=>!before.has(i)),pending:state.archives.map((_,index)=>({index,...inspectMatch(state,index,landmarkCache)})).filter(r=>r.status!=='matched')};
 }
 function inspectAll(state){
  const preview={...state,history:[],chart:{...state.chart,nodes:new Map(state.chart.nodes),matches:new Set(state.chart.matches)}};

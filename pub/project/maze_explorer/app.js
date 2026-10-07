@@ -239,6 +239,9 @@ function renderArchive() {
     : '両方の地図に記録した同じ入口・番号目印を手がかりにします。理解済みの周期だけで整理し、印が複数の場所に残る地図・共通の印がない地図・位置関係が食い違う地図は保留します。';
   $('matchHint').textContent=!landmark ? '入口または番号付き目印の上で、その印を記録した地図帳を照合できます。閲覧・照合では時間は進みません。' : matches.length ? `${matches.length}冊を${landmarkLabel}の位置で照合できます。その印を記録していない地図・対応する像が一つに定まらない地図は保留します。` : '今照合できる地図はありません。周回を理解すると、保留した地図を照合できる場合があります。';
   if(game.viewFrame)$('matchHint').textContent='回転・反転した地図は、共通の入口・目印と観測した地形で向きを絞ります。情報不足や対称な形で候補が複数ある場合は保留します。';
+  if(diagnosis.reasons.length&&diagnosis.reasons.every(reason=>reason==='matched')){
+    $('matchHint').textContent=$('matchRecordedHint').textContent='保存された記録はすべて現在の地図につながっています。新たな転移で記録が増えたら、また照合できます。';
+  }
   $('archiveCaption').textContent=`現在は地図帳 ${archives.length+1} を探索中。${game.cognition.matchedArchives.has(Number(select.value)) ? "この地図は照合済み。" : "この地図との位置関係は未同定。"}保存時 ${original.filter(n=>n.terrain).length}床セル → ${folded ? "今の知識で整理" : "当時の記録"} ${nodes.filter(n=>n.terrain).length}床セル。${landmarkLabel}の記録 ${entrance.images}像 → 現在の知識では ${entrance.classes}種類。`;
   if(combined)$('archiveCaption').textContent=`統合地図：記録 ${group.members.map(i=>i+1).join('・')}${live?' と現在の探索':''}。表示中 ${nodes.filter(n=>n.terrain).length}床セル。${live?'現在の知識と観測を反映しています。':'最後に統合して保存した地図を表示しています。'} 原本は保持しています。`;
   if(folded&&game.cognition.knowledgeBasis)$('archiveCaption').textContent+=' 表示の細長さを抑えるため、理解済みの周期内で配置を整えています。';
