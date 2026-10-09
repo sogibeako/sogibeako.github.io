@@ -28,6 +28,24 @@
     let q, period = null, label;
     if (kind === 'constant') { const base = integer(a, 2, 1000000, '基数'); q = () => base; period = 1; label = `qₙ = ${base}`; }
     else if (kind === 'factorial') { q = n => BigInt(n + 1); label = 'qₙ = n + 1'; }
+    else if (kind === 'primes') {
+      const primes = [2n];
+      q = n => {
+        while (primes.length < n) {
+          let candidate = primes[primes.length - 1] + 1n;
+          for (;; candidate++) {
+            let prime = true;
+            for (const divisor of primes) {
+              if (divisor * divisor > candidate) break;
+              if (candidate % divisor === 0n) { prime = false; break; }
+            }
+            if (prime) { primes.push(candidate); break; }
+          }
+        }
+        return primes[n - 1];
+      };
+      label = 'qₙ = pₙ（n 番目の素数）';
+    }
     else if (kind === 'exponential') { const base = integer(a, 2, 100, '底'); q = n => base ** BigInt(n); label = `qₙ = ${base}ⁿ`; }
     else if (kind === 'linear') {
       const slope = integer(a, 0, 10000, '係数 A'), offset = integer(b, -9998, 10000, '定数 B');
@@ -77,9 +95,58 @@
     }
     return high ** degree <= x ? high : low;
   }
-  function expression(text) {
+  const constantCache = new Map();
+  function constantInterval(name) {
+    if (constantCache.has(name)) return constantCache.get(name);
+    const scale = 10n ** 240n, guard = 10n ** 20n, work = scale * guard;
+    let low, high;
+    if (name === 'phi') {
+      const root = nthRoot(5n * scale * scale, 2n);
+      const lower = (scale + root) / 2n;
+      const interval = { lower, upper: lower + 1n, scale };
+      constantCache.set(name, interval); return interval;
+    }
+    if (name === 'e') {
+      // e = sum 1/n!. Each floored term loses less than one work unit;
+      // after the first term smaller than one unit, the full tail is < 2.
+      let factorial = 1n, sum = 0n, terms = 0n;
+      for (let n = 0n; ; n++) {
+        if (n) factorial *= n;
+        const term = work / factorial;
+        if (!term) break;
+        sum += term; terms++;
+      }
+      low = sum; high = sum + terms + 2n;
+    } else {
+      // Machin: pi = 16 atan(1/5) - 4 atan(1/239).
+      // The alternating-series tail is bounded by the first omitted term.
+      const atan = m => {
+        let power = m, lo = 0n, hi = 0n;
+        for (let k = 0n; ; k++) {
+          const term = work / ((2n * k + 1n) * power);
+          if (!term) return { lo: lo - 1n, hi: hi + 1n };
+          if (k % 2n === 0n) { lo += term; hi += term + 1n; }
+          else { lo -= term + 1n; hi -= term; }
+          power *= m * m;
+        }
+      };
+      const a = atan(5n), b = atan(239n);
+      low = 16n * a.lo - 4n * b.hi;
+      high = 16n * a.hi - 4n * b.lo;
+    }
+    const lower = low / guard;
+    if (high / guard !== lower) throw Error('定数の上下限が一致せず、この精度で確定できません。');
+    const interval = { lower, upper: lower + 1n, scale };
+    constantCache.set(name, interval); return interval;
+  }
+  function atomicExpression(text) {
     text = text.trim().replace(/−/g, '-');
     if (text.length > 300) throw Error('入力は 300 文字以内にしてください。');
+    const constant = /^([+-]?)\s*(e|pi|π|phi|φ|ϕ)$/i.exec(text);
+    if (constant) {
+      const name = { 'π': 'pi', 'φ': 'phi', 'ϕ': 'phi' }[constant[2].toLowerCase()] || constant[2].toLowerCase();
+      return { exact: false, ...constantInterval(name), negative: constant[1] === '-', source: text };
+    }
     const unwrap = x => x.startsWith('(') && x.endsWith(')') ? x.slice(1, -1).trim() : x;
     let base, exponent;
     const square = /^(-?)(?:sqrt|√)\s*\(([^()]+)\)$/.exec(text);
@@ -91,18 +158,94 @@
       if (parts.length !== 2) throw Error('べき乗は (3/2)^(2/3) のように指定してください。');
       base = parse(unwrap(parts[0].trim())); exponent = parse(unwrap(parts[1].trim()));
     } else return { exact: true, value: parse(text), source: text };
+    return rationalPower(base, exponent, text, outerNegative);
+  }
+  function rationalPower(base, exponent, source = '', outerNegative = false) {
     if (abs(exponent.p) > 100n || exponent.d > 100n) throw Error('指数は約分後の分子の絶対値・分母を 100 以下にしてください。');
+    if (BigInt(abs(base.p).toString(2).length + base.d.toString(2).length) * abs(exponent.p) > 160000n) throw Error('計算が大きすぎます。式や指数を小さくしてください。');
     if (base.p < 0n && exponent.d % 2n === 0n) throw Error('負の数の偶数乗根は実数になりません。');
     if (!base.p && exponent.p <= 0n) throw Error('0 の 0 乗・負の数乗は扱えません。');
     const negative = outerNegative || (base.p < 0n && abs(exponent.p) % 2n === 1n);
     let p = abs(base.p) ** abs(exponent.p), d = base.d ** abs(exponent.p);
     if (exponent.p < 0n) [p, d] = [d, p];
     const rp = nthRoot(p, exponent.d), rd = nthRoot(d, exponent.d);
-    if (rp ** exponent.d === p && rd ** exponent.d === d) return { exact: true, value: fraction(negative ? -rp : rp, rd), source: text };
+    if (rp ** exponent.d === p && rd ** exponent.d === d) return { exact: true, value: fraction(negative ? -rp : rp, rd), source };
     // Enclose the magnitude between two rational bounds, 240 decimals apart.
     const scale = 10n ** 240n;
     const lower = nthRoot(p * scale ** exponent.d / d, exponent.d);
-    return { exact: false, lower, upper: lower + 1n, scale, negative, source: text };
+    return { exact: false, lower, upper: lower + 1n, scale, negative, source };
+  }
+  function expression(text) {
+    text = text.trim().replace(/−/g, '-').replace(/×/g, '*').replace(/÷/g, '/');
+    if (!text || text.length > 300) throw Error('式は 1〜300 文字で入力してください。');
+    const tokens = text.match(/\d+(?:\.\d*)?|\.\d+|[a-zA-Z]+|[πφϕ√()+\-*/^]|\S/g) || [];
+    let pos = 0;
+    const scale = 10n ** 240n, zero = {p:0n,d:1n}, one = {p:1n,d:1n};
+    const cmp = (a,b) => a.p*b.d-b.p*a.d;
+    const neg = a => ({p:-a.p,d:a.d});
+    const add = (a,b) => fraction(a.p*b.d+b.p*a.d,a.d*b.d);
+    const mul = (a,b) => fraction(a.p*b.p,a.d*b.d);
+    const floor = (p,d) => p/d - (p<0n && p%d ? 1n : 0n);
+    const rounded = a => ({lo:{p:floor(a.lo.p*scale,a.lo.d),d:scale},hi:{p:-floor(-a.hi.p*scale,a.hi.d),d:scale}});
+    const exact = a => cmp(a.lo,a.hi) === 0n;
+    const spansZero = a => a.lo.p<=0n && a.hi.p>=0n;
+    const wrap = result => result.exact ? {lo:result.value,hi:result.value} : result.negative
+      ? {lo:{p:-result.upper,d:result.scale},hi:{p:-result.lower,d:result.scale}}
+      : {lo:{p:result.lower,d:result.scale},hi:{p:result.upper,d:result.scale}};
+    const bounded = a => {
+      if (a.lo.p.toString().length > 10000 || a.lo.d.toString().length > 10000 || a.hi.p.toString().length > 10000 || a.hi.d.toString().length > 10000) throw Error('計算が大きすぎます。式を小さくしてください。');
+      return exact(a) ? a : rounded(a);
+    };
+    function binary(op,a,b) {
+      if (op === '+') return bounded({lo:add(a.lo,b.lo),hi:add(a.hi,b.hi)});
+      if (op === '-') {
+        if (a.key === b.key) return {lo:zero,hi:zero};
+        return bounded({lo:add(a.lo,neg(b.hi)),hi:add(a.hi,neg(b.lo))});
+      }
+      if (op === '/') {
+        if (spansZero(b)) throw Error(exact(b) ? '0 で割ることはできません。' : '分母の区間が 0 を含むため、この精度では割り算できません。');
+        if (a.key === b.key) return {lo:one,hi:one};
+        b = {lo:fraction(b.hi.d,b.hi.p),hi:fraction(b.lo.d,b.lo.p)};
+      }
+      if (op === '*' || op === '/') {
+        const values=[mul(a.lo,b.lo),mul(a.lo,b.hi),mul(a.hi,b.lo),mul(a.hi,b.hi)].sort((x,y)=>cmp(x,y)<0n?-1:cmp(x,y)>0n?1:0);
+        return bounded({lo:values[0],hi:values[3]});
+      }
+      if (!exact(b)) throw Error('指数は有理数になる式で指定してください（例 2、1/2、1+1/3）。');
+      const exponent=fraction(b.lo.p,b.lo.d);
+      if (spansZero(a) && exponent.p<=0n) throw Error('0 を含む底の 0 乗・負の数乗は計算できません。');
+      if (a.lo.p<0n && exponent.d%2n===0n) throw Error('負の数の偶数乗根は実数になりません。');
+      const l=wrap(rationalPower(a.lo,exponent)), h=wrap(rationalPower(a.hi,exponent));
+      const lowers=[l.lo,h.lo], uppers=[l.hi,h.hi];
+      if (spansZero(a) && exponent.p>0n) lowers.push(zero);
+      return bounded({lo:lowers.reduce((x,y)=>cmp(x,y)<0n?x:y),hi:uppers.reduce((x,y)=>cmp(x,y)>0n?x:y)});
+    }
+    function combine(op,a,b) { return {...binary(op,a,b),key:`(${a.key}${op}${b.key})`}; }
+    function primary() {
+      const token=tokens[pos++];
+      if (token === '(') {
+        const a=sum(); if (tokens[pos++]!==')') throw Error('閉じ括弧 ) が必要です。'); return a;
+      }
+      if (token==='√' || token?.toLowerCase()==='sqrt') {
+        const a=primary(); return combine('^',a,{lo:{p:1n,d:2n},hi:{p:1n,d:2n},key:'1/2'});
+      }
+      if (!token || !/^(?:\d+(?:\.\d*)?|\.\d+|e|pi|π|phi|φ|ϕ)$/i.test(token)) throw Error('数・定数・括弧を入力してください。掛け算には * を使います。');
+      const a=wrap(atomicExpression(token)); return {...a,key:token.toLowerCase()};
+    }
+    function power() { const a=primary(); if(tokens[pos]==='^') {pos++; return combine('^',a,unary());} return a; }
+    function unary() {
+      if(tokens[pos]==='+' || tokens[pos]==='-') { const sign=tokens[pos++], a=unary(); return sign==='+'?a:{lo:neg(a.hi),hi:neg(a.lo),key:`(-${a.key})`}; }
+      return power();
+    }
+    function product() { let a=unary(); while(tokens[pos]==='*'||tokens[pos]==='/') {const op=tokens[pos++];a=combine(op,a,unary());} return a; }
+    function sum() { let a=product(); while(tokens[pos]==='+'||tokens[pos]==='-') {const op=tokens[pos++];a=combine(op,a,product());} return a; }
+    const result=sum();
+    if(pos!==tokens.length) throw Error('式を読み取れません。括弧と演算子を確認してください。');
+    if(exact(result)) return {exact:true,value:fraction(result.lo.p,result.lo.d),source:text};
+    if(result.lo.p<0n && result.hi.p>0n) throw Error('結果が 0 に近く、この精度では符号を確定できません。式を整理してください。');
+    const negative=result.hi.p<=0n;
+    const magnitude=rounded(negative?{lo:neg(result.hi),hi:neg(result.lo)}:result);
+    return {exact:false,lower:magnitude.lo.p,upper:magnitude.hi.p,scale,negative,source:text};
   }
   function expandExpression(input, seq, count) {
     if (input.exact) return { ...expand(input.value, seq, count), source: input.source };

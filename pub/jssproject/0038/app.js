@@ -16,7 +16,7 @@ function render() {
     const result = Cantor.expandExpression(Cantor.expression($('rational').value), seq, $('count').value);
     current = { result, seq, config }; $('error').hidden = true; $('results').style.opacity = '1';
     const { rows, value, whole, negative, terminated, repeat, remainder, product, sum } = result;
-    $('status').textContent = result.approximate ? `${rows.length} 桁確定${result.precisionLimited ? '・精度上限' : '・無理数'}` : terminated ? '有限展開' : repeat ? '循環を検出' : `${rows.length} 桁で打ち切り`;
+    $('status').textContent = result.approximate ? `${rows.length} 桁確定${result.precisionLimited ? '・精度上限' : '・区間計算'}` : terminated ? '有限展開' : repeat ? '循環を検出' : `${rows.length} 桁で打ち切り`;
     $('result-label').textContent = `x = ${result.approximate ? result.source : Cantor.format(value.p, value.d)}　 /　 ${seq.label}`;
     $('digits').replaceChildren();
     const prefix = document.createElement('span'); prefix.className = 'integer'; prefix.textContent = `${negative ? '−(' : ''}${whole} + 0.`; $('digits').append(prefix);
@@ -30,15 +30,15 @@ function render() {
     const end = document.createElement('span'); end.className = 'integer'; end.textContent = `${!rows.length ? '0' : ''}${terminated ? '' : '…'}${negative ? ')' : ''}`; $('digits').append(end);
     $('notation').textContent = '枠 1 つが 1 桁。整数部分 + 小数部分として表示しています。';
     $('sum').textContent = Cantor.format(sum, product);
-    $('tail').textContent = result.approximate ? `${Cantor.scientific(remainder, value.d * product)} < 残り < ${Cantor.scientific(result.remainderUpper, value.d * product, true)}` : Cantor.format(remainder, value.d * product);
+    $('tail').textContent = result.approximate ? `${Cantor.scientific(remainder, value.d * product)} ≤ 残り ≤ ${Cantor.scientific(result.remainderUpper, value.d * product, true)}` : Cantor.format(remainder, value.d * product);
     $('conclusion').textContent = terminated ? `${rows.length} 桁で余りが 0 になりました。以後の桁はすべて 0 です。` : repeat ? `第 ${repeat.start + 1} 桁から ${repeat.length} 桁の周期を検出しました。緑色は循環部分です。` : 'この表示範囲では終了していません。打ち切りは、無限展開であることの判定ではありません。';
-    if (result.approximate) $('conclusion').textContent = `数を幅 10⁻²⁴⁰ の上下限で挟み、両側で一致する桁だけを表示しています。${result.precisionLimited ? '次の桁はこの精度では確定できないため停止しました。' : '表示した各桁と部分和は厳密です。'} 余りの上下限は外側へ丸めて表示。詳細な分数は CSV に保存できます。`;
+    if (result.approximate) $('conclusion').textContent = `定数・根を小数点以下 240 桁の精度で挟み、四則演算・べき乗の誤差も含む上下限で一致した桁だけを表示しています。${result.precisionLimited ? '次の桁はこの精度では確定できないため停止しました。' : '表示した各桁と部分和は厳密です。'} 余りの上下限は外側へ丸めて表示。詳細な分数は CSV に保存できます。`;
     $('rows').replaceChildren(); $('chart').replaceChildren();
     rows.forEach(row => {
       const tr = document.createElement('tr');
       rowValues(row, value.d).forEach((v, i) => {
         const td = document.createElement('td');
-        td.textContent = i === 6 && result.approximate ? `${Cantor.scientific(row.r, value.d)} < r < ${Cantor.scientific(row.rUpper, value.d, true)}` : v;
+        td.textContent = i === 6 && result.approximate ? `${Cantor.scientific(row.r, value.d)} ≤ r ≤ ${Cantor.scientific(row.rUpper, value.d, true)}` : v;
         tr.append(td);
       }); $('rows').append(tr);
       const cell = document.createElement('div'); cell.className = 'bar-cell'; cell.title = `第 ${row.n} 桁: ${row.digit} / ${row.q - 1n}`;
@@ -54,7 +54,7 @@ function render() {
     $('import-digits').disabled = true;
   }
 }
-function rowValues(row, d) { return [row.n, row.q, row.digit, row.product, Cantor.format(row.digit, row.product), Cantor.format(row.sum, row.product), row.rUpper === undefined ? Cantor.format(row.r, d) : `${Cantor.format(row.r, d)} < r < ${Cantor.format(row.rUpper, d)}`].map(String); }
+function rowValues(row, d) { return [row.n, row.q, row.digit, row.product, Cantor.format(row.digit, row.product), Cantor.format(row.sum, row.product), row.rUpper === undefined ? Cantor.format(row.r, d) : `${Cantor.format(row.r, d)} ≤ r ≤ ${Cantor.format(row.rUpper, d)}`].map(String); }
 $('form').addEventListener('submit', e => { e.preventDefault(); render(); });
 $('kind').addEventListener('change', () => { parameters(); render(); });
 document.querySelectorAll('[data-value]').forEach(button => button.addEventListener('click', () => { $('rational').value = button.dataset.value; render(); }));

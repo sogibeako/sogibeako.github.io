@@ -1,6 +1,6 @@
 (function(root){
 'use strict';
-const directions=[[0,-1],[1,0],[0,1],[-1,0]],names={doubleMaze:'中央の穴でつながる2トーラスのミニ迷路',cornerUnderpass:'曲がるアンダーパス',kleinMaze:'クラインの壺の生成迷路',torusMaze:'トーラスの生成迷路',underpassMaze:'アンダーパスの生成迷路',underpass:'極小の立体交差（アンダーパス）',crossingMaze:'立体交差の生成迷路',crossing:'立体交差（橋と地下通路）',triple:'中央の穴でつながる3トーラス',branch3:'柱の四方で風景が変わる3シート',doubleTwist:'double-twist',cwTwist:'quarter-clockwise-twist',ccwTwist:'quarter-counterclockwise-twist',plane:'平面',cylinder:'円筒',mobius:'メビウス帯',torus:'トーラス',klein:'クラインの壺',sheets:'2シートのトーラス',rotate:'90度回転する境界',chaos:'全辺90度回転（ちょっとひどい）',double:'中央の穴でつながる2トーラス',branch:'柱を周回する2シート',branch4:'柱の四方で風景が変わる2シート'};
+const directions=[[0,-1],[1,0],[0,1],[-1,0]],names={tripleMaze:'中央の穴でつながる3トーラスのミニ迷路',doubleMaze:'中央の穴でつながる2トーラスのミニ迷路',cornerUnderpass:'曲がるアンダーパス',kleinMaze:'クラインの壺の生成迷路',torusMaze:'トーラスの生成迷路',underpassMaze:'アンダーパスの生成迷路',underpass:'極小の立体交差（アンダーパス）',crossingMaze:'立体交差の生成迷路',crossing:'立体交差（橋と地下通路）',triple:'中央の穴でつながる3トーラス',branch3:'柱の四方で風景が変わる3シート',doubleTwist:'double-twist',cwTwist:'quarter-clockwise-twist',ccwTwist:'quarter-counterclockwise-twist',plane:'平面',cylinder:'円筒',mobius:'メビウス帯',torus:'トーラス',klein:'クラインの壺',sheets:'2シートのトーラス',rotate:'90度回転する境界',chaos:'全辺90度回転（ちょっとひどい）',double:'中央の穴でつながる2トーラス',branch:'柱を周回する2シート',branch4:'柱の四方で風景が変わる2シート'};
 const identity=[0,1,2,3],flip=[2,1,0,3],cw=[1,2,3,0];
 function generate(mode,options={}){
  const world=generateBase(mode,options);
@@ -12,7 +12,7 @@ function generate(mode,options={}){
 }
 function generateBase(mode,options={}){
  if(!Object.hasOwn(names,mode))throw Error('Unknown space');
- if(mode==='doubleMaze')return doubleMaze(options);
+ if(mode==='doubleMaze'||mode==='tripleMaze')return doubleMaze(options,mode);
  if(['kleinMaze','torusMaze'].includes(mode))return periodicMaze(mode,options);
  if(mode==='crossingMaze'){const style=options.wallStyle??'dense';if(!['dense','grid'].includes(style))throw Error('未対応の壁の配置です。');return addFloorUnderpasses(style==='grid'?gridCrossing(options):placeCrossingStairs(crossingMaze(options.seed??'bridge-1',options.width??8,options.height??8,options.growth??'frontier',options.newestBias??70),options.stairPlacement??'diagonal'),options.floorUnderpasses??0);}
  if(mode==='underpassMaze')return underpassWorld(options);
@@ -471,12 +471,12 @@ function loopsIntact(world){
   let id=path.start;for(const d of path.directions){const e=world.edges.get(`${id}:${d}`);if(!e)return false;id=e.to;}return id===path.start;
  }));
 }
-function doubleMaze(options){
- const world=holeWorld('double',{dimensions:options.dimensions??[[12,12],[12,12]],holeSize:options.holeSize??2,walls:false});
+function doubleMaze(options,mode='doubleMaze'){
+ const world=holeWorld(mode==='tripleMaze'?'triple':'double',{dimensions:options.dimensions??(mode==='tripleMaze'?[[12,12],[20,12],[12,12]]:[[12,12],[12,12]]),holeSize:options.holeSize??2,walls:false});
  world.wallStyle=options.wallStyle??'dense';
  if(!['dense','grid'].includes(world.wallStyle))throw Error('未対応の壁配置です。');
  if(world.wallStyle==='grid'&&world.layouts.some(l=>l.width%2||l.height%2))throw Error('格子状の壁では各辺を偶数にしてください。');
- world.mode='doubleMaze';world.seed=String(options.seed??'double-first');world.growth=options.growth??'walls';world.loopStyle=options.loopStyle??'meander';
+ world.mode=mode;world.seed=String(options.seed??'double-first');world.growth=options.growth??'walls';world.loopStyle=options.loopStyle??'meander';
  if(!['straight','meander'].includes(world.loopStyle))throw Error('未対応の周回路です。');
  if(!['walls','dfs','prim','growing'].includes(world.growth))throw Error('未対応の2トーラス生成方式です。');
  const protectedCells=new Set([world.start]);
@@ -490,7 +490,7 @@ function doubleMaze(options){
  const random=()=>{value+=0x6D2B79F5;let t=Math.imul(value^value>>>15,1|value);t^=t+Math.imul(t^t>>>7,61|t);return ((t^t>>>14)>>>0)/4294967296;};
  // Reserve one full horizontal and vertical circuit on each punctured torus.
  world.guaranteedLoops=world.layouts.map((l,sheet)=>{
-  const hole=world.portals.find(p=>p.sheet===sheet),rows=Array.from({length:l.height},(_,i)=>i).filter(y=>(world.wallStyle!=='grid'||y%2===1)&&(y<hole.y-1||y>hole.y+hole.size)),cols=Array.from({length:l.width},(_,i)=>i).filter(x=>(world.wallStyle!=='grid'||x%2===1)&&(x<hole.x-1||x>hole.x+hole.size));
+  const holes=world.portals.filter(p=>p.sheet===sheet),rows=Array.from({length:l.height},(_,i)=>i).filter(y=>(world.wallStyle!=='grid'||y%2===1)&&holes.every(hole=>y<hole.y-1||y>hole.y+hole.size)),cols=Array.from({length:l.width},(_,i)=>i).filter(x=>(world.wallStyle!=='grid'||x%2===1)&&holes.every(hole=>x<hole.x-1||x>hole.x+hole.size));
   const row=rows[Math.floor(random()*rows.length)],column=cols[Math.floor(random()*cols.length)];
   const horizontal=world.loopStyle==='straight'?{start:l.offset+row*l.width,directions:Array(l.width).fill(1)}:windingRoute(world,sheet,l.offset+row*l.width,1,random);
   const vertical=world.loopStyle==='straight'?{start:l.offset+column,directions:Array(l.height).fill(2)}:windingRoute(world,sheet,l.offset+column,2,random);
@@ -577,7 +577,7 @@ function doubleMaze(options){
   }
  }
  // End on the other torus so the central connection is part of the route.
- world.exit=reachable().filter(id=>position(world,id).sheet===1).at(-1);
+ world.exit=reachable().filter(id=>position(world,id).sheet===world.sheets-1).at(-1);
  world.wallCount=world.cells.filter(n=>!n).length-world.holes.size;
  world.underpassProtected=[...world.holes,...world.portals.flatMap(p=>{const l=world.layouts[p.sheet],ids=[];for(let y=p.y-1;y<=p.y+p.size;y++)for(let x=p.x-1;x<=p.x+p.size;x++)ids.push(l.offset+y*l.width+x);return ids;})];
  world.underpassReach=2;const physicalLength=world.cells.length;addFloorUnderpasses(world,options.floorUnderpasses??0);
@@ -702,7 +702,7 @@ function holeView(state,radius,metrics){
 // Topowalk-style local chart: nearest floor wins; walls win ties, only chosen floor expands.
 function nearestView(state,radius=4,metrics=null){
  if(!Number.isInteger(radius)||radius<0||radius>6)throw Error('Invalid preview radius');
- if(['double','triple','doubleMaze'].includes(state.world.mode))return holeView(state,radius,metrics);
+ if(['double','triple','doubleMaze','tripleMaze'].includes(state.world.mode))return holeView(state,radius,metrics);
  const queue=[{x:0,y:0,id:state.id,frame:state.frame,depth:0}],tiles=new Map(),seen=new Set();
  const underpass=Boolean(state.world.passages?.length),passages=underpass?(state.world.passages||[state.world]):[];
  for(const p of queue){
@@ -733,7 +733,7 @@ function nearestView(state,radius=4,metrics=null){
 // Exploration memory is keyed by real cell id, including the layer offset.
 // Only the subjective chart is observed; revealing the true map does not fill memory.
 function observeAtlas(state,memory=new Set()){
- if(!['crossing','crossingMaze','kleinMaze','torusMaze','doubleMaze'].includes(state.world.mode))return {memory,visible:new Set()};
+ if(!['crossing','crossingMaze','kleinMaze','torusMaze','doubleMaze','tripleMaze'].includes(state.world.mode))return {memory,visible:new Set()};
  const visible=new Set(nearestView(state).filter(p=>p.id>=0).map(p=>p.id));
  for(const id of visible)memory.add(id);return {memory,visible};
 }
@@ -783,7 +783,7 @@ function observeWalkingMap(state,book={charts:[],active:-1},view=nearestView(sta
   if(underpass){const right=directions[state.frame[1]],down=directions[state.frame[2]];
    record.groundX=here.x+p.x*right[0]+p.y*down[0];record.groundY=here.y+p.x*right[1]+p.y*down[1];
    // Compare actual locations modulo the seam, while leaving chart x/y unfolded.
-   if(['kleinMaze','torusMaze','doubleMaze'].includes(state.world.mode)){
+   if(['kleinMaze','torusMaze','doubleMaze','tripleMaze'].includes(state.world.mode)){
     const {width,height}=state.world.layouts[sheet],wrap=Math.floor(record.groundX/width);
     record.groundX=((record.groundX%width)+width)%width;
     if(state.world.mode==='kleinMaze'&&Math.abs(wrap)%2)record.groundY=-record.groundY;
@@ -803,7 +803,7 @@ function observeWalkingMap(state,book={charts:[],active:-1},view=nearestView(sta
  // On returning through a known hole, register the saved sheet chart against
  // a visible remembered floor, or the shared sheet frame for disconnected pockets.
  // Keep unseen records as well as the saved chart identity.
- if(state.world.mode==='doubleMaze'&&state.last?.kind==='throat'&&book.lastArrivalStep!==state.steps){
+ if(['doubleMaze','tripleMaze'].includes(state.world.mode)&&state.last?.kind==='throat'&&book.lastArrivalStep!==state.steps){
   book.lastArrivalStep=state.steps;
   registration:for(const saved of [...book.charts].reverse()){
    if(![...saved.cells.values()].some(p=>!p.wall&&groundSheet(state.world,p.id)===sheet))continue;
@@ -867,7 +867,7 @@ function crossingStats(world){
 }
 // Versioned local snapshot: retain the generated graph, not just its seed.
 function encodeSave(snapshot){
- return JSON.stringify({format:'connection-double-save',version:1,savedAt:new Date().toISOString(),snapshot},(_,v)=>v instanceof Map?{saveType:'Map',values:[...v]}:v instanceof Set?{saveType:'Set',values:[...v]}:v instanceof Uint8Array?{saveType:'Cells',values:[...v]}:v);
+ return JSON.stringify({format:snapshot?.state?.world?.mode==='tripleMaze'?'connection-triple-save':'connection-double-save',version:1,savedAt:new Date().toISOString(),snapshot},(_,v)=>v instanceof Map?{saveType:'Map',values:[...v]}:v instanceof Set?{saveType:'Set',values:[...v]}:v instanceof Uint8Array?{saveType:'Cells',values:[...v]}:v);
 }
 function decodeSave(text){
  if(typeof text!=='string'||text.length>20000000)throw Error('保存データの大きさが不正です。');
@@ -879,10 +879,10 @@ function decodeSave(text){
   if(v.saveType==='Cells'){if(v.values.some(n=>n!==0&&n!==1))throw Error('床データが不正です。');return Uint8Array.from(v.values);}
   throw Error('未対応の保存形式です。');
  });
- if(data.format!=='connection-double-save'||data.version!==1)throw Error('未対応の保存バージョンです。');
+ if(!['connection-double-save','connection-triple-save'].includes(data.format)||data.version!==1)throw Error('未対応の保存バージョンです。');
  const s=data.snapshot,st=s?.state,w=st?.world,validFrame=f=>Array.isArray(f)&&f.length===4&&new Set(f).size===4&&f.every(n=>Number.isInteger(n)&&n>=0&&n<4);
  const fail=()=>{throw Error('保存データの内容が不正です。');};
- if(!w||w.mode!=='doubleMaze'||w.sheets!==2||!(w.cells instanceof Uint8Array)||w.cells.length>10000||!Array.isArray(w.layouts)||w.layouts.length<2||!(w.edges instanceof Map)||!(w.candidates instanceof Map)||!(w.holes instanceof Set)||!Array.isArray(w.portals))fail();
+ if(!w||!['doubleMaze','tripleMaze'].includes(w.mode)||w.sheets!==(w.mode==='tripleMaze'?3:2)||data.format!==(w.mode==='tripleMaze'?'connection-triple-save':'connection-double-save')||!(w.cells instanceof Uint8Array)||w.cells.length>10000||!Array.isArray(w.layouts)||w.layouts.length<w.sheets||!(w.edges instanceof Map)||!(w.candidates instanceof Map)||!(w.holes instanceof Set)||!Array.isArray(w.portals))fail();
  let length=0;for(const l of w.layouts){if(!Number.isInteger(l.width)||!Number.isInteger(l.height)||l.width<8||l.width>24||l.height<8||l.height>24||l.offset!==length)fail();length+=l.width*l.height;}if(length!==w.cells.length)fail();
  if(!Number.isInteger(st.id)||!w.cells[st.id]||!validFrame(st.frame)||![st.x,st.y,st.steps].every(Number.isSafeInteger)||st.steps<0||!Array.isArray(st.history))fail();
  for(const map of [w.edges,w.candidates])for(const [key,e] of map){const parts=String(key).split(':').map(Number);if(parts.length!==2||!Number.isInteger(parts[0])||parts[0]<0||parts[0]>=length||!Number.isInteger(parts[1])||parts[1]<0||parts[1]>3||!Number.isInteger(e.to)||e.to<0||e.to>=length||!validFrame(e.transform))fail();if(map===w.edges&&(!w.cells[parts[0]]||!w.cells[e.to]))fail();}
@@ -896,7 +896,7 @@ function decodeSave(text){
  for(const [id,p] of s.regionBook.records)if(!cellId(id)||p?.id!==id)fail();
  for(const [id,n] of s.regionBook.owners)if(!cellId(id)||!Number.isSafeInteger(n)||n<1)fail();
  for(const c of Object.values(s.controls))if(!c||typeof c.value!=='string'||typeof c.checked!=='boolean')fail();
- for(const p of w.passages||[])if(!cellId(p.horizontal)||!cellId(p.vertical)||![0,1].includes(p.baseSheet)||!Number.isInteger(p.cx)||!Number.isInteger(p.cy))fail();
+ for(const p of w.passages||[])if(!cellId(p.horizontal)||!cellId(p.vertical)||!Number.isInteger(p.baseSheet)||p.baseSheet<0||p.baseSheet>=w.sheets||!Number.isInteger(p.cx)||!Number.isInteger(p.cy))fail();
  return data;
 }
 const api={encodeSave,decodeSave,randomDoubleOptions,observeJourneyMap,observeRegions,underpassSymbol,groundSheet,underpassAxis,crossingStats,observeWalkingMap,observeAtlas,holeLimit,position,names,directions,generate,create,move,quadrantSheets,branchView,branchRayView,candidateView,nearestView};if(typeof module==='object')module.exports=api;else root.ConnectionSpace=api;

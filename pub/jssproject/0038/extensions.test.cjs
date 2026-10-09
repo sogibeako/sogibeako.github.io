@@ -17,7 +17,7 @@ assert.deepEqual(C.expression('sqrt(0)').value, {p:0n,d:1n});
 assert.deepEqual(C.expression('-sqrt(4)').value, {p:-2n,d:1n});
 assert.equal(C.expandExpression(C.expression('-sqrt(2)'), decimal, 20).negative,true);
 assert.equal(C.expression('√2').lower,sqrt2.lower);
-for (const expression of ['(-2)^(1/2)', '0^(-1)', '0^0', '2^(1/101)', '2^101', 'alert(1)', '2^2^2', 'pi']) assert.throws(() => C.expression(expression));
+for (const expression of ['(-2)^(1/2)', '0^(-1)', '0^0', '2^(1/101)', '2^101', 'alert(1)', 'pi^pi', '1/(e-e)', '2**3']) assert.throws(() => C.expression(expression));
 const limited = C.expandExpression(sqrt2,C.sequence('exponential','100'),100);
 assert.equal(limited.precisionLimited,true);
 assert.ok(limited.rows.length > 0 && limited.rows.length < 100);
