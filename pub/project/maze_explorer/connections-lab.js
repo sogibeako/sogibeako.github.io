@@ -76,6 +76,7 @@ function draw(){
  $('doubleMazeGeneration').hidden=state.world.mode!=='doubleMaze';
  $('periodicGeneration').hidden=!['kleinMaze','torusMaze'].includes(state.world.mode);
  $('underpassGeneration').hidden=state.world.mode!=='underpassMaze';
+ $('tripleCustomSize').hidden=$('tripleMazeSize').value!=='custom';
  $('explorationSave').hidden=!['doubleMaze','tripleMaze'].includes(state.world.mode);
  $('journeyHint').hidden=!['underpassMaze','crossingMaze','doubleMaze','tripleMaze'].includes(state.world.mode);
  $('underpassExitNext').hidden=!['underpassMaze','crossingMaze','doubleMaze','tripleMaze'].includes(state.world.mode);
@@ -110,7 +111,7 @@ function draw(){
  if(state.world.mode==='crossingMaze')$('spaceStatus').textContent+=` 階段：${state.world.stairPlacement==='random'?(state.world.stairPlacementFallback?'候補不足のため従来配置':'ランダム配置'):'対角配置'}。`;
  if(['kleinMaze','torusMaze'].includes(state.world.mode))$('spaceStatus').textContent+=` ${state.world.growth} / シード ${state.world.seed} / アンダーパス ${state.world.passages?.length??0}か所。${state.id===state.world.exit?'出口に到達しました！ Shift+Nで別の迷路を生成できます。':''}`;
  if(state.world.mode==='crossingMaze'&&state.world.floorUnderpasses)$('spaceStatus').textContent+=` 各階内のアンダーパス：上層 ${state.world.passages.filter(p=>p.baseSheet===0).length} / 下層 ${state.world.passages.filter(p=>p.baseSheet===1).length}（各階目標 ${state.world.floorUnderpasses}）。`;
- if(state.world.mode==='tripleMaze'){$('spaceStatus').textContent+=` 3トーラス / ${state.world.growth} / ${state.world.wallStyle==='grid'?'格子状の壁':'密な枝道'} / シード ${state.world.seed} / 穴 ${state.world.holeSize}×${state.world.holeSize} / 交差 ${['A','B','C'].map((n,i)=>n+' '+(state.world.passages||[]).filter(p=>p.baseSheet===i).length).join('・')}。${state.id===state.world.exit?'出口に到達しました！ > で同じ条件の次の迷路へ。移動すれば探索を続けられます。':''}`;}
+ if(state.world.mode==='tripleMaze'){$('spaceStatus').textContent+=` 3トーラス / ${state.world.growth} / ${state.world.wallStyle==='grid'?'格子状の壁':'密な枝道'} / シード ${state.world.seed} / 穴 ${state.world.holeSize}×${state.world.holeSize} / 交差 ${['A','B','C'].map((n,i)=>n+' '+(state.world.passages||[]).filter(p=>p.baseSheet===i).length).join('・')}。${state.id===state.world.exit?($('tripleRandomNext').checked?'出口に到達しました！ > で選んだ項目を抽選して次へ。移動すれば探索を続けられます。':'出口に到達しました！ > で同じ条件の次の迷路へ。移動すれば探索を続けられます。'):''}`;}
  if(state.world.mode==='doubleMaze'){$('spaceStatus').textContent+=` ${{walls:'連結を保つ壁配置',dfs:'DFS型',prim:'Prim型',growing:'Growing Tree型'}[state.world.growth]} / シード ${state.world.seed} / ${state.world.wallStyle==='grid'?'格子状の壁':'密な枝道'} / アンダーパス A ${(state.world.passages||[]).filter(p=>p.baseSheet===0).length}・B ${(state.world.passages||[]).filter(p=>p.baseSheet===1).length}か所 / 壁 ${state.world.wallCount}マス${state.world.holeRimWalls?`（穴の周囲に追加 ${state.world.holeRimWallCount}）`:""}。各シートに上下・左右の周回路あり（${state.world.loopStyle==='straight'?'直線型':'曲がる経路も許可'}）。${state.id===state.world.exit?($('doubleRandomNext').checked?'出口に到達しました！ > で選んだ項目を抽選して次へ。移動すれば探索を続けられます。':'出口に到達しました！ > で同じ条件の次の迷路へ。移動すれば探索を続けられます。'):''}`;if(!archived)$('spaceViewHint').textContent=joined&&!truth&&!atlas?'穴を越えて歩いた位置に記憶をつなぎます。暗い部分は過去の観測、明るい部分は現在の視界です。重なる風景は最新の観測を優先します。':truth?'2つのトーラスの全体図です。外周は各シート内でつながり、中央の穴は別シートへつながります。':atlas?'探索済みの範囲を各シートに記録します。未探索は空白です。':($('doubleKeepMemory').checked?'以前のシートの記憶を薄く残し、現在の視界を優先します。重なる記録は地図の選択欄やMで見返せます。':'現在のシートの記憶だけを表示します。以前の記録は地図の選択欄やMで見返せます。');}
  if(state.world.holeSize)$('spaceStatus').textContent+=` 穴 ${state.world.holeSize}×${state.world.holeSize}。`;
  if(preview)$('spaceStatus').textContent+=` 周辺4歩：候補状態 ${metrics.states}件 / 表示 ${metrics.tiles}マス / 別の位置の自分 ${candidates.filter(p=>!p.wall&&p.selfCandidate&&(p.x!==0||p.y!==0)).length}体。`;
@@ -126,8 +127,8 @@ function reset(continuing=false){
  const mode=$('spaceMode').value,options={walls:true,seed:$('crossingSeed').value,underpassShape:mode==='cornerUnderpass'?'corners':$('underpassShape').value};
  if(['double','triple'].includes(mode))options.dimensions=['A','B','C'].slice(0,mode==='triple'?3:2).map(n=>[Number($('size'+n+'Width').value),Number($('size'+n+'Height').value)]);
  if(['kleinMaze','torusMaze'].includes(mode)){options.width=Number($('periodicWidth').value);options.height=Number($('periodicHeight').value);options.growth=$('periodicGrowth').value;options.floorUnderpasses=Number($('periodicUnderpasses').value);options.seed=$('periodicSeed').value;}
- if(mode==='doubleMaze'){options.holeRimWalls=$('doubleRimWalls').checked;options.wallStyle=$('doubleWallStyle').value;options.floorUnderpasses=Number($('doubleUnderpasses').value);options.seed=$('doubleMazeSeed').value;options.growth=$('doubleMazeGrowth').value;options.loopStyle=$('doubleLoopStyle').value;options.dimensions=['A','B'].map(n=>[Number($('double'+n+'Width').value),Number($('double'+n+'Height').value)]);options.holeSize=Number($('doubleHoleSize').value);}
- if(mode==='tripleMaze'){options.seed=$('tripleMazeSeed').value;options.growth=$('tripleMazeGrowth').value;options.wallStyle=$('tripleWallStyle').value;options.holeRimWalls=$('tripleRimWalls').checked;options.floorUnderpasses=Number($('tripleUnderpasses').value);options.loopStyle=$('tripleLoopStyle').value;options.holeSize=Number($('tripleHoleSize').value);options.dimensions=$('tripleMazeSize').value==='medium'?[[16,16],[24,16],[16,16]]:[[12,12],[20,12],[12,12]];}
+ if(mode==='doubleMaze'){options.holePlacement=$('doubleHolePlacement').value||'center';options.holeRimWalls=$('doubleRimWalls').checked;options.wallStyle=$('doubleWallStyle').value;options.floorUnderpasses=Number($('doubleUnderpasses').value);options.seed=$('doubleMazeSeed').value;options.growth=$('doubleMazeGrowth').value;options.loopStyle=$('doubleLoopStyle').value;options.dimensions=['A','B'].map(n=>[Number($('double'+n+'Width').value),Number($('double'+n+'Height').value)]);options.holeSize=Number($('doubleHoleSize').value);}
+ if(mode==='tripleMaze'){options.seed=$('tripleMazeSeed').value;options.growth=$('tripleMazeGrowth').value;options.wallStyle=$('tripleWallStyle').value;options.holePlacement=$('tripleHolePlacement').value||'center';options.holeRimWalls=$('tripleRimWalls').checked;options.floorUnderpasses=Number($('tripleUnderpasses').value);options.loopStyle=$('tripleLoopStyle').value;options.holeSize=Number($('tripleHoleSize').value);options.dimensions=$('tripleMazeSize').value==='custom'?['A','B','C'].map(n=>[Number($('triple'+n+'Width').value),Number($('triple'+n+'Height').value)]):$('tripleMazeSize').value==='medium'?[[16,16],[24,16],[16,16]]:[[12,12],[20,12],[12,12]];}
  if(mode==='underpassMaze'){options.variety=$('underpassVariety').value;options.growth=$('underpassGrowth').value;options.count=Number($('underpassCount').value);options.route=$('underpassRoute').value;options.seed=$('underpassSeed').value;options.width=Number($('underpassWidth').value);options.height=Number($('underpassHeight').value);}
  if(mode==='crossingMaze'){options.stairPlacement=$('crossingStairs').value;options.floorUnderpasses=$('floorUnderpassesEnabled').checked?Number($('floorUnderpassesCount').value):0;options.growth=$('crossingGrowth').value;options.newestBias=Number($('crossingBias').value);options.wallStyle=$('crossingWallStyle').value;options.width=Number($('crossingWidth').value);options.height=Number($('crossingHeight').value);}
  if(options.dimensions&&!['doubleMaze','tripleMaze'].includes(mode))options.holeSize=$('holeSize').value==='auto'?'auto':Number($('holeSize').value);
@@ -151,14 +152,15 @@ function advanceGeneratedMaze(){
   for(const [i,n] of ['A','B'].entries()){$('double'+n+'Width').value=world.layouts[i].width;$('double'+n+'Height').value=world.layouts[i].height;}
   $('doubleMazeGrowth').value=world.growth;$('doubleWallStyle').value=world.wallStyle;
   $('doubleLoopStyle').value=world.loopStyle;$('doubleHoleSize').value=world.holeSize;
-  $('doubleRimWalls').checked=world.holeRimWalls;$('doubleUnderpasses').value=world.floorUnderpasses??0;
+  $('doubleHolePlacement').value=world.holePlacement??'center';$('doubleRimWalls').checked=world.holeRimWalls;$('doubleUnderpasses').value=world.floorUnderpasses??0;
   truth=false;atlasShown=false;nextDoubleMaze(true);return;
  }
  if(world.mode==='tripleMaze'){
-  $('tripleMazeSize').value=world.layouts[0].width===16?'medium':'small';
+  $('tripleMazeSize').value='custom';
+  for(const [i,n] of ['A','B','C'].entries()){$('triple'+n+'Width').value=world.layouts[i].width;$('triple'+n+'Height').value=world.layouts[i].height;}
   $('tripleMazeGrowth').value=world.growth;$('tripleWallStyle').value=world.wallStyle;
   $('tripleLoopStyle').value=world.loopStyle;$('tripleHoleSize').value=world.holeSize;
-  $('tripleRimWalls').checked=world.holeRimWalls;$('tripleUnderpasses').value=world.floorUnderpasses??0;
+  $('tripleHolePlacement').value=world.holePlacement??'center';$('tripleRimWalls').checked=world.holeRimWalls;$('tripleUnderpasses').value=world.floorUnderpasses??0;
   truth=false;atlasShown=false;nextTripleMaze(true);return;
  }
  if(world.mode==='crossingMaze'){
@@ -181,14 +183,14 @@ function nextDoubleMaze(continuing=false){
  if(continuing===true&&$('doubleRandomNext').checked){
   const o=S.randomDoubleOptions(seed,state.world,{generation:$('randomDoubleGeneration').checked,size:$('randomDoubleSize').checked,hole:$('randomDoubleHole').checked,loop:$('randomDoubleLoop').checked,underpasses:$('randomDoubleUnderpasses').checked});
   for(const [i,n] of ['A','B'].entries()){$('double'+n+'Width').value=o.dimensions[i][0];$('double'+n+'Height').value=o.dimensions[i][1];}
-  $('doubleMazeGrowth').value=o.growth;$('doubleWallStyle').value=o.wallStyle;$('doubleHoleSize').value=o.holeSize;$('doubleRimWalls').checked=o.holeRimWalls;
+  $('doubleMazeGrowth').value=o.growth;$('doubleWallStyle').value=o.wallStyle;$('doubleHoleSize').value=o.holeSize;$('doubleHolePlacement').value=o.holePlacement;$('doubleRimWalls').checked=o.holeRimWalls;
   $('doubleLoopStyle').value=o.loopStyle;$('doubleUnderpasses').value=o.floorUnderpasses;$('underpassShape').value=o.underpassShape;
  }
  reset(continuing===true);
 }
 const doubleSaveKey='maze-explorer.connections.double-save.v1';
 function explorationSaveKey(){return state.world.mode==='tripleMaze'?'maze-explorer.connections.triple-save.v1':doubleSaveKey;}
-const savedControlIds=['tripleMazeSize','tripleMazeSeed','tripleMazeGrowth','tripleWallStyle','tripleHoleSize','tripleRimWalls','tripleLoopStyle','tripleUnderpasses','doubleAWidth','doubleAHeight','doubleBWidth','doubleBHeight','doubleMazeSeed','doubleMazeGrowth','doubleWallStyle','doubleHoleSize','doubleRimWalls','doubleLoopStyle','doubleUnderpasses','underpassShape','doubleRandomNext','randomDoubleGeneration','randomDoubleSize','randomDoubleHole','randomDoubleLoop','randomDoubleUnderpasses','doubleContinuousMemory','doubleKeepMemory'];
+const savedControlIds=['doubleHolePlacement','tripleHolePlacement','tripleRandomNext','randomTripleGeneration','randomTripleSize','randomTripleHole','randomTripleLoop','randomTripleUnderpasses','tripleAWidth','tripleAHeight','tripleBWidth','tripleBHeight','tripleCWidth','tripleCHeight','tripleMazeSize','tripleMazeSeed','tripleMazeGrowth','tripleWallStyle','tripleHoleSize','tripleRimWalls','tripleLoopStyle','tripleUnderpasses','doubleAWidth','doubleAHeight','doubleBWidth','doubleBHeight','doubleMazeSeed','doubleMazeGrowth','doubleWallStyle','doubleHoleSize','doubleRimWalls','doubleLoopStyle','doubleUnderpasses','underpassShape','doubleRandomNext','randomDoubleGeneration','randomDoubleSize','randomDoubleHole','randomDoubleLoop','randomDoubleUnderpasses','doubleContinuousMemory','doubleKeepMemory'];
 function doubleSnapshot(){
  const controls=Object.fromEntries(savedControlIds.map(id=>[id,{value:String($(id).value),checked:Boolean($(id).checked)}]));
  return {state,journey,journeyMap,regionBook,atlasMemory,walkingBook,controls};
@@ -204,6 +206,8 @@ function restoreDoubleText(text){
  const {snapshot:s,savedAt}=S.decodeSave(text),previous=doubleSnapshot(),display={truth,atlasShown,browsedChart,mode:$('spaceMode').value,region:$('regionChoice').value};
  try{
  state=s.state;journey=s.journey;journeyMap=s.journeyMap;regionBook=s.regionBook;atlasMemory=s.atlasMemory;walkingBook=s.walkingBook;
+ $('doubleHolePlacement').value='center';$('tripleHolePlacement').value='center';
+ $('tripleRandomNext').checked=false;
  for(const id of savedControlIds)if(s.controls[id]){$(id).value=s.controls[id].value;$(id).checked=Boolean(s.controls[id].checked);}
  $('spaceMode').value=state.world.mode;truth=false;atlasShown=false;browsedChart=0;$('regionChoice').value='0';$('sizeError').textContent='';
  draw();$('doubleSaveStatus').textContent=`再開しました：${state.world.seed} / ${state.steps}歩（保存日時 ${new Date(savedAt).toLocaleString()}）。`;canvas.focus();
@@ -242,7 +246,19 @@ $('doubleSaveFile').addEventListener('change',e=>importDoubleExploration(e.targe
 $('saveDoubleExploration').addEventListener('click',saveDoubleExploration);$('loadDoubleExploration').addEventListener('click',loadDoubleExploration);
 $('doubleKeepMemory').addEventListener('change',draw);$('doubleRandomNext').addEventListener('change',draw);
 $('generateDoubleMaze').addEventListener('click',reset);$('nextDoubleMaze').addEventListener('click',nextDoubleMaze);
-function nextTripleMaze(continuing=false){$('tripleMazeSeed').value='triple-'+Math.random().toString(36).slice(2,10);reset(continuing===true);}
+$('tripleMazeSize').addEventListener('change',()=>{$('tripleCustomSize').hidden=$('tripleMazeSize').value!=='custom';});
+function nextTripleMaze(continuing=false){
+ const seed='triple-'+Math.random().toString(36).slice(2,10);$('tripleMazeSeed').value=seed;
+ if(continuing===true&&$('tripleRandomNext').checked){
+  const o=S.randomTripleOptions(seed,state.world,{generation:$('randomTripleGeneration').checked,size:$('randomTripleSize').checked,hole:$('randomTripleHole').checked,loop:$('randomTripleLoop').checked,underpasses:$('randomTripleUnderpasses').checked});
+  $('tripleMazeSize').value='custom';
+  for(const [i,n] of ['A','B','C'].entries()){$('triple'+n+'Width').value=o.dimensions[i][0];$('triple'+n+'Height').value=o.dimensions[i][1];}
+  $('tripleMazeGrowth').value=o.growth;$('tripleWallStyle').value=o.wallStyle;$('tripleHoleSize').value=o.holeSize;$('tripleHolePlacement').value=o.holePlacement;$('tripleRimWalls').checked=o.holeRimWalls;
+  $('tripleLoopStyle').value=o.loopStyle;$('tripleUnderpasses').value=o.floorUnderpasses;$('underpassShape').value=o.underpassShape;
+ }
+ reset(continuing===true);
+}
+$('tripleRandomNext').addEventListener('change',draw);
 $('generateTripleMaze').addEventListener('click',reset);$('nextTripleMaze').addEventListener('click',nextTripleMaze);
 function nextPeriodic(){$('periodicSeed').value='periodic-'+Math.random().toString(36).slice(2,10);reset();}
 $('generatePeriodic').addEventListener('click',reset);$('nextPeriodic').addEventListener('click',nextPeriodic);

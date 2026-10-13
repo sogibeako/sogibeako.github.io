@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict'),S=require('./connection-space.js');let cases=0,crossings=0;
 for(const growth of ['walls','dfs','prim','growing'])for(const wallStyle of ['dense','grid'])for(const loopStyle of ['straight','meander'])for(let seed=0;seed<4;seed++){
- const opts={growth,wallStyle,loopStyle,seed,holeSize:seed%4+1,holeRimWalls:seed%2===0,floorUnderpasses:2,underpassShape:['straight','mixed','corners'][seed%3],dimensions:seed%2?[[16,16],[24,16],[16,16]]:[[12,12],[20,12],[12,12]]},st=S.create('tripleMaze',opts),w=st.world;
+ const opts={growth,wallStyle,loopStyle,seed,holeSize:seed%4+1,holeRimWalls:seed%2===0,floorUnderpasses:2,underpassShape:['straight','mixed','corners'][seed%3],dimensions:[[[8,10],[12,8],[10,8]],[[10,14],[22,12],[18,16]],[[24,24],[24,22],[20,24]],[[16,12],[18,14],[12,16]]][seed]},st=S.create('tripleMaze',opts),w=st.world;
  assert.equal(w.sheets,3);assert.equal(w.portals.length,4);assert.deepEqual(w.cells,S.generate('tripleMaze',opts).cells);
  const q=[w.start],parents=new Map([[w.start,null]]);for(const id of q)for(let d=0;d<4;d++){const e=w.edges.get(`${id}:${d}`);if(!e)continue;assert(w.cells[e.to]);assert.equal(w.edges.get(`${e.to}:${e.transform[(d+2)%4]}`)?.to,id);if(e.kind==='throat')assert.equal(Math.abs(S.groundSheet(w,id)-S.groundSheet(w,e.to)),1);if(!parents.has(e.to)){parents.set(e.to,[id,d]);q.push(e.to);}}
  assert.equal(q.length,w.cells.reduce((a,b)=>a+b,0));assert.equal(S.groundSheet(w,w.exit),2);

@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict'),S=require('./connection-space.js');
 for(const mode of ['doubleMaze','tripleMaze'])for(const underpassShape of ['straight','mixed','corners']){
- const state=S.create(mode,{seed:'save-'+underpassShape,wallStyle:'grid',growth:'prim',holeRimWalls:true,dimensions:mode==='tripleMaze'?[[16,16],[24,16],[16,16]]:[[20,20],[24,18]],holeSize:3,floorUnderpasses:3,underpassShape}),snapshot={state,journey:{number:4,steps:321},journeyMap:{cells:new Map()},regionBook:{records:new Map(),owners:new Map(),nextNumber:1},atlasMemory:new Set(),walkingBook:{charts:[],active:-1},controls:{doubleRandomNext:{checked:true,value:'on'}}};
+ const state=S.create(mode,{holePlacement:'offset',seed:'save-'+underpassShape,wallStyle:'grid',growth:'prim',holeRimWalls:true,dimensions:mode==='tripleMaze'?[[16,16],[24,16],[16,16]]:[[20,20],[24,18]],holeSize:3,floorUnderpasses:3,underpassShape}),snapshot={state,journey:{number:4,steps:321},journeyMap:{cells:new Map()},regionBook:{records:new Map(),owners:new Map(),nextNumber:1},atlasMemory:new Set(),walkingBook:{charts:[],active:-1},controls:{doubleRandomNext:{checked:true,value:'on'}}};
  // Reach the final sheet through real holes before saving, keeping observations on all sheets.
  const w=state.world,q=[state.id],parents=new Map([[state.id,null]]);
  for(const id of q)for(let d=0;d<4;d++){const e=w.edges.get(`${id}:${d}`);if(e&&!parents.has(e.to)){parents.set(e.to,[id,d]);q.push(e.to);}}

@@ -42,10 +42,11 @@ function begin(game,seed,course='same') {
   if(course!=='same'&&course!=='random'){const size=game.journey?.size||'standard';[choice.options.width,choice.options.height]=size==='small'?[15,11]:size==='large'?[33,25]:[21,17];}
   const result=start(choice.options,choice.rotation);if(game.journey?.size)result.journey.size=game.journey.size;if(game.journey?.layout)result.journey.layout=game.journey.layout;if(game.journey?.random)result.journey.random=Random.validate(game.journey.random);return result;
 }
-function next(game,seed,course='same') {
+function next(game,seed,course='same',learning=null) {
   if(!canAdvance(game))throw Error('出口の上から次の迷路へ進めます。');
   if(typeof seed!=='string'||!seed.trim()||seed===game.generationOptions.seed)throw Error('別のシードを指定してください。');
   const choice=course==='random'?Random.choose(seed,game.journey?.random||Random.defaults):courseOptions(game,seed,course,game.journey?.size||'standard',game.journey?.layout||'all');
+  if(learning){if(typeof learning.loopLearning!=='boolean'||![3,5].includes(learning.learningLaps))throw Error('方向感覚の設定が不正です。');choice.options={...choice.options,loopLearning:learning.loopLearning,learningLaps:learning.learningLaps};}
   const result=start(choice.options,choice.rotation);
   result.journey={completed:game.journey.completed+1,steps:game.journey.steps+game.steps};
   if(game.journey.size)result.journey.size=game.journey.size;

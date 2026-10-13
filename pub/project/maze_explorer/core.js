@@ -789,6 +789,18 @@
     }
     observe(game); return game;
   }
+  // Display-only observation history. Replay reconstructs it without changing save fingerprints.
+  const unfoldedMemories = new WeakMap();
+  function unfoldedFloorCount(game){let count=0;for(const node of (unfoldedMemories.get(game.cognition)||new Map()).values())if(node.terrain)count++;return count;}
+  function unfoldedCells(game, bounds) {
+    const nodes=unfoldedMemories.get(game.cognition)||new Map(),result=[];
+    for(let y=bounds.minY;y<=bounds.maxY;y++)for(let x=bounds.minX;x<=bounds.maxX;x++){
+      const node=nodes.get(`C${x},${y}`);if(!node)continue;
+      const p=cognitivePosition(game,x,y),current=game.cognition.memory_nodes.get(cognitiveId(game.world,p.x,p.y));
+      result.push({...node,feature:current?current.feature:node.feature,visible:game.cognition.visible_positions.has(`C${x},${y}`),familiar:false});
+    }
+    return result;
+  }
   function cognitiveId(world, x, y) { return world.topology === 'torus' || world.rotatingWarp ? `C${x},${y}` : 'C' + (y * world.width + x); }
   function cognitivePosition(game, x = game.player.perceived_x, y = game.player.perceived_y) {
     if (game.cognition.knowledgeBasis) return reduceKnowledge(game.cognition.knowledgeBasis, x, y);
@@ -973,6 +985,9 @@
         if ((x - cx) ** 2 + (y - cy) ** 2 > radius ** 2 || !traceLine(cx, cy, x, y, wall)) continue;
         const position = cognitivePosition(game, x, y);
         const world_id = worldId(x, y), id = cognitiveId(world, position.x, position.y);
+        if(!unfoldedMemories.has(cognition))unfoldedMemories.set(cognition,new Map());
+        const raw=unfoldedMemories.get(cognition),rawId=`C${x},${y}`;
+        raw.set(rawId,{world_id,x,y,terrain:world.cells[world_id],feature:featureAt(game,world_id),firstSeen:raw.get(rawId)?.firstSeen??game.steps,seenAt:game.steps});
         cognition.visible_cells.add(id);
         cognition.visible_positions.add(`C${x},${y}`);
         cognition.memory_nodes.set(id, { world_id, ...position, terrain: world.cells[world_id], feature: featureAt(game, world_id), firstSeen: cognition.memory_nodes.get(id)?.firstSeen ?? game.steps, seenAt: game.steps });
@@ -1407,6 +1422,7 @@
       game.cognition.archives.push({nodes:game.cognition.memory_nodes,step:game.steps,turn:game.turns,sources:[...game.cognition.matchedArchives],transferKind:kind==='warp' ? (world.warpInvisible ? 'unknown' : 'warp') : 'bird'});
       if(game.viewFrame)game.cognition.archives[game.cognition.archives.length-1].viewFrame=[...game.viewFrame];
       game.cognition.memory_nodes=new Map();
+      unfoldedMemories.delete(game.cognition);
       game.cognition.matchedArchives=new Set();
     }
     Object.assign(game.player,{world_position:to,perceived_x:to%world.width,perceived_y:Math.floor(to/world.width),perceived_position:'C'+to});
@@ -1533,7 +1549,7 @@
     return game.cognition.archives.flatMap((archive, index) =>
       [...archive.nodes.values()].some(node => node.world_id === entry[0] && node.feature === label) ? [index] : []);
   }
-  const api = { warpArrowRecords, exportWarpArrowNotes, resetWarpArrowCurve, curveWarpArrow, eraseWarpArrow, rememberWarpArrow, knownWarpAnchor, eraseZeroMark, placeRemoteZeroMark, placeZeroMark, continueExploring, archiveDisplayCells, inspectRecordedMatching, matchRecordedMaps, archiveTransfers, archiveGroups, inspectWarpConnectivity, createWarpDemo, exportTrueMap, exportArchiveNotes, setArchiveNote, markerArchives, markerTitle, nameMarker, currentLandmark, inspectLandmarkMemory, matchLandmarkMaps, placeMarker, createArchiveDemo, archiveCells, inspectEntranceMemory, matchEntranceMaps, knowledgeSummary, selfRaySegments, periodicPosition, periodicId, windingOf, deckVector, DIRS, random, generate, createTorusDemo, inspectTorus, cognitivePosition, subjectiveCells, transition, ruleTransition, solvePuzzle, featureAt, reachable, lineOfSight, createGame, observe, move, waitTurn, inspectBird };
+  const api = { unfoldedFloorCount, unfoldedCells, warpArrowRecords, exportWarpArrowNotes, resetWarpArrowCurve, curveWarpArrow, eraseWarpArrow, rememberWarpArrow, knownWarpAnchor, eraseZeroMark, placeRemoteZeroMark, placeZeroMark, continueExploring, archiveDisplayCells, inspectRecordedMatching, matchRecordedMaps, archiveTransfers, archiveGroups, inspectWarpConnectivity, createWarpDemo, exportTrueMap, exportArchiveNotes, setArchiveNote, markerArchives, markerTitle, nameMarker, currentLandmark, inspectLandmarkMemory, matchLandmarkMaps, placeMarker, createArchiveDemo, archiveCells, inspectEntranceMemory, matchEntranceMaps, knowledgeSummary, selfRaySegments, periodicPosition, periodicId, windingOf, deckVector, DIRS, random, generate, createTorusDemo, inspectTorus, cognitivePosition, subjectiveCells, transition, ruleTransition, solvePuzzle, featureAt, reachable, lineOfSight, createGame, observe, move, waitTurn, inspectBird };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MazeCore = api;
 })(globalThis);

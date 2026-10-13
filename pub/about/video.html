@@ -451,37 +451,73 @@
             </li>
         </ul>
 
+        <div style="text-align: center;">
+            <a href="index.html" class="rain-window-btn">
+                <canvas data-rainwindow="true"></canvas>
+                <span class="rw-label">Back</span>
+            </a>
+        </div>
+
         <script>
+            /* ============================================================
+               案D: 雨窓 — 常に降る雨粒
+               ============================================================ */
             document.querySelectorAll('canvas[data-rainwindow]').forEach(cv => {
                 const dpr = window.devicePixelRatio || 1;
                 const parent = cv.parentElement;
                 const rect = parent.getBoundingClientRect();
-                cv.width = rect.width * dpr; cv.height = rect.height * dpr;
-                const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+                cv.width = rect.width * dpr;
+                cv.height = rect.height * dpr;
+                const ctx = cv.getContext('2d');
+                ctx.scale(dpr, dpr);
                 const w = rect.width, h = rect.height;
+
                 const drops = Array.from({ length: 30 }, () => ({
-                    x: Math.random() * w, y: Math.random() * h, speed: 0.5 + Math.random() * 1.5,
-                    len: 4 + Math.random() * 10, opacity: 0.15 + Math.random() * 0.35, width: 0.5 + Math.random() * 0.8
+                    x: Math.random() * w,
+                    y: Math.random() * h,
+                    speed: 0.5 + Math.random() * 1.5,
+                    len: 4 + Math.random() * 10,
+                    opacity: 0.15 + Math.random() * 0.35,
+                    width: 0.5 + Math.random() * 0.8
                 }));
+
+                // 水滴の着弾スプラッシュ
                 const splashes = [];
+
                 function draw() {
                     ctx.clearRect(0, 0, w, h);
+
+                    // 雨粒
                     drops.forEach(d => {
-                        ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - 0.3, d.y + d.len);
-                        ctx.strokeStyle = `rgba(158,200,209,${d.opacity})`; ctx.lineWidth = d.width; ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(d.x, d.y);
+                        ctx.lineTo(d.x - 0.3, d.y + d.len);
+                        ctx.strokeStyle = `rgba(158,200,209,${d.opacity})`;
+                        ctx.lineWidth = d.width;
+                        ctx.stroke();
                         d.y += d.speed;
                         if (d.y > h) {
                             splashes.push({ x: d.x, y: h - 2, r: 0, opacity: 0.4 });
-                            d.y = -d.len - Math.random() * 20; d.x = Math.random() * w;
+                            d.y = -d.len - Math.random() * 20;
+                            d.x = Math.random() * w;
                         }
                     });
+
+                    // スプラッシュ
                     splashes.forEach(s => {
-                        s.r += 0.3; s.opacity -= 0.015;
+                        s.r += 0.3;
+                        s.opacity -= 0.015;
                         if (s.opacity <= 0) return;
-                        ctx.beginPath(); ctx.ellipse(s.x, s.y, s.r * 1.5, s.r * 0.5, 0, 0, Math.PI * 2);
-                        ctx.strokeStyle = `rgba(158,200,209,${s.opacity})`; ctx.lineWidth = 0.5; ctx.stroke();
+                        ctx.beginPath();
+                        ctx.ellipse(s.x, s.y, s.r * 1.5, s.r * 0.5, 0, 0, Math.PI * 2);
+                        ctx.strokeStyle = `rgba(158,200,209,${s.opacity})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
                     });
+
+                    // 古いスプラッシュを除去
                     while (splashes.length > 0 && splashes[0].opacity <= 0) splashes.shift();
+
                     requestAnimationFrame(draw);
                 }
                 draw();

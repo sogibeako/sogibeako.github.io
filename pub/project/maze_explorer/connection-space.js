@@ -227,6 +227,24 @@ function periodicMaze(mode,options){
  return addFloorUnderpasses({mode,seed,growth,wallStyle:'grid',underpassReach:2,size:width,sheets:1,layouts:[{width,height,offset:0}],cells,edges,candidates,start,exit:queue.at(-1),holes:new Set(),stairs:new Set(),crossings:new Set(),directed:false},options.floorUnderpasses??3);
 }
 function groundSheet(world,id){const p=world.passages?.find(p=>p.vertical===id);return p?(p.baseSheet??0):position(world,id).sheet;}
+// A local tunnel endpoint can touch a skew seam even when its center is inland.
+function skewStep(world,id,d){
+ const p=position(world,id),l=world.lattice,[dx,dy]=directions[d],x=p.x+world.minX+dx,y=p.y+world.minY+dy;
+ const a=Math.floor((l.height*(2*x+1)+l.shiftX*(2*y+1))/(2*l.determinant)),b=Math.floor((l.shiftY*(2*x+1)+l.width*(2*y+1))/(2*l.determinant)),layout=world.layouts[p.sheet];
+ return layout.offset+(y+a*l.shiftY-b*l.height-world.minY)*layout.width+x-a*l.width+b*l.shiftX-world.minX;
+}
+function repairSkewSeams(world){
+ let repaired=0;if(!world.lattice||!world.domain)return repaired;
+ for(const [key,e] of world.candidates){
+  const [from,d]=key.split(':').map(Number);
+  if(e.kind!=='normal'||!world.domain.has(from)||world.domain.has(e.to))continue;
+  const to=skewStep(world,from,d);if(!world.domain.has(to))continue;
+  const fixed={...e,to};world.candidates.set(key,fixed);world.edges.delete(key);
+  if(world.cells[from]&&world.cells[to]){world.edges.set(key,fixed);const reverse=`${to}:${(d+2)%4}`,back=world.candidates.get(reverse);if(back?.to===from)world.edges.set(reverse,back);}
+  repaired++;
+ }
+ return repaired;
+}
 function addFloorUnderpasses(world,count){
  if(!Number.isInteger(count)||count<0||count>6)throw Error('各階のアンダーパス目標数は0〜6にしてください。');
  if(!count)return world;
@@ -258,7 +276,7 @@ function addFloorUnderpasses(world,count){
    for(const id of [...added,v])cells[id]=1;
    for(const id of new Set([h,v,...added,h-width,h+width,h-1,h+1,...ends]))if(cells[id])for(let d=0;d<4;d++){
     edges.delete(`${id}:${d}`);candidates.delete(`${id}:${d}`);if(id===h&&d%2===0||id===v&&d%2===1)continue;
-    const [dx,dy]=directions[d],to=(id===v?h:id)+dy*width+dx,target=to===h&&d%2===0?v:to,e={to:target,transform:[...identity],kind:id===v||target===v?'underpass':'normal'};
+    const [dx,dy]=directions[d],to=world.lattice?skewStep(world,id===v?h:id,d):(id===v?h:id)+dy*width+dx,target=to===h&&d%2===0?v:to,e={to:target,transform:[...identity],kind:id===v||target===v?'underpass':'normal'};
     candidates.set(`${id}:${d}`,e);if(cells[target])edges.set(`${id}:${d}`,e);
    }
    const q=[world.start],seen=new Set(q);for(const id of q)for(let d=0;d<4;d++){const e=edges.get(`${id}:${d}`);if(e&&!seen.has(e.to)){seen.add(e.to);q.push(e.to);}}
@@ -438,7 +456,16 @@ function holeWorld(mode,options){
  if(!Number.isInteger(holeSize)||holeSize<1||holeSize>limit)throw Error(`このマップでは穴の一辺を1〜${limit}マスにしてください。`);
  let count=0;const layouts=dimensions.map(([width,height])=>{const l={width,height,offset:count};count+=width*height;return l;}),cells=new Uint8Array(count).fill(1),holes=new Set(),portals=[],edges=new Map(),candidates=new Map();
  const id=(sheet,x,y)=>layouts[sheet].offset+y*layouts[sheet].width+x;
- const hole=(sheet,side)=>{const l=layouts[sheet];return {sheet,x:sheet===1&&sheets===3?(side===0?2:l.width-2-holeSize):Math.floor((l.width-holeSize)/2),y:Math.floor((l.height-holeSize)/2),size:holeSize};};
+ const holePlacement=options.holePlacement??'center';
+ if(!['center','offset'].includes(holePlacement))throw Error('未対応の穴の配置です。');
+ let hv=2166136261;for(const c of String(options.seed??'double-first')+'-hole-position')hv=Math.imul(hv^c.charCodeAt(0),16777619);
+ const choose=(min,max)=>{hv=(Math.imul(hv,1664525)+1013904223)>>>0;return min+Math.floor(hv/4294967296*(max-min+1));};
+ const positions=layouts.map((l,sheet)=>{
+  if(holePlacement==='center')return null;
+  if(sheet===1&&sheets===3){const left=choose(2,l.width-4-2*holeSize),right=choose(left+holeSize+2,l.width-2-holeSize);return [{x:left,y:choose(2,l.height-2-holeSize)},{x:right,y:choose(2,l.height-2-holeSize)}];}
+  return [{x:choose(2,l.width-2-holeSize),y:choose(2,l.height-2-holeSize)}];
+ });
+ const hole=(sheet,side)=>{const l=layouts[sheet],p=positions[sheet]?.[sheet===1&&sheets===3?side:0];return {sheet,x:p?.x??(sheet===1&&sheets===3?(side===0?2:l.width-2-holeSize):Math.floor((l.width-holeSize)/2)),y:p?.y??Math.floor((l.height-holeSize)/2),size:holeSize};};
  const links=[];for(let i=0;i<sheets-1;i++){const a=hole(i,1),b=hole(i+1,0);links.push([a,b]);portals.push({...a,target:i+1},{...b,target:i});for(const h of [a,b])for(let y=h.y;y<h.y+holeSize;y++)for(let x=h.x;x<h.x+holeSize;x++){const n=id(h.sheet,x,y);cells[n]=0;holes.add(n);}}
  for(let sheet=0;sheet<sheets;sheet++){const l=layouts[sheet];for(let y=0;y<l.height;y++)for(let x=0;x<l.width;x++){const from=id(sheet,x,y);if(!cells[from])continue;for(let d=0;d<4;d++){const [dx,dy]=directions[d],to=id(sheet,(x+dx+l.width)%l.width,(y+dy+l.height)%l.height);if(cells[to])edges.set(`${from}:${d}`,{to,transform:[...identity],kind:'normal'});}}}
  for(const [a,b] of links)for(const [src,dst] of [[a,b],[b,a]])for(let k=0;k<holeSize;k++)for(let d=0;d<4;d++){
@@ -447,7 +474,7 @@ function holeWorld(mode,options){
  }
  for(const [key,e] of edges)candidates.set(key,e);
  if(options.walls){for(let sheet=0;sheet<sheets;sheet++){const l=layouts[sheet];for(const [x,y] of [[2,2],[l.width-3,2],[l.width-2,l.height-3],[Math.floor(l.width/2),l.height-2]]){const n=id(sheet,x,y);if(!holes.has(n)&&!portals.some(h=>h.sheet===sheet&&x>=h.x-1&&x<=h.x+holeSize&&y>=h.y-1&&y<=h.y+holeSize))cells[n]=0;}}for(const [key,e] of edges)if(!cells[Number(key.split(':')[0])]||!cells[e.to])edges.delete(key);}
- return {mode,size:8,sheets,layouts,portals,holeSize,cells,holes,edges,candidates,directed:false,start:id(0,1,1)};
+ return {mode,size:8,sheets,layouts,portals,holeSize,holePlacement,cells,holes,edges,candidates,directed:false,start:id(0,1,1)};
 }
 // A weighted path on a lifted sheet ends one period away, proving its winding.
 function windingRoute(world,sheet,start,axis,random){
@@ -467,12 +494,12 @@ function windingRoute(world,sheet,start,axis,random){
 }
 // First small experiment: add walls while preserving all remaining floor connectivity.
 function loopsIntact(world){
- return (world.guaranteedLoops||[]).every(({horizontal,vertical})=>[horizontal,vertical].every(path=>{
+ return (world.guaranteedLoops||[]).every(route=>(route.directions?[route]:[route.horizontal,route.vertical]).every(path=>{
   let id=path.start;for(const d of path.directions){const e=world.edges.get(`${id}:${d}`);if(!e)return false;id=e.to;}return id===path.start;
  }));
 }
 function doubleMaze(options,mode='doubleMaze'){
- const world=holeWorld(mode==='tripleMaze'?'triple':'double',{dimensions:options.dimensions??(mode==='tripleMaze'?[[12,12],[20,12],[12,12]]:[[12,12],[12,12]]),holeSize:options.holeSize??2,walls:false});
+ const world=holeWorld(mode==='tripleMaze'?'triple':'double',{dimensions:options.dimensions??(mode==='tripleMaze'?[[12,12],[20,12],[12,12]]:[[12,12],[12,12]]),holeSize:options.holeSize??2,holePlacement:options.holePlacement,seed:options.seed,walls:false});
  world.wallStyle=options.wallStyle??'dense';
  if(!['dense','grid'].includes(world.wallStyle))throw Error('未対応の壁配置です。');
  if(world.wallStyle==='grid'&&world.layouts.some(l=>l.width%2||l.height%2))throw Error('格子状の壁では各辺を偶数にしてください。');
@@ -591,7 +618,7 @@ function position(world,id){
 function randomDoubleOptions(seed,world,groups={}){
  let value=2166136261;for(const c of String(seed)+'-conditions')value=Math.imul(value^c.charCodeAt(0),16777619);
  const pick=values=>{value=(Math.imul(value,1664525)+1013904223)>>>0;return values[Math.floor(value/4294967296*values.length)];};
- const options={seed,growth:world.growth,wallStyle:world.wallStyle,dimensions:world.layouts.slice(0,2).map(l=>[l.width,l.height]),holeSize:world.holeSize,holeRimWalls:world.holeRimWalls,loopStyle:world.loopStyle,floorUnderpasses:world.floorUnderpasses??0,underpassShape:world.underpassShape};
+ const options={seed,growth:world.growth,wallStyle:world.wallStyle,dimensions:world.layouts.slice(0,2).map(l=>[l.width,l.height]),holeSize:world.holeSize,holeRimWalls:world.holeRimWalls,holePlacement:world.holePlacement??'center',loopStyle:world.loopStyle,floorUnderpasses:world.floorUnderpasses??0,underpassShape:world.underpassShape};
  if(groups.generation){options.growth=pick(['walls','dfs','prim','growing']);options.wallStyle=pick(['dense','grid']);}
  if(groups.size)options.dimensions=Array.from({length:2},()=>[pick([16,18,20,22,24]),pick([16,18,20,22,24])]);
  // An unchanged odd size must not silently change when only generation is random.
@@ -599,6 +626,23 @@ function randomDoubleOptions(seed,world,groups={}){
  if(groups.hole){options.holeSize=pick([1,2,3,4].filter(n=>n<=Math.min(...options.dimensions.flat())-4));options.holeRimWalls=pick([false,true]);}
  // Keep an explicitly retained large hole valid when sizes are randomized.
  if(groups.size&&!groups.hole){const min=options.holeSize+4;options.dimensions=options.dimensions.map(pair=>pair.map(n=>Math.max(n,min+(min%2))));}
+ if(groups.loop)options.loopStyle=pick(['straight','meander']);
+ if(groups.underpasses){options.floorUnderpasses=pick([0,1,2,3,4]);options.underpassShape=pick(['straight','mixed','corners']);}
+ return options;
+}
+function randomTripleOptions(seed,world,groups={}){
+ let value=2166136261;for(const c of String(seed)+'-conditions')value=Math.imul(value^c.charCodeAt(0),16777619);
+ const pick=values=>{value=(Math.imul(value,1664525)+1013904223)>>>0;return values[Math.floor(value/4294967296*values.length)];};
+ const options={seed,growth:world.growth,wallStyle:world.wallStyle,dimensions:world.layouts.slice(0,3).map(l=>[l.width,l.height]),holeSize:world.holeSize,holeRimWalls:world.holeRimWalls,holePlacement:world.holePlacement??'center',loopStyle:world.loopStyle,floorUnderpasses:world.floorUnderpasses??0,underpassShape:world.underpassShape};
+ if(groups.generation){options.growth=pick(['walls','dfs','prim','growing']);options.wallStyle=pick(['dense','grid']);}
+ if(groups.size){
+  const min=groups.hole?1:options.holeSize,evens=[16,18,20,22,24];
+  const sides=evens.filter(n=>n>=min+4);
+  const central=[];for(const width of evens)for(const height of evens)if(width>height&&width>=2*min+6&&height>=min+4)central.push([width,height]);
+  options.dimensions=[[pick(sides),pick(sides)],pick(central),[pick(sides),pick(sides)]];
+ }
+ if(options.dimensions.flat().some(n=>n%2)&&groups.generation)options.wallStyle='dense';
+ if(groups.hole){options.holeSize=pick([1,2,3,4].filter(n=>n<=holeLimit('triple',options.dimensions)));options.holeRimWalls=pick([false,true]);}
  if(groups.loop)options.loopStyle=pick(['straight','meander']);
  if(groups.underpasses){options.floorUnderpasses=pick([0,1,2,3,4]);options.underpassShape=pick(['straight','mixed','corners']);}
  return options;
@@ -783,7 +827,11 @@ function observeWalkingMap(state,book={charts:[],active:-1},view=nearestView(sta
   if(underpass){const right=directions[state.frame[1]],down=directions[state.frame[2]];
    record.groundX=here.x+p.x*right[0]+p.y*down[0];record.groundY=here.y+p.x*right[1]+p.y*down[1];
    // Compare actual locations modulo the seam, while leaving chart x/y unfolded.
-   if(['kleinMaze','torusMaze','doubleMaze','tripleMaze'].includes(state.world.mode)){
+   if(state.world.lattice){
+    const l=state.world.lattice,gx=record.groundX+state.world.minX,gy=record.groundY+state.world.minY;
+    const a=Math.floor((l.height*(2*gx+1)+l.shiftX*(2*gy+1))/(2*l.determinant)),b=Math.floor((l.shiftY*(2*gx+1)+l.width*(2*gy+1))/(2*l.determinant));
+    record.groundX=gx-a*l.width+b*l.shiftX-state.world.minX;record.groundY=gy+a*l.shiftY-b*l.height-state.world.minY;
+   }else if(['kleinMaze','torusMaze','doubleMaze','tripleMaze'].includes(state.world.mode)){
     const {width,height}=state.world.layouts[sheet],wrap=Math.floor(record.groundX/width);
     record.groundX=((record.groundX%width)+width)%width;
     if(state.world.mode==='kleinMaze'&&Math.abs(wrap)%2)record.groundY=-record.groundY;
@@ -803,7 +851,7 @@ function observeWalkingMap(state,book={charts:[],active:-1},view=nearestView(sta
  // On returning through a known hole, register the saved sheet chart against
  // a visible remembered floor, or the shared sheet frame for disconnected pockets.
  // Keep unseen records as well as the saved chart identity.
- if(['doubleMaze','tripleMaze'].includes(state.world.mode)&&state.last?.kind==='throat'&&book.lastArrivalStep!==state.steps){
+ if((['doubleMaze','tripleMaze'].includes(state.world.mode)||(state.world.mode==='double'&&state.world.lattice))&&state.last?.kind==='throat'&&book.lastArrivalStep!==state.steps){
   book.lastArrivalStep=state.steps;
   registration:for(const saved of [...book.charts].reverse()){
    if(![...saved.cells.values()].some(p=>!p.wall&&groundSheet(state.world,p.id)===sheet))continue;
@@ -899,5 +947,5 @@ function decodeSave(text){
  for(const p of w.passages||[])if(!cellId(p.horizontal)||!cellId(p.vertical)||!Number.isInteger(p.baseSheet)||p.baseSheet<0||p.baseSheet>=w.sheets||!Number.isInteger(p.cx)||!Number.isInteger(p.cy))fail();
  return data;
 }
-const api={encodeSave,decodeSave,randomDoubleOptions,observeJourneyMap,observeRegions,underpassSymbol,groundSheet,underpassAxis,crossingStats,observeWalkingMap,observeAtlas,holeLimit,position,names,directions,generate,create,move,quadrantSheets,branchView,branchRayView,candidateView,nearestView};if(typeof module==='object')module.exports=api;else root.ConnectionSpace=api;
+const api={repairSkewSeams,bendUnderpasses,addFloorUnderpasses,randomTripleOptions,encodeSave,decodeSave,randomDoubleOptions,observeJourneyMap,observeRegions,underpassSymbol,groundSheet,underpassAxis,crossingStats,observeWalkingMap,observeAtlas,holeLimit,position,names,directions,generate,create,move,quadrantSheets,branchView,branchRayView,candidateView,nearestView};if(typeof module==='object')module.exports=api;else root.ConnectionSpace=api;
 })(typeof globalThis==='object'?globalThis:this);

@@ -1,7 +1,7 @@
 'use strict';
 const $ = id => document.getElementById(id);
 const canvas = $('map'), ctx = canvas.getContext('2d');
-let game, view = 0, ascii = false, markerEditorGame, archiveNoteRecord, trueMapExportGame, warpDebugWorld;
+let game, view = 0, ascii = false, hybrid = false, markerEditorGame, archiveNoteRecord, trueMapExportGame, warpDebugWorld;
 let archiveNavigation={game:null,key:null,index:-1,points:[]};
 // Keep original hint elements (and their IDs) so generator-specific updates still apply.
 for(const hint of document.querySelectorAll('#settings p.hint')) {
@@ -63,7 +63,8 @@ function newWorld(demo = false, prepared = null) {
     if(world.warpDemo){$('generationInfo').textContent='ワープ実験：二つの部屋と一対の O。床へ進入すると相手側へ移動します。通常の通路でも部屋を行き来できます。';$('status').textContent='下へ2歩、右へ2歩で O に入ります。移動先では一度離れて入り直すと戻れます。光はワープしません。';}
     announceSelfVision();
     render();
-  } catch (error) { $('status').textContent = error.message; }
+    return true;
+  } catch (error) { $('status').textContent = error.message; return false; }
 }
 function loadMarkerName() {
   $('markerName').value=game.markerNames.get($('markerChoice').value)||'';
@@ -268,7 +269,7 @@ function renderArchive() {
     const entrance=n.world_id===game.world.start,marker=/^[0-9]$/.test(n.feature)||n.feature==='O';
     g.fillStyle=entrance?'#f1c583':marker?'#8be1ee':n.terrain?'#36534e':'#77918e';
     if(ascii&&tile>=7){g.font=`${tile}px monospace`;g.textAlign='center';g.textBaseline='middle';g.fillText(entrance?'<':marker?n.feature:n.terrain?'.':'#',x+tile/2,y+tile/2);}
-    else {g.fillRect(x,y,Math.max(.5,tile-1),Math.max(.5,tile-1));if(marker&&tile>=9){g.fillStyle='#0b161c';g.font=`${tile*.8}px monospace`;g.textAlign='center';g.textBaseline='middle';g.fillText(n.feature,x+tile/2,y+tile/2);}}
+    else {g.fillRect(x,y,Math.max(.5,tile-1),Math.max(.5,tile-1));if((marker||hybrid)&&tile>=9){g.fillStyle=hybrid?'#e3dab0':'#0b161c';g.font=`${tile*.8}px monospace`;g.textAlign='center';g.textBaseline='middle';g.fillText(marker?n.feature:entrance?'<':n.terrain?'.':'#',x+tile/2,y+tile/2);}}
   }
   renderArchive.arrowHits=drawWarpAnnotations(g,renderArchive.zeroPoints,w,h);
   // Draw after all cells so nearby tiles cannot cover the selected marker's outline.
@@ -391,6 +392,7 @@ $('matchEntrance').addEventListener('click',()=>{
   render();
 });
 function render() {
+  window.dispatchEvent?.(new Event('exploration-change'));
   if (!game) return;
   $('trueMapExport').hidden=!view;
   if(trueMapExportGame!==game){trueMapExportGame=game;$('trueMapTextResult').hidden=true;$('trueMapText').value='';}
@@ -399,7 +401,8 @@ function render() {
   canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = '#0b161c'; ctx.fillRect(0, 0, w, h);
   const tile = view ? Math.min((w - 28) / world.width, (h - 28) / world.height) : Math.min(24, (w - 20) / 19);
-  const continuous = !view && world.topology === 'torus' && ($('foldDisplay').value === 'continuous' || cognition.knowledgeBasis !== null || world.lattice);
+  const unfolded = world.topology === 'torus' && !$('mainFoldLoops').checked;
+  const continuous = !view && world.topology === 'torus' && (unfolded || $('foldDisplay').value === 'continuous' || cognition.knowledgeBasis !== null || world.lattice);
   const perceived = continuous ? { x: player.perceived_x, y: player.perceived_y } : MazeCore.cognitivePosition(game);
   const px = view ? player.world_position % world.width : perceived.x;
   const py = view ? Math.floor(player.world_position / world.width) : perceived.y;
@@ -427,16 +430,19 @@ function render() {
     ctx.fillStyle = terrain ? (visible ? (familiar ? '#466b55' : '#36534e') : '#192e33') : (visible ? '#77918e' : '#34474d');
     const gap = tile > 8 ? 1 : 0;
     ctx.fillRect(sx, sy, tile - gap, tile - gap);
+    if (hybrid && !feature) {
+      ctx.fillStyle=visible?'#e3dab0':'#7e8c82';ctx.font=`${Math.max(7,tile*.65)}px Consolas, monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(terrain?'.':'#',sx+tile/2,sy+tile/2);
+    }
     if (feature) {
       ctx.globalAlpha = visible ? 1 : .5; ctx.fillStyle = feature === '<' ? '#acd3ce' : featureColor(feature);
       ctx.font = `bold ${Math.max(7, tile * .8)}px monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(feature === '<' ? '·' : feature, sx + tile / 2, sy + tile / 2); ctx.globalAlpha = 1;
+      ctx.fillText(feature === '<' && !hybrid ? '·' : feature, sx + tile / 2, sy + tile / 2); ctx.globalAlpha = 1;
     }
   }
   if (view) { for (let i = 0; i < world.cells.length; i++) if (!world.domain || world.domain[i]) cell(i % world.width, Math.floor(i / world.width), world.cells[i], true, i, MazeCore.featureAt(game, i)); }
   else if (continuous) {
     const bounds = { minX: Math.floor(-ox / tile), maxX: Math.ceil((w - ox) / tile), minY: Math.floor(-oy / tile), maxY: Math.ceil((h - oy) / tile) };
-    for (const node of MazeCore.subjectiveCells(game, bounds)) cell(node.x, node.y, node.terrain, node.visible, node.world_id, node.feature, node.familiar);
+    for (const node of (unfolded ? MazeCore.unfoldedCells(game, bounds) : MazeCore.subjectiveCells(game, bounds))) cell(node.x, node.y, node.terrain, node.visible, node.world_id, node.feature, node.familiar);
   }
   else for (const [id, node] of cognition.memory_nodes) cell(node.x, node.y, node.terrain, cognition.visible_cells.has(id), node.world_id, node.feature);
   renderWarpNotes(ctx,w,h);
@@ -624,7 +630,7 @@ function render() {
   const known = new Set([cognition.memory_nodes,...cognition.archives.map(a=>a.nodes)].flatMap(nodes=>[...nodes.values()].filter(n=>n.terrain).map(n=>n.world_id))).size;
   const subjectiveTorus = world.topology === 'torus' && !view;
   $('discoveredLabel').textContent = subjectiveTorus ? '記憶した床（重複を含む）' : '通路の発見率';
-  $('discovered').textContent = subjectiveTorus ? `${remembered.length}セル` : Math.floor(100 * known / world.validation.floors) + '%';
+  $('discovered').textContent = subjectiveTorus ? `${unfolded?MazeCore.unfoldedFloorCount(game):remembered.length}セル` : Math.floor(100 * known / world.validation.floors) + '%';
   $('validation').textContent = world.warpMode ? `全 ${world.validation.floors} 通路 · ワープ込み到達可` : world.topology === 'torus' ? '全通路接続 · 二方向の周回可' : world.puzzle ? `${world.puzzle.locks.length}組の攻略順序 検証済み` : `全 ${world.validation.floors} 通路セル到達可`;
   $('topologyInfo').hidden = world.topology !== 'torus';
   const knowledge = MazeCore.knowledgeSummary(game);
@@ -636,21 +642,22 @@ function render() {
   if (world.loopLearning && routes.length) $('loopProgress').textContent += ' ｜ ' + routes.slice(-6).map(r => `複合（横${r.winding[0]}・縦${r.winding[1]}）：${r.recognized ? (r.source === 'vision' ? '自己視認で理解' : '理解済み') : `${r.count} / ${world.learningLaps ?? 5}周`}`).join(' ｜ ');
   $('topologyReadout').textContent = view
     ? `実位置 (${px}, ${py}) ／ 展開座標 (${player.perceived_x}, ${player.perceived_y})`
-    : world.separateMaps ? `地図帳 ${cognition.archives.length+1}：保存地図 ${cognition.archives.length}冊のうち ${cognition.matchedArchives.size}冊を照合済み。` : `主観位置 (${px}, ${py}) · ${continuous ? "視界は連続し、理解済みの場所は同じ記憶を参照します。" : "未理解の方向だけ展開を続けます。"}`;
+    : world.separateMaps ? `地図帳 ${cognition.archives.length+1}：保存地図 ${cognition.archives.length}冊のうち ${cognition.matchedArchives.size}冊を照合済み。` : `主観位置 (${px}, ${py}) · ${unfolded ? "折りたたみOFF：実際に見た展開上の記憶を表示しています。" : continuous ? "視界は連続し、理解済みの場所は同じ記憶を参照します。" : "未理解の方向だけ展開を続けます。"}`;
   $('topologyGuide').textContent = view
     ? `左右の金色・上下の水色が接続口。右端→左端は縦に${world.shiftY || 0}セル、下端→上端は横に${world.shiftX || 0}セルずれます（逆向きは逆のずれ）。`
-    : cognition.knowledgeBasis ? '複合周回の理解は連続表示で表現します。学習した周回だけ同じ記憶を共有し、他の未知のつながりは残します。' : continuous ? '視界は途切れず続きます。理解済みの記憶を共有し、見覚えのある床を淡い緑で表示します。' : cognition.known_loops.size ? '理解した方向の端はつながっています。左右は金色、上下は水色の印で示します。矢印の向きに進めます。' : '境界でも道と視界は続きます。どちらの表示でも矢印の向きに進みます。';
+    : unfolded ? '折りたたみOFF。方向感覚の学習は保持し、観測した場所だけを展開して表示します。ONで学習済みの記憶共有へ戻せます。' : cognition.knowledgeBasis ? '複合周回の理解は連続表示で表現します。学習した周回だけ同じ記憶を共有し、他の未知のつながりは残します。' : continuous ? '視界は途切れず続きます。理解済みの記憶を共有し、見覚えのある床を淡い緑で表示します。' : cognition.known_loops.size ? '理解した方向の端はつながっています。左右は金色、上下は水色の印で示します。矢印の向きに進めます。' : '境界でも道と視界は続きます。どちらの表示でも矢印の向きに進みます。';
   if (world.lattice) $('topologyGuide').textContent = view ? '段差状の輪郭が真世界の範囲。外側は壁ではなく別の周期コピーです。接続口の金色は横周期、水色は縦周期、紫は両周期をまたぐ接続。矢印キーは表示の上下左右に対応します。' : '二方向ずれは連続表示を使用します。横・縦は斜めに伸びる二つの基本周期を意味し、理解した周期だけ記憶を統合します。';
   $('puzzleInfo').hidden = !world.puzzle;
   const inventory = (world.puzzle?.locks || []).map(lock => `${lock.keyId}：${game.openedDoors.has(lock.keyId) ? '開扉済み' : player.keys.includes(lock.keyId) ? '鍵を所持' : '鍵は未取得'}`).join(' ｜ ');
   if ($('inventory').textContent !== inventory) $('inventory').textContent = inventory;
-  canvas.setAttribute('aria-label', `迷路、${view ? '真世界' : '主観世界'}、${ascii ? '等幅文字' : 'タイル'}表示。${game.steps}歩・${game.turns}行動。${$('discoveredLabel').textContent}${$('discovered').textContent}。${game.won ? '出口に到着。' : '矢印キーまたはhjklで移動。'}`);
+  canvas.setAttribute('aria-label', `迷路、${view ? '真世界' : '主観世界'}、${ascii ? '等幅文字' : hybrid ? 'タイル＋等幅文字' : 'タイル'}表示。${game.steps}歩・${game.turns}行動。${$('discoveredLabel').textContent}${$('discovered').textContent}。${game.won ? '出口に到着。' : '矢印キーまたはhjklで移動。'}`);
 }
 function setAscii(next) {
-  ascii = next;
-  $('tiles').setAttribute('aria-pressed', String(!ascii));
+  hybrid = next === 'hybrid';ascii = next === true;
+  $('tiles').setAttribute('aria-pressed', String(!ascii&&!hybrid));
+  $('hybrid').setAttribute('aria-pressed',String(hybrid));
   $('ascii').setAttribute('aria-pressed', String(ascii));
-  $('asciiLegend').hidden = !ascii;
+  $('asciiLegend').hidden = !ascii&&!hybrid;
   document.querySelector('.legend').hidden = ascii;
   render();
 }
@@ -757,7 +764,7 @@ $('randomize').addEventListener('click', () => { $('seed').value = 'walk-' + Mat
 $('waitTurn').addEventListener('click', () => step('wait'));
 $('restart').addEventListener('click', () => { game = MazeSession.attach(MazeMainJourney.restart(game)); $('archiveExportResult').hidden=true;$('archiveExportText').value=''; $('status').textContent = game.world.puzzle ? '入口に戻りました。探索記憶・鍵・扉を初期状態に戻しました。' : '同じ迷路の入口に戻りました。探索記憶とループの学習をリセットしました。'; announceSelfVision(); render(); });
 $('subjective').addEventListener('click', () => setView(0)); $('truth').addEventListener('click', () => setView(1));
-$('tiles').addEventListener('click', () => setAscii(false)); $('ascii').addEventListener('click', () => setAscii(true));
+$('tiles').addEventListener('click', () => setAscii(false)); $('ascii').addEventListener('click', () => setAscii(true)); $('hybrid').addEventListener('click', () => setAscii('hybrid'));
 for (const button of document.querySelectorAll('[data-dir]')) button.addEventListener('click', () => step(button.dataset.dir));
 canvas.addEventListener('pointerdown', () => canvas.focus());
 document.addEventListener('keydown', e => {
@@ -791,6 +798,7 @@ updateGeneratorControls();
 newWorld();
 
 $('foldDisplay').addEventListener('change', render);
+$('mainFoldLoops').addEventListener('change',()=>{$('foldDisplay').disabled=!$('mainFoldLoops').checked;render();});
 
 $('shiftAxis').addEventListener('change', updateGeneratorControls);
 
@@ -811,11 +819,12 @@ function continueExploration(){if(game.won&&MazeSession.act(game,'continue')){$(
 $('continueExploring').addEventListener('click',continueExploration);
 
 function nextMaze() {
+  if(window.ExplorationHost?.advance('main'))return;
   if(!MazeMainJourney.canAdvance(game)) { $('status').textContent='次の迷路へ進むには、出口 > の上に戻ってください。実験用の部屋は対象外です。';return; }
   try {
     const seed='walk-'+Math.random().toString(36).slice(2,10);
     const course=$('journeyCourse').value;
-    const next=MazeMainJourney.next(game,seed,course);
+    const next=MazeMainJourney.next(game,seed,course,{loopLearning:$('loopLearning').value!=='off',learningLaps:$('loopLearning').value==='three'?3:5});
     if(course!=='same')applyJourneySettings(next);
     newWorld(false,next); $('seed').value=next.generationOptions.seed;canvas.focus();
   } catch(error) { $('status').textContent=`次の迷路を生成できませんでした。現在の探索を保持しています。${error.message}`; }
@@ -1437,3 +1446,14 @@ $('randomSettingsFile').addEventListener('change',async()=>{
  }catch(error){if(version===randomSettingsReadVersion)$('randomSettingsRecordStatus').textContent='ファイルを読み込めませんでした。欄内の記録と現在の設定を保持しています。'+error.message;}
 });
 
+
+// Host adapter: use the existing replay validation and native UI restoration.
+window.MainExplorationAdapter={
+ autoPlan:()=>ExplorationSolver.main(game,MazeCore),autoMove:direction=>step(direction),
+ progress:()=>({token:game,steps:game.steps,exit:MazeMainJourney.canAdvance(game)}),
+ fresh(seed,randomGeneration=false,generators,sizes,topologies,shifts){if(!game.generationOptions)throw Error('この実験は共通コースに対応していません。');return MazeMainJourney.start(ExplorationGeneration.choose('main',{...game.generationOptions,loopLearning:$('loopLearning').value!=='off',learningLaps:$('loopLearning').value==='three'?3:5},randomGeneration,seed,generators,sizes,topologies,game.world.rotatingWarp||'none',shifts),game.world.rotatingWarp||'none');},
+ enter(next){applyJourneySettings(next);if(!newWorld(false,next))throw Error('通常迷路の開始に失敗しました。');$('seed').value=next.generationOptions.seed;},
+ snapshot:()=>MazeSession.encode(game,$('journeyCourse').value),
+ prepare:text=>MazeSession.decodeAsync(text),
+ apply(restored){applyJourneySettings(restored.game);$('journeyCourse').value=restored.course;if(!newWorld(false,restored.game))throw Error('通常迷路の表示を復元できませんでした。');$('seed').value=restored.game.generationOptions.seed;}
+};

@@ -1,0 +1,21 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const control=value=>({value,listeners:[],addEventListener(t,f){this.listeners.push(f);},dispatchEvent(){this.listeners.forEach(f=>f());}});
+const main=control('three'),fold=control(''),open=control(''),frames={},events={};let active='main';
+for(const name of ['skew','enclosure'])frames[name]={addEventListener(t,f){this.load=f;},contentWindow:{Event:class {}}};
+fold.checked=true;
+const ids={foldDisplay:control('continuous'),mainFoldLoops:fold,loopLearning:main,openExplorationSettings:open,skewPilotFrame:frames.skew,enclosureFrame:frames.enclosure};
+vm.runInNewContext(fs.readFileSync(__dirname+'/exploration-learning.js','utf8'),{Event:class {},document:{getElementById:id=>ids[id]},window:{ExplorationHost:{mode:()=>active},addEventListener:(t,f)=>events[t]=f}});
+const select=name=>{active=name;events['exploration-selected']();};
+const load=name=>{const c=control('3');frames[name].control=c;frames[name].fold=control('');frames[name].fold.checked=true;frames[name].contentDocument={getElementById:id=>id==='foldLoops'?frames[name].fold:c};frames[name].load();return c;};
+select('skew');const skew=load('skew');assert.equal(skew.value,'3');
+skew.value='0';skew.dispatchEvent();assert.equal(main.value,'off');
+select('enclosure');const enclosure=load('enclosure');assert.equal(enclosure.value,'0');
+enclosure.value='3';enclosure.dispatchEvent();select('main');assert.equal(main.value,'three');
+main.value='on';main.dispatchEvent();assert.equal(skew.value,'0');select('skew');assert.equal(skew.value,'5');
+main.value='off';open.dispatchEvent();assert.equal(main.value,'on');
+console.log('Shared threshold: all sources, delayed loading, inactive view deferred, reopen passed.');
+
+frames.skew.fold.checked=false;frames.skew.fold.dispatchEvent();select('main');assert.equal(fold.checked,false);
+select('enclosure');assert.equal(frames.enclosure.fold.checked,false);
+fold.checked=true;fold.dispatchEvent();select('skew');assert.equal(frames.skew.fold.checked,true);
+console.log('Shared folding: embedded to main, cross-frame and main to embedded passed.');

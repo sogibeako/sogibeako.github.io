@@ -23,3 +23,12 @@ for(let trial=0;trial<12;trial++){
 }
 assert.equal(shifts.size,6);
 console.log('PASS: 12 gentle starts, 72 alternating transitions and final exits; all 6 shift patterns, deterministic results, 3-lap learning and preserved progress.');
+
+const source=J.start({width:10,height:10,topology:'torus',seed:'shared-learning-source',loopLearning:true,learningLaps:5});
+finish(source);const original=snap(source);
+for(const learning of [{loopLearning:true,learningLaps:3},{loopLearning:false,learningLaps:5}]){
+ const next=J.next(source,'shared-learning-next','same',learning);
+ assert.equal(next.world.loopLearning,learning.loopLearning);assert.equal(next.world.learningLaps,learning.learningLaps);
+ assert.equal(next.generationOptions.loopLearning,learning.loopLearning);assert.equal(snap(source),original);
+}
+console.log('Shared learning preference reaches the next maze without changing the previous exploration.');

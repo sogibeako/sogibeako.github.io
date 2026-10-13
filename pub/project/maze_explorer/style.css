@@ -53,3 +53,27 @@ summary:focus-visible { outline:2px solid #e0bb79; outline-offset:3px; }
 #archiveMatchList { list-style: none; padding: 0; max-height: 20rem; overflow-y: auto; }
 #archiveMatchList li { margin: .4rem 0; }
 #archiveMatchList button { width: 100%; text-align: left; white-space: normal; }
+
+/* Shared exploration surface; each runtime keeps its own state during migration. */
+.exploration-switch{padding:14px 22px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.exploration-switch button[aria-pressed=true]{background:#31484a;color:#e0f4e9;border-color:#9ebdb1}
+#explorationModeStatus{margin:0;color:var(--muted);font-size:12px}
+#mainExplorePane[hidden],#skewExplorePane[hidden],.layout>aside[hidden]{display:none}
+.layout.skew-exploration{grid-template-columns:minmax(0,1fr)}
+#skewPilotFrame{display:block;width:100%;height:900px;border:0;background:#0b181e}
+@media(max-width:700px){#skewPilotFrame{height:800px}.exploration-switch{padding:12px}}
+
+#bundleText{display:block;box-sizing:border-box;width:100%;margin-top:8px;padding:10px;background:#0b161c;color:var(--text);border:1px solid var(--line);font:12px/1.4 monospace;resize:vertical}
+
+#enclosureExplorePane[hidden]{display:none}#enclosureFrame{display:block;width:100%;height:1050px;border:0;background:#0b181e}@media(max-width:700px){#enclosureFrame{height:900px}}
+
+/* Play first; generation is a modal instead of a persistent left column. */
+.layout.play-first{display:block}.exploration-switch>span[hidden]{display:none}
+#explorationSettingsDialog{width:min(820px,calc(100vw - 32px));max-height:88vh;padding:20px;background:#101e23;color:var(--text);border:1px solid var(--line);border-radius:12px;overflow:auto}
+#explorationSettingsDialog::backdrop{background:#020b10c9}
+.settings-heading{position:sticky;top:-20px;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;background:#101e23}.settings-heading h2{margin:0}
+.space-settings,#embeddedGeneration{margin-bottom:20px}#embeddedGeneration:empty{display:none}
+#explorationSettingsDialog aside[hidden]{display:none}#explorationSettingsDialog aside section{padding:16px}
+#explorationSettingsDialog [hidden]{display:none!important}#commonSettings{margin-top:20px}#embeddedSettingsForm{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}#embeddedSettingsForm button{align-self:end}
+
+.course-play{padding:10px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;flex-wrap:wrap}.course-play[hidden]{display:none}.course-play p{margin:0;font-size:12px;color:var(--accent)}.course-play #coursePlayError{flex-basis:100%;color:#f1c583}.course-play #coursePlayError:empty{display:none}.course-play button:disabled{opacity:.5;cursor:default}

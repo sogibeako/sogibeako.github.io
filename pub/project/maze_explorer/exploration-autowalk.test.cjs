@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
+const els={},events={},winEvents={};let callback=null,moves=0,token={},steps=0;
+for(const id of ['autoWalkStart','autoWalkStop','autoWalkSpeed','autoWalkStatus','skewPilotFrame','enclosureFrame'])els[id]={value:'250',addEventListener(){}};
+const adapter={autoPlan:()=>[0,1,2],autoMove(){moves++;steps++;},progress:()=>({token,steps,exit:steps===3})};
+const document={getElementById:id=>els[id],addEventListener:(n,f)=>events[n]=f};
+vm.runInNewContext(fs.readFileSync(__dirname+'/exploration-autowalk.js','utf8'),{document,window:{ExplorationHost:{mode:()=> 'main'},MainExplorationAdapter:adapter,addEventListener:(n,f)=>winEvents[n]=f},setTimeout:f=>(callback=f,1),clearTimeout:()=>callback=null});
+els.autoWalkStart.onclick();assert.equal(moves,1);callback();callback();assert.equal(moves,3);assert.equal(callback,null);assert.match(els.autoWalkStatus.textContent,/出口/);
+steps=0;els.autoWalkStart.onclick();events.keydown({type:'keydown',key:'Escape',target:{}});assert.equal(callback,null);
+steps=0;els.autoWalkStart.onclick();token={};callback();assert.equal(callback,null);assert.match(els.autoWalkStatus.textContent,/変更/);
+steps=0;els.autoWalkStart.onclick();winEvents['exploration-selected']();assert.equal(callback,null);
+steps=0;els.autoWalkStart.onclick();document.hidden=true;events.visibilitychange();assert.equal(callback,null);
+console.log('Playback stops at exit, manual input, changed exploration, space switching and hidden page.');
