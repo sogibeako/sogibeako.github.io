@@ -65,13 +65,29 @@ function shiftOptions(mode,options,seed,setting){
  const type=draw(types,'|shared-shift-type-v1'),[shiftX,shiftY]=draw(groups[type],'|shared-shift-pair-v1');
  return {...options,shiftX,shiftY};
 }
-function choose(mode,options,enabled,seed,pools,sizes,topologies,rotation='none',shifts){
+function chooseBase(mode,options,enabled,seed,pools,sizes,topologies,rotation='none',shifts){
  const shiftSetting=validateShifts(shifts);if(shiftSetting.enabled)options={...options,shiftX:0,shiftY:0};
  const setting=validateTopologies(topologies);if(mode==='main'&&setting.enabled)options=chooseTopology(options,enabled,seed,pools,sizes,setting,rotation);
  const result={...shiftOptions(mode,resize(mode,options,seed,sizes),seed,shiftSetting),seed};if(!enabled)return result;
  const selected=validatePools(pools)[mode],choices=candidates(mode,options).filter(a=>selected.includes(a));if(!choices.length)throw Error('この空間に対応する生成方式が候補にありません。トーラスでは領域分割・Eller以外を選んでください。');let h=2166136261;for(const ch of String(seed)+'|shared-generator-v1')h=Math.imul(h^ch.charCodeAt(0),16777619);
  result[mode==='main'?'algorithm':'growth']=choices[(h>>>0)%choices.length];return result;
 }
+function validateRules(value){const v=value??{enabled:false,pool:['plain','keys','warp','birds']};if(!v||typeof v.enabled!=='boolean'||!Array.isArray(v.pool)||!v.pool.length||new Set(v.pool).size!==v.pool.length||v.pool.some(x=>!['plain','keys','warp','birds'].includes(x)))throw Error('仕掛けの候補を1つ以上選んでください。');return {enabled:v.enabled,pool:[...v.pool]};}
+function choose(mode,options,enabled,seed,pools,sizes,topologies,rotation='none',shifts,rules){
+ const setting=validateRules(rules);if(mode!=='main'||!setting.enabled)return chooseBase(mode,options,enabled,seed,pools,sizes,topologies,rotation,shifts);
+ // Evaluate compatible topology/rule pairs before drawing; never silently discard a keys-only pool.
+ const ts=validateTopologies(topologies),possible=[];
+ for(const rule of setting.pool){
+  const base={...options,keyDoor:rule==='keys',warpMode:rule==='warp',birdMode:rule==='birds',keyCount:options.keyCount||1,birdCount:1,warpCount:options.warpCount||2,warpStyle:options.warpStyle||'pair',separateMaps:true};
+  if(base.birdMode)base.loops=Math.max(8,base.loops||0);
+  const spaces=ts.enabled?ts.pool:[options.topology||'plane'];
+  for(const topology of spaces){if(topology==='torus'&&rule==='keys')continue;
+   try{possible.push(chooseBase(mode,{...base,topology},enabled,seed,pools,sizes,ts.enabled?{enabled:true,pool:[topology]}:ts,'none',shifts));}catch(error){/* Another supported pair may still be available. */}
+  }
+ }
+ if(!possible.length)throw Error('仕掛け・空間・サイズ・生成方式の候補に対応する組合せがありません。鍵と扉は平面で使えます。');
+ return pick(possible,seed,'|shared-rules-v1');
+}
 function chooseEnclosure(options,seed,shifts){return {...shiftOptions('enclosure',options,seed,validateShifts(shifts)),seed};}
-const api={chooseEnclosure,candidates,choose,validatePools,validateSizes,resize,validateTopologies,validateShifts};if(typeof module==='object')module.exports=api;else root.ExplorationGeneration=api;
+const api={validateRules,chooseEnclosure,candidates,choose,validatePools,validateSizes,resize,validateTopologies,validateShifts};if(typeof module==='object')module.exports=api;else root.ExplorationGeneration=api;
 })(globalThis);

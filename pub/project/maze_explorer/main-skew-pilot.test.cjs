@@ -26,6 +26,7 @@ console.log('Third exploration: iframe loaded once, three-way switching retains 
  const progress={main:{token:{},steps:12,exit:false},skew:{token:{},steps:99,exit:true}};let fail=false,lastRandomGeneration,lastSizes,lastTopologies,lastShifts;
  function adapter(mode){return {progress:()=>progress[mode],snapshot:()=>mode,prepare:async()=>({...progress[mode]}),fresh:(seed,randomGeneration,generators,sizes,topologies,shifts)=>{lastShifts=shifts;lastTopologies=topologies;lastSizes=sizes;lastRandomGeneration=randomGeneration;if(fail)throw Error('generation failed');return {token:{},steps:0,exit:false};},enter:next=>{progress[mode]=next;},apply:previous=>{progress[mode]=previous;}};}
  hostWindow.MainExplorationAdapter=adapter('main');el('skewPilotFrame').contentWindow={SkewExplorationAdapter:adapter('skew')};
+ el('sharedCourseOrder').value='alternate';el('sharedPoolTorus').checked=false;el('sharedPoolEnclosure').checked=false;el('sharedCourseOrder').events.change();
  el('sharedCourseEnabled').checked=true;el('sharedCourseEnabled').events.change();
  const tick=()=>new Promise(resolve=>setImmediate(resolve));
  assert(hostWindow.ExplorationHost.advance('main'));await tick();assert.equal(progress.skew.steps,99);assert(el('sharedCourseStatus').textContent.includes('出口'));
@@ -46,6 +47,10 @@ console.log('Third exploration: iframe loaded once, three-way switching retains 
  progress.skew.exit=true;progress.skew.steps=7;assert(hostWindow.ExplorationHost.advance('skew'));assert(el('embeddedGeneration').inert);await tick();assert(!el('embeddedGeneration').inert);assert.equal(progress.enclosure.steps,0);assert.equal(el('enclosureExploreSelect').attrs['aria-pressed'],'true');
  progress.enclosure.steps=9;progress.enclosure.exit=true;assert(hostWindow.ExplorationHost.advance('enclosure'));await tick();assert.equal(el('mainExploreSelect').attrs['aria-pressed'],'true');assert(el('sharedCourseStatus').textContent.includes('通算16歩'));assert(el('coursePlaySummary').textContent.includes('通算16歩'));assert.equal(el('coursePlayError').textContent,'');
  el('sharedCourseOrder').value='random';el('sharedPoolMain').checked=false;el('sharedPoolSkew').checked=false;el('sharedPoolEnclosure').checked=true;el('sharedCourseOrder').events.change();progress.main.exit=true;assert(hostWindow.ExplorationHost.advance('main'));await tick();assert.equal(el('enclosureExploreSelect').attrs['aria-pressed'],'true');
+ // A torus-only sequence uses the main runtime but forces torus generation.
+ el('sharedCourseOrder').value='sequence';el('sharedPoolMain').checked=false;el('sharedPoolTorus').checked=true;el('sharedPoolSkew').checked=false;el('sharedPoolEnclosure').checked=false;el('sharedCourseOrder').events.change();progress.enclosure.exit=true;
+ assert(hostWindow.ExplorationHost.advance('enclosure'));await tick();assert.equal(hostWindow.ExplorationHost.mode(),'main');assert.deepEqual(Array.from(lastTopologies.pool),['torus']);
+ progress.main.exit=true;progress.main.topology='torus';const previousTorus=progress.main.token;assert(hostWindow.ExplorationHost.advance('main'));await tick();assert.notEqual(progress.main.token,previousTorus);assert.deepEqual(Array.from(lastTopologies.pool),['torus']);
  console.log('Three-space host: cycle entry/exit, total steps and enclosure-only random destination passed.');
  console.log('Alternating host: exit guard, generation failure, duplicate input, both directions, totals and manual-switch stop passed.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
@@ -53,4 +58,4 @@ console.log('Third exploration: iframe loaded once, three-way switching retains 
 // A modal keeps keyboard events available to its own controls.
 el('explorationSettingsDialog').open=true;let modalBlocked=false;listeners.keydown({stopPropagation(){modalBlocked=true;}});assert.equal(modalBlocked,false);el('explorationSettingsDialog').open=false;
 
-assert.equal(el('skewPilotFrame').getAttribute('src'),'lattice-holes.html?embedded=1&v=300');assert.equal(el('enclosureFrame').getAttribute('src'),'return-enclosure.html?embedded=1&v=300');
+assert.equal(el('skewPilotFrame').getAttribute('src'),'lattice-holes.html?embedded=1&v=312');assert.equal(el('enclosureFrame').getAttribute('src'),'return-enclosure.html?embedded=1&v=312');

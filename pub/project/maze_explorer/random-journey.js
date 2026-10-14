@@ -36,7 +36,7 @@ function choose(seed,value){
  const {topology,algorithm,rule}=pick(candidates(c)),torus=topology==='torus';
  const shifts=torus?pick([[0,0],[2,0],[0,2]]):[0,0];
  const options={seed,width:pick(dimensions(c.minWidth,c.maxWidth,torus)),height:pick(dimensions(c.minHeight,c.maxHeight,torus)),algorithm,topology:torus?'torus':'plane',shiftX:shifts[0],shiftY:shifts[1],
- loops:0,newestBias:pick([30,70,100]),roomCount:6,roomPlacement:pick(['bsp','scatter','grid']),connectionStyle:pick(['tree','chain','ring','hub']),
+ loops:['birds','bird-keys'].includes(rule)?8:0,newestBias:pick([30,70,100]),roomCount:6,roomPlacement:pick(['bsp','scatter','grid']),connectionStyle:pick(['tree','chain','ring','hub']),
  warpMode:rule==='warp',warpStyle:pick(c.warpStyles?.length?c.warpStyles:catalog.warpStyles),warpCount:pick([1,2,3,4]),warpInvisible:false,
  keyDoor:['keys','bird-keys'].includes(rule),keyCount:pick([1,2,3]),birdMode:['birds','bird-keys'].includes(rule),birdCount:1,teleportPolicy:pick(['far','known','unseen']),separateMaps:true,
  loopLearning:torus,learningLaps:3,selfVision:false};

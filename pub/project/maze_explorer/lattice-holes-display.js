@@ -2,10 +2,11 @@
 (function(root){
 'use strict';
 const S=typeof module==='object'?require('./connection-space.js'):root.ConnectionSpace;
+const Features=typeof module==='object'?require('./sheet-features.js'):root.SheetFeatures;
 const F=typeof module==='object'?require('./lattice-holes-fold.js'):root.SkewFold;
 function compose(state,book,view,truth=false){
  const w=state.world,tiles=[],portals=[];
- function tile(x,y,id,bright,glyph){tiles.push({x,y,id,bright,sheet:S.groundSheet(w,id),wall:!w.cells[id],glyph:glyph??(!w.cells[id]?'#':id===w.exit?'>':S.underpassSymbol(w,id)||'.')});}
+ function tile(x,y,id,bright,glyph){tiles.push({x,y,id,bright,sheet:S.groundSheet(w,id),wall:!w.cells[id],glyph:glyph==='@'?glyph:(Features.glyph(state,id,bright)||glyph)??(!w.cells[id]?'#':id===w.exit?'>':S.underpassSymbol(w,id)||'.')});}
  if(truth){
   const l=w.layouts[0],playerCells=new Set([state.id]);
   for(const p of w.passages||[])if(p.vertical===state.id)playerCells.add(p.horizontal);

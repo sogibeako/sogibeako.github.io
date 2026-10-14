@@ -1,5 +1,6 @@
 (function(root){
 'use strict';
+const Features=typeof module==='object'?require('./sheet-features.js'):root.SheetFeatures||{allowed:()=>true,afterMove:()=>{}};
 const directions=[[0,-1],[1,0],[0,1],[-1,0]],names={tripleMaze:'中央の穴でつながる3トーラスのミニ迷路',doubleMaze:'中央の穴でつながる2トーラスのミニ迷路',cornerUnderpass:'曲がるアンダーパス',kleinMaze:'クラインの壺の生成迷路',torusMaze:'トーラスの生成迷路',underpassMaze:'アンダーパスの生成迷路',underpass:'極小の立体交差（アンダーパス）',crossingMaze:'立体交差の生成迷路',crossing:'立体交差（橋と地下通路）',triple:'中央の穴でつながる3トーラス',branch3:'柱の四方で風景が変わる3シート',doubleTwist:'double-twist',cwTwist:'quarter-clockwise-twist',ccwTwist:'quarter-counterclockwise-twist',plane:'平面',cylinder:'円筒',mobius:'メビウス帯',torus:'トーラス',klein:'クラインの壺',sheets:'2シートのトーラス',rotate:'90度回転する境界',chaos:'全辺90度回転（ちょっとひどい）',double:'中央の穴でつながる2トーラス',branch:'柱を周回する2シート',branch4:'柱の四方で風景が変わる2シート'};
 const identity=[0,1,2,3],flip=[2,1,0,3],cw=[1,2,3,0];
 function generate(mode,options={}){
@@ -650,10 +651,11 @@ function randomTripleOptions(seed,world,groups={}){
 function create(mode,options={}){const world=generate(mode,options);return {world,id:world.start,frame:[...identity],x:0,y:0,steps:0,history:[{x:0,y:0,id:world.start}],last:null};}
 function move(state,direction,truth=false){
  if(!Number.isInteger(direction)||direction<0||direction>3)return false;
- const wd=truth?direction:state.frame[direction],edge=state.world.edges.get(`${state.id}:${wd}`);if(!edge)return false;
+ const wd=truth?direction:state.frame[direction],edge=state.world.edges.get(`${state.id}:${wd}`);if(!edge||!Features.allowed(state,edge.to))return false;
  const local=state.frame.indexOf(wd),[dx,dy]=directions[local],from=state.id;
  state.id=edge.to;state.x+=dx;state.y+=dy;state.frame=state.frame.map(d=>edge.transform[d]);state.steps++;
  state.last={from,to:edge.to,worldDirection:wd,localDirection:local,kind:edge.kind,changed:edge.transform.some((d,i)=>d!==i)};
+ Features.afterMove(state);
  state.history.push({x:state.x,y:state.y,id:state.id});if(state.history.length>1000)state.history.shift();return true;
 }
 function quadrant(x,y){return y<=3?(x<=3?0:1):(x<=3?3:2);}

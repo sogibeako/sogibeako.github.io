@@ -1,6 +1,20 @@
 const assert = require('node:assert/strict');
 const C = require('./core.js');
 const value = text => { const x=C.expression(text); assert.equal(x.exact,true,text); return C.format(x.value.p,x.value.d); };
+// Aliases must share identity in expressions as well as numerical bounds.
+for (const aliases of [['pi','PI','π','Π'], ['phi','PHI','φ','ϕ','Φ'], ['e','E']]) {
+  for (const left of aliases) for (const right of aliases) {
+    assert.equal(value(`${left}-${right}`),'0');
+    assert.equal(value(`${left}/${right}`),'1');
+    assert.equal(value(`(${left}+1)-(${right}+1)`),'0');
+    assert.equal(value(`sqrt(${left})-sqrt(${right})`),'0');
+  }
+}
+assert.equal(value('pi^2-π^2'),'0');
+assert.equal(value('(e+phi)-(E+ϕ)'),'0');
+assert.equal(C.expandExpression(C.expression('pi-π'),C.sequence('factorial'),24).terminated,true);
+assert.throws(()=>C.expression('1/(pi-π)'), /0 で割る/);
+assert.equal(C.expression('pi-phi').exact,false);
 for (const [text,expected] of [
   ['1+2*3','7'], ['(1+2)*3','9'], ['2^3^2','512'], ['-2^2','-4'],
   ['(-2)^2','4'], ['2^-3','1/8'], ['1/2/3','1/6'], ['2--3','5'],

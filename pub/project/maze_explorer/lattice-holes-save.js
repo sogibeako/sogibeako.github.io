@@ -35,6 +35,7 @@ function decode(text){
   data.repairedSeams=repaired;
  }
  if(w.returnPocket){const H=typeof module==='object'?require('./lattice-holes.js'):root.LatticeHoles;if(!H.verifyReturnPocket(w))fail();}
+ (typeof module==='object'?require('./sheet-features.js'):root.SheetFeatures).validate(st);
  return data;
 }
 const api={encode,decode};if(typeof module==='object')module.exports=api;else root.SkewSave=api;

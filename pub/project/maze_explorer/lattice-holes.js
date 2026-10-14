@@ -27,7 +27,7 @@ function placeReturnPocket(world){
  }
  throw Error('この条件では周回路を保つ出口ポケットを配置できませんでした。別のシードを試すか「A→B→Aの配置例」でお試しください。');
 }
-function create({shiftX=2,shiftY=2,walls=true,maze=false,seed='skew-first',growth='walls',wallStyle='dense',periodSize=12,periodWidth=periodSize,periodHeight=periodSize,underpasses=0,underpassShape='straight',holeRimWalls=false,returnPocket=false}={}){
+function create({shiftX=2,shiftY=2,walls=true,maze=false,seed='skew-first',growth='walls',wallStyle='dense',periodSize=12,periodWidth=periodSize,periodHeight=periodSize,underpasses=0,underpassShape='straight',holeRimWalls=false,returnPocket=false,features={}}={}){
  if(returnPocket&&!maze)throw Error('出口ポケットは生成迷路で指定してください。');
  if(!['walls','dfs','prim','growing'].includes(growth))throw Error('未対応の生成方式です。');
  if(!['straight','mixed','corners'].includes(underpassShape))throw Error('未対応のアンダーパス形状です。');
@@ -65,11 +65,12 @@ function create({shiftX=2,shiftY=2,walls=true,maze=false,seed='skew-first',growt
    for(const [axis,vector] of [['a',lattice.a],['b',lattice.b]]){
     // Search the unfolded sheet: the endpoint is exactly one lattice period away.
     const origin=[h.x,h.y+2],goal=origin.map((v,i)=>v+vector[i]),key=(x,y)=>`${x},${y}`;
+    const detour=canonical(sheet,origin[0]+Math.round(vector[0]/2),origin[1]+Math.round(vector[1]/2));
     const first=key(...origin),target=key(...goal),q=[origin],parents=new Map([[first,null]]),order=[0,1,2,3];
     for(let i=3;i>0;i--){const j=Math.floor(random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
     for(let i=0;i<q.length&&!parents.has(target);i++){const [x,y]=q[i],from=canonical(sheet,x,y);
      for(const d of order){const nx=x+D[d][0],ny=y+D[d][1],k=key(nx,ny);if(Math.abs(nx-origin[0])>periodWidth*2+4||Math.abs(ny-origin[1])>periodHeight*2+4||parents.has(k))continue;
-      const e=edges.get(`${from}:${d}`);if(!e||e.kind!=='normal'||e.to!==canonical(sheet,nx,ny))continue;
+      const e=edges.get(`${from}:${d}`);if(!e||e.kind!=='normal'||e.to!==canonical(sheet,nx,ny)||e.to===detour)continue;
       parents.set(k,{previous:key(x,y),d});q.push([nx,ny]);
      }
     }
@@ -127,12 +128,14 @@ function create({shiftX=2,shiftY=2,walls=true,maze=false,seed='skew-first',growt
  if(maze&&underpasses){
   world.underpassReach=2;
   // Keep local rewiring away from holes and the jagged representative boundary.
-  world.underpassProtected=[...(world.returnPocketWalls||[]),...holes,...rimCells,...Array.from({length:cells.length},(_,n)=>n).filter(n=>!domain.has(n))];
+  const loopCells=new Set();for(const route of guaranteedLoops){let n=route.start;loopCells.add(n);for(const d of route.directions){n=edges.get(`${n}:${d}`).to;loopCells.add(n);}}
+  world.underpassProtected=[...loopCells,...(world.returnPocketWalls||[]),...holes,...rimCells,...Array.from({length:cells.length},(_,n)=>n).filter(n=>!domain.has(n))];
   S.addFloorUnderpasses(world,underpasses);
   if(underpassShape!=='straight')S.bendUnderpasses(world,underpassShape);
  }
+ for(const route of guaranteedLoops){let n=route.start;for(const d of route.directions){const e=world.edges.get(`${n}:${d}`);if(!e||e.kind==='throat')throw Error('周回路の接続が失われました。');n=e.to;}if(n!==route.start)throw Error('周回路が閉じていません。');}
  if(returnPocket&&!verifyReturnPocket(world))throw Error('アンダーパス追加後の出口ポケット検証に失敗しました。');
- return {world,id:start,frame:[...I],x:0,y:0,steps:0,history:[],last:null};
+ return (typeof module==='object'?require('./sheet-features.js'):root.SheetFeatures).install({world,id:start,frame:[...I],x:0,y:0,steps:0,history:[],last:null},features);
 }
 const api={create,verifyReturnPocket};if(typeof module==='object')module.exports=api;else root.LatticeHoles=api;
 })(globalThis);

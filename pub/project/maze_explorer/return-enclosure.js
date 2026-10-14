@@ -3,7 +3,8 @@
 const S=typeof module==='object'?require('./connection-space.js'):root.ConnectionSpace;
 const L=typeof module==='object'?require('./lattice.js'):root.TorusLattice;
 const D=[[0,-1],[1,0],[0,1],[-1,0]],I=[0,1,2,3];
-function create(seed='return-enclosure-1',{verticalLoops=3,shiftX=2,shiftY=0,underpasses=2,size=24,width=size,height=size,layout='original'}={}){
+function create(seed='return-enclosure-1',{verticalLoops=3,shiftX=2,shiftY=0,underpasses=2,size=24,width=size,height=size,layout='original',horizontalLoops=false,features={}}={}){
+ if(typeof horizontalLoops!=='boolean')throw Error('横周回路の指定が不正です。');
  if([width,height].some(n=>!Number.isInteger(n)||n<24||n>40||n%2))throw Error('大きさは24〜40の偶数で指定してください。');
  if(!['original','mirrorX','mirrorY','half','random'].includes(layout))throw Error('配置の向きが不正です。');
  if(![0,1,3].includes(verticalLoops))throw Error('上下周回路は0・1・3本から選んでください。');
@@ -55,6 +56,20 @@ function create(seed='return-enclosure-1',{verticalLoops=3,shiftX=2,shiftY=0,und
    verticalRoutes.push({sheet,start:id(sheet,x,0),directions});
   }
  }
+ const horizontalRoutes=[];
+ if(horizontalLoops)for(let sheet=0;sheet<2;sheet++){
+  const sx=1-minX,sy=1-minY,tx=sx+width,ty=sy-shiftY,key=(x,y)=>x+','+y;
+  const blocked=id(sheet,sx+Math.floor(width/2),sy),q=[[sx,sy]],parents=new Map([[key(sx,sy),null]]);
+  for(let i=0;i<q.length&&!parents.has(key(tx,ty));i++){const [x,y]=q[i];for(const d of [1,2,0,3]){const nx=x+D[d][0],ny=y+D[d][1],k=key(nx,ny),p=point(nx,ny),n=id(sheet,nx,ny);
+   if(parents.has(k)||Math.abs(nx-sx)>width*2||Math.abs(ny-sy)>height*2||n===blocked||holes.has(n)||wall(p.x,p.y)||inside(p.x,p.y))continue;
+   parents.set(k,[x,y,d]);q.push([nx,ny]);
+  }}
+  if(!parents.has(key(tx,ty)))throw Error('横周回路を確保できませんでした。');
+  const directions=[];for(let x=tx,y=ty;parents.get(key(x,y));){const [px,py,d]=parents.get(key(x,y));directions.unshift(d);x=px;y=py;}
+  let x=sx,y=sy;cells[id(sheet,x,y)]=1;for(const d of directions){x+=D[d][0];y+=D[d][1];cells[id(sheet,x,y)]=1;}
+  horizontalRoutes.push({sheet,start:id(sheet,sx,sy),directions});
+ }
+ const periodRoutes=[...verticalRoutes,...horizontalRoutes];
  // The lower mouth has an extra cell joining its odd-grid room.
  for(let s=0;s<2;s++)cells[id(s,hx+3,hy+4)]=1;
  // Ordinary edges wrap around the torus; solid wall bands separate both A regions.
@@ -63,20 +78,20 @@ function create(seed='return-enclosure-1',{verticalLoops=3,shiftX=2,shiftY=0,und
  const walk=(start,local=false)=>{const seen=new Map([[start,0]]),q=[start];for(const from of q)for(let d=0;d<4;d++){const e=edges.get(`${from}:${d}`);if(e&&(!local||Math.floor(e.to/A)===Math.floor(start/A))&&!seen.has(e.to)){seen.set(e.to,seen.get(from)+1);q.push(e.to);}}return {seen,last:q.at(-1)};};
  const start=walk(id(0,hx+1,hy-1),true).last,exit=walk(id(0,hx+3,hy+4),true).last,full=walk(start),front=walk(start,true),back=walk(exit,true),b=walk(id(1,hx+1,hy-1),true);
  if(front.seen.has(exit)||full.seen.size!==cells.reduce((a,b)=>a+b,0)||!full.seen.has(exit))throw Error('A→B→Aの接続検証に失敗しました。');
- for(const route of verticalRoutes){let at=route.start;for(const d of route.directions){const e=edges.get(`${at}:${d}`);if(!e||e.kind!=='normal')throw Error('上下周回路の検証に失敗しました。');at=e.to;}if(at!==route.start)throw Error('上下周回路が閉じていません。');}
- const world={wallStyle:'grid',minX,minY,lattice,verticalLoops,verticalRoutes,example:3,mode:'double',size:N,sheets:2,layouts:[{width:N,height:H,offset:0},{width:N,height:H,offset:A}],cells,holes,portals,edges,candidates,start,exit,seed:String(seed),maze:true,directed:false,domain:new Set([...domain,...[...domain].map(n=>n+A)]),stats:{front:front.seen.size,back:back.seen.size,b:b.seen.size,bSteps:b.seen.get(id(1,hx+3,hy+4)),exitSteps:full.seen.get(exit)}};
+ for(const route of periodRoutes){let at=route.start;for(const d of route.directions){const e=edges.get(`${at}:${d}`);if(!e||e.kind!=='normal')throw Error('上下周回路の検証に失敗しました。');at=e.to;}if(at!==route.start)throw Error('上下周回路が閉じていません。');}
+ const world={wallStyle:'grid',minX,minY,lattice,verticalLoops,verticalRoutes,horizontalRoutes,example:3,mode:'double',size:N,sheets:2,layouts:[{width:N,height:H,offset:0},{width:N,height:H,offset:A}],cells,holes,portals,edges,candidates,start,exit,seed:String(seed),maze:true,directed:false,domain:new Set([...domain,...[...domain].map(n=>n+A)]),stats:{front:front.seen.size,back:back.seen.size,b:b.seen.size,bSteps:b.seen.get(id(1,hx+3,hy+4)),exitSteps:full.seen.get(exit)}};
  if(underpasses){
   const keep=new Set(holes);for(let sheet=0;sheet<2;sheet++)for(let y=0;y<H;y++)for(let x=0;x<N;x++)if((sheet===0&&wall(x,y))||x===0||y===0||x===N-1||y===H-1||(x>=hx-1&&x<=hx+4&&y>=hy-1&&y<=hy+4))keep.add(id(sheet,x,y));
   if(dual)for(const n of domain){const x=n%N,y=Math.floor(n/N);if(D.some(([dx,dy])=>!domain.has((y+dy)*N+x+dx)))for(let sheet=0;sheet<2;sheet++)keep.add(sheet*A+n);}
-  for(const route of verticalRoutes){let at=route.start;keep.add(at);for(const d of route.directions){at=edges.get(`${at}:${d}`).to;keep.add(at);}}
+  for(const route of periodRoutes){let at=route.start;keep.add(at);for(const d of route.directions){at=edges.get(`${at}:${d}`).to;keep.add(at);}}
   world.underpassReach=2;world.underpassProtected=[...keep];S.addFloorUnderpasses(world,underpasses);
  }
  // Recheck the final graph, including virtual underpass floors.
  const visit=(origin,local=false)=>{const q=[origin],seen=new Map([[origin,0]]);for(const from of q)for(let d=0;d<4;d++){const e=world.edges.get(`${from}:${d}`);if(e&&(!local||S.groundSheet(world,e.to)===S.groundSheet(world,origin))&&!seen.has(e.to)){seen.set(e.to,seen.get(from)+1);q.push(e.to);}}return seen;};
  const all=visit(start);if(all.size!==world.cells.reduce((a,b)=>a+b,0)||visit(start,true).has(exit))throw Error('最終配置の区画検証に失敗しました。');
- for(const route of verticalRoutes){let at=route.start;for(const d of route.directions){const e=world.edges.get(`${at}:${d}`);if(!e)throw Error('アンダーパスで周回路が壊れました。');at=e.to;}if(at!==route.start)throw Error('周回路が閉じていません。');}
+ for(const route of periodRoutes){let at=route.start;for(const d of route.directions){const e=world.edges.get(`${at}:${d}`);if(!e)throw Error('アンダーパスで周回路が壊れました。');at=e.to;}if(at!==route.start)throw Error('周回路が閉じていません。');}
  world.stats={front:visit(start,true).size,back:visit(exit,true).size,b:visit(id(1,hx+1,hy-1),true).size,bSteps:visit(id(1,hx+1,hy-1),true).get(id(1,hx+3,hy+4)),exitSteps:all.get(exit)};
- world.generationOptions={verticalLoops,shiftX,shiftY,underpasses,size,width,height,layout};
+ world.generationOptions={verticalLoops,shiftX,shiftY,underpasses,size,width,height,layout,...(horizontalLoops?{horizontalLoops:true}:{}),...(Object.values(features).some(Boolean)?{features}:{})};
  const chosen=layout==='random'?['original','mirrorX','mirrorY','half'][Math.floor(random()*4)]:layout;
  world.layoutVariant=chosen;
  if(chosen!=='original'){
@@ -89,11 +104,12 @@ function create(seed='return-enclosure-1',{verticalLoops=3,shiftX=2,shiftY=0,und
   world.portals=world.portals.map(p=>({...p,x:flipX?N-p.x-p.size:p.x,y:flipY?H-p.y-p.size:p.y}));
   world.passages=world.passages?.map(p=>{const [cx,cy]=xy(p.cx,p.cy);return {...p,cx,cy,horizontal:remap(p.horizontal),vertical:remap(p.vertical)};});
   if(world.underpassProtected)world.underpassProtected=world.underpassProtected.map(remap);
+  world.horizontalRoutes=world.horizontalRoutes.map(p=>({...p,start:remap(p.start),directions:p.directions.map(dir)}));
   world.verticalRoutes=world.verticalRoutes.map(p=>({...p,start:remap(p.start),directions:p.directions.map(dir)}));
   world.start=remap(start);world.exit=remap(exit);
   if(flipX!==flipY){world.lattice.shiftY=-shiftY;world.lattice.a=[width,shiftY];world.lattice.shiftX=-shiftX;world.lattice.b=[shiftX,height];}
  }
- return {world,id:world.start,frame:[...I],x:0,y:0,steps:0,history:[],last:null};
+ return (typeof module==='object'?require('./sheet-features.js'):root.SheetFeatures).install({world,id:world.start,frame:[...I],x:0,y:0,steps:0,history:[],last:null},features);
 }
 function crossedVertical(w,before,after,d){const l=w.lattice,dx=before.x+D[d][0]-after.x,dy=before.y+D[d][1]-after.y;return Math.abs((l.shiftY*dx+l.width*dy)/l.determinant)>.5;}
 const api={create,crossedVertical};if(typeof module==='object')module.exports=api;else root.ReturnEnclosure=api;

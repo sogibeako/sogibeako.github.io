@@ -1104,6 +1104,13 @@
     if(game.warpArrows.length>=100)return false;
     game.warpArrows.push({from,to,status:'hypothesis'});return true;
   }
+  // A witnessed transfer is evidence; never infer the reverse connection.
+  function recordObservedWarp(game){
+    const e=game.lastTransition;if(e?.kind!=='warp'||e.to!==game.player.world_position)return false;
+    if(!rememberWarpArrow(game,e.from,e.to))return false;
+    if(game.world.warpInvisible)for(const id of [e.from,e.to])if(!game.zeroMarks?.has(id))placeRemoteZeroMark(game,id);
+    verifyWarpArrows(game,e.from,e.to);return true;
+  }
   function resetWarpArrowCurve(game,from,to){
     const arrow=game.warpArrows?.find(a=>a.from===from&&a.to===to);if(!arrow)return false;
     delete arrow.curve;return true;
@@ -1549,7 +1556,7 @@
     return game.cognition.archives.flatMap((archive, index) =>
       [...archive.nodes.values()].some(node => node.world_id === entry[0] && node.feature === label) ? [index] : []);
   }
-  const api = { unfoldedFloorCount, unfoldedCells, warpArrowRecords, exportWarpArrowNotes, resetWarpArrowCurve, curveWarpArrow, eraseWarpArrow, rememberWarpArrow, knownWarpAnchor, eraseZeroMark, placeRemoteZeroMark, placeZeroMark, continueExploring, archiveDisplayCells, inspectRecordedMatching, matchRecordedMaps, archiveTransfers, archiveGroups, inspectWarpConnectivity, createWarpDemo, exportTrueMap, exportArchiveNotes, setArchiveNote, markerArchives, markerTitle, nameMarker, currentLandmark, inspectLandmarkMemory, matchLandmarkMaps, placeMarker, createArchiveDemo, archiveCells, inspectEntranceMemory, matchEntranceMaps, knowledgeSummary, selfRaySegments, periodicPosition, periodicId, windingOf, deckVector, DIRS, random, generate, createTorusDemo, inspectTorus, cognitivePosition, subjectiveCells, transition, ruleTransition, solvePuzzle, featureAt, reachable, lineOfSight, createGame, observe, move, waitTurn, inspectBird };
+  const api = { recordObservedWarp, unfoldedFloorCount, unfoldedCells, warpArrowRecords, exportWarpArrowNotes, resetWarpArrowCurve, curveWarpArrow, eraseWarpArrow, rememberWarpArrow, knownWarpAnchor, eraseZeroMark, placeRemoteZeroMark, placeZeroMark, continueExploring, archiveDisplayCells, inspectRecordedMatching, matchRecordedMaps, archiveTransfers, archiveGroups, inspectWarpConnectivity, createWarpDemo, exportTrueMap, exportArchiveNotes, setArchiveNote, markerArchives, markerTitle, nameMarker, currentLandmark, inspectLandmarkMemory, matchLandmarkMaps, placeMarker, createArchiveDemo, archiveCells, inspectEntranceMemory, matchEntranceMaps, knowledgeSummary, selfRaySegments, periodicPosition, periodicId, windingOf, deckVector, DIRS, random, generate, createTorusDemo, inspectTorus, cognitivePosition, subjectiveCells, transition, ruleTransition, solvePuzzle, featureAt, reachable, lineOfSight, createGame, observe, move, waitTurn, inspectBird };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MazeCore = api;
 })(globalThis);

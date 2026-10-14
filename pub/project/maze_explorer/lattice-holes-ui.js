@@ -22,7 +22,7 @@
   const sheet=S.groundSheet(w,state.id),learned=knowledge.filter(p=>p.sheet===sheet&&p.learned).length;
   $('senseStatus').textContent=threshold===0?'方向感覚：OFF（周回記録は継続）':`方向感覚：${threshold}周で理解 ／ 現在のシートで理解した周期 ${learned}種類`;
   $('exitNext').hidden=!w.maze;$('exitNext').disabled=!w.maze||state.id!==w.exit;
-  const l=w.lattice;$('status').textContent=`${state.steps}歩 ／ シート ${S.groundSheet(w,state.id)===0?'A':'B'} ／ 周期 a=(${l.a})、b=(${l.b}) ／ 穴を除く各シート ${l.determinant-4}セル（壁を含む） ／ 主観地図 ${book.active+1}/${book.charts.length}枚${w.maze?` ／ ${{walls:'連結を保つ壁配置',dfs:'DFS',prim:'Prim',growing:'Growing Tree'}[w.growth]} ／ ${w.wallStyle==='grid'?'格子状の壁':'密な枝道'} ／ シード ${w.seed} ／ 4本の周期周回路${w.returnPocket?' ／ A→B→A必須の出口ポケット（検証済み）':''} ／ 穴の縁の壁 ${w.holeRimWallCount??0}セル${w.holeRimWalls?'（許可）':'（なし）'} ／ アンダーパス A ${(w.passages||[]).filter(p=>p.baseSheet===0).length}・B ${(w.passages||[]).filter(p=>p.baseSheet===1).length}（曲がる交差 ${(w.passages||[]).filter(p=>p.arms).length}）${state.id===w.exit?' ／ 出口に到達しました！ > で次へ。移動すれば探索を続けられます。':''} ／ ${journey.number}枚目・${journey.number-1}枚踏破 ／ 通算 ${journey.steps+state.steps}歩`:''}`;
+  const l=w.lattice;$('status').textContent=`${state.steps}歩 ／ シート ${S.groundSheet(w,state.id)===0?'A':'B'} ／ 周期 a=(${l.a})、b=(${l.b}) ／ 穴を除く各シート ${l.determinant-4}セル（壁を含む） ／ 主観地図 ${book.active+1}/${book.charts.length}枚${w.maze?` ／ ${{walls:'連結を保つ壁配置',dfs:'DFS',prim:'Prim',growing:'Growing Tree'}[w.growth]} ／ ${w.wallStyle==='grid'?'格子状の壁':'密な枝道'} ／ シード ${w.seed} ／ 4本の周期周回路${w.returnPocket?' ／ A→B→A必須の出口ポケット（検証済み）':''} ／ 穴の縁の壁 ${w.holeRimWallCount??0}セル${w.holeRimWalls?'（許可）':'（なし）'} ／ アンダーパス A ${(w.passages||[]).filter(p=>p.baseSheet===0).length}・B ${(w.passages||[]).filter(p=>p.baseSheet===1).length}（曲がる交差 ${(w.passages||[]).filter(p=>p.arms).length}）${state.id===w.exit?' ／ 出口に到達しました！ > で次へ。移動すれば探索を続けられます。':''} ／ ${journey.number}枚目・${journey.number-1}枚踏破 ／ 通算 ${journey.steps+state.steps}歩`:''}`+(window.SheetFeatures?.status(state)||'');
  }
  function move(d){
   const observation=SkewSession.step(state,book,d,truth),result=observation.learned;
@@ -33,11 +33,12 @@
  $('foldLoops').addEventListener('change',()=>{state.foldLoops=$('foldLoops').checked;draw();});
  $('loopThreshold').addEventListener('change',()=>{try{SkewLoops.setThreshold(state,Number($('loopThreshold').value));$('loopNotice').textContent='';draw();}catch(error){$('error').textContent=error.message;}});
  function begin(next,continuing=false){
+  for(const [id,key]of [['sheetKeys','keys'],['sheetWarp','warp'],['sheetBirds','birds']])$(id).checked=!!next.features?.options[key];
   $('periodWidth').value=String(next.world.lattice.width);$('periodHeight').value=String(next.world.lattice.height);
   ({state,book,truth,journey}=SkewSession.begin(next,{state,book,truth,journey},continuing));
   $('loopNotice').textContent='';$('error').textContent='';draw();canvas.focus();
  }
- function regenerate(){try{const sx=Number($('sx').value),sy=Number($('sy').value);if(Math.abs(sx)>4||Math.abs(sy)>4)throw Error('ずれは−4〜4の偶数で指定してください。');const next=LatticeHoles.create({shiftX:sx,shiftY:sy,walls:$('walls').checked,maze:$('terrain').value==='maze',seed:$('seed').value,growth:$('growth').value,wallStyle:$('wallStyle').value,periodWidth:Number($('periodWidth').value),periodHeight:Number($('periodHeight').value),underpasses:Number($('underpasses').value),underpassShape:$('underpassShape').value,holeRimWalls:$('holeRimWalls').checked,returnPocket:$('returnPocket').checked});begin(next);}catch(error){$('error').textContent=error.message;}}
+ function regenerate(){try{const sx=Number($('sx').value),sy=Number($('sy').value);if(Math.abs(sx)>4||Math.abs(sy)>4)throw Error('ずれは−4〜4の偶数で指定してください。');const next=LatticeHoles.create({features:{keys:$('sheetKeys').checked,warp:$('sheetWarp').checked,birds:$('sheetBirds').checked},shiftX:sx,shiftY:sy,walls:$('walls').checked,maze:$('terrain').value==='maze',seed:$('seed').value,growth:$('growth').value,wallStyle:$('wallStyle').value,periodWidth:Number($('periodWidth').value),periodHeight:Number($('periodHeight').value),underpasses:Number($('underpasses').value),underpassShape:$('underpassShape').value,holeRimWalls:$('holeRimWalls').checked,returnPocket:$('returnPocket').checked});begin(next);}catch(error){$('error').textContent=error.message;}}
  $('settings').addEventListener('submit',e=>{e.preventDefault();regenerate();});
  function nextSeed(){$('seed').value='skew-'+Math.random().toString(36).slice(2,10);regenerate();}
  $('nextSeed').onclick=nextSeed;
@@ -50,7 +51,7 @@
   const w=state.world;if(!w.maze)return;
   if(state.id!==w.exit){$('error').textContent='出口 > の上で > を押すと次の迷路へ進めます。';return;}
   try{
-   const options=randomOptions(SkewOptions.applied(w,'skew-'+Math.random().toString(36).slice(2,10)));
+   const options=randomOptions({...SkewOptions.applied(w,'skew-'+Math.random().toString(36).slice(2,10)),features:state.features?.options});
    const next=LatticeHoles.create(options);
    for(const [id,value] of Object.entries({terrain:'maze',seed:options.seed,sx:options.shiftX,sy:options.shiftY,periodSize:options.periodSize,growth:options.growth,wallStyle:options.wallStyle,underpasses:options.underpasses,underpassShape:options.underpassShape}))$(id).value=String(value);
    $('holeRimWalls').checked=options.holeRimWalls;$('returnPocket').checked=!!options.returnPocket;
@@ -64,7 +65,7 @@
   }catch(error){$('error').textContent=error.message;}
  });
  $('exitNext').onclick=advance;
- const saveKey='maze-explorer.skew-holes-save.v1',controlIds=['terrain','growth','wallStyle','periodSize','periodWidth','periodHeight','underpasses','underpassShape','seed','sx','sy','walls','holeRimWalls','returnPocket',...Object.keys(randomDefaults),'randomMin','randomMax'];
+ const saveKey='maze-explorer.skew-holes-save.v1',controlIds=['sheetKeys','sheetWarp','sheetBirds','terrain','growth','wallStyle','periodSize','periodWidth','periodHeight','underpasses','underpassShape','seed','sx','sy','walls','holeRimWalls','returnPocket',...Object.keys(randomDefaults),'randomMin','randomMax'];
  const controls=()=>Object.fromEntries(controlIds.map(id=>[id,{value:String($(id).value),checked:Boolean($(id).checked)}]));
  function save(){try{const text=SkewSave.encode({state,book,journey,controls:controls()});SkewSave.decode(text);window.localStorage.setItem(saveKey,text);$('saveStatus').textContent=`保存しました：${state.world.seed} ／ ${state.steps}歩 ／ ${journey.number}枚目。`;}catch(error){$('saveStatus').textContent='保存できませんでした。'+error.message;}}
  function restore(text,prepared=null){
@@ -99,9 +100,10 @@
   }catch(error){if(serial===importSerial)$('saveStatus').textContent='読み込みできませんでした。'+error.message;}
  }
  window.SkewExplorationAdapter={
-  autoPlan:()=>ExplorationSolver.connected(state),autoMove:d=>move(truth?d:state.frame.indexOf(d)),
+  autoNext:()=>advance(),
+  autoDynamic:()=>state.features?.bird!=null,autoStallLimit:()=>2000,autoRelocated:()=>!!state.features?.last,autoTraversed:()=>state.features?.last?[state.features.last.from,state.id]:[state.id],autoLoop:()=>ExplorationSolver.connectedLoop(state,S,SkewLoops),autoTargets:()=>ExplorationSolver.connectedTargets(state),autoPosition:()=>state.id,autoExplore:seen=>ExplorationSolver.connected(state,seen),autoPlan:()=>ExplorationSolver.connected(state),autoMove:d=>move(truth?d:state.frame.indexOf(d)),
   progress:()=>({token:state,steps:state.steps,exit:state.world.maze&&state.id===state.world.exit}),
-  fresh(seed,randomGeneration=false,generators,sizes,topologies,shifts){return LatticeHoles.create(ExplorationGeneration.choose('skew',{...SkewOptions.applied(state.world,seed),maze:true},randomGeneration,seed,generators,sizes,topologies,'none',shifts));},
+  fresh(seed,randomGeneration=false,generators,sizes,topologies,shifts){return LatticeHoles.create(ExplorationGeneration.choose('skew',{...SkewOptions.applied(state.world,seed),maze:true,features:state.features?.options},randomGeneration,seed,generators,sizes,topologies,'none',shifts));},
   enter(next){begin(next);$('seed').value=next.world.seed;$('terrain').value='maze';$('growth').value=next.world.growth;$('periodSize').value=String(next.world.lattice.width);$('sx').value=String(next.world.lattice.shiftX);$('sy').value=String(next.world.lattice.shiftY);$('returnPocket').checked=!!next.world.returnPocket;},
   snapshot:()=>SkewSave.encode({state,book,journey,controls:controls()}),
   prepare:text=>SkewSave.decode(text),
@@ -111,6 +113,7 @@
  $('importFile').addEventListener('change',e=>{const file=e.target.files?.[0];e.target.value='';void importFile(file);});
  $('save').onclick=save;$('load').onclick=load;
 
+ $('sheetMark').onclick=()=>{SheetFeatures.mark(state);draw();canvas.focus();};
  $('subjective').onclick=()=>{truth=false;draw();canvas.focus();};$('truth').onclick=()=>{truth=true;draw();canvas.focus();};document.querySelectorAll('[data-dir]').forEach(b=>b.onclick=()=>move(Number(b.dataset.dir)));
- document.addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey||e.isComposing||e.target.closest('input,select,textarea'))return;if(e.key==='>'){e.preventDefault();if(!e.repeat)advance();return;}if(e.shiftKey&&e.key.toLowerCase()==='n'){e.preventDefault();if(!e.repeat)nextSeed();return;}const d={ArrowUp:0,ArrowRight:1,ArrowDown:2,ArrowLeft:3,k:0,l:1,j:2,h:3}[e.key];if(d!==undefined){e.preventDefault();move(d);}else if(e.key==='0'||e.key==='1'){truth=e.key==='1';draw();}});window.addEventListener('resize',()=>draw());draw();
+ document.addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey||e.isComposing||e.target.closest('input,select,textarea'))return;if(e.key.toLowerCase()==='m'){e.preventDefault();if(!e.repeat)$('sheetMark').click();return;}if(e.key==='>'){e.preventDefault();if(!e.repeat)advance();return;}if(e.shiftKey&&e.key.toLowerCase()==='n'){e.preventDefault();if(!e.repeat)nextSeed();return;}const d={ArrowUp:0,ArrowRight:1,ArrowDown:2,ArrowLeft:3,k:0,l:1,j:2,h:3}[e.key];if(d!==undefined){e.preventDefault();move(d);}else if(e.key==='0'||e.key==='1'){truth=e.key==='1';draw();}});window.addEventListener('resize',()=>draw());draw();
 })();

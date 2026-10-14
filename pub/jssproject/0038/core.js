@@ -139,12 +139,16 @@
     const interval = { lower, upper: lower + 1n, scale };
     constantCache.set(name, interval); return interval;
   }
+  function canonicalConstantName(name) {
+    name = name.toLowerCase();
+    return { 'π': 'pi', 'φ': 'phi', 'ϕ': 'phi' }[name] || name;
+  }
   function atomicExpression(text) {
     text = text.trim().replace(/−/g, '-');
     if (text.length > 300) throw Error('入力は 300 文字以内にしてください。');
     const constant = /^([+-]?)\s*(e|pi|π|phi|φ|ϕ)$/i.exec(text);
     if (constant) {
-      const name = { 'π': 'pi', 'φ': 'phi', 'ϕ': 'phi' }[constant[2].toLowerCase()] || constant[2].toLowerCase();
+      const name = canonicalConstantName(constant[2]);
       return { exact: false, ...constantInterval(name), negative: constant[1] === '-', source: text };
     }
     const unwrap = x => x.startsWith('(') && x.endsWith(')') ? x.slice(1, -1).trim() : x;
@@ -230,7 +234,7 @@
         const a=primary(); return combine('^',a,{lo:{p:1n,d:2n},hi:{p:1n,d:2n},key:'1/2'});
       }
       if (!token || !/^(?:\d+(?:\.\d*)?|\.\d+|e|pi|π|phi|φ|ϕ)$/i.test(token)) throw Error('数・定数・括弧を入力してください。掛け算には * を使います。');
-      const a=wrap(atomicExpression(token)); return {...a,key:token.toLowerCase()};
+      const a=wrap(atomicExpression(token)); return {...a,key:canonicalConstantName(token)};
     }
     function power() { const a=primary(); if(tokens[pos]==='^') {pos++; return combine('^',a,unary());} return a; }
     function unary() {
