@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="仲間はずれの図形問題から、ハミング距離、量子情報、線形代数、余接複体へ。一彌と一埜とこにゃんの、少し遠くまで行ってしまう数学小話。" />
+    <title>仲間はずれのDと、四角い数の箱 * 湫埜と雨滴 *</title>
+    <link rel="stylesheet" href="quiz.css" />
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="quiz.js" defer></script>
+</head>
+<body>
+<main class="wrapper" id="top">
+    <nav aria-label="現在位置"><a href="../../../../novels/sibling/2026sib.htm">2026年兄妹小話</a> ＞ 仲間はずれのDと、四角い数の箱</nav>
+    <header>
+        <p class="date"><time datetime="2026-10-25">2026/10/25</time> · 兄妹小話</p>
+        <h1>仲間はずれのDと、<br />四角い数の箱</h1>
+        <p class="subtitle">黄色い丸から、ブラックホールを経由して、導来圏まで。</p>
+        <p>兄・一彌、妹・一埜、そして猫のこにゃん。たった一問の図形問題が、今日もちょっと終わらない。</p>
+    </header>
+
+    <section class="inner_wrapper" id="question" aria-labelledby="question-title">
+        <h2 id="question-title">まずは、問題！</h2>
+        <dl class="talk">
+            <dt>一埜</dt><dd>「お兄ちゃん！ 問題〜〜ですっ！✨」</dd>
+            <dt>一彌</dt><dd>「ふふふ、このぼくの、濃いめの灰色の脳細胞が火を吹くぜ！」</dd>
+            <dt>一埜</dt><dd>「次の5つの図形のうち、仲間はずれはどれでしょうか？」</dd>
+        </dl>
+        <figure>
+            <a href="quiz.png" aria-label="問題図を原寸で開く"><img src="quiz.png" width="722" height="227" alt="Aは大きな黄色い丸の中に青い四角。Bは大きな青い丸の中に黄色い三角。Cは中くらいの黄色い丸の中に青い三角。Dは大きな黄色い丸の中に青い三角。Eは大きな黄色い三角の中に青い三角。" /></a>
+            <figcaption>図を押すと原寸で表示します。ひとつ選んで、その理由も考えてみてください。</figcaption>
+        </figure>
+        <p class="quiet">ここから先は答えと解説です。先に考えたい方は、いったんここでひと休み。</p>
+    </section>
+
+    <details class="reading-guide">
+        <summary>この小話の道順を見る（答えに触れます）</summary>
+        <ol>
+            <li><a href="#odd">仲間はずれの意味が反転する</a></li>
+            <li><a href="#center">消えたDと、特徴の行列</a></li>
+            <li><a href="#ancestor">原型は祖先なのか</a></li>
+            <li><a href="#distance-two">距離2だと、なぜ決まらない？</a></li>
+            <li><a href="#quantum">行と列にキュンとする</a></li>
+            <li><a href="#ame">本物のAME状態を並べる</a></li>
+            <li><a href="#codes">間違いを見つけること、直すこと</a></li>
+            <li><a href="#blackhole">ブラックホールの記事を思い出す</a></li>
+            <li><a href="#weaker">もっと緩い条件でも守れる？</a></li>
+            <li><a href="#dragon">幕間・五色吹流龍伝説</a></li>
+            <li><a href="#linear">なぜ、あちこちに線形代数？</a></li>
+            <li><a href="#tangent">局所的にも、自由にできる？</a></li>
+            <li><a href="#cotangent">余接「複体」の匂い</a></li>
+            <li><a href="#ending">Dの受難</a></li>
+        </ol>
+        <p>会話を読み進めるだけでも流れを追えます。計算の補足は折りたたみにまとめました。</p>
+    </details>
+
+    <article id="novel-content">
+    <section class="inner_wrapper" id="odd">
+        <h2>1．仲間はずれの意味が反転する</h2>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「ふーむふむ！ まずは特徴を整理しよう！」</dd>
+        </dl>
+        <div class="table-scroll" role="region" aria-label="図形の特徴一覧" tabindex="0">
+        <table><caption>どこが同じで、どこが違う？</caption><thead><tr><th scope="col">図形</th><th scope="col">外形</th><th scope="col">配色（外／内）</th><th scope="col">外側の大きさ</th><th scope="col">内形</th></tr></thead><tbody>
+            <tr><th scope="row">A</th><td>丸</td><td>黄／青</td><td>大</td><td>四角</td></tr>
+            <tr><th scope="row">B</th><td>丸</td><td>青／黄</td><td>大</td><td>三角</td></tr>
+            <tr><th scope="row">C</th><td>丸</td><td>黄／青</td><td>中</td><td>三角</td></tr>
+            <tr class="highlight"><th scope="row">D</th><td>丸</td><td>黄／青</td><td>大</td><td>三角</td></tr>
+            <tr><th scope="row">E</th><td>三角</td><td>黄／青</td><td>大</td><td>三角</td></tr>
+        </tbody></table></div>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「Aだけ内側が四角。Bだけ配色が逆。Cだけ中くらい。Eだけ外側が三角……どれでも仲間はずれにできるではないかァァ！💦」</dd>
+            <dt>一埜</dt><dd>「いひひ！ じゃあ、Dは？」</dd>
+            <dt>一彌</dt><dd>「……Dを基準にすると、ほかの4つはそれぞれ<strong>特徴を1種類だけ変えたもの</strong>になっている！」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（ここでは内外の色をまとめて、一つの『配色』と数えるのね。別々の特徴にしたら、Bだけ2か所の変更になるわ）」</dd>
+            <dt>一彌</dt><dd>「うむ！ ならば一つ選ぶならD！ お前ッ！ 正体を見せよォォ！」</dd>
+            <dt>D</dt><dd>「……よくぞ見破ったな。私は……何ひとつ変わっていない、ただのDだ！」</dd>
+            <dt>一彌</dt><dd>「正体が正体のままだったァァ！！」</dd>
+            <dt>一埜</dt><dd>「A・B・C・Eは、それぞれ一つの特徴で目立つ。Dだけは、そういう目立ち方をしてないんだね！」</dd>
+            <dt>一彌</dt><dd>「<strong>異端でないことこそが、唯一の異端だったのだ！</strong> 対象の特徴を比べていたはずが、対象同士の関係を比べ始めていた！」</dd>
+            <dt>こにゃん</dt><dd>「ンー🐈（ただし、問題文だけでDが唯一の正解と決まるわけではないわ。何を『違う』と数えるかが必要よ）」</dd>
+            <dt>一埜</dt><dd>「『Dを中心とする変化の組』という読み方なら、Dが特別。Aを選んで『四角があるから』にも理由はある、ということね！」</dd>
+            <dt>一彌</dt><dd>「そして猫はどの図形にも含まれていない。猫こそ真の仲間はずれ！」</dd>
+            <dt>一埜</dt><dd>「選択肢にいないよ！！ｗｗ」</dd>
+        </dl>
+    </section>
+
+    <section class="inner_wrapper" id="center">
+        <h2>2．消えたDと、特徴の行列</h2>
+        <dl class="talk">
+            <dt>こにゃん</dt><dd>「ハァーン🐈（Dを抜いて、代わりに2種類変えた図形を入れたら？）」</dd>
+            <dt>一彌</dt><dd>「よし、Fを『中くらいの黄色い丸の中に、青い四角』としよう。大きさと内形、二つの変更だ！」</dd>
+            <dt>一埜</dt><dd>「じゃあFが仲間はずれ！ ……でも、基準にするDはもういないよ？」</dd>
+            <dt>一彌</dt><dd>「そこで行列を使いたくなってきたぞ！ 内形・配色・大きさ・外形を列にし、Dと同じなら0、違えば1だ！」</dd>
+        </dl>
+        <div class="table-scroll" role="region" aria-label="変化を表す行列" tabindex="0">
+        <table class="matrix"><caption>4種類の特徴を、4個のビットで表す</caption><thead><tr><th scope="col">図形</th><th scope="col">内形</th><th scope="col">配色</th><th scope="col">大きさ</th><th scope="col">外形</th></tr></thead><tbody>
+            <tr><th scope="row">A</th><td>1</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><th scope="row">B</th><td>0</td><td>1</td><td>0</td><td>0</td></tr>
+            <tr><th scope="row">C</th><td>0</td><td>0</td><td>1</td><td>0</td></tr>
+            <tr class="highlight"><th scope="row">D</th><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><th scope="row">E</th><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+            <tr><th scope="row">F（追加候補）</th><td>1</td><td>0</td><td>1</td><td>0</td></tr>
+        </tbody></table></div>
+        <dl class="talk">
+            <dt>一埜</dt><dd>「Dを消してA・B・C・Eだけ並べたら、対角線だけ1！」</dd>
+            <dt>一彌</dt><dd>「4次の単位行列 \(I_{4}\)！ その各行は標準基底 \(e_{1}\)、\(e_{2}\)、\(e_{3}\)、\(e_{4}\)だ。元の5点は {0, \(e_{1}\), \(e_{2}\), \(e_{3}\), \(e_{4}\)} だったのか！」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（0と1だけの座標を4個並べた空間ね。違っている座標の数を<strong>ハミング距離</strong>と呼ぶわ）」</dd>
+            <dt>一彌</dt><dd>「例えば1000と0010は距離2。0000と1000は距離1だ。するとDは、ほかの4点すべてから距離1にある！」</dd>
+            <dt>一埜</dt><dd>「Dが消えても、各列の多数派は全部0。観測されていない0000が戻ってきた！」</dd>
+            <dt>一彌</dt><dd>「この『距離の合計を最小にする点』をハミング中央値と呼べる。多数派を各列で選べば、食い違いの合計が最少になるのだ！」</dd>
+            <dt>こにゃん</dt><dd>「ンー🐈（二値の特徴を同じ重みで比べる設定だからよ。同数の列があれば、その列の答えは決まらない）」</dd>
+            <dt>一彌</dt><dd>「A・B・C・EにF＝1010を加えても、各列の多数派は0のまま。だからこの基準ではFだけ距離2、ほかは距離1になる！」</dd>
+            <dt>一埜</dt><dd>「FはAとCには距離1なんだね。『誰かに近い』と『全体の中心に近い』は違うんだ！」</dd>
+        </dl>
+        <details class="note"><summary>計算ノート：なぜ0000が一意に決まる？</summary>
+            <p>ビット列xに含まれる1の数をwとします。4個の標準基底に対して、</p>
+            <div class="formula">\[\sum_{i=1}^{4} d_H(x,e_i)=4+2w\]</div>
+            <p>なので、最小値4を取るのはw＝0、つまり0000だけです。また、全4点からの距離がちょうど1なら合計は4なので、その条件の解も0000だけです。</p>
+            <p>一般にn個の標準基底なら合計は \(n+(n-2)w\)。<strong>n≧3</strong>なら同じ一意性が成り立ちます。n＝2では合計が常に2になり、中央値は一意ではありません。</p>
+            <p>各座標の0と1を一斉に入れ替えても距離は変わりません。0000という表記が特別なのではなく、点同士の距離関係が特別なのです。</p>
+        </details>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「存在しないDを基準に、存在するFを判定できる……！ D、お前は消えてなお我々を支配するのか！」</dd>
+            <dt>一埜</dt><dd>「中心は、選択肢に実在しなくてもいいんだね！✨」</dd>
+        </dl>
+    </section>
+
+    <section class="inner_wrapper" id="ancestor">
+        <h2>3．原型は祖先なのか</h2>
+        <dl class="talk">
+            <dt>一埜</dt><dd>「なんだかDは、印欧祖語みたいだね？」</dd>
+            <dt>一彌</dt><dd>「比較言語学！ 直接記録されていない言語を、子孫に当たる言語の対応から再建する、あれだな！」</dd>
+            <dt>一埜</dt><dd>「ラテン語のpater、ギリシア語のpatḗr、サンスクリットのpitár-、英語のfatherとか！」</dd>
+            <dt>一彌</dt><dd>「英語だけfだから間違い、とは言わない。ほかの語にも現れる規則的な音の対応を調べるのだ！」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（祖語再建は多数決ではないわ。変化の規則や方向を検討する。図形の中央値も、それだけで実際の歴史的祖先と証明されたわけではないのよ）」</dd>
+            <dt>一埜</dt><dd>「じゃあFだって、二つ変化しただけの親戚かもしれない。『間違い』って言う必要はないんだ！」</dd>
+            <dt>一彌</dt><dd>「仲間はずれを探していたのに、全員が同じ家系になった！ 図形の印欧語族！！」</dd>
+            <dt>こにゃん</dt><dd>「ﾆｬｰﾝ🐈」</dd>
+            <dt>一彌</dt><dd>「そして猫語は孤立言語である」</dd>
+            <dt>一埜</dt><dd>「それはお兄ちゃんの設定ね！ｗ」</dd>
+        </dl>
+        <p class="source">比較再建の補足：<a href="https://bpb-us-w2.wpmucdn.com/u.osu.edu/dist/4/105142/files/2021/06/2000indo.pdf">The Evidence Uniting the Indo-European Languages</a>。似た単語一つだけでなく、繰り返し現れる対応が手掛かりになります。</p>
+    </section>
+
+    <section class="inner_wrapper" id="distance-two">
+        <h2>4．距離2だと、なぜ決まらない？</h2>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「では原型0000から距離2にある、異なる4点ならどうだ？ 一意に再建できるか！？」</dd>
+            <dt>一埜</dt><dd>「1が二つの4ビット列だね。1100、1010、0101、0011なら……各列で0と1が2対2！」</dd>
+            <dt>一彌</dt><dd>「どの列も多数派がない。なんと16個すべての点で、距離の合計が8だ！」</dd>
+            <dt>一埜</dt><dd>「じゃあ1100、1010、1001、0110は？ 1の個数が列ごとに3、2、2、1だよ」</dd>
+            <dt>一彌</dt><dd>「最初は1、最後は0に決まるが、中央は自由。中央値は1000、1010、1100、1110の4個。こちらも一意じゃない！」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（実は4ビットで重み2の異なる4点なら、どんな選び方でも中央値は一意にならないわ）」</dd>
+        </dl>
+        <details class="note"><summary>計算ノート：全部調べなくてもわかる証明</summary>
+            <p>重み2の4ビット列は6個で、全ビットを反転した補集合のペアに分かれます。</p>
+            <div class="formula">\[\begin{gathered}1100 \longleftrightarrow 0011\\1010 \longleftrightarrow 0101\\1001 \longleftrightarrow 0110\end{gathered}\]</div>
+            <p>3組から異なる4点を選べば、少なくとも1組は両方入ります。その組は各列に0と1を一つずつ供給します。残る2点は異なるので、どこかの列で食い違います。その列が2対2になるため、中央値は必ず複数になります。</p>
+            <p><strong>「全観測点からちょうど距離2の点」も一意にはなりません。</strong>どの重み2の点も0000から距離2ですが、1111からも距離2だからです。中央値と等距離の中心は異なる条件ですが、この設定ではどちらも一意性がありません。</p>
+        </details>
+        <div class="experiment" id="median-experiment" hidden>
+            <h3>16個の候補を比べてみる</h3>
+            <label for="dataset">観測する点の組</label>
+            <select id="dataset">
+                <option value="basis">単位行列：1000・0100・0010・0001</option>
+                <option value="balanced">距離2の例①：1100・1010・0101・0011</option>
+                <option value="biased">距離2の例②：1100・1010・1001・0110</option>
+                <option value="with-f">A・B・C・EとF＝1010</option>
+            </select>
+            <div id="median-result" aria-live="polite"></div>
+        </div>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「『復元する』と言うだけでは足りないのだな。何を最小にするか、どんな生成規則を仮定するかを言わねば！」</dd>
+            <dt>一埜</dt><dd>「情報が4個ある、だけでは決まらない。どう並んでいるかが大事なんだね！」</dd>
+        </dl>
+    </section>
+
+    <section class="inner_wrapper" id="quantum">
+        <h2>5．行と列にキュンとする</h2>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「……何か思い出すぞ。ブラックホールの内部が、ものすごくもつれた情報かもしれない、という記事……！」</dd>
+            <dt>こにゃん</dt><dd>「ンー🐈（どこで似ていると思ったの？）」</dd>
+            <dt>一彌</dt><dd>「行と列の総和が同じ、みたいな例を見た時に、何かキュンと……！？」</dd>
+            <dt>一埜</dt><dd>「お兄ちゃん、行列に恋してる！ｗ」</dd>
+        </dl>
+        <div class="formula">\[M=\begin{pmatrix}0&1&1&0\\1&0&0&1\\1&0&0&1\\0&1&1&0\end{pmatrix}\]</div>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「この表は行和も列和も2だ。内部には模様があるのに、集約すると均一になる！」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（でも、行和や列和がそろうだけでは量子もつれの条件にならないわ。まず、同じビット列を使って別の問題を作ってみましょう）」</dd>
+            <dt>一埜</dt><dd>「A・B・C・Eを、4量子ビットの基底状態として重ね合わせるんだね！」</dd>
+        </dl>
+        <div class="formula">\[\begin{aligned}|W_4\rangle=\frac12\bigl(&|1000\rangle+|0100\rangle\\&+|0010\rangle+|0001\rangle\bigr)\end{aligned}\]</div>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「これが4量子ビットのW状態。古典の問題では4個の観測点だったものが、今度は<strong>一つの量子状態の成分</strong>になった！」</dd>
+            <dt>一埜</dt><dd>「同じ数字でも、使い方が変わってるね！」</dd>
+            <dt>こにゃん</dt><dd>「ンー🐈（絶対最大量子もつれ状態、AME状態は全体が純粋状態で、半分以下のどの部分系を選んでも、その縮約密度行列が最大混合になるの）」</dd>
+            <dt>一彌</dt><dd>「密度行列とは、その部分で測定した時の確率などを表す道具だな。最大混合なら、ある基底での測定確率が均一なだけでなく、行列そのものが単位行列に比例する！」</dd>
+            <dt>一埜</dt><dd>「W状態の1ビット目は、0が4分の3、1が4分の1。半々じゃないね！」</dd>
+        </dl>
+        <div class="formula">\[\rho_1(W_4)=\begin{pmatrix}\frac34&0\\0&\frac14\end{pmatrix}\ne\frac{I_2}{2}\]</div>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「ゆえに\(W_{4}\)はAMEではない。<strong>古典的な中心が一意に決まることと、量子的に最大にもつれることは別条件</strong>なのだ！」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（さらに4量子ビットでは、どんな純粋状態を選んでもAMEにはできない。でも、各要素を3準位にした4体系なら作れるわ）」</dd>
+            <dt>一埜</dt><dd>「4個のキュートリット！ 数は4個のままで、一個が取れる値を0・1・2に増やすんだね！」</dd>
+        </dl>
+        <p class="note">図形の「4次元」は4個の特徴座標です。4量子ビットの状態空間は複素16次元、4キュートリットなら複素81次元。同じ「4」という数字でも、数えているものが異なります。</p>
+        <p class="source">4量子ビットでの不可能性と4キュートリットのAME状態：<a href="https://journals.aps.org/pra/abstract/10.1103/PhysRevA.108.032412">Ratherほか、Physical Review A 108, 032412（2023）</a>。</p>
+    </section>
+
+    <section class="inner_wrapper" id="ame">
+        <h2>6．本物のAME状態を並べる</h2>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「0・1・2の計算を、3で割った余りで行おう。2＋2は1になる！ そして次の状態を作る！」</dd>
+        </dl>
+        <div class="formula">\[|\Omega\rangle=\frac13\sum_{i,j=0}^{2}|i,j,i+j,i+2j\rangle\]<small>各成分は \(\bmod 3\) で計算</small></div>
+        <div class="table-scroll" role="region" aria-label="AME状態の9個の基底成分" tabindex="0">
+        <table class="matrix" id="oa-table"><caption>9個の基底成分を行に並べる</caption><thead><tr><th scope="col">行</th><th scope="col">1：i</th><th scope="col">2：j</th><th scope="col">3：i+j</th><th scope="col">4：i+2j</th></tr></thead><tbody>
+            <tr><th scope="row">1</th><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            <tr><th scope="row">2</th><td>0</td><td>1</td><td>1</td><td>2</td></tr>
+            <tr><th scope="row">3</th><td>0</td><td>2</td><td>2</td><td>1</td></tr>
+            <tr><th scope="row">4</th><td>1</td><td>0</td><td>1</td><td>1</td></tr>
+            <tr><th scope="row">5</th><td>1</td><td>1</td><td>2</td><td>0</td></tr>
+            <tr><th scope="row">6</th><td>1</td><td>2</td><td>0</td><td>2</td></tr>
+            <tr><th scope="row">7</th><td>2</td><td>0</td><td>2</td><td>2</td></tr>
+            <tr><th scope="row">8</th><td>2</td><td>1</td><td>0</td><td>1</td></tr>
+            <tr><th scope="row">9</th><td>2</td><td>2</td><td>1</td><td>0</td></tr>
+        </tbody></table></div>
+        <dl class="talk">
+            <dt>一埜</dt><dd>「どの列も0・1・2が3回ずつ！」</dd>
+            <dt>一彌</dt><dd>「さらに、<strong>どの2列を選んでも、9種類の順序対が1回ずつ</strong>現れる。これが強さ2、指数1の直交配列だ！」</dd>
+        </dl>
+        <div class="experiment" id="oa-experiment" hidden>
+            <h3>列を選んで、組み合わせを数える</h3>
+            <label for="column-pair">取り出す2列</label>
+            <select id="column-pair"><option value="0,1">列1・2</option><option value="0,2">列1・3</option><option value="0,3">列1・4</option><option value="1,2">列2・3</option><option value="1,3">列2・4</option><option value="2,3">列3・4</option></select>
+            <div id="pair-result" aria-live="polite"></div>
+        </div>
+        <dl class="talk">
+            <dt>こにゃん</dt><dd>「ハァーン🐈（この構成では残りの2列も全組み合わせを1回ずつ取る。だから残りを見ないことにする<strong>部分トレース</strong>で、異なる行の干渉項が消えるの）」</dd>
+            <dt>一彌</dt><dd>「取り出した2体系には9種類が同じ確率で残る。縮約密度行列は \(I_9/9\)。どの2体系でもそうなるので、\(\mathrm{AME}(4,3)\)だ！」</dd>
+            <dt>一埜</dt><dd>「単なる行和の一致から、どの2列の組も均一、まで条件が強くなった！ でも『直交配列なら何でもAME』ではなく、この構成で確かめたんだね！」</dd>
+        </dl>
+        <details class="note"><summary>計算ノート：行列と量子もつれの、正確な接点</summary>
+            <p>二つの部分系に分けた純粋状態を \(|\psi\rangle=\sum_{ij}C_{ij}|i\rangle_A|j\rangle_B\) と書くと、</p>
+            <div class="formula">\[\rho_A=CC^\dagger,\qquad \rho_B=C^{\mathsf T}\overline C\]</div>
+            <p>†は複素共役転置、Tは転置、上線は複素共役です。この係数の置き方では\(\rho_B\)は \((C^\dagger C)^{\mathsf T}\) である点に注意します。</p>
+            <p>両側がd次元で最大にもつれていれば、\(CC^\dagger=C^\dagger C=I_d/d\)。必要なのは行和の一致ではなく、<strong>行・列の直交性とノルム</strong>です。上の4キュートリットの例では、どの2対2の分け方でもCが置換行列の1/3倍になるので、この条件を満たします。</p>
+            <p>このように、添字をどう二分しても適切な等長写像になるテンソルは、パーフェクトテンソルと関係します。単なる表に加え、振幅・複素数・部分トレースという量子論の構造が必要です。</p>
+        </details>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「ぼくがキュンとしたのは、中心があることだけではなく、いろいろな切り出し方で構造が保たれることだったのかもしれぬ！」</dd>
+            <dt>一埜</dt><dd>「数学的なキュンだった！ｗｗ」</dd>
+        </dl>
+    </section>
+
+    <section class="inner_wrapper" id="codes">
+        <h2>7．間違いを見つけること、直すこと</h2>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「誤り訂正……クククッ！ 脳の中でとろけるではないか……！」</dd>
+            <dt>一埜</dt><dd>「怪しいよ！ｗ」</dd>
+            <dt>一彌</dt><dd>「訂正より弱い『誤り検出』の問題も作れそうだ。まず『正しいビット列』を決めよう！」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（その集合を符号、各要素を符号語と呼ぶわ。未知の原型をデータから推定する問題とは、ここが違うのね）」</dd>
+            <dt>一彌</dt><dd>「例えば4ビットで、1の数が偶数なら正しい、という偶数パリティ符号だ。1100は正しい。1ビット反転して1101になったら、検査でわかる！」</dd>
+            <dt>一埜</dt><dd>「でも、どこを直せばいいかはわからない。2ビット反転すると偶数に戻って、見逃すんだね！」</dd>
+            <dt>一彌</dt><dd>「次は正しいものを0000と1111だけにする。0001を受け取った時、誤りが1ビット以内だとわかっていれば、元は0000と訂正できる！」</dd>
+            <dt>一埜</dt><dd>「0011だと両方から距離2。元が決まらないね」</dd>
+        </dl>
+        <div class="table-scroll" role="region" aria-label="古典符号の検出能力と訂正能力" tabindex="0">
+        <table><caption>異なる符号語の最小距離が、保証できる範囲を決める</caption><thead><tr><th scope="col">符号</th><th scope="col">最小距離</th><th scope="col">必ず検出できる反転数</th><th scope="col">必ず訂正できる反転数</th></tr></thead><tbody>
+            <tr><th scope="row">4ビット偶数パリティ</th><td>2</td><td>1個まで</td><td>0個</td></tr>
+            <tr><th scope="row">{0000, 1111}</th><td>4</td><td>3個まで</td><td>1個まで</td></tr>
+            <tr><th scope="row">一般の符号</th><td>\(d_{min}\)</td><td>\(d_{\min}-1\)個まで</td><td>\(\left\lfloor(d_{\min}-1)/2\right\rfloor\)個まで</td></tr>
+        </tbody></table></div>
+        <p class="note">検出は「受信語が符号語か」の検査、訂正は「誤り数の上限を仮定した復号」の保証です。例えば0001は0000の1ビット誤りとも1111の3ビット誤りとも読めます。検出能力3と訂正能力1を、同時にあらゆるケースで判別できるという意味ではありません。</p>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「『何かがおかしい』と、『どれに戻せばよい』は違う。ぼくの脳がおかしいとわかっても、直し方はわからないということか！」</dd>
+            <dt>一埜</dt><dd>「自己診断だけ成功してる！ｗｗ」</dd>
+            <dt>こにゃん</dt><dd>「ﾆｬｰﾝ🐈（訂正用におやつを追加しましょう）」</dd>
+            <dt>一彌</dt><dd>「それはおやつ要求プロトコルだァァ！！」</dd>
+        </dl>
+    </section>
+
+    <section class="inner_wrapper" id="blackhole">
+        <h2>8．ブラックホールの記事を思い出す</h2>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「思い出した！ 『ブラックホールの内部は究極にもつれた情報の集まりかもしれない』という記事だった！」</dd>
+            <dt>一埜</dt><dd>「さっきのAME状態につながるんだね！」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（姉川尊徳さんと玉岡幸太郎さんの研究ね。<strong>AdSブラックホール内部の特別な極値スライス</strong>に対応する状態について、AME構造を論じているわ）」</dd>
+            <dt>一彌</dt><dd>「AdSは負の曲率を持つ時空のモデル。その重力理論と境界側の量子論の対応がAdS/CFTだな。ブラックホールそのものの表面と、AdS時空の境界は区別しよう！」</dd>
+            <dt>一埜</dt><dd>「『宇宙の中身は表面に書いてある！』って、全部ひとまとめにしちゃうと危ないんだね」</dd>
+        </dl>
+        <aside class="note">
+            <h3>ここでいう「情報」と「表面」</h3>
+            <p>閉じた量子系のユニタリな時間発展は、全体の量子情報を保存します。一方、一部分しか観測しないと混合状態になり、情報が見えなくなることがあります。</p>
+            <p>ブラックホール情報問題の中心は、半古典的な計算で熱的に見えるホーキング放射と、蒸発を含む全体のユニタリ性をどう両立させるかです。無毛定理の「質量・電荷・角運動量」は一定の仮定下の定常な外部解の特徴であり、微視的状態が3個しかないという意味ではありません。ホーキング放射は理論的予言であり、天体ブラックホールで直接検出されたという話でもありません。</p>
+            <p>ブラックホールのエントロピー \(S_{\mathrm{BH}}=\frac{k_Bc^3A}{4G\hbar}\) は地平面の面積Aに比例します。これはホログラフィーの重要な動機ですが、図形の丸をそのまま物理的な地平面にする式ではありません。</p>
+        </aside>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「確か、すごく小さな次元から計算していたような……？」</dd>
+            <dt>こにゃん</dt><dd>「ンー🐈（少数の量子ビットは入門に便利だけれど、この論文の結果は無限体積の系についてのものよ。小さな有限次元を順番に調べた研究、とは別ね）」</dd>
+            <dt>一彌</dt><dd>「手掛かりはレニー・エントロピーだったな！」</dd>
+        </dl>
+        <div class="formula">\[S_\alpha(\rho)=\frac{\log\operatorname{Tr}(\rho^\alpha)}{1-\alpha}\]<small>\(\alpha>0,\ \alpha\ne1\)。\(\rho=I/d\) なら \(S_\alpha=\log d\)。</small></div>
+        <dl class="talk">
+            <dt>一埜</dt><dd>「最大混合なら、次数αを変えても同じなんだ！」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（論文は任意の二分割についてホログラフィックなレニー・エントロピーの次数依存性を調べ、AMEという解釈を支えている。これだけで現実の全ブラックホールが完全に理解されたわけでも、情報問題全体が解決したわけでもないわ）」</dd>
+        </dl>
+        <p class="source">研究の範囲：<a href="https://journals.aps.org/prl/abstract/10.1103/w7nc-l9s5">Anegawa・Tamaoka, Physical Review Letters 135, 261601（2025年12月29日）</a>／<a href="https://arxiv.org/abs/2508.07634">公開原稿</a>。元の会話で紹介されたニュース記事を、ここでは論文に照らして短く整理しています。</p>
+        <details class="note"><summary>補足：ランダムに見えることと、復元できること</summary>
+            <p>有限次元では、全レニー次数で同じ値になることは、非零固有値が等しい「支持空間上での平坦なスペクトル」に対応します。全d次元での最大混合I/dを結論するには、ランクがdであることも必要です。</p>
+            <p>また、固定された一つのAME状態があるだけで、任意の未知情報を保存・回復する方式が完成するわけではありません。何を入力し、どう符号化し、どの部分が失われ、何を使って復元するか、という設計が別途必要です。</p>
+        </details>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「では、我々の図形問題はブラックホールの境界面だった……？（？？？）」</dd>
+            <dt>一埜</dt><dd>「お兄ちゃん、知育問題をブラックホールにしちゃった！ｗｗ」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（似ているのは、見えているデータの関係から、直接見えていないものを再構成するという発想。図形には量子もつれも重力もないわ）」</dd>
+            <dt>一彌</dt><dd>「本当の符号化に近づけるなら、Dを一つ当てるだけでなく、いろいろなDをどう外側のデータに写すかまで決める必要があるのだな！」</dd>
+        </dl>
+    </section>
+
+    <section class="inner_wrapper" id="weaker">
+        <h2>9．もっと緩い条件でも守れる？</h2>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「AMEはずいぶん強い。もっと緩い、誤り検出くらいに対応する構造も調べられていないのか？」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（まず状態の条件を緩めるなら、<strong>k-uniform状態</strong>があるわ。任意のk個以下の部分系が最大混合になる純粋状態よ）」</dd>
+            <dt>一埜</dt><dd>「AMEは、kを\(\lfloor n/2\rfloor\)まで大きくした場合なんだね！」</dd>
+            <dt>一彌</dt><dd>「例えば4量子ビットのGHZ状態はどうだ！」</dd>
+        </dl>
+        <div class="formula">\[|\mathrm{GHZ}_4\rangle=\frac{|0000\rangle+|1111\rangle}{\sqrt2}\]</div>
+        <dl class="talk">
+            <dt>一埜</dt><dd>「1個だけ見ると\(I_2/2\)。でも2個だと00と11しか出ないから、\(I_4/4\)ではない。1-uniformだけどAMEではないんだ！」</dd>
+            <dt>こにゃん</dt><dd>「ンー🐈（それと、未知の量子情報を守る符号の条件は分けましょう。符号空間への射影をP、誤り演算子をEとすると、標準的な検出条件はこれ）」</dd>
+        </dl>
+        <div class="formula">\[PEP=\lambda_E P\]</div>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「符号空間内に残る作用は、どの論理状態にも同じ定数倍。外へ漏れた成分は検査できるが、状態を変えない作用まで『必ず発生を知らせる』わけではないのだな」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（訂正では、誤り集合 {\(E_a\)} に対してクニル＝ラフラム条件を使うわ）」</dd>
+        </dl>
+        <div class="formula">\[PE_a^\dagger E_b P=c_{ab}P\]<small>すべての \(a,b\) について</small></div>
+        <dl class="talk">
+            <dt>一埜</dt><dd>「どの誤りを対象にするかで、検出や訂正の可否が変わるんだね！」</dd>
+            <dt>こにゃん</dt><dd>「ンー🐈（一つの純粋状態だけを1次元の符号空間にすれば、PEPが定数倍になる条件は自動的に成り立つ。でも未知の論理量子ビットを入れる余地はない。状態の美しさと、符号として何を保存できるかは別よ）」</dd>
+            <dt>一彌</dt><dd>「ではブラックホールの研究では？」</dd>
+        </dl>
+        <ul class="references">
+            <li><a href="https://arxiv.org/abs/1503.06237">ホログラフィック量子誤り訂正の模型（Pastawskiほか、2015）</a>：内部を論理自由度、境界を物理自由度とするテンソルネットワークの符号化。</li>
+            <li><a href="https://arxiv.org/abs/1906.03669">熱化仮説と近似量子誤り訂正（Bao・Cheng、2019）</a>：完全な対称性だけに限らない、高精度の回復を扱う。</li>
+            <li><a href="https://arxiv.org/abs/2203.01961">ブラックホール内部の量子誤り訂正（Karほか、JHEP 2023）</a>：ホーキング放射に対する操作と内部情報の回復可能性を調べる。</li>
+            <li><a href="https://arxiv.org/abs/2602.01241">動的重力を含む研究（Miyata・Ugajin、2026）</a>：放射への操作が生む重力の反作用を考慮し、因果性との関係を検討する。</li>
+        </ul>
+        <dl class="talk">
+            <dt>こにゃん</dt><dd>「ハァーン🐈（これらを全部『誤り検出だけの理論』と呼ぶのは違うけれど、AME以外の条件や近似回復も重要な研究対象なのよ）」</dd>
+            <dt>一彌</dt><dd>「検出、訂正、近似訂正、全体のユニタリ性。どれも情報に関わるが、同じ主張ではない。誤りが見つかるだけで情報保存問題は解決しない！」</dd>
+            <dt>一埜</dt><dd>「でも、完全に戻せなくても、何がわかるかは調べられる！」</dd>
+            <dt>一彌</dt><dd>「完全な復元と完全な無知の間には、広大な数学の世界があるのだな……！💕」</dd>
+        </dl>
+        <p class="source">符号条件の原典：<a href="https://arxiv.org/abs/quant-ph/9604034">Knill・Laflamme, A Theory of Quantum Error-Correcting Codes</a>。</p>
+    </section>
+
+    <section class="inner_wrapper interlude" id="dragon">
+        <h2>10．幕間・五色吹流龍伝説</h2>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「つまりDの正体は、事象の地平面だったのかァァ！！」</dd>
+            <dt>D</dt><dd>「ばれちまっちゃあ仕方がないなァ……」</dd>
+        </dl>
+        <p class="stage">＊D、黄色い大きな円を脱ぐ！ 中身は青い三角！＊</p>
+        <dl class="talk">
+            <dt>時空検閲官</dt><dd>「おっと！ そこから先は観測禁止です！」</dd>
+            <dt>一埜</dt><dd>「もう見ちゃったよ！ｗｗ」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（宇宙検閲仮説は裸の特異点をめぐる仮説で、地平面の脱衣規制ではないわ）」</dd>
+            <dt>時空検閲官</dt><dd>「猫さん、私の職務がなくなります」</dd>
+            <dt>一彌</dt><dd>「五色吹き流し龍仮説、Dブラックホール仮説……今日もいろいろな仮説が生まれたなッ！」</dd>
+            <dt>一埜</dt><dd>「前のは、お兄ちゃんが小さい時から言ってるやつ！ｗ」</dd>
+        </dl>
+        <p class="stage">＊回想・幼い一彌と、テレビの前。＊</p>
+        <dl class="talk">
+            <dt>テレビ</dt><dd>「鯉は滝を登ると龍になると言われており……」</dd>
+            <dt>一彌（幼）</dt><dd>「……！！！✨ おとうさーん！ こいのぼりの、いちばん上のやつ！ りゅうだったんだよ！！」</dd>
+            <dt>父</dt><dd>「吹き流し？ いや、龍ももう少し形があるだろｗ」</dd>
+            <dt>一彌（幼）</dt><dd>「つよすぎて、かたちがなくなったんだ……！」</dd>
+            <dt>父</dt><dd>「龍すら超えてる！！」</dd>
+        </dl>
+        <p class="stage">＊数年後・中学校。＊</p>
+        <dl class="talk">
+            <dt>先生</dt><dd>「古代中国では、虹を龍のような存在と捉える考えがありました」</dd>
+            <dt>一彌（中学生）</dt><dd>「！！！💦 先生！ 吹き流しは五色で、長くて、空にいて、鯉より上にいるんです！」</dd>
+            <dt>先生</dt><dd>「ええと、五色の吹き流しは五行説に由来するものですが……」</dd>
+            <dt>一彌（中学生）</dt><dd>「つながったァァ！ 父は否定しましたが、歴史がぼくを証明したのです！」</dd>
+            <dt>先生</dt><dd>「お父さんは歴史と争っていないと思いますよ？」</dd>
+        </dl>
+        <p class="stage">＊そして水原家。＊</p>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「一埜よ……吹き流しは、鯉が形態を超越した最終形態なのだぞ……✨」</dd>
+            <dt>一埜（幼）</dt><dd>「じゃあ、いちばん上のが、いちばんつよいの！？ おにーちゃん、なんでもしってるね！💕」</dd>
+            <dt>父</dt><dd>「俗説が広がる瞬間を目にした」</dd>
+            <dt>一埜（幼）</dt><dd>「せんせーにも、おしえてあげる！ わたしがおっきくなったら、こどもにも！」</dd>
+            <dt>父</dt><dd>「三世代目が予約されたァァ！！」</dd>
+        </dl>
+        <p class="note">登龍門伝説や五色の吹き流しの説明は<a href="https://www.koinobori-nippon.jp/">日本鯉のぼり協会</a>、虹と龍の観念は<a href="https://www.kanjipedia.jp/kanji/0005433400">漢字ペディア「虹」</a>を参照。「だから吹き流し自体が進化した龍である」は、一彌独自の飛躍です。</p>
+        <p class="stage">＊現在に戻る。＊</p>
+        <dl class="talk">
+            <dt>一埜</dt><dd>「仮説というか、珍説というか……！ｗｗ」</dd>
+            <dt>一彌</dt><dd>「珍説が発見になることもある！ ただし、思いつきと検証は別……むむ、自分で言って痛い！」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（連想を楽しむことと、同じ仕組みだと証明することは違うのよ）」</dd>
+        </dl>
+    </section>
+
+    <section class="inner_wrapper" id="linear">
+        <h2>11．なぜ、あちこちに線形代数？</h2>
+        <dl class="talk">
+            <dt>一埜</dt><dd>「あのね、なんで行列ってこんなに出てくるんだろ？ 世の中に線形な現象が多いから、と思ってたけど……最近は、そもそも<strong>配列すること</strong>が大事なんじゃないかって！」</dd>
+            <dt>一彌</dt><dd>「……！！ 最初は図形の特徴を並べただけだったのに、いつの間にか量子力学にいたものな！」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（まず、表にするだけなら線形代数ではないわ。丸・黄・大、と並べても、足し算や定数倍はまだ定まっていない）」</dd>
+            <dt>一彌</dt><dd>「二値の特徴に\(\mathbb F_{2}\)の演算を入れると、1＋1＝0。特徴の反転を足し算で書けるようになる！」</dd>
+        </dl>
+        <div class="formula">\[x\longmapsto x+e_1+e_3\]<small>内形と大きさを反転</small></div>
+        <dl class="talk">
+            <dt>一埜</dt><dd>「配列して、操作を決めて、変化を組み合わせる！」</dd>
+            <dt>こにゃん</dt><dd>「ンー🐈（なお、固定ベクトルを足すこの操作そのものは一般には<strong>アフィン変換</strong>よ。線形写像は0を0に移すので、そこも区別しましょう）」</dd>
+            <dt>一彌</dt><dd>「線形写像Tなら、基底の行き先だけで全部決まる！」</dd>
+        </dl>
+        <div class="formula">\[\begin{aligned}x&=\sum_i x_i e_i\\ \Longrightarrow\quad T(x)&=\sum_i x_i T(e_i)\end{aligned}\]</div>
+        <dl class="talk">
+            <dt>一埜</dt><dd>「でも自然って、そんなに線形なの？」</dd>
+            <dt>一彌</dt><dd>「乱流も一般相対論も非線形性でいっぱいだ。しかし微分可能なら、小さな変化を線形写像で近似できる！」</dd>
+        </dl>
+        <div class="formula">\[f(x+\delta x)\approx f(x)+Df(x)\,\delta x\]</div>
+        <dl class="talk">
+            <dt>こにゃん</dt><dd>「ハァーン🐈（Df(x)はヤコビ行列で表せる微分。滑らかさと変化の小ささが大切で、不連続な現象や大きな変化まで保証するわけではない）」</dd>
+            <dt>一埜</dt><dd>「配列から構造が見える例は？」</dd>
+            <dt>一彌</dt><dd>「グラフの隣接行列だ！ 点iとjがつながっていれば\(A_{ij}\)＝1。普通の整数の演算で\(A^k\)を計算すると、その成分が長さkの歩道の数になる。途中で同じ点に戻ってもよい歩き方だ！」</dd>
+            <dt>一埜</dt><dd>「それ！ もとの関係が線形現象じゃなくても、表にして計算すると新しいことがわかる！」</dd>
+            <dt>一彌</dt><dd>「さらに、係数に使う体K――例えば実数や\(\mathbb F_{2}\)――を決めて、集合Xの各要素xに基底\(e_{x}\)を一つずつ用意する方法がある。<strong>自由ベクトル空間</strong>だ！」</dd>
+        </dl>
+        <div class="formula">\[F_K(X)=\left\{\sum_{x\in X}a_xe_x\;\middle|\;\#\{x:a_x\ne0\}<\infty\right\}\]<small>非零の係数 \(a_x\in K\) は有限個</small></div>
+        <dl class="talk">
+            <dt>一埜</dt><dd>「元の集合に足し算がなくても、形式的な線形結合を作れるんだ！」</dd>
+            <dt>一彌</dt><dd>「Xからベクトル空間Vへの写像fを決めると、ただ一つの線形写像に延長できる！」</dd>
+        </dl>
+        <div class="formula">\[\widetilde f\left(\sum_x a_xe_x\right)=\sum_x a_xf(x)\]</div>
+        <dl class="talk">
+            <dt>こにゃん</dt><dd>「ハァーン🐈（これが普遍性。集合の写像X→Yも、\(e_x\mapsto e_{f(x)}\)と線形に延長できる。自由ベクトル空間関手が、忘却関手の左随伴になる、という話ね）」</dd>
+            <dt>一彌</dt><dd>「随伴まで出てきたァァ！ 微分は<strong>局所の一次情報を取り出す</strong>。自由ベクトル空間は<strong>形式的な組み合わせを付け加える</strong>。違う入口から線形代数に来ているのだ！」</dd>
+            <dt>一埜</dt><dd>「自由に作った空間には、元の距離や因果関係が勝手についてくるわけじゃないのも大事だね！」</dd>
+            <dt>一彌</dt><dd>「しかも量子論はヒルベルト空間そのものを使う。線形代数が頻出する理由は一つではない……！」</dd>
+            <dt>一埜</dt><dd>「お兄ちゃんが、四角い数の箱から脱出した！✨」</dd>
+        </dl>
+    </section>
+
+    <section class="inner_wrapper" id="tangent">
+        <h2>12．局所的にも、自由にできる？</h2>
+        <dl class="talk">
+            <dt>一埜</dt><dd>「じゃあ、あらゆる現象の中に、局所的には自由ベクトル空間があったり……！？」</dd>
+            <dt>一彌</dt><dd>「微分と自由ベクトル空間を合体させようとしているのか！？💦」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（集合として扱えるものから形式的に作ることと、局所の変化を忠実に表すことは別ね。滑らかな多様体Mなら、各点pに接空間\(T_pM\)があるわ）」</dd>
+            <dt>一彌</dt><dd>「曲面の接平面の一般化だな。n次元多様体なら、接空間もn次元。局所座標を使うと、n個の方向を基底にできる！」</dd>
+            <dt>一埜</dt><dd>「でも、多様体の点を全部基底にした自由ベクトル空間とは違うんだね」</dd>
+            <dt>こにゃん</dt><dd>「ンー🐈（そう。接空間は滑らかな構造から生まれる。基底を選べば自由ベクトル空間と同一視できても、元の点集合を自由化したものではない。また、局所ごとの基底を空間全体で滑らかにそろえられるとは限らないわ）」</dd>
+            <dt>一彌</dt><dd>「もっと代数的に、一次の情報を取り出す方法はあるのか？」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（点pの近くの滑らかな関数の芽を考えて、pで0になるものを\(\mathfrak m_p\)とする。そのうち、そういう関数同士の積の有限和を\(\mathfrak m_p^2\)と書くと……）」</dd>
+        </dl>
+        <div class="formula">\[T_p^*M\cong\mathfrak m_p/\mathfrak m_p^2\]</div>
+        <p class="note">関数の「芽」は、pの十分近くで一致する関数を同じものと見たものです。遠くでの違いを忘れ、点の近くの振る舞いに注目します。</p>
+        <dl class="talk">
+            <dt>一埜</dt><dd>「星のついた余接空間！ 接ベクトルの向きに沿った変化を測る側だね？」</dd>
+            <dt>一彌</dt><dd>「pで消える関数の積は、一次の微分も消える。積でできる部分を無視すると、一次の変化だけが残る！」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（そして滑らかでない代数的な対象まで調べると、ケーラー微分や余接複体が現れるわ。ただし任意の現象が、いつでも有限次元の接空間だけで理解できるとは言えない）」</dd>
+            <dt>一埜</dt><dd>「『世界が全部線形』というより、いろんな対象から線形な情報を取り出す方法を、数学者が発明してきたんだね！」</dd>
+            <dt>一彌</dt><dd>「そして一次だけで足りなければ、二次、三次へ！ 黄色い丸から、どこまで行くのだ！」</dd>
+        </dl>
+    </section>
+
+    <section class="inner_wrapper" id="cotangent">
+        <h2>13．余接「複体」の匂い</h2>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「余接複体……語感だけだが、なんとなくコホモロジーの匂い！？」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（当たりよ。Extも出てくるわ）」</dd>
+            <dt>一彌</dt><dd>「あの拡大を分類するExtかァァ！！✨」</dd>
+            <dt>一埜</dt><dd>「お兄ちゃんの嗅覚が変なところで鋭い！ｗ」</dd>
+        </dl>
+        <aside class="note">
+            <h3>ここからの言葉を、少しだけ</h3>
+            <p><strong>環</strong>は足し算・掛け算のできる代数的な対象。<strong>加群</strong>は、ベクトル空間の係数を体から環へ広げたものです。<strong>複体</strong>は、連続する二つの写像を合成すると0になるように加群を並べた列。コホモロジーは、次へ送ると消えるもののうち、前から来たものでは説明できない部分を取り出します。</p>
+        </aside>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「環A→Bに対して、ケーラー微分\(\Omega_{B/A}\)は、足し算と積の微分則を満たす微分をまとめる道具だな！」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（余接複体\(L_{B/A}\)はその導来版。次数0のコホモロジーが\(\Omega_{B/A}\)で、関係式に由来する情報をほかの次数にも持てるの）」</dd>
+            <dt>一埜</dt><dd>「一個のベクトル空間だけで終わらず、写像でつながった列を見るんだ！」</dd>
+            <dt>一彌</dt><dd>「具体例を！ 体kの上で B＝\(k[x]/(x^2)\)。xは0とは限らないが、二乗すると0になる！」</dd>
+            <dt>一埜</dt><dd>「普通の点に、微小な厚みを持たせた『二重化された原点』だね！」</dd>
+        </dl>
+        <div class="formula">\[L_{B/k}\simeq\bigl[B\xrightarrow{\,2x\,}B\bigr]\]<small>左が次数 \(-1\)、右が次数 \(0\)（右の基底 \(dx\) を省略）</small></div>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「関係式x²を微分して2x dx。だから矢印が2x倍になるのか！」</dd>
+            <dt>こにゃん</dt><dd>「ンー🐈（標数が2でない場合、核と余核を取ればこうなるわ）」</dd>
+        </dl>
+        <div class="formula">\[\begin{aligned}H^{-1}(L_{B/k})&=(x)\cong k\\H^0(L_{B/k})&=B/(2x)\cong k\end{aligned}\]</div>
+        <details class="note"><summary>計算ノート：核と余核を実際に計算</summary>
+            <p>Bの元はa＋bxと書けます。2x倍すると2ax（x²＝0）。標数が2でなければ、0へ送られるのはa＝0の元、つまり(x)です。像も(x)なので、右側を像で割った余核はB/(x)≅kになります。</p>
+            <p>標数2では2x＝0となり、矢印は零写像です。その場合は\(H^{-1}\)も\(H^0\)もBとなります。</p>
+        </details>
+        <dl class="talk">
+            <dt>一埜</dt><dd>「いつもの微分加群は次数0に。でも次数−1にも情報が残った！」</dd>
+            <dt>一彌</dt><dd>「そしてAndré–Quillenコホモロジーだ！」</dd>
+        </dl>
+        <div class="formula">\[D^r(B/A,M)=\operatorname{Ext}_B^r(L_{B/A},M)\]</div>
+        <dl class="talk">
+            <dt>こにゃん</dt><dd>「ハァーン🐈（ここでのExtは複体に対する導来Homから取るもの。\(D^0\)はA上の導分、\(D^1\)は平方零拡大の分類と結びつく。変形を持ち上げる問題では、適切な設定で\(\operatorname{Ext}^2\)に障害が現れるわ）」</dd>
+            <dt>一彌</dt><dd>「変形できるか、どんな変形があるか、何が邪魔をするか！ 一次の情報を取る話から、その背後の関係式を調べる話へ来たのだな！」</dd>
+            <dt>一埜</dt><dd>「でも、この例ではどうなの？」</dd>
+            <dt>こにゃん</dt><dd>「ンー🐈（このBの余接複体は、自由B加群の2項複体で表せる。したがってこのアフィンな例の\(\operatorname{Ext}^2\)は0よ。負のコホモロジーがあるから、必ず変形に障害がある、とは言えないの）」</dd>
+            <dt>一彌</dt><dd>「猫の査読が厳密だ！ ……気がつけば導来圏にいる」</dd>
+            <dt>一埜</dt><dd>「算数の宿題を導来圏に提出しないでね！？ｗｗ」</dd>
+        </dl>
+        <p class="source">補足の根拠：Stacks Projectの<a href="https://stacks.math.columbia.edu/tag/08SH">局所完全交差の余接複体</a>、<a href="https://stacks.math.columbia.edu/tag/08UX">変形と余接複体</a>。余接複体から通常の微分加群を得るのであって、微分加群だけから失われた情報が自動で戻るわけではありません。</p>
+    </section>
+
+    <section class="inner_wrapper interlude" id="ending">
+        <h2>14．Dの受難</h2>
+        <dl class="talk">
+            <dt>一埜</dt><dd>「算数の宿題が特異点論みたいなところへ……やっぱりDはブラックホールだったんだ……😈💦」</dd>
+            <dt>一彌</dt><dd>「証明があまりにも雑ッ！！」</dd>
+            <dt>こにゃん</dt><dd>「ハァーン🐈（事象の地平面と時空特異点は別。代数幾何の特異性と、一般相対論の特異点も同じものではないわ）」</dd>
+            <dt>D</dt><dd>「……実はな」</dd>
+        </dl>
+        <p class="stage">＊ぱかっ！ 黄色い丸の中に青い三角。その奥に、\(k[x]/(x^2)\)！＊</p>
+        <dl class="talk">
+            <dt>一彌</dt><dd>「二重化された原点だァァァ！！」</dd>
+            <dt>時空検閲官</dt><dd>「今度は何を露出しているんですか！？」</dd>
+            <dt>D</dt><dd>「いや、接空間を見せようと思って……」</dd>
+            <dt>時空検閲官</dt><dd>「接空間は構いませんが、裸の特異点は困ります！！」</dd>
+            <dt>こにゃん</dt><dd>「ンー🐈（管轄が違うわ）」</dd>
+            <dt>一彌</dt><dd>「Dだけが仲間はずれだった本当の理由は、ほかが平面図形なのに、お前だけ時空の因果構造だったからかァァ！！」</dd>
+            <dt>一埜</dt><dd>「最初の問題文からわかるわけないよ！！ｗｗｗ」</dd>
+        </dl>
+        <p class="stage">＊翌日・実相寺先生の採点欄。＊</p>
+        <blockquote><p><strong>答え：D。</strong></p><p>ほかの4図形が、それぞれ異なる特徴を1種類ずつ変えたものと見られる、その共通の基準だから。</p><p>なおDは事象の地平面であり、内部に非被約な点を内蔵し、余接複体の負の次数に非自明なコホモロジーを持つ。</p></blockquote>
+        <dl class="talk">
+            <dt>実相寺先生</dt><dd>「……一埜ちゃん。最初の理由はわかります。後半は何ですか」</dd>
+            <dt>一埜</dt><dd>「自由研究ですっ！✨」</dd>
+            <dt>実相寺先生</dt><dd>「先生はもう、Dがかわいそうになってきました。ただの黄色い丸だったのに、ブラックホールにされて、特異点を入れられて、導来圏に送られて……」</dd>
+            <dt>一彌</dt><dd>「説明するたびに、設定が増えるのだ！」</dd>
+            <dt>実相寺先生</dt><dd>「増やさないでください！！」</dd>
+            <dt>D</dt><dd>「……俺、ただの丸に戻りたい」</dd>
+            <dt>一埜</dt><dd>「Dの情報は保存されるから大丈夫だよ！😈✨」</dd>
+            <dt>一彌</dt><dd>「情報パラドックスが解決したァァ！！」</dd>
+            <dt>実相寺先生</dt><dd>「解決してません！！」</dd>
+            <dt>こにゃん</dt><dd>「ﾆｬｰﾝ🐈✨」</dd>
+        </dl>
+        <p class="ending">＊おしまい。Dはまだ、ただの丸です。＊</p>
+    </section>
+    </article>
+
+    <footer>
+        <p>元の会話：<a href="https://chatgpt.com/share/6add07eb-e61c-83ec-87b9-7dbb0b5c90d8">共有会話</a>。提供された本文をもとに、重複と途中の訂正を整理し、計算・用語の補足を加えた再構成です。問題図は提供画像を使用しています。</p>
+        <p>物語中の「Dブラックホール仮説」「五色吹流龍伝説」は登場人物の冗談です。数式による説明と連想の飛躍は、こにゃんの補足を道しるべにお読みください。</p>
+        <p><a href="#top">ページの先頭へ</a> · <a href="../../../../novels/sibling/2026sib.htm">2026年兄妹小話へ</a></p>
+    </footer>
+</main>
+</body>
+</html>

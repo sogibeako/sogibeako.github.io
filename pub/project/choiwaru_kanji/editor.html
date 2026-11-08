@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="文字や部首を重ねて、自分だけの漢字をつくる小さな実験室。">
+  <title>Choiwaru Kanji — 創作漢字の実験室</title>
+  <link rel="stylesheet" href="kanji-renderer.css">
+  <link rel="stylesheet" href="editor.css">
+  <script src="kanji-core.js" defer></script>
+  <script src="kanji-renderer.js" defer></script>
+  <script src="ttf-writer.js" defer></script>
+  <script src="kanji-font.js" defer></script>
+  <script src="font-export.js" defer></script>
+  <script src="editor.js" defer></script>
+</head>
+<body>
+<header class="masthead">
+  <a class="brand" href="./"><span class="brand-mark">字<span>＋</span></span><span>Choiwaru Kanji<small>創作漢字の実験室</small></span></a>
+  <nav><a href="demo.html">文章で使ってみる ↗</a><a href="README.md">使い方</a><span class="version">LOCAL FIRST / v0.1</span></nav>
+</header>
+<main>
+  <section class="intro"><div><p class="eyebrow">A LITTLE REBELLION IN EVERY CHARACTER</p><h1>ことばに、まだない<span>かたち</span>を。</h1><p>部首を重ねて、線を引いて。あなただけの一字をつくろう。</p></div><span class="intro-note">つくる → ためす → ことばにする</span></section>
+  <div class="workspace">
+    <aside class="panel parts">
+      <h2><span class="step">01</span> 部品をえらぶ</h2>
+      <label for="characters">文字・部首・記号</label>
+      <textarea id="characters" rows="2" placeholder="例：門 猫 月（何文字でも）">猫</textarea>
+      <p class="hint">1文字ずつ、独立した部品として追加します。</p>
+      <label for="layout">追加時の並べ方</label>
+      <select id="layout"><option value="overlay">重ねる</option><option value="horizontal">左右に並べる</option><option value="vertical">上下に並べる</option><option value="grid">格子に並べる</option></select>
+      <button class="primary full" id="add-text">＋ 文字を追加</button>
+      <h3>よく使う部品</h3>
+      <div class="radicals" id="radicals"></div>
+      <h3>線と図形</h3>
+      <div class="shape-buttons"><button data-add="line">─ 直線</button><button data-add="rect">▭ 矩形</button><button data-add="circle">○ 円</button><button data-add="erase">▧ 消去領域</button></div>
+      <p class="hint">消去領域は、それより下の部品を透明に抜きます。</p>
+      <div class="layer-heading"><h3>レイヤー <span id="layer-count"></span></h3><span class="hint">上ほど前面</span></div>
+      <ol id="layers" class="layers"></ol>
+      <label class="check"><input id="multi-select" type="checkbox"> 複数選択モード</label>
+      <p class="hint">Shift / Ctrl / ⌘＋クリックでも追加選択・解除できます。</p>
+      <div class="shape-buttons"><button id="select-all">全選択</button><button id="clear-selection">選択解除</button><button id="copy-parts">部品をコピー</button><button id="paste-parts">部品を貼り付け</button></div>
+      <label>移動量<input id="move-step" type="number" min="1" max="1000" value="10"></label>
+      <div class="shape-buttons"><button data-nudge="-1,0">← 左へ</button><button data-nudge="1,0">右へ →</button><button data-nudge="0,-1">↑ 上へ</button><button data-nudge="0,1">↓ 下へ</button></div>
+    </aside>
+    <section class="canvas-panel">
+      <div class="canvas-toolbar"><div><button id="undo" title="元に戻す (Ctrl+Z)">↶ 戻す</button><button id="redo" title="やり直す (Ctrl+Shift+Z)">↷</button></div><span>1000 × 1000</span><button id="new-glyph">新しい字</button></div>
+      <div class="canvas-surround"><div id="canvas" class="canvas grid guides" tabindex="0" aria-label="漢字編集キャンバス。部品をドラッグ、選択後に矢印キーで移動できます"></div></div>
+      <div class="canvas-options"><label><input id="grid" type="checkbox" checked> グリッド</label><label><input id="guides" type="checkbox" checked> 中心線</label><label><input id="snap" type="checkbox" checked> スナップ <small>25</small></label></div>
+      <p class="canvas-tip">選択部品をまとめてドラッグ・矢印移動 · Shiftで10ずつ · Ctrl/⌘＋C → Vで原寸複製</p>
+      <div class="reference-controls">
+        <label class="check"><input id="reference-enabled" type="checkbox"> 比較用の字を重ねる</label>
+        <label>比較する漢字<input id="reference-char" type="text" value="漢" maxlength="64" aria-describedby="reference-help"></label>
+        <label>不透明度 <output id="reference-opacity-value">25%</output><input id="reference-opacity" type="range" min="5" max="60" step="5" value="25"></label>
+        <p id="reference-help" class="hint">先頭の1文字をNoto Sans JP・標準の1em（1000単位）で表示します。縦横の変形はせず、字形本来の余白も残します。比較用の字は保存・書き出しに含みません。</p>
+      </div>
+    </section>
+    <aside class="panel properties">
+      <h2><span class="step">02</span> かたちを整える</h2>
+      <p id="selection-label" class="selection-label">部品を選択してください</p>
+      <fieldset id="group-scale" disabled>
+        <h3>選択した塊を伸縮</h3>
+        <p id="group-size" class="hint"></p>
+        <div class="pair"><label>横の倍率（%）<input id="group-scale-x" type="number" min="1" max="1000" value="100"></label><label>縦の倍率（%）<input id="group-scale-y" type="number" min="1" max="1000" value="100"></label></div>
+        <button id="apply-group-scale" type="button">塊全体に適用</button>
+        <p class="hint">塊の左上を固定し、配置・線幅もまとめて伸縮します。100%でその方向の大きさを維持。部品の幅・高さ欄は伸縮前の値です。</p>
+      </fieldset>
+      <fieldset id="properties" disabled>
+        <label>文字<input id="prop-char" type="text" maxlength="64"></label>
+        <div class="pair"><label>X 座標<input id="prop-x" type="number" min="-5000" max="5000"></label><label>Y 座標<input id="prop-y" type="number" min="-5000" max="5000"></label></div>
+        <div class="pair"><label>幅<input id="prop-width" type="number" min="1" max="5000"></label><label>高さ<input id="prop-height" type="number" min="1" max="5000"></label></div>
+        <label>回転 <span class="unit">deg</span><input id="prop-rotation" type="number" min="-3600" max="3600" step="1"></label>
+        <label>書体<select id="prop-font"><option value="sans">Noto Sans JP（ゴシック）</option><option value="serif">Noto Serif JP（明朝）</option></select></label>
+        <label>文字の太さ <output id="weight-value">400</output><input id="prop-fontWeight" type="range" min="100" max="900" step="100"></label>
+        <label>線幅・文字の追加の太さ<input id="prop-strokeWidth" type="number" min="0" max="300" step="1"></label>
+        <label>色 <input id="prop-fill" type="color" value="#111827"></label>
+        <div class="pair"><label class="check"><input id="prop-flipX" type="checkbox"> 左右反転</label><label class="check"><input id="prop-flipY" type="checkbox"> 上下反転</label></div>
+        <div class="pair"><button id="forward">前面へ ↑</button><button id="backward">背面へ ↓</button></div>
+        <div class="pair"><button id="duplicate">複製</button><button id="delete" class="danger">削除</button></div>
+      </fieldset>
+    </aside>
+  </div>
+  <section class="bottom-grid">
+    <div class="panel preview-panel">
+      <h2><span class="step">03</span> ことばに馴染ませる</h2>
+      <label for="preview-text">プレビューの例文</label>
+      <textarea id="preview-text" rows="2" maxlength="2000" aria-describedby="preview-text-help">今日も{字}していた。</textarea>
+      <div class="sentence-actions"><button id="insert-preview-glyph" type="button">＋ この字を挿入</button><button id="reset-preview-text" type="button">例文を戻す</button></div>
+      <p class="hint" id="preview-text-help">{字} の位置に編集中の漢字を表示します。何か所でも挿入できます。</p>
+      <div class="preview-controls"><label>確認する書体<select id="preview-font"><option value="">部品の設定どおり</option><option value="sans">ゴシック体</option><option value="serif">明朝体</option></select></label><label>背景<select id="preview-bg"><option value="paper">紙色</option><option value="dark">濃い色</option><option value="checker">透明チェック</option></select></label></div>
+      <button id="match-preview-color" type="button" aria-pressed="false">本文と同じ色：オフ</button>
+      <p class="hint">オンにすると {字} の色が例文に揃います。部品の保存色は変わりません。</p>
+      <div id="previews"></div>
+      <h3>いつもの日記で確認</h3>
+      <div class="preview-controls">
+        <label>本文<select id="diary-preview-font"><option value="">通常の本文</option><option value="seoremium">Seoremium</option></select></label>
+        <label>文字サイズ<select id="diary-preview-size"><option value="">日記の標準</option><option>12</option><option>14</option><option>16</option><option>18</option><option>20</option><option>24</option></select></label>
+        <label>表示幅<select id="diary-preview-width"><option value="">この欄に合わせる</option><option value="390">スマートフォン（390px）</option><option value="900">PC（900px）</option></select></label>
+      </div>
+      <p class="hint">上の例文・書体・本文と同じ色の設定を反映します。日記のCSSで背景・本文の書体・行間を確認できます。サイズ指定の単位はpxです。PC表示は横にスクロールできます。</p>
+      <p id="diary-preview-info" class="hint" aria-live="polite"></p>
+      <div class="diary-preview-scroll"><iframe id="diary-preview" title="日記スタイルでの創作漢字プレビュー" sandbox="allow-same-origin"></iframe></div>
+      <p class="hint">文章をドラッグして範囲選択し、右クリックの「コピー」またはCtrl/⌘＋Cでコピーできます。{字} はコピー時だけコピー用文字列に置き換わります。</p>
+      <p class="hint">小さな字でも読めるか確認。書体の切り替えはプレビューだけに適用されます。</p>
+      <h3>日記への埋め込み</h3><pre id="embed-code"></pre>
+      <p><a href="downloads.html">JS・CSS・サンプル辞書のダウンロードと設置方法 →</a></p>
+    </div>
+    <div class="panel metadata-panel">
+      <h2><span class="step">04</span> 名前をつけて、残す</h2>
+      <div class="pair"><label>漢字ID<input id="meta-id" value="gate-cat" maxlength="80" placeholder="例：gate-cat"></label><label>読み<input id="meta-ruby" placeholder="こもりねこ"></label></div>
+      <div class="pair"><label>対応Unicode文字（任意）<input id="meta-unicode" placeholder="確認済みの1文字"></label><label>本来の表記<input id="meta-original" placeholder="籠城"></label></div>
+      <div class="pair"><label>構成・IDS<input id="meta-ids" placeholder="⿴門猫"></label><label>コピー用文字列<input id="meta-copyText" placeholder="空欄ならUnicode → IDS → 部品"></label></div>
+      <div id="ids-buttons" class="ids-buttons" role="group" aria-label="IDS構成記号の挿入"></div>
+      <p class="hint">構成記号をIDS欄のカーソル位置に挿入します。例：⿰木木（左右）、⿱日月（上下）、⿴門猫（囲み）。字形は自動変更しません。</p>
+      <label>意味・説明<textarea id="meta-meaning" rows="2" placeholder="どんなときに使う字？"></textarea></label>
+      <p class="hint">Unicode対応は自動判定しません。確認した文字だけを登録してください。</p>
+      <div class="save-actions"><button id="save" class="primary">辞書に保存</button><button id="export">辞書JSON ↓</button><button id="svg-export">SVG ↓</button></div>
+      <div class="dictionary-controls"><label>登録済みの字<select id="dictionary-select"><option value="">字を選ぶ</option></select></label><button id="load-glyph">編集</button><label class="file-button">JSONを読み込む<input id="import" type="file" accept=".json,application/json"></label></div>
+      <label>登録字を検索<input id="dictionary-search" type="search" placeholder="ID・読み・意味・コピー用文字列"></label>
+      <button id="delete-glyph" class="danger" type="button" disabled>選択した登録字を削除…</button>
+      <button id="insert-glyph" type="button" disabled>選択した字を作業領域に追加</button>
+      <p class="hint">元の字を残して、登録字の部品を同じサイズ・位置で追加します。追加した部品はまとめて選択されます。消去領域は既存の下側レイヤーにも作用します。</p>
+      <label>一覧をクリックしたとき<select id="dictionary-action"><option value="edit">登録字を開いて編集</option><option value="insert">作業領域に追加</option></select></label>
+      <p class="hint">「作業領域に追加」なら、今の字に登録字の部品を足せます。操作は「戻す」で取り消せます。</p>
+      <div id="dictionary-grid" class="dictionary-grid" aria-label="登録字の一覧"></div>
+      <div class="dictionary-pager"><button id="dictionary-prev">← 前へ</button><span id="dictionary-count" role="status"></span><button id="dictionary-next">次へ →</button></div>
+      <p class="hint">下書き・辞書はこのブラウザに保存。公開用にはJSONを書き出して配置してください。読み込みは辞書を置き換えます。</p>
+    </div>
+  </section>
+  <p id="status" role="status" aria-live="polite">準備しています…</p>
+  <section class="panel font-panel" aria-labelledby="font-title">
+    <h2 id="font-title"><span class="step">05</span> 辞書からフォントをつくる</h2>
+    <p>登録済みの全字を、Unicodeの指定位置へ割り当ててTTFにします。編集中の字は先に「辞書に保存」してください。割り当てがない字や重複がある場合は、書き出しを止めて赤く表示します。</p>
+    <fieldset id="font-settings">
+      <div class="pair"><label>フォント名（英数字・ハイフン）<input id="font-family" value="ChoiwaruCustom" maxlength="48"></label><label>輪郭の精度<select id="font-resolution"><option value="1024">1024px（標準・軽量）</option><option value="2048">2048px（細部優先）</option></select></label></div>
+      <div class="font-actions"><label>私用領域の開始位置<input id="font-pua-start" value="U+E000" maxlength="12"></label><button id="font-fill-pua" type="button">未指定の字を私用領域に連番割り当て</button><button id="font-use-unicode" type="button">Unicode対応から未指定分を設定</button></div>
+      <p class="hint">U+E000・0xE000・E000 のような16進数、または実際の1文字を指定できます。Unicode対応とは別の「フォント内の配置」であり、既存文字との同一性は意味しません。私用領域の文字は、このフォントのない環境では別の表示になります。</p>
+      <label>割り当て一覧を検索<input id="font-search" type="search" placeholder="ID・読み・割り当て位置"></label>
+      <label class="check"><input id="font-errors-only" type="checkbox"> 問題のある字だけ表示</label>
+      <div id="font-assignments" class="font-assignments"></div>
+      <div class="dictionary-pager"><button id="font-prev" type="button">← 前へ</button><span id="font-page"></span><button id="font-next" type="button">次へ →</button></div>
+      <div class="font-actions"><button id="font-check" type="button">割り当てを確認</button><button id="font-build" class="primary" type="button">TTFを生成・プレビュー</button><button id="font-json" type="button">割り当て付き辞書JSON ↓</button></div>
+    </fieldset>
+    <p id="font-status" role="status" aria-live="polite"></p>
+    <button id="font-cancel" type="button" hidden>生成を中止</button>
+    <div id="font-result" hidden>
+      <p>生成したTTFで表示しています。字形を確認してから保存してください。</p>
+      <div id="font-preview" class="font-preview"></div>
+      <div class="font-actions"><button id="font-download" class="primary" type="button">TTFをダウンロード ↓</button><button id="font-license" type="button">フォントのライセンス ↓</button></div>
+    </div>
+    <p class="hint">初期版は、描画を単色化して輪郭を近似する方式です。元フォントの曲線を直接合成するものではなく、拡大時には輪郭の細かな段差が見える場合があります。1000×1000の枠外は切り取ります。色・ルビ・意味・IDSはTTFには入りません。生成フォントは横書き・固定字幅・ヒンティングなしです。</p>
+    <p class="hint">元字形は同梱のNoto Sans JP／Noto Serif JPを使用します。初回生成時に必要な書体のデータを読み込みます。未収録の部品文字はエラーになります。Noto由来の生成フォントにはSIL Open Font Licenseを埋め込みます。配布時にもライセンスを添付してください。<a href="font-assets/NotoSansJP-OFL.txt">Sansのライセンス</a> / <a href="font-assets/NotoSerifJP-OFL.txt">Serifのライセンス</a></p>
+  </section>
+</main>
+<dialog id="delete-glyph-dialog" class="choiwaru-dialog" aria-labelledby="delete-glyph-title" aria-describedby="delete-glyph-description">
+  <h2 id="delete-glyph-title">この登録字を削除しますか？</h2>
+  <div id="delete-glyph-preview"></div>
+  <p id="delete-glyph-target"></p>
+  <p id="delete-glyph-description">このブラウザの辞書から削除します。削除は「戻す」では取り消せません。編集中の下書きは残ります。公開サイトへ反映するには、削除後の辞書JSONを配置し直してください。</p>
+  <form method="dialog"><button value="cancel" autofocus>キャンセル</button><button id="confirm-delete-glyph" value="delete" class="danger">削除する</button></form>
+</dialog>
+<footer><span>Choiwaru Kanji</span> 既存の文字から、ちょっと自由に。<a href="downloads.html">配布ファイル・設置方法 ↗</a></footer>
+</body>
+</html>

@@ -81,6 +81,7 @@ const locks = [
 const fixture = { width: 15, height: 5, cells: new Uint8Array(75), start: 31, exit: 43, puzzle: { locks, requestedCount: 3 } };
 for (let id = 31; id <= 43; id++) fixture.cells[id] = 1;
 for (const lock of locks) fixture.cells[lock.key] = 1;
+fixture.validation = { floors: fixture.cells.reduce((a,b) => a+b, 0) };
 const game = M.createGame(fixture);
 assert.equal(M.ruleTransition(fixture, { world_position: 37, keys: ['A'] }, 'right'), null, 'A cannot open B');
 assert.equal(M.ruleTransition(fixture, { world_position: 41, keys: ['A', 'B'] }, 'right'), null, 'A and B cannot open C');

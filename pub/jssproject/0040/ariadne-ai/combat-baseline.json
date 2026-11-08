@@ -1,0 +1,99 @@
+{
+  "agent": "sampled-lookahead-v2",
+  "depth": 2,
+  "samples": 3,
+  "turnLimit": 300,
+  "goal": "home",
+  "results": [
+    {
+      "seed": 42,
+      "depth": 2,
+      "floor": 3,
+      "score": 2942,
+      "turn": 37,
+      "result": "dead",
+      "elapsedMs": 463
+    },
+    {
+      "seed": 43,
+      "depth": 2,
+      "floor": 4,
+      "score": 4415,
+      "turn": 59,
+      "result": "dead",
+      "elapsedMs": 801
+    },
+    {
+      "seed": 44,
+      "depth": 2,
+      "floor": 1,
+      "score": 387,
+      "turn": 14,
+      "result": "dead",
+      "elapsedMs": 120
+    },
+    {
+      "seed": 45,
+      "depth": 2,
+      "floor": 4,
+      "score": 5544,
+      "turn": 177,
+      "result": "dead",
+      "elapsedMs": 1374
+    },
+    {
+      "seed": 46,
+      "depth": 2,
+      "floor": 4,
+      "score": 4276,
+      "turn": 46,
+      "result": "dead",
+      "elapsedMs": 598
+    },
+    {
+      "seed": 47,
+      "depth": 2,
+      "floor": 2,
+      "score": 2104,
+      "turn": 42,
+      "result": "dead",
+      "elapsedMs": 360
+    },
+    {
+      "seed": 48,
+      "depth": 2,
+      "floor": 2,
+      "score": 1656,
+      "turn": 17,
+      "result": "dead",
+      "elapsedMs": 197
+    },
+    {
+      "seed": 49,
+      "depth": 2,
+      "floor": 2,
+      "score": 1316,
+      "turn": 23,
+      "result": "dead",
+      "elapsedMs": 174
+    },
+    {
+      "seed": 50,
+      "depth": 2,
+      "floor": 2,
+      "score": 2468,
+      "turn": 34,
+      "result": "dead",
+      "elapsedMs": 389
+    },
+    {
+      "seed": 51,
+      "depth": 2,
+      "floor": 2,
+      "score": 2298,
+      "turn": 31,
+      "result": "dead",
+      "elapsedMs": 564
+    }
+  ]
+}

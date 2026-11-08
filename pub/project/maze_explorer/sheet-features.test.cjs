@@ -1,6 +1,6 @@
 const a=require('node:assert/strict'),L=require('./lattice-holes.js'),H=require('./return-enclosure.js'),S=require('./connection-space.js'),F=require('./sheet-features.js'),P=require('./exploration-solver.js'),Save=require('./return-enclosure-save.js');
 (async()=>{let count=0;for(const kind of ['central','enclosure'])for(let bits=0;bits<8;bits++){
-const features={keys:!!(bits&1),warp:!!(bits&2),birds:!!(bits&4)},s=kind==='central'?L.create({maze:true,seed:'features-'+bits,periodSize:16,features}):H.create('features-'+bits,{features,horizontalLoops:true});s.replayMoves=[];
+const features={distantKey:true,avoidWarpTrap:true,birdLeap:true,birdAcross:true,birdWander:true,keys:!!(bits&1),warp:!!(bits&2),birds:!!(bits&4)},s=kind==='central'?L.create({maze:true,seed:'features-'+bits,periodSize:16,features}):H.create('features-'+bits,{features,horizontalLoops:true});s.replayMoves=[];
 F.mark(s);a.equal(F.glyph(s,s.id),'1');F.validate(s);
 if(features.keys)a.equal(F.allowed(s,s.world.exit),false);
 for(let n=0;n<3000&&s.id!==s.world.exit;n++){const path=P.connected(s);a(path?.length,'exit path');a(S.move(s,path[0],true));s.replayMoves.push(path[0]);}

@@ -11,16 +11,16 @@ for(const [n,topology] of [[8,'torus'],[9,'plane']]){
  const g=J.begin(base,'fixed-'+n,'random');assert.equal(g.world.width,n);assert.equal(g.world.height,n);assert.equal(g.generationOptions.topology,topology);
  S.attach(g);S.markExport(g,'random');assert(S.info(g,'random').current);g.journey.random={...c,maxWidth:n+2};assert(!S.info(g,'random').current);
 }
-for(const patch of [{algorithms:[]},{rules:[]},{topologies:[]},{minWidth:50,maxWidth:10},{minHeight:8.5},{algorithms:['division'],topologies:['torus']},{rules:['keys'],topologies:['torus']},{minWidth:8,maxWidth:8,minHeight:9,maxHeight:9}])assert.throws(()=>R.validate({...R.defaults,...patch}));
+for(const patch of [{algorithms:[]},{rules:[]},{topologies:[]},{minWidth:50,maxWidth:10},{minHeight:8.5},{algorithms:['division'],topologies:['torus']},{minWidth:8,maxWidth:8,minHeight:9,maxHeight:9}])assert.throws(()=>R.validate({...R.defaults,...patch}));
 base.player.world_position=base.world.exit;base.won=true;const next=J.next(base,'random-next','random');assert.deepEqual(next.journey.random,base.journey.random);assert.equal(next.journey.completed,1);assert.deepEqual(J.restart(next).journey.random,base.journey.random);
 assert.equal(J.begin(base,'normal','plain').generationOptions.topology,'plane');
 console.log('PASS: 180 random mazes, bounded actual dimensions, 15 session round trips, exact sizes, candidate exclusions, invalid combinations, dirty saves and independent existing course.');
 
-assert.equal(R.inspect(R.defaults).count,66);
-const onlyTorus={...R.defaults,topologies:['torus']};assert.equal(R.inspect(onlyTorus).count,21);
-const impossible={...onlyTorus,algorithms:['division'],rules:['keys']};assert.equal(R.inspect(impossible).count,0);assert.equal(R.inspect(impossible).spaces[0].reasons.length,2);assert.throws(()=>R.validate(impossible));
+assert.equal(R.inspect(R.defaults).count,80);
+const onlyTorus={...R.defaults,topologies:['torus']};assert.equal(R.inspect(onlyTorus).count,35);
+const impossible={...onlyTorus,algorithms:['division'],rules:['keys']};assert.equal(R.inspect(impossible).count,0);assert.equal(R.inspect(impossible).spaces[0].reasons.length,1);assert.throws(()=>R.validate(impossible));
 const odd={...R.defaults,minWidth:9,maxWidth:9,minHeight:9,maxHeight:9};assert.equal(R.inspect(odd).count,45);assert.equal(R.inspect(odd).spaces[1].count,0);assert(R.inspect(odd).spaces[1].reasons.some(x=>x.includes('偶数')));
-for(let i=0;i<100;i++){const choice=R.choose('preview-'+i,onlyTorus);assert.equal(choice.options.topology,'torus');assert(!['division','eller'].includes(choice.options.algorithm));assert(!choice.options.keyDoor);}
+for(let i=0;i<100;i++){const choice=R.choose('preview-'+i,onlyTorus);assert.equal(choice.options.topology,'torus');assert(!['division','eller'].includes(choice.options.algorithm));}
 console.log('PASS: preview counts, parity and unsupported-combination reasons agree with generation; impossible drafts cannot be applied.');
 
 const configRecord=R.exportSettings({...R.defaults,algorithms:['prim'],rules:['warp'],minWidth:21});

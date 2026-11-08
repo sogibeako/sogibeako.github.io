@@ -20,14 +20,14 @@ for(const algorithm of ['dfs','prim','rooms'])for(const size of [8,16,30])for(co
   }
   if(g.won)break;
  }
- const reset=M.createGame(w),beforeProgress={...reset.cognition.loopProgress};
+ const reset=M.createGame(w);reset.cognition.loopProgress={x:3,y:2};reset.cognition.known_loops.add('x');const beforeProgress={...reset.cognition.loopProgress};
  reset.bird.position=reset.player.world_position;
  // Seed previous-segment visits with a different lift; these must not survive.
  const [dx,dy]=M.deckVector(w,2,1);
  for(let id=0;id<w.cells.length;id++)if(w.cells[id])reset.cognition.loopVisits.set(id,{x:id%w.width+dx,y:Math.floor(id/w.width)+dy,step:0});
  const oldMemory=[...reset.cognition.memory_nodes.keys()];M.waitTurn(reset);
  assert.equal(reset.lastEvent,'teleport');assert.equal(reset.cognition.loopVisits.size,1);assert.ok(reset.cognition.loopVisits.has(reset.player.world_position));
- assert.deepEqual(reset.cognition.loopProgress,beforeProgress);assert.ok(oldMemory.every(k=>reset.cognition.memory_nodes.has(k)));assert.equal(reset.lastLoopEvent,null);
+ assert.deepEqual(reset.cognition.loopProgress,beforeProgress);assert(reset.cognition.known_loops.has('x'));assert.ok(oldMemory.every(k=>reset.cognition.memory_nodes.has(k)));assert.equal(reset.lastLoopEvent,null);
  assert.equal(M.periodicId(w,reset.player.perceived_x,reset.player.perceived_y),reset.player.world_position);
  assert.ok(reset.birds.every(b=>b.position!==reset.player.world_position));contacts++;cases++;
 }

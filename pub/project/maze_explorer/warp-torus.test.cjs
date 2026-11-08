@@ -16,7 +16,7 @@ for(const algorithm of ['dfs','prim','wilson','kruskal','hunt','growing','rooms'
  const back=[w.exit],escaped=new Set(back);for(const to of back)for(const from of incoming.get(to)||[])if(!escaped.has(from)){escaped.add(from);back.push(from);}
  assert.equal(escaped.size,paths.size);
  const g=M.createGame(w);paths.get(w.exit).forEach(d=>assert.ok(M.move(g,d)));assert.ok(g.won);
- const walk=M.createGame(w);firstWarp.forEach(d=>assert.ok(M.move(walk,d)));assert.equal(walk.lastEvent,'warp');
+ const walk=M.createGame(w);firstWarp.slice(0,-1).forEach(d=>assert.ok(M.move(walk,d)));walk.cognition.loopProgress={x:3,y:2};walk.cognition.known_loops.add('x');assert.ok(M.move(walk,firstWarp.at(-1)));assert.deepEqual(walk.cognition.loopProgress,{x:3,y:2});assert(walk.cognition.known_loops.has('x'));assert.equal(walk.lastEvent,'warp');
  assert.equal(walk.cognition.loopVisits.size,1);assert.equal(walk.cognition.lastAward.x,walk.steps);assert.equal(walk.cognition.lastAward.y,walk.steps);
  assert.equal(walk.cognition.archives.length,1);assert.equal(M.periodicId(w,walk.player.perceived_x,walk.player.perceived_y),walk.player.world_position);
  assert.equal(walk.player.orientation,1);const position=walk.player.world_position;M.waitTurn(walk);assert.equal(walk.player.world_position,position);

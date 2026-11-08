@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Ariadne — Graph Escape</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="at-title">
+    <section id="title-screen" aria-label="タイトル画面"><img src="../material/img/ariadne_title.png"
+            alt="Ariadne — Graph Escape。アリアドネの糸が輝く迷宮">
+        <div class="title-menu">
+            <p>糸をたどれ。運命を出し抜け。</p><label class="difficulty-choice" for="new-difficulty">新しい探索のモード <select
+                    id="new-difficulty">
+                    <option value="normal">ノーマル（回復5〜）</option>
+                    <option value="hard">ハード（回復1〜・従来の設定）</option>
+                </select><small>歩行・待機で回復。どちらもレベルごとに回復量＋0.1。</small></label><button id="title-new">初めから</button><button
+                id="title-continue">続きから</button><button id="title-sound">サウンドテスト</button><button id="title-help">初めての方へ
+                · 遊び方</button><small>タイトル画像：ChatGPT</small>
+            <p id="title-status" role="status"></p>
+        </div>
+    </section>
+    <dialog id="continue-dialog"><button id="close-continue" class="close">閉じる ×</button>
+        <h2>続きから</h2>
+        <p id="save-summary"></p><button id="load-browser">ブラウザデータから再開</button><label class="file-label"
+            for="load-json">JSONファイルを読み込む</label><input id="load-json" type="file" accept=".json,application/json">
+        <p id="load-status" role="status"></p>
+    </dialog>
+    <dialog id="sound-dialog"><button id="close-sound" class="close">タイトルへ戻る ×</button>
+        <h2>サウンドテスト</h2><label for="test-kind">種類</label><select id="test-kind">
+            <option value="bgm">曲（BGM）</option>
+            <option value="se">効果音（SE）</option>
+        </select><label for="test-track">曲・効果音</label><select id="test-track"></select><audio id="test-audio" controls
+            preload="none"></audio>
+        <p><button id="test-stop">停止</button><label class="test-loop"><input id="test-loop"
+                    type="checkbox">1曲ループ</label><label id="test-all-loop-label" class="test-loop"><input
+                    id="test-all-loop" type="checkbox">連続再生・全曲ループ</label></p><label for="test-volume">試聴音量</label><input
+            id="test-volume" type="range" min="0" max="100" value="35"><output id="test-volume-value">35%</output>
+        <h3 class="sound-comment-heading">コメント</h3>
+        <p id="test-comment"></p>
+        <p id="test-status" role="status"></p>
+    </dialog>
+    <div class="depth-marks" aria-hidden="true">
+        <span>#</span><span>#</span><span>#</span><span>#</span><span>#</span><span>#</span><span>#</span><span>#</span><span>#</span><span>#</span><span>#</span><span>#</span>
+    </div>
+    <main id="game-shell" hidden>
+        <header>
+            <div class="brand"><span class="sigil">⌘</span>
+                <div>
+                    <h1>ARIADNE <span>GRAPH ESCAPE</span></h1>
+                    <p>糸をたどれ。運命を出し抜け。</p>
+                </div>
+            </div>
+            <div class="actions"><button id="to-title">タイトルへ</button><button id="export-save">JSON保存</button><span
+                    id="save-status" role="status"></span><label class="audio-volume">BGM <input id="bgm-volume"
+                        type="range" min="0" max="100" value="25" aria-label="BGM音量"><output
+                        id="bgm-value">25%</output></label><label class="audio-volume">SE <input id="se-volume"
+                        type="range" min="0" max="100" value="45" aria-label="効果音音量"><output
+                        id="se-value">45%</output></label><button id="sound-toggle" aria-pressed="true">効果音
+                    ON</button><button id="show-scores">ベスト10</button><button id="help">遊び方 <kbd>?</kbd></button><button
+                    id="restart">新しい探索 ↗</button></div>
+        </header>
+        <section class="arena">
+            <div class="map-panel">
+                <div class="panel-heading"><span><i></i> THE LABYRINTH</span><span id="map-info"></span><button
+                        id="return-result" hidden>結果画面に戻る</button></div><svg id="map" viewBox="0 0 880 300"
+                    aria-label="迷宮マップ"></svg>
+                <div id="enemy-info" hidden role="status"></div>
+                <div id="angle-info" hidden role="status"></div>
+                <div id="aim-panel" hidden>
+                    <div id="shot-options" aria-label="射線の候補"></div>
+                    <div class="shot-summary"><span id="shot-preview" aria-live="polite"></span><button
+                            id="fire-shot">発射 · Enter</button></div>
+                </div>
+                <div class="map-footer"><span><b class="gold">@</b> あなた <b class="red">M</b> ミノタウロス <b class="teal">&gt;</b> 階段</span>
+                    <div class="map-controls"><span id="mode">移動：矢印 / WASDで選択 → <kbd>Enter</kbd> </span><span><span class="map-controls-heading">階層を進む</span>：（階段・出口の上で）<kbd>M</kbd>
+                            / <kbd>&gt;</kbd> 　　</span><button id="other-keys" class="text-link">その他のキー説明</button></div>
+                </div>
+                <div id="end" hidden><span id="end-label">A LITTLE OVEN BREAK</span>
+                    <h2 id="end-title">ただいま、焼き直し中。</h2>
+                    <p id="end-score"></p>
+                    <blockquote id="defeat-quote" hidden><small id="defeat-label"></small>
+                        <p id="defeat-ja"></p>
+                        <p id="defeat-en" lang="en"></p><cite><a id="defeat-source" target="_blank"
+                                rel="noopener noreferrer"></a><span> · 日本語は本ゲーム訳</span></cite>
+                    </blockquote>
+                    <div id="ending-message" hidden>
+                        <p class="ending-message">長い迷宮の果て、アリアドネの糸は朝の光へ。<br>あなたの足音に、誰かが「おかえり」と答えた。</p>
+                        <p class="clear-bonus">☆ ESCAPE BONUS +300,000 pt</p>
+                    </div><button id="ending-next" hidden>進む → スタッフロール</button>
+                    <div id="ending-credits" hidden>
+                        <dl>
+                            <dt>製作</dt>
+                            <dd>かずのこ　ChatGPT（Codex）</dd>
+                            <dt>タイトル画像</dt>
+                            <dd>ChatGPT</dd>
+                            <dt>作曲</dt>
+                            <dd>かずのこ</dd>
+                            <dt>編曲</dt>
+                            <dd>Suno.AI</dd>
+                            <dt>効果音</dt>
+                            <dd>かずのこ　Adobe Firefly</dd>
+                            <dt>出演</dt>
+                            <dd>テセウス　ミノタウロスの皆さん　アリアドネ</dd>
+                        </dl>
+                        <p>THANK YOU FOR PLAYING</p>
+                    </div>
+                    <div id="end-actions" class="end-actions"><button id="register-score">スコアを登録</button><button
+                            id="view-final-board">最後の盤面を見る</button><button id="retry">もう一度、迷宮へ ↗</button></div>
+                </div>
+            </div>
+            <aside>
+                <div class="depth">
+                    <div><label>現在の階層</label><strong id="floor">01<span>F</span></strong></div>
+                    <div class="turn"><label>経過ターン</label><strong id="turn">000</strong></div>
+                </div>
+                <div class="vitals">
+                    <div class="statline"><span><b class="avatar">@</b> THESEUS <small id="level">LV.
+                                01</small></span><span id="hp"></span></div>
+                    <div id="player-status" role="status"></div>
+                    <div id="level-progress" class="level-progress"></div>
+                    <div class="health">
+                        <div id="health"></div>
+                    </div>
+                    <p>歩行・待機で、少しずつ回復する。</p>
+                </div>
+                <div class="inventory">
+                    <div class="statline"><label>ARIADNE'S WANDS</label><small>数字キーで装備</small></div>
+                    <div id="wands"></div><button id="cancel" hidden>射撃をやめる · Esc</button>
+                </div>
+                <div class="score"><label>TOTAL SCORE</label><strong id="score">0</strong><span id="best"></span></div>
+            </aside>
+        </section>
+        <section class="journal">
+            <div class="panel-heading"><span>EXPLORATION LOG <small>探索の記録</small></span><span>一歩ずつ、物語は続く。</span></div>
+            <div id="logs" role="log" aria-live="polite"></div>
+            <footer><span>安全を確かめ、一歩ずつ。</span><button id="descend">階段を降りる &gt;</button></footer>
+        </section>
+    </main>
+    <dialog id="debug-dialog"><button id="close-debug" class="close">閉じる ×</button>
+        <h2>デバッグ開始</h2>
+        <p>指定した階層・レベルで新しい探索を始めます。HPは全快、杖は5・5・5・2回。謎の紋章を所持します。25F・50Fは指定マップより分岐を優先します。ランキングには登録されません。</p>
+        <form id="debug-form"><label for="debug-floor">階層（25・50：分岐／26〜49：二周目）</label><input id="debug-floor"
+                type="number" min="1" max="999" step="1" required value="15"><label
+                for="debug-level">レベル（1〜999）</label><input id="debug-level" type="number" min="1" max="999" step="1"
+                required value="10"><label for="debug-layout">開始マップ</label><select id="debug-layout">
+                <option value="random">ランダム（通常の生成）</option>
+                <optgroup label="6ノード">
+                    <option value="6-0">6ノード · 配置 1</option>
+                    <option value="6-1">6ノード · 配置 2</option>
+                    <option value="6-2">6ノード · 配置 3</option>
+                    <option value="6-3">6ノード · 配置 4</option>
+                </optgroup>
+                <optgroup label="7ノード">
+                    <option value="7-0">7ノード · 配置 1：分かれ道の罠</option>
+                    <option value="7-1">7ノード · 配置 2：三角の抜け道</option>
+                    <option value="7-2">7ノード · 配置 3：誘いの回廊</option>
+                    <option value="7-3">7ノード · 配置 4：遠回りの広間</option>
+                    <option value="7-4">7ノード · 配置 5：三つ又の回廊</option>
+                    <option value="7-5">7ノード · 配置 6：枝分かれの広間</option>
+                    <option value="7-6">7ノード · 配置 7：二重の抜け道</option>
+                    <option value="7-7">7ノード · 配置 8：交わる分岐</option>
+                </optgroup>
+                <optgroup label="8ノード">
+                    <option value="8-0">8ノード · 配置 1：分かれ道の罠</option>
+                    <option value="8-1">8ノード · 配置 2：三角の抜け道</option>
+                    <option value="8-2">8ノード · 配置 3：誘いの回廊</option>
+                    <option value="8-3">8ノード · 配置 4：遠回りの広間</option>
+                    <option value="8-4">8ノード · 配置 5：網目の広間</option>
+                    <option value="8-5">8ノード · 配置 6：袋小路と迂回路</option>
+                    <option value="8-6">8ノード · 配置 7：二重の回廊</option>
+                    <option value="8-7">8ノード · 配置 8：橋と分岐</option>
+                </optgroup>
+            </select><label for="debug-mirror">小階層の向き</label><select id="debug-mirror">
+                <option value="normal">通常</option>
+                <option value="mirror">左右反転</option>
+            </select>
+            <p>指定は開始階のみ。15F以降はメイジも出現します。無戦闘ルートの確認には14F以下を選んでください。</p>
+            <p id="debug-error" role="alert"></p><button type="submit">この条件で開始</button>
+        </form>
+    </dialog>
+    <dialog id="key-instructions" aria-labelledby="key-heading"><button id="close-keys" class="close">閉じる ×</button>
+        <h2 id="key-heading">その他のキー説明</h2>
+        <dl class="key-guide">
+            <dt>矢印 / WASD → Enter</dt>
+            <dd>方向を選び、Enterで移動。敵がいる方向なら剣で攻撃します。選択だけではターンは進みません。</dd>
+            <dt>1〜4 → 方向選択 → Enter</dt>
+            <dd>1：金縛り、2：吹き飛ばし、3：場所替え、4：身代わり。杖を構え、光る射線を選んで発射します。同じ方向を押すと候補が切り替わります。</dd>
+            <dt>.（ピリオド）</dt>
+            <dd>その場で1ターン待機し、HPを回復。敵も行動します。自分の @ をクリックしても待機できます。</dd>
+            <dt>Esc</dt>
+            <dd>杖の構えと方向選択を解除します。ターンは進みません。</dd>
+            <dt>M / &gt;</dt>
+            <dd>階段や出口に乗ってから押すと、その先へ進みます。</dd>
+            <dt>? ／ 遊び方ボタン</dt>
+            <dd>遊び方とTIPSを開きます。</dd>
+            <dt>マウスでも操作できます</dt>
+            <dd>隣のノードをクリックで移動・攻撃。杖ボタン→射線の終点→「発射」で魔法を使えます。敵にポインタを合わせると能力がわかります。</dd>
+        </dl>
+    </dialog>
+    <dialog id="instructions" aria-labelledby="help-heading"><button id="close-help" class="close">閉じる
+            ×</button><label>THE THREAD OF ARIADNE</label>
+        <h2 id="help-heading">糸をたどって、迷宮から帰ろう。</h2>
+        <p>あなたは <strong>@</strong>。敵の <strong>M</strong> をかわしたり倒したりしながら、階段 <strong>&gt;</strong>
+            を目指します。まずは25Fからの帰還が目標です。</p>
+        <h3>最初の一歩 · 3ステップ</h3>
+        <ol>
+            <li><strong>方向を選ぶ：</strong>矢印 / WASDで行き先を光らせます。選ぶだけなら敵は動きません。</li>
+            <li><strong>Enterで進む：</strong>隣のノードへ移動します。敵のいるノードなら剣で攻撃。クリックでも操作できます。</li>
+            <li><strong>階段に乗って M：</strong>「&gt;」の上で M または &gt; を押すと、次の階へ進みます。</li>
+        </ol>
+        <h3>生き残るコツ</h3>
+        <ul>
+            <li>歩行・待機でHPが回復します。ただし敵も動くので、安全な場所を選びましょう。</li>
+            <li>ノーマルは回復5、ハードは1から開始。どちらもLVごとに＋0.1、端数は蓄積します。</li>
+            <li>敵を倒すと成長します。囲まれる前に杖で足止めし、1体ずつ戦いましょう。</li>
+            <li>小階層をノーダメージで抜けるとLV＋1。敵のHP・攻撃力は、ポインタを合わせて確認できます。</li>
+        </ul>
+        <h3>杖を使ってみよう</h3>
+        <p><strong>1〜4で杖を選ぶ → 矢印 / WASDで射線を選ぶ → Enterで発射。</strong>光る射線と予測を確認してから撃ちましょう。Escで取り消せます。</p>
+        <dl class="wand-guide">
+            <dt>1 · 金縛り</dt>
+            <dd>相手を止める。ダメージを与えるまで解けません。</dd>
+            <dt>2 · 吹き飛ばし</dt>
+            <dd>射線の先へ飛ばす。壁や敵にぶつけるとダメージ。</dd>
+            <dt>3 · 場所替え</dt>
+            <dd>相手と位置を交換。逃げ道や立ち位置を変えられます。</dd>
+            <dt>4 · 身代わり</dt>
+            <dd>相手を囮の @ に変える。ほかの敵は囮を狙います。</dd>
+        </dl>
+        <details class="game-tips">
+            <summary>TIPS · 杖と敵の攻略ヒント</summary>
+            <ul>
+                <li>吹き飛ばし・場所替えが命中した相手は、そのターンの行動を休みます。ほかの敵は行動するので注意！</li>
+                <li>身代わり状態は時間経過では解けません。身代わりの敵は、あなたやほかの敵を攻撃しません。</li>
+                <li>金縛りのあとに場所替えを使っても、金縛りは解けません。</li>
+                <li>敵にマウスポインタを合わせると、攻撃力・HPなどの情報を確認できます。</li>
+                <li>不死のミノタウロスは、身代わりの杖が苦手です。</li>
+                <li>ミノタウロスメイジは杖を持っています。使用回数が残っていれば、倒したときに残り回数ぶんの杖を落とします。</li>
+                <li>メイジが使う「混乱の杖」は、拾うと「身代わりの杖」として使えます。</li>
+            </ul>
+        </details>
+        <details class="help-more">
+            <summary>得点・成長・帰還について</summary>
+            <p>階段を降りると＋1,000点、討伐で＋300点、未踏破ノードで＋10点。ゴールドや杖の回収、敵へのダメージも得点になります。</p>
+            <p>LVが上がると最大HP＋10。剣の基本攻撃力も＋1、＋2と交互に増加します。剣のダイスで＋3以上を引くと追加ヒット！</p>
+            <p>25Fごとの分かれ道では、右の出口から帰還すると＋300,000点。謎の紋章があれば左の扉からさらに深く進めます。紋章の所持中は敵の直接攻撃が1.2倍になるので注意。</p>
+            <p>探索は自動保存されます。タイトルの「続きから」で再開でき、JSON保存で書き出すこともできます。</p>
+        </details>
+        <p class="help-note">操作を忘れたら、マップ下の「その他のキー説明」へ。TIPSはログ下からも読めます。</p>
+    </dialog>
+    <dialog id="score-dialog"><button id="close-scores" class="close">閉じる ×</button><label>THE LABYRINTH HONOR
+            ROLL</label>
+        <h2>迷宮のベスト10</h2>
+        <p class="score-note">このブラウザー内の記録です。同点の場合は先に登録した記録が優先されます。</p>
+        <form id="score-form" hidden><label for="player-name">プレイヤーネーム（半角英数字1〜10文字）</label>
+            <div class="name-row"><input id="player-name" name="player" maxlength="10" pattern="[A-Za-z0-9]{1,10}"
+                    required autocomplete="off" spellcheck="false" placeholder="THESEUS"
+                    aria-describedby="score-status"><button type="submit">登録する</button></div>
+        </form>
+        <p id="score-status" role="status"></p>
+        <div class="ranking-wrap">
+            <table class="ranking">
+                <thead>
+                    <tr>
+                        <th>順位</th>
+                        <th>名前</th>
+                        <th>スコア</th>
+                        <th>階層</th>
+                        <th>ターン</th>
+                    </tr>
+                </thead>
+                <tbody id="ranking-body"></tbody>
+            </table>
+        </div>
+        <p id="ranking-empty">まだ記録がありません。探索を終えたら、名前を残しましょう。</p>
+    </dialog>
+    <script src="dialogue.js"></script>
+    <script src="engine.js"></script>
+    <script src="scores.js"></script>
+    <script src="defeat-quotes.js"></script>
+    <script src="music-library.js"></script>
+    <script src="music.js"></script>
+    <script src="saves.js"></script>
+    <script src="sound-comments.js"></script>
+    <script src="app.js"></script>
+    <script src="title.js"></script>
+</body>
+
+</html>

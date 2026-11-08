@@ -1,0 +1,48 @@
+/* quiz.css is reused unchanged from 20261025. Add only story-specific elements. */
+.part-label { margin: 2.5em 0 .7em; font-weight: bold; border-bottom: 2px solid #609aa0; padding: .5em; }
+.chapter-nav { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .7em; border-top: 1px dashed #609aa0; margin-top: 1.5em; padding-top: 1em; }
+.terminal { background: #111822; color: #d6f2df; border-left: 4px solid #609aa0; padding: 1em; overflow-x: auto; font: .9em/1.8 Consolas, "MS Gothic", monospace; }
+.sign-map { display: flex; flex-wrap: wrap; gap: .3em; }
+.sign-map > div { flex: 1 1 90px; border: 1px solid #609aa0; padding: .5em; background: #e3e8f1; text-align: center; }
+.sign-map strong { display: inline-block; margin-top: .5em; }
+.spectrum-map { padding: 1em; border: 1px solid #609aa0; background: #eef3f7; }
+.map-top { text-align: right; line-height: 2; }
+.map-side { text-align: right; line-height: 1.8; }
+.spectrum-map > p { margin-top: -3em; width: 60%; }
+input[type="text"] { display: block; box-sizing: border-box; width: 100%; margin: .5em 0; padding: .7em; border: 1px solid #666; border-radius: 0; color: #111; background: white; font: inherit; }
+input:focus-visible { outline: 3px solid #a25f12; outline-offset: 3px; }
+input[aria-invalid="true"] { border: 2px solid #a22222; }
+.fiber-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .3em; padding-left: 1.5em; }
+.fiber-list code { font-size: .9em; white-space: nowrap; }
+.note > div { margin-top: 1em; }
+#glossary table { min-width: 520px; }
+.reading-guide h3 { margin-top: 1.5em; }
+.reading-guide li { margin: .4em 0; }
+.reading-guide .supplement-toc { list-style: none; padding: .6em .8em; border-left: 3px solid #609aa0; background: #eef3f7; }
+.source { color: #445360; }
+.branch-map { padding: 1em; border: 1px solid #609aa0; background: #eef3f7; }
+.branch-map figcaption { margin-bottom: 1em; }
+.branch-spine { list-style: none; margin: 0; padding: 0 0 0 1em; font-weight: normal; }
+.branch-spine > li { position: relative; border-left: 2px dashed #609aa0; padding: 0 0 1.3em 1em; }
+.branch-spine > li::before { content: ''; position: absolute; left: -.32em; top: .55em; width: .55em; height: .55em; border-radius: 50%; background: #375d68; }
+.branch-spine > li:last-child { padding-bottom: 0; border-left-color: transparent; }
+.branch-off { display: block; margin: .3em 0 .4em 1em; padding-left: .5em; border-left: 2px solid #90a6ad; font-size: .85em; }
+.branch-step { display: block; margin-top: .5em; color: #445360; font-size: .85em; }
+.branch-step::before { content: '↓ '; }
+@media (max-width: 600px) {
+    /* Keep the shared sibling layout and palette, with readable long-form text. */
+    body { font-size: .95rem; }
+    h1 { font-size: 1.6rem; }
+    h2 { font-size: 1.18rem; }
+    .wrapper { margin: 15px auto; }
+    .inner_wrapper { width: 100%; }
+    dd { margin-left: 1em; }
+    .reading-guide { padding: 12px; }
+    .sign-map > div { flex-basis: 90px; }
+    .terminal { font-size: .8em; }
+}
+@media print {
+    .chapter-nav { display: none; }
+    .terminal { background: #f2f2f2; color: #111; white-space: pre-wrap; }
+    .part-label { break-before: page; }
+}

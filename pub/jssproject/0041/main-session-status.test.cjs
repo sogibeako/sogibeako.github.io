@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict'),{performance}=require('node:perf_hooks'),S=require('./main-session.js'),J=require('./main-journey.js');
+const g=S.attach(J.start({width:9,height:9,seed:'session-limit'}));
+assert.equal(S.info(g,'same').exported,false);S.encode(g,'same');assert.equal(S.info(g,'same').exported,false);
+S.markExport(g,'same');assert(S.info(g,'same').current);assert(!S.info(g,'birds').current);
+S.act(g,'wait');assert(!S.info(g,'same').current);assert.equal(S.info(g,'same').remaining,19999);
+for(let i=1;i<20000;i++)S.act(g,'wait');
+assert.equal(S.info(g,'same').remaining,0);assert(!S.info(g,'same').overflow);
+const start=performance.now(),text=S.encode(g,'same'),encoded=performance.now(),r=S.decode(text).game,end=performance.now();
+assert.equal(r.turns,20000);assert(S.info(r,'same').current);assert.equal(S.encode(r,'same'),text);
+S.act(g,'wait');assert.equal(g.turns,20001);assert(S.info(g,'same').overflow);assert.throws(()=>S.encode(g,'same'));assert(!S.info(g,'same').current);
+const fresh=S.attach(J.restart(g));assert.equal(S.info(fresh,'same').count,0);assert(!S.info(fresh,'same').exported);
+console.log(`PASS: unsaved/exported/changed/course/restored states, exact limit and overflow with play continuing; 20,000 waits: encode ${(encoded-start).toFixed(1)} ms, decode ${(end-encoded).toFixed(1)} ms, ${text.length} chars (9x9).`);

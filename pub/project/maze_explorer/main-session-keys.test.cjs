@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),M=require('./core.js'),J=require('./m
 let checkpoints=0;
 function roundtrip(g){const text=S.encode(g,'keys'),r=S.decode(text);assert.equal(r.course,'keys');assert.deepEqual(r.game.player,g.player);assert.deepEqual(r.game.openedDoors,g.openedDoors);assert.deepEqual(r.game.cognition,g.cognition);assert.equal(r.game.steps,g.steps);assert.equal(r.game.turns,g.turns);assert.deepEqual(r.game.journey,g.journey);assert.equal(S.encode(r.game,'keys'),text);checkpoints++;return r.game;}
 for(const algorithm of ['dfs','prim','division','rooms','eller','wilson','kruskal','hunt','growing'])for(const keyCount of [1,2,3]){
- let g=S.attach(J.start({width:31,height:23,algorithm,keyDoor:true,keyCount,seed:'save-keys-'+algorithm+keyCount}));g.journey={completed:4,steps:501};assert(S.supported(g));
+ let g=S.attach(J.start({width:31,height:23,algorithm,keyDoor:true,distantKey:true,keyCount,seed:'save-keys-'+algorithm+keyCount}));g.journey={completed:4,steps:501};assert(S.supported(g));
  const path=M.solvePuzzle(g.world).path;g=roundtrip(g);
  for(const direction of path){
   const keys=g.player.keys.length,doors=g.openedDoors.size;

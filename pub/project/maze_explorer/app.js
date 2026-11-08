@@ -2,6 +2,51 @@
 const $ = id => document.getElementById(id);
 const canvas = $('map'), ctx = canvas.getContext('2d');
 let game, view = 0, ascii = false, hybrid = false, markerEditorGame, archiveNoteRecord, trueMapExportGame, warpDebugWorld;
+let wandAim=null,wandSlot=0;
+let wandFlight=false;
+let wandVisual=null,wandVisualGame=null,wandVisualNumber=0,wandVisualTimer=null;
+const incomingWands=WandFlight.create({current:()=>game,visible:()=>new Set(view?game.world.cells.keys():[...game.cognition.visible_cells].map(k=>game.cognition.memory_nodes.get(k)?.world_id)),changed:()=>render(),after:()=>{wandVisualNumber=game.wands.shots;}});
+function updateWandVisual(){
+ if(game?.wands)WandFlight.hint(game,new Set([...game.cognition.visible_cells].map(k=>game.cognition.memory_nodes.get(k)?.world_id)),wandNotice,wandAim!==null);
+ if(game?.wands)MainWands.setAnimator(game,(path,commit)=>incomingWands.enqueue(path,commit));
+ if(wandVisualGame!==game){clearTimeout(wandVisualTimer);wandVisualGame=game;wandVisualNumber=0;wandVisual=null;wandFlight=false;}
+ if(wandFlight||incomingWands.busy())return;
+ const shot=game?.wands?.lastShot;if(!shot||shot.number===wandVisualNumber)return;
+ clearTimeout(wandVisualTimer);wandVisualNumber=shot.number;wandVisual=null;if(MazeCore.wandShotMoved(game))return;
+ const seen=new Set([...game.cognition.visible_cells].map(k=>game.cognition.memory_nodes.get(k)?.world_id));
+ const path=shot.source==='@'?shot.path:shot.path.filter(p=>seen.has(p.id));let i=0;const current=game;
+ function advance(){if(current!==game)return;wandVisual=path[i++]||null;render();if(i<=path.length)wandVisualTimer=setTimeout(advance,30);}
+ wandVisual=path[i++]||null;if(path.length)wandVisualTimer=setTimeout(advance,30);
+}
+function wandNotice(text){window.dispatchEvent(new CustomEvent('maze-auto-notice',{detail:{turn:game?.turns||0,text}}));}
+function enableMainWands(){if(game.world.birdMode&&!game.wands)MazeSession.act(game,'wands');wandAim=null;wandSlot=0;}
+window.MainWandsUI={
+ state(){const s=game?.wands;return {available:!!s&&!s.oob,events:s?.events||[],armed:wandAim!==null,held:s?.held||[],spell:MainWands.spells[wandSlot],direction:wandAim,text:!s?'':(wandAim===null?'杖 /：'+(s.held.map(k=>MainWands.names[k]).join('・')||'未所持'):(wandSlot<0?'1 金縛り・2 吹き飛ばし・3 場所替え・4 引き寄せ':MainWands.names[MainWands.spells[wandSlot]]+(wandAim<0?' ／ 矢印で方向を選択':' '+['↑','→','↓','←'][wandAim]+' ／ Enter 発射'))+' ／ Esc 取消')+(s.frozen?' ／ 金縛り '+s.frozen:'')};},
+ begin(){if(wandFlight||incomingWands.busy()||!game?.wands||game.wands.oob)return false;if(!game.wands.held.length){wandNotice('杖はまだ持っていません。床の / を拾ってください。');return false;}$('autoWalkStop')?.click();wandSlot=-1;wandAim=-1;render();canvas.focus();return true;},
+ toggle(){if(wandAim!==null){window.MainWandsUI.cancel();return;}window.MainWandsUI.begin();},
+ select(index){if(wandFlight)return;if(!game?.wands?.held.includes(MainWands.spells[index])){wandNotice('その杖はまだ持っていません。');return;}$('autoWalkStop')?.click();wandSlot=index;wandAim=-1;render();},
+ aim(d){if(wandAim!==null&&wandSlot>=0){wandAim=d;render();}},
+ cancel(){wandAim=null;render();},
+ fire(){if(wandFlight||wandAim===null||wandAim<0||wandSlot<0||!game?.wands)return;const direction=MazeRotationBridge.input(game,Object.keys(MazeCore.DIRS)[wandAim],!!view),spell=MainWands.spells[wandSlot],d=Object.keys(MazeCore.DIRS).indexOf(direction);wandAim=null;
+ const current=game,turn=game.turns,seen=new Set([...game.cognition.visible_cells].map(k=>game.cognition.memory_nodes.get(k)?.world_id));
+ const path=MazeCore.previewWand(game,spell,d).path;let i=0;clearTimeout(wandVisualTimer);wandFlight=true;
+ function advance(){if(current!==game||game.turns!==turn){wandFlight=false;wandVisual=null;render();return;}
+  let point=path[i++];if(point){wandVisual=point;render();wandVisualTimer=setTimeout(advance,point.seam?90:30);return;}
+  // Hidden segments are instantaneous; visible re-entry is animated before impact.
+  wandVisual=null;wandFlight=false;MazeSession.act(game,'cast',spell,d);wandVisualGame=game;wandVisualNumber=game.wands.shots;render();
+ }
+ advance();}
+
+};
+document.addEventListener('keydown',e=>{
+ if(e.isComposing||e.ctrlKey||e.altKey||e.metaKey||e.target.closest('input,select,textarea,[contenteditable=true]')||(window.ExplorationHost&&window.ExplorationHost.mode()!=='main'))return;
+ if(wandFlight||incomingWands.busy()){e.preventDefault();e.stopImmediatePropagation();return;}
+ if(e.shiftKey&&e.key.toLowerCase()==='z'&&game?.wands){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)window.MainWandsUI.begin();return;}
+ if(e.key==='/'&&game?.wands){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)window.MainWandsUI.toggle();return;}
+ if(wandAim===null)return;
+ const d=['ArrowUp','ArrowRight','ArrowDown','ArrowLeft'].indexOf(e.key);
+ if(d>=0||/^[1-4]$/.test(e.key)||['Enter','Escape'].includes(e.key)){e.preventDefault();e.stopImmediatePropagation();if(e.repeat)return;if(d>=0)window.MainWandsUI.aim(d);else if(e.key==='Enter')window.MainWandsUI.fire();else if(e.key==='Escape')window.MainWandsUI.cancel();else window.MainWandsUI.select(Number(e.key)-1);}
+},true);
 let archiveNavigation={game:null,key:null,index:-1,points:[]};
 // Keep original hint elements (and their IDs) so generator-specific updates still apply.
 for(const hint of document.querySelectorAll('#settings p.hint')) {
@@ -22,10 +67,10 @@ function newWorld(demo = false, prepared = null) {
     const shiftY = shifted && (dual || $('shiftAxis').value === 'y') ? Number($('shiftAmount').value) : 0;
     const selfVision = $('selfVision').checked && (demo || $('topology').value === 'torus');
     const learningLaps = $('loopLearning').value === 'three' ? 3 : 5;
-    const options = { width: Number($('width').value), height: Number($('height').value), algorithm: $('algorithm').value, newestBias: Number($('newestBias').value), seed: $('seed').value, loops: Number($('loops').value), roomCount: Number($('roomCount').value), connectionStyle: $('connectionStyle').value, roomPlacement: $('roomPlacement').value, warpMode: $('ruleMode').value==='warp', warpStyle:$('warpStyle').value, warpCount:Number($('warpCount').value), warpInvisible:$('warpInvisible').checked, keyDoor: ['key-door','bird-keys'].includes($('ruleMode').value), birdMode: ['bird','bird-keys'].includes($('ruleMode').value), birdCount: Number($('birdCount').value), teleportPolicy: $('teleportPolicy').value, separateMaps: $('separateMaps').checked, keyCount: Number($('keyCount').value), topology: $('topology').value, loopLearning, learningLaps, selfVision, shiftX, shiftY };
+    const options = { distantKey: true, width: Number($('width').value), height: Number($('height').value), algorithm: $('algorithm').value, newestBias: Number($('newestBias').value), seed: $('seed').value, loops: Number($('loops').value), roomCount: Number($('roomCount').value), connectionStyle: $('connectionStyle').value, roomPlacement: $('roomPlacement').value, warpMode: $('ruleMode').value==='warp', warpStyle:$('warpStyle').value, warpCount:Number($('warpCount').value), warpInvisible:$('warpInvisible').checked, keyDoor: ['key-door','bird-keys'].includes($('ruleMode').value), birdMode: ['bird','bird-keys'].includes($('ruleMode').value), birdCount: Number($('birdCount').value), teleportPolicy: $('teleportPolicy').value, separateMaps: $('separateMaps').checked, keyCount: Number($('keyCount').value), topology: $('topology').value, loopLearning, learningLaps, selfVision, shiftX, shiftY };
     const candidate = prepared || (demo ? MazeCore.createGame(demo === 'warp' ? MazeCore.createWarpDemo() : demo === 'archive' ? MazeCore.createArchiveDemo() : demo ? MazeCore.createTorusDemo({ loopLearning, learningLaps, selfVision, openRoom: demo === 'optics', diagonalRoom: demo === 'crossed' ? 'crossed' : demo === 'diagonal', shiftX, shiftY }) : null) : MazeMainJourney.start(options,$('warpRotation').value));
     if(demo && (candidate.world.warpMode||candidate.world.warpDemo)&&candidate.world.topology!=='torus')MazeRotationBridge.enable(candidate,$('warpRotation').value);
-    game = MazeSession.attach(candidate);
+    game = MazeSession.attach(candidate);enableMainWands();
     $('archiveExportResult').hidden=true;$('archiveExportText').value='';
     const { world } = game;
     const algorithmName = { warp: 'ワープ実験', dfs: 'DFS', prim: 'Prim', eller: 'Eller', division: 'Recursive Division', wilson: 'Wilson', rooms: '部屋と通路', kruskal: 'Kruskal', hunt: 'Hunt-and-Kill', growing: `Growing Tree（長い道 ${world.newestBias}%）` }[world.algorithm];
@@ -54,7 +99,7 @@ function newWorld(demo = false, prepared = null) {
       $('generationInfo').textContent += ` 鍵と扉：${locks.length}組 / 目標${requestedCount}組。`;
       if (locks.length < requestedCount) $('generationInfo').textContent += ' この地形で順序を保証できる組数に調整しました。';
       if (locks.some(lock => lock.placement === 'exit-door')) $('generationInfo').textContent += ' 最後の扉は出口を施錠しています。';
-      $('puzzleLegend').textContent = locks.length === 1 ? 'a 鍵A · + 閉じた扉 · / 開いた扉' : `${locks.map(lock => lock.keyId.toLowerCase()).join(' / ')} 鍵 · ${locks.map(lock => lock.keyId).join(' / ')} 対応する扉 · / 開いた扉`;
+      $('puzzleLegend').textContent = locks.length === 1 ? "a 鍵A · + 閉じた扉 · ' 開いた扉" : `${locks.map(lock => lock.keyId.toLowerCase()).join(' / ')} 鍵 · ${locks.map(lock => lock.keyId).join(' / ')} 対応する扉 · ' 開いた扉`;
       $('puzzleSequence').textContent = locks.map(lock => `鍵${lock.keyId} → 扉${lock.keyId}`).join(' → ') + ' → 出口';
     }
     $('status').textContent = world.demo && (world.shiftX || world.shiftY) ? 'ずれのある8×8実験室です。0 / 1キーで主観世界と真世界を比べてください。' : world.demo ? (world.loopLearning ? `右へ8歩で1周。${world.learningLaps}周すると横方向の場所を理解します。` : '右へ8歩、歩いてみましょう。0 / 1キーで主観世界と真世界を比べられます。') : world.puzzle ? 'まず鍵A（a）を探しましょう。対応する扉へ進むと開きます。' : '探索を始めました。見えた道は記憶に残ります。';
@@ -392,13 +437,18 @@ $('matchEntrance').addEventListener('click',()=>{
   render();
 });
 function render() {
+  updateWandVisual();
   window.dispatchEvent?.(new Event('exploration-change'));
   if (!game) return;
   $('trueMapExport').hidden=!view;
   if(trueMapExportGame!==game){trueMapExportGame=game;$('trueMapTextResult').hidden=true;$('trueMapText').value='';}
   const { world, player, cognition } = game;
-  const w = canvas.clientWidth, h = canvas.clientHeight, dpr = window.devicePixelRatio || 1;
-  canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  // Match the CSS content box, including fractional pixels. The bitmap must not
+  // be letterboxed/rescaled when a teleport updates the surrounding UI.
+  const box=canvas.getBoundingClientRect(),w=box.width,h=box.height,dpr=window.devicePixelRatio||1;
+  if(w<=0||h<=0)return;
+  canvas.width=Math.max(1,Math.round(w*dpr));canvas.height=Math.max(1,Math.round(h*dpr));
+  ctx.setTransform(canvas.width/w,0,0,canvas.height/h,0,0);
   ctx.fillStyle = '#0b161c'; ctx.fillRect(0, 0, w, h);
   const tile = view ? Math.min((w - 28) / world.width, (h - 28) / world.height) : Math.min(24, (w - 20) / 19);
   const unfolded = world.topology === 'torus' && !$('mainFoldLoops').checked;
@@ -411,35 +461,50 @@ function render() {
   render.warpPoints=[];
   const featureColor = symbol => /^[1-9]$/.test(symbol) ? '#8be1ee' : ['V','W'].includes(symbol) && game.bird ? (symbol === 'V' ? '#ef9eaf' : '#8be1ee') : ({ a: '#f1c583', b: '#8bd3e6', c: '#d0a5e8' }[symbol?.toLowerCase()] || '#f1c583');
   function cell(x, y, terrain, visible, worldId, feature, familiar = false) {
+    // Old remembered door glyphs may be present in restored map fragments.
+    if(feature==='/'&&(world.puzzle?.locks||[]).some(lock=>lock.door===worldId))feature="'";
     if(!view&&game.viewFrame){const p=MazeRotationBridge.project(game.viewFrame,x-px,y-py);x=px+p[0];y=py+p[1];}
-    const bird = visible && game.birds?.find(b=>b.position===worldId);
+    const bird = (visible || game.atlasComplete) && game.birds?.find(b=>!b.oob&&b.position===worldId);
     if (bird) feature = bird.symbol;
+    if(terrain&&(visible||game.atlasComplete))feature=MazeCore.wildlifeGlyph(game,worldId,true)||feature;
+    const visual=incomingWands.point()||wandVisual,projectile=WandFlight.matches(visual,worldId);if(projectile)feature=visual.tail?'↶':'*';
     const sx = ox + x * tile, sy = oy + y * tile;
     if (sx + tile < 0 || sy + tile < 0 || sx > w || sy > h) return;
     if(terrain)render.warpPoints.push({id:worldId,x:sx+tile/2,y:sy+tile/2,tile});
     if (ascii) {
+      if(projectile){ctx.fillStyle=WandFlight.color(visual);ctx.fillRect(sx,sy,tile-1,tile-1);}
       const symbol = x === px && y === py ? '@' : feature || (terrain ? '.' : '#');
       ctx.fillStyle = symbol === '@' ? '#ceeac3' : feature && feature !== '<' ? featureColor(feature) : terrain ? (familiar ? '#ceeac3' : '#b3ccc5') : '#94b0b0';
       ctx.globalAlpha = visible ? 1 : .42;
       ctx.font = `${tile * .88}px Consolas, "Liberation Mono", monospace`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(symbol, sx + tile / 2, sy + tile / 2);
+      if(!terrain)globalThis.ReflectingWalls?.paint(ctx,game,worldId,sx+tile/2,sy+tile/2,tile);if(visible||game.atlasComplete)globalThis.MazeWildlife?.paint(ctx,game,worldId,symbol,sx+tile/2,sy+tile/2,tile);ctx.fillText(symbol, sx + tile / 2, sy + tile / 2);
       ctx.globalAlpha = 1;
       return;
     }
-    ctx.fillStyle = terrain ? (visible ? (familiar ? '#466b55' : '#36534e') : '#192e33') : (visible ? '#77918e' : '#34474d');
+    ctx.fillStyle = projectile?WandFlight.color(visual):terrain ? (visible ? (familiar ? '#466b55' : '#36534e') : '#192e33') : (visible ? '#77918e' : '#34474d');
     const gap = tile > 8 ? 1 : 0;
     ctx.fillRect(sx, sy, tile - gap, tile - gap);
     if (hybrid && !feature) {
       ctx.fillStyle=visible?'#e3dab0':'#7e8c82';ctx.font=`${Math.max(7,tile*.65)}px Consolas, monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(terrain?'.':'#',sx+tile/2,sy+tile/2);
     }
+    if(!terrain)globalThis.ReflectingWalls?.paint(ctx,game,worldId,sx+tile/2,sy+tile/2,tile);
     if (feature) {
       ctx.globalAlpha = visible ? 1 : .5; ctx.fillStyle = feature === '<' ? '#acd3ce' : featureColor(feature);
       ctx.font = `bold ${Math.max(7, tile * .8)}px monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(feature === '<' && !hybrid ? '·' : feature, sx + tile / 2, sy + tile / 2); ctx.globalAlpha = 1;
+      if(visible||game.atlasComplete)globalThis.MazeWildlife?.paint(ctx,game,worldId,feature,sx+tile/2,sy+tile/2,tile);ctx.fillText(feature === '<' && !hybrid ? '·' : feature, sx + tile / 2, sy + tile / 2); ctx.globalAlpha = 1;
     }
   }
   if (view) { for (let i = 0; i < world.cells.length; i++) if (!world.domain || world.domain[i]) cell(i % world.width, Math.floor(i / world.width), world.cells[i], true, i, MazeCore.featureAt(game, i)); }
+  else if(game.atlasComplete){
+    const wx=player.world_position%world.width,wy=Math.floor(player.world_position/world.width),radius=Math.ceil(Math.max(w,h)/tile)+1;
+    const visible=new Set([...cognition.visible_cells].map(id=>cognition.memory_nodes.get(id)?.world_id));
+    for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++){
+      const x=wx+dx,y=wy+dy;if(world.topology!=='torus'&&(x<0||y<0||x>=world.width||y>=world.height))continue;
+      const id=world.topology==='torus'?MazeCore.periodicId(world,x,y):y*world.width+x;
+      if(world.domain&&!world.domain[id])continue;cell(px+dx,py+dy,world.cells[id],visible.has(id),id,MazeCore.featureAt(game,id));
+    }
+  }
   else if (continuous) {
     const bounds = { minX: Math.floor(-ox / tile), maxX: Math.ceil((w - ox) / tile), minY: Math.floor(-oy / tile), maxY: Math.ceil((h - oy) / tile) };
     for (const node of (unfolded ? MazeCore.unfoldedCells(game, bounds) : MazeCore.subjectiveCells(game, bounds))) cell(node.x, node.y, node.terrain, node.visible, node.world_id, node.feature, node.familiar);
@@ -600,11 +665,12 @@ function render() {
   ctx.fillStyle = '#ceeac3'; ctx.fillRect(sx - tile / 2, sy - tile / 2, tile - (tile > 8 ? 1 : 0), tile - (tile > 8 ? 1 : 0));
   ctx.fillStyle = '#132a24'; ctx.font = `bold ${Math.max(8, tile * .84)}px monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('@', sx, sy);
   }
-  if(game.viewFrame){
+  if(game.viewFrame&&!game.wands?.oob){
     const vector=view?MazeCore.DIRS[player.direction]:MazeRotationBridge.project(game.viewFrame,...MazeCore.DIRS[player.direction]);
     const symbol=vector[0]>0?'→':vector[0]<0?'←':vector[1]>0?'↓':'↑';
     ctx.fillStyle='#e6ffd6';ctx.font=`${Math.max(9,tile*.4)}px monospace`;ctx.fillText(symbol,ox+(px+.85)*tile,oy+(py+.15)*tile);
   }
+  if(globalThis.MainOob?.draw(ctx,game,w,h)){canvas.setAttribute('aria-label','OOB空間・'+['上','右','下','左'][game.wands.oob.direction]+'、緊急脱出口 > で > キー');$('viewLabel').textContent='外側の空間 · THIS IS NOWHERE';}else $('viewLabel').textContent=view?'全体図 · 未探索部分も表示':'見える範囲と、歩いた記憶';
   $('steps').textContent = `${game.steps} / ${game.turns}`;
   renderJourneyOverview();
   $('journeyControls').hidden=!game.journey;
@@ -632,6 +698,9 @@ function render() {
   $('discoveredLabel').textContent = subjectiveTorus ? '記憶した床（重複を含む）' : '通路の発見率';
   $('discovered').textContent = subjectiveTorus ? `${unfolded?MazeCore.unfoldedFloorCount(game):remembered.length}セル` : Math.floor(100 * known / world.validation.floors) + '%';
   $('validation').textContent = world.warpMode ? `全 ${world.validation.floors} 通路 · ワープ込み到達可` : world.topology === 'torus' ? '全通路接続 · 二方向の周回可' : world.puzzle ? `${world.puzzle.locks.length}組の攻略順序 検証済み` : `全 ${world.validation.floors} 通路セル到達可`;
+  if(game.atlasComplete)$('discovered').textContent='完成地図（全床・全壁を記憶）';
+  window.MazeConsoleStatus={token:world,steps:$('steps').textContent,label:$('discoveredLabel').textContent,discovery:$('discovered').textContent,validation:$('validation').textContent};
+  window.dispatchEvent(new CustomEvent('maze-status-update',{detail:window.MazeConsoleStatus}));
   $('topologyInfo').hidden = world.topology !== 'torus';
   const knowledge = MazeCore.knowledgeSummary(game);
   $('knowledgeSummary').textContent = !world.loopLearning ? '周期の理解：学習なし' : knowledge.complete ? '周期の理解：全周期を理解しました。未探索の地形は引き続き探索が必要です。' : knowledge.rank === 2 ? `周期の理解：二方向の一部を理解。まだ${knowledge.index}種類の周期コピーを別の場所として記憶します。` : knowledge.rank === 1 ? '周期の理解：一方向の繰り返しを理解。横断する方向には、未知のつながりが残っています。' : '周期の理解：まだ周回のつながりを理解していません。';
@@ -650,7 +719,7 @@ function render() {
   $('puzzleInfo').hidden = !world.puzzle;
   const inventory = (world.puzzle?.locks || []).map(lock => `${lock.keyId}：${game.openedDoors.has(lock.keyId) ? '開扉済み' : player.keys.includes(lock.keyId) ? '鍵を所持' : '鍵は未取得'}`).join(' ｜ ');
   if ($('inventory').textContent !== inventory) $('inventory').textContent = inventory;
-  canvas.setAttribute('aria-label', `迷路、${view ? '真世界' : '主観世界'}、${ascii ? '等幅文字' : hybrid ? 'タイル＋等幅文字' : 'タイル'}表示。${game.steps}歩・${game.turns}行動。${$('discoveredLabel').textContent}${$('discovered').textContent}。${game.won ? '出口に到着。' : '矢印キーまたはhjklで移動。'}`);
+  if(!game.wands?.oob)canvas.setAttribute('aria-label', `迷路、${view ? '真世界' : '主観世界'}、${ascii ? '等幅文字' : hybrid ? 'タイル＋等幅文字' : 'タイル'}表示。${game.steps}歩・${game.turns}行動。${$('discoveredLabel').textContent}${$('discovered').textContent}。${game.won ? '出口に到着。' : '矢印キーまたはhjklで移動。'}`);
 }
 function setAscii(next) {
   hybrid = next === 'hybrid';ascii = next === true;
@@ -671,7 +740,7 @@ function announceSelfVision() {
 }
 function step(direction) {
   if (game.won) return;
-  const moved = direction === 'wait' ? MazeSession.act(game,'wait') : MazeSession.act(game,'move', MazeRotationBridge.input(game,direction,!!view));
+  const moved = direction === 'wait' ? MazeSession.act(game,'wait') : MazeSession.act(game,'move', game.wands?.oob?direction:MazeRotationBridge.input(game,direction,!!view));
   const id = game.eventKeyId;
   const locks = game.world.puzzle?.locks || [];
   const next = locks[locks.findIndex(lock => lock.keyId === id) + 1];
@@ -707,9 +776,6 @@ function updateGeneratorControls() {
   $('warpOptions').hidden=$('ruleMode').value!=='warp';
   for(const id of ['warpStyle','warpCount','warpInvisible'])$(id).disabled=$('ruleMode').value!=='warp';
   $('warpRotation').disabled=torus||$('ruleMode').value!=='warp';
-  if(torus && $('ruleMode').value === 'key-door') $('ruleMode').value = 'explore';
-  if(torus && $('ruleMode').value === 'bird-keys') $('ruleMode').value = 'bird';
-  for(const option of $('ruleMode').options) option.disabled = torus && ['key-door','bird-keys'].includes(option.value);
   for (const id of ['width', 'height']) { $(id).min = torus ? '8' : '9'; $(id).max = torus ? '100' : '101'; }
   $('sizeHint').textContent = torus ? '8〜100の偶数（壁を含む周期の長さ）。空間切替時にサイズを調整します。' : '9〜101の奇数（壁を含むセル数）';
   $('ellerHint').hidden = $('algorithm').value !== 'eller';
@@ -762,7 +828,7 @@ $('newestBias').addEventListener('input', () => { $('newestValue').textContent =
 $('loops').addEventListener('input', () => { $('loopValue').textContent = $('loops').value + '%'; });
 $('randomize').addEventListener('click', () => { $('seed').value = 'walk-' + Math.random().toString(36).slice(2, 10); if ($('settings').reportValidity()) newWorld(); });
 $('waitTurn').addEventListener('click', () => step('wait'));
-$('restart').addEventListener('click', () => { game = MazeSession.attach(MazeMainJourney.restart(game)); $('archiveExportResult').hidden=true;$('archiveExportText').value=''; $('status').textContent = game.world.puzzle ? '入口に戻りました。探索記憶・鍵・扉を初期状態に戻しました。' : '同じ迷路の入口に戻りました。探索記憶とループの学習をリセットしました。'; announceSelfVision(); render(); });
+$('restart').addEventListener('click', () => { game = MazeSession.attach(MazeMainJourney.restart(game));enableMainWands(); $('archiveExportResult').hidden=true;$('archiveExportText').value=''; $('status').textContent = game.world.puzzle ? '入口に戻りました。探索記憶・鍵・扉を初期状態に戻しました。' : '同じ迷路の入口に戻りました。探索記憶とループの学習をリセットしました。'; announceSelfVision(); render(); });
 $('subjective').addEventListener('click', () => setView(0)); $('truth').addEventListener('click', () => setView(1));
 $('tiles').addEventListener('click', () => setAscii(false)); $('ascii').addEventListener('click', () => setAscii(true)); $('hybrid').addEventListener('click', () => setAscii('hybrid'));
 for (const button of document.querySelectorAll('[data-dir]')) button.addEventListener('click', () => step(button.dataset.dir));
@@ -777,7 +843,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Delete' && $('editZeroMark').getAttribute('aria-pressed')==='true') { e.preventDefault(); if(!e.repeat) deleteAnnotationSelection(); return; }
   if (e.key.toLowerCase() === 'z' && game.world.warps?.size) { e.preventDefault(); if(!e.repeat) $('editZeroMark').click(); return; }
   if (e.key.toLowerCase() === 'e' && game.won) { e.preventDefault(); if(!e.repeat) continueExploration(); return; }
-  if (e.key === '>') { e.preventDefault(); if(!e.repeat) nextMaze(); return; }
+  if (e.key === '>') { e.preventDefault(); if(!e.repeat){if(game.wands?.oob){MazeSession.act(game,'oobReturn');render();}else nextMaze();} return; }
   if (e.key.toLowerCase() === 'c') { e.preventDefault(); if(!e.repeat) matchAvailableMaps(); return; }
   if (e.key.toLowerCase() === 'm') { e.preventDefault(); if(!e.repeat) markHere(); return; }
   if (e.shiftKey && e.key.toLowerCase() === 'n') {
@@ -786,7 +852,7 @@ document.addEventListener('keydown', e => {
     return;
   }
   if (e.key === '.' || e.key === '5' || e.code === 'Numpad5') {
-    e.preventDefault(); if (!e.repeat) step('wait'); return;
+    e.preventDefault(); if (e.key === '.' || !e.repeat) step('wait'); return;
   }
   const keys = { ArrowUp: 'up', ArrowRight: 'right', ArrowDown: 'down', ArrowLeft: 'left', h: 'left', j: 'down', k: 'up', l: 'right', '2': 'down', '4': 'left', '6': 'right', '8': 'up' };
   const direction = keys[e.key];
@@ -1448,9 +1514,10 @@ $('randomSettingsFile').addEventListener('change',async()=>{
 
 
 // Host adapter: use the existing replay validation and native UI restoration.
-window.MainExplorationAdapter={
+window.MainExplorationAdapter={autoOobPlan:()=>OobWalk.plan(game,MazeCore),autoOobCast:d=>{const dir=ExplorationSolver.screenDirection(game,Object.keys(MazeCore.DIRS)[d],!!view,MazeRotationBridge,MazeCore);wandSlot=1;wandAim=Object.keys(MazeCore.DIRS).indexOf(dir);window.MainWandsUI.fire();return true;},autoOob:()=>!!game.wands?.oob,
+ autoBusy:()=>wandFlight||incomingWands.busy(),autoFrozen:()=>game.wands?.frozen||0,autoWait:()=>{MazeSession.act(game,'wait');render();},
  autoNext:()=>nextMaze(),
- autoMap:()=>ExplorationSolver.mainMapPlan(game,MazeCore),autoMapPending:()=>game.world.warps?.size?MazeCore.inspectRecordedMatching(game).reasons.filter(r=>r!=='matched').length:0,autoAfter:()=>{if(ExplorationSolver.warpNotes(game,MazeCore,MazeSession.act))render();},autoPrepare:()=>{if(ExplorationSolver.warpNotes(game,MazeCore,MazeSession.act))render();if(ExplorationSolver.birdNotes(game,MazeCore,MazeSession.act))render();},autoRelocated:()=>game.lastTransition?.kind==='teleport',autoLoop:()=>ExplorationSolver.mainLoop(game,MazeCore),autoDetour:()=>ExplorationSolver.birdDetour(game,MazeCore),autoDynamic:()=>!!game.world.birdMode,autoStallLimit:()=>Math.min(4000,Math.max(300,game.world.cells.length*4)),autoTargets:()=>ExplorationSolver.mainTargets(game,MazeCore),autoTraversed:()=>['warp','teleport'].includes(game.lastTransition?.kind)?[game.lastTransition.from,game.player.world_position]:[game.player.world_position],autoPosition:()=>game.player.world_position,autoContinue:()=>continueExploration(),autoExplore:seen=>ExplorationSolver.main(game,MazeCore,seen),autoPlan:()=>ExplorationSolver.main(game,MazeCore),autoMove:direction=>step(ExplorationSolver.screenDirection(game,direction,!!view,MazeRotationBridge,MazeCore)),
+ autoStroll:()=>{const nav=MazeCore.wildlifeAdapter(game);const path=MazeStroll.route(game,nav,null,game.world.exit);return path?.map(d=>Object.keys(MazeCore.DIRS)[d])??null;},autoMap:()=>ExplorationSolver.mainMapPlan(game,MazeCore),autoMapPending:()=>game.world.warps?.size?MazeCore.inspectRecordedMatching(game).reasons.filter(r=>r!=='matched').length:0,autoAfter:()=>{if(ExplorationSolver.warpNotes(game,MazeCore,MazeSession.act))render();},autoPrepare:()=>{if(ExplorationSolver.warpNotes(game,MazeCore,MazeSession.act))render();if(ExplorationSolver.birdNotes(game,MazeCore,MazeSession.act))render();},autoRelocated:()=>game.lastTransition?.kind==='teleport',autoLoopPending:()=>ExplorationSolver.mainLoopPending(game),autoLoop:()=>ExplorationSolver.mainLoop(game,MazeCore),autoDetour:()=>ExplorationSolver.birdDetour(game,MazeCore),autoDynamic:()=>!!game.world.birdMode,autoStallLimit:()=>Math.min(4000,Math.max(300,game.world.cells.length*4)),autoTargets:()=>ExplorationSolver.mainTargets(game,MazeCore),autoTraversed:()=>['warp','teleport'].includes(game.lastTransition?.kind)?[game.lastTransition.from,game.player.world_position]:[game.player.world_position],autoPosition:()=>game.player.world_position,autoContinue:()=>continueExploration(),autoWarpPending:()=>ExplorationSolver.mainWarpPending(game).size,autoExplore:seen=>ExplorationSolver.mainExplore(game,MazeCore,seen),autoPlan:()=>ExplorationSolver.main(game,MazeCore),autoMove:direction=>step(ExplorationSolver.screenDirection(game,direction,!!view,MazeRotationBridge,MazeCore)),
  progress:()=>({token:game,topology:game.world.topology||'plane',steps:game.steps,exit:MazeMainJourney.canAdvance(game)}),
  fresh(seed,randomGeneration=false,generators,sizes,topologies,shifts,rules){if(!game.generationOptions)throw Error('この実験は共通コースに対応していません。');return MazeMainJourney.start(ExplorationGeneration.choose('main',{...game.generationOptions,loopLearning:$('loopLearning').value!=='off',learningLaps:$('loopLearning').value==='three'?3:5},randomGeneration,seed,generators,sizes,topologies,game.world.rotatingWarp||'none',shifts,rules),rules?.enabled?'none':game.world.rotatingWarp||'none');},
  enter(next){applyJourneySettings(next);if(!newWorld(false,next))throw Error('通常迷路の開始に失敗しました。');$('seed').value=next.generationOptions.seed;},
@@ -1458,3 +1525,5 @@ window.MainExplorationAdapter={
  prepare:text=>MazeSession.decodeAsync(text),
  apply(restored){applyJourneySettings(restored.game);$('journeyCourse').value=restored.course;if(!newWorld(false,restored.game))throw Error('通常迷路の表示を復元できませんでした。');$('seed').value=restored.game.generationOptions.seed;}
 };
+
+window.addEventListener('maze-map-panel-open',()=>requestAnimationFrame(()=>renderArchive()));

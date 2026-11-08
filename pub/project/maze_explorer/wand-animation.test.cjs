@@ -1,0 +1,12 @@
+const a=require('node:assert/strict'),E=require('./wand-engine.js');
+const path=[{id:1},{id:2,tail:'c'},{id:1},{id:0}];
+a.deepEqual(E.animationPath(path,'V',new Set([1])),[{id:1},{id:1}]);
+a.deepEqual(E.animationPath(path,'V',new Set()),[]);
+a.deepEqual(E.animationPath(path,'V',new Set([2])),[{id:2,tail:'c'}]);
+a.deepEqual(E.animationPath(path,'@',new Set()),[]);
+a.deepEqual(E.animationPath(path,'@',new Set([1])),[{id:1},{id:1}]);
+const w={width:8,height:1,cells:Array(8).fill('.'),wrap:false},actors=[{key:'@',id:0},{key:'V',id:4},{key:'c',id:6}];
+const result=E.cast(w,actors,'V',1,'freeze');
+a.deepEqual(E.animationPath(result.path,'V',new Set([0])),[]);
+a.equal(result.target,'V');a.equal(actors[1].frozen,5);a.equal(result.reflected,true);
+console.log('Offscreen bird frames skipped, visible return visits retained, player and bird visibility rules match, offscreen reflection/effect preserved.');

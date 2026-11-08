@@ -1,0 +1,4 @@
+const a=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');const src=fs.readFileSync(__dirname+'/lattice-holes-ui.js','utf8'),code=src.slice(src.indexOf('  const projectile=wandUI.projectile();'),src.indexOf('  for(const h of display.portals)'));
+for(const renderMode of ['ascii','tiles','hybrid'])for(const shot of [false,true]){const fills=[],texts=[],ctx={strokeText(){},fillRect(){fills.push(this.fillStyle);},fillText(g){texts.push([g,this.fillStyle]);}};vm.runInNewContext(code,{wandUI:{projectile:()=>shot?{id:2}:null},display:{tiles:[{id:1,glyph:'@',x:0,y:0,bright:true},{id:2,glyph:'.',x:1,y:0,bright:true}]},ox:0,oy:0,size:24,truth:false,renderMode,ctx,state:{id:1},w:{},S:{groundSheet:()=>0}});a(fills.includes('#fff5a9'));a(texts.some(([g,c])=>g==='@'&&c==='#111'));if(shot){a(fills.includes('#b66fd1'));a(texts.some(([g])=>g==='*'));}}
+console.log('Player and projectile colors passed in all 3 render modes');
+

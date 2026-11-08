@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "1.0",
+  "unitsPerEm": 1000,
+  "glyphs": {
+    "gate-cat": {
+      "unicode": null,
+      "copyText": "⿴門猫",
+      "ids": "⿴門猫",
+      "ruby": "こもりねこ",
+      "original": "籠城",
+      "meaning": "猫が閉じこもること。",
+      "layers": [
+        { "type": "text", "char": "門", "x": 100, "y": 70, "width": 800, "height": 860, "rotation": 0, "fontWeight": 400 },
+        { "type": "text", "char": "猫", "x": 325, "y": 415, "width": 350, "height": 430, "rotation": 0, "fontWeight": 400 }
+      ]
+    },
+    "three-moons": {
+      "unicode": null,
+      "copyText": "⿱月⿰月月",
+      "ids": "⿱月⿰月月",
+      "ruby": "みつづき",
+      "original": null,
+      "meaning": "月が三つ見えるような、夢の中の夜。",
+      "layers": [
+        { "type": "text", "char": "月", "x": 350, "y": 60, "width": 300, "height": 400 },
+        { "type": "text", "char": "月", "x": 150, "y": 530, "width": 300, "height": 400 },
+        { "type": "text", "char": "月", "x": 550, "y": 530, "width": 300, "height": 400 }
+      ]
+    }
+  }
+}

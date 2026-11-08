@@ -9,6 +9,10 @@ for(const growth of ['walls','dfs','prim','growing'])for(const wallStyle of ['de
   const cut=Math.floor(route.directions.length/3);for(const d of route.directions.slice(0,cut))assert(move(st,d));delete st.loopExperience;
   const rotated=[...route.directions.slice(cut),...route.directions.slice(0,cut)],key=`${route.sheet}:${route.axis==='a'?'1:0':'0:1'}`;
   for(let n=1;n<=3;n++){for(const d of rotated)assert(move(st,d));assert.equal(st.loopExperience.counts.get(key),n);const evidence=R.knowledge(st).find(p=>p.key===key);assert.equal(evidence.learned,n===3);assert.equal(evidence.remaining,3-n);assert(!R.knowledge(st).some(p=>p.sheet!==route.sheet&&p.learned));}
+  R.start(st);const waitPath=JSON.stringify(st.loopExperience.path),waitCounts=[...st.loopExperience.counts];
+  assert(S.move(st,4));assert.equal(R.observe(st,route.sheet),null);
+  assert.equal(JSON.stringify(st.loopExperience.path),waitPath);assert.deepEqual([...st.loopExperience.counts],waitCounts);
+  assert.equal(st.loopExperience.lastStep,st.steps);
   R.setThreshold(st,5);assert(!R.knowledge(st).find(p=>p.key===key).learned);
   for(const d of [...rotated].reverse().map(d=>(d+2)%4))assert(move(st,d));assert.equal(st.loopExperience.counts.get(key),4);assert(!R.knowledge(st).find(p=>p.key===key).learned);
   for(const d of rotated)assert(move(st,d));assert(R.knowledge(st).find(p=>p.key===key).learned);

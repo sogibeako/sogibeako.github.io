@@ -1,0 +1,2 @@
+const a=require('node:assert/strict'),R=require('./reflecting-walls.js');let holes=0,far=0;
+for(let n=0;n<1000;n++){const w={mode:'tripleMaze',seed:'rarity-'+n,cells:[1,1,0,0,0,1],edges:new Map([['0:0',{to:1,kind:'throat'}]]),candidates:new Map([['0:0',{to:1,kind:'throat'}],['0:1',{to:2,kind:'normal'}],['5:1',{to:3,kind:'normal'}]])};const out=R.graph(w);holes+=out.some(p=>p.id===2);far+=out.some(p=>p.id===3);a.deepEqual(out,R.graph(w));}a(holes>=150&&holes<=250);a.equal(far,1000);console.log({holeMirrors:holes,ordinaryMirrors:far,seeds:1000});

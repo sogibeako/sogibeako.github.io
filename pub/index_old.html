@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>* 湫埜と雨滴 *</title>
+    <link rel="preload" as="font" href="/seoremium/Seoremium_clg.ttf" type="ttf" crossorigin />
+    <style>
+        /* 色は出来るだけ、SB Creative出版『日本の美しい色と言葉』から取っていく。 */
+        /* 当ページはp256『しとしと』 */
+        /* 氷雨 #e3e8f1 */
+        /* 俄雨 #6290b1 */
+        /* 長雨 #afd3e6 */
+        /* 秋雨 #609aa0 */
+        /* 五月雨 #9ec8d1 */
+        @font-face {
+            font-family: "Seoremium_clg";
+            src: url("/seoremium/Seoremium_clg.ttf") format("truetype");
+            font-display: swap;
+        }
+
+        body {
+            font-size: 1rem;
+            background-color: #111822;
+            /* 青っぽい背景色 */
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+            line-height: 1.6;
+        }
+
+        h1 {
+            background-color: #609aa0;
+            /* 秋雨 */
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.5em;
+            /* 内側の余白で見た目よく */
+        }
+
+        h2 {
+            background-color: #609aa0;
+            /* 秋雨 */
+            color: black;
+            /* 文字は黒でよい */
+            padding: 0.5em;
+            /* 内側の余白で見た目よく */
+        }
+
+        .p_left {
+            text-align: left;
+        }
+
+        .wrapper {
+            max-width: 700px;
+            width: 80%;
+            margin: 50px auto;
+            padding: 20px;
+            border: 0px solid #111;
+            background-color: #afd3e6;
+            /* 長雨 */
+            font-family: inherit;
+        }
+
+        .inner_wrapper {
+            width: 600px;
+            margin: 10px auto;
+            padding: 20px;
+            border: 1px solid #111;
+            background-color: #ffffee;
+            font-family: inherit;
+        }
+
+        .grid-table {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 2px;
+        }
+
+        .grid-table2 {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 2px;
+        }
+
+        .cell {
+            border: 0px solid #ccc;
+            padding: 4px 8px;
+            line-break: strict;
+            /* 日本語の自然な改行ルールに従う */
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        img.top-image {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        hr {
+            border-width: 2px 0 0 0;
+            /* 線の太さ */
+            border-style: dashed;
+            /* 線の種類 */
+            border-color: #609aa0;
+            /* 線の色 */
+        }
+
+        .seoremium {
+            font-family: "Seoremium_clg";
+            font-size: 1.4rem;
+            font-weight: 599;
+            letter-spacing: 0.1rem;
+        }
+
+        .annotation {
+            font-size: 0.8rem;
+        }
+
+        .br-sp {
+            display: none;
+        }
+
+        @media screen and (max-width: 600px) {
+            body {
+                font-size: 0.7rem;
+            }
+
+            .seoremium {
+                font-size: 1rem;
+            }
+
+            h1,
+            h2 {
+                font-size: 1rem;
+            }
+
+            .wrapper,
+            .inner_wrapper {
+                width: 95%;
+                padding: 10px;
+                word-wrap: break-word;
+                box-sizing: border-box;
+            }
+
+            .grid-table,
+            .grid-table2 {
+                grid-template-columns: 1fr;
+            }
+
+            .annotation {
+                font-size: 0.6rem;
+            }
+
+            .br-sp {
+                display: inline;
+            }
+        }
+    </style>
+    <script>
+        const pressed = new Set();
+        window.addEventListener("keydown", (e) => {
+            const tag =
+                e.target && e.target.tagName ? e.target.tagName.toLowerCase() : "";
+            if (tag === "input" || tag === "textarea" || e.target.isContentEditable)
+                return;
+            pressed.add(e.key.toLowerCase());
+            if (e.key === "Enter") {
+                if (pressed.has("a") && pressed.has("b")) {
+                    e.preventDefault();
+                    window.location.href = "../nazo/nazo.htm";
+                }
+            }
+        });
+        window.addEventListener("keyup", (e) => {
+            pressed.delete(e.key.toLowerCase());
+        });
+        window.addEventListener("blur", () => pressed.clear());
+    </script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="p_left">
+            現在位置 : <a href="index.html"><b>ホーム</b></a>
+        </div>
+        <h1>* 湫埜と雨滴 *</h1>
+        Sorry, this page is in Japanese only.<br />
+        Thank you for understanding.<br />
+        <br />
+        <script type="text/javascript">
+            var imglist = new Array(
+                "top-image/top-0004.png",
+                "top-image/top-0003.png",
+            );
+            var selectnum = Math.floor(Math.random() * imglist.length);
+            var output =
+                '<img src="' +
+                imglist[selectnum] +
+                '" class="top-image" alt="トップ画像。一埜のお正月イラスト。"' +
+                ">";
+            document.write(output);
+        </script>
+        <noscript>
+            <img src="top-image/top-0002.jpg" alt="トップ画像。一埜のクリスマスイラスト。" />
+        </noscript>
+        <img src="dream/dream.cgi?id=index" /><br />
+        <div class="annotation">
+            KENT Web様の<a href="https://www.kent-web.com/count/dream.html">『夢カウンター』</a>をお借りしてます。
+        </div>
+        <br />
+        <h2>* Information *</h2>
+        このページは
+        <a href="https://lsv.jp/">Little Server</a> で作られています。<br />
+        当ページはまだまだ工事中です。<span class="br-sp"><br /></span>
+        今後は過去作った音楽とかが増えていくかも。<br />
+        <hr />
+        <h3>そもそも誰？ このサイトは何？</h3>
+        <hr />
+        Twitterでは「かずのこ」と名乗っています<span class="br-sp"><br /></span>（某プロゲーマーの方とは関係ありません）。<br />
+        名前の由来は、オリジナルキャラクターのもじりです。<br />
+        <br />
+        このサイトには私の創作物が集約されていくことになります。<br />
+        （あくまでアマチュアクオリティの物ですが。最近みんな上手いし……！）<br />
+        <br />
+        以前は他の名前を名乗って geocities やら何やらで<span class="br-sp"><br /></span>サイトを持っていたりしたのですが……。<br />
+        Twitterが対戦型SNSと化して久しいため、<span class="br-sp"><br /></span>思ったこととかをゆっくり書き溜める場所が<br />あればいいなと思って開設した次第です。<br />
+        <br />
+        <h2>* 直近の更新 / ひとこと *</h2>
+        <div class="grid-table">
+            <div class="cell p_left">2026/02/20</div>
+            <div class="cell p_left">
+                気が付いたらバレンタインデーが過ぎてます。時間があっという間だぁ。<br />
+                <br />
+                AntiGravityにハマっています。<br />
+                JS Projectに
+                <a href="jssproject/0009/index.html">009</a>、<a href="jssproject/0010/index.htm">010</a>、
+                <a href="jssproject/0011/index.htm">011</a>、<a href="jssproject/0012/index.htm">012</a>、
+                <a href="jssproject/0013/index.htm">013</a>を追加しました。<br />
+                009はテキストを、010は画像をバグらせます。011はテ〇リス、012は画像版の001（マトリックス風スクリーンセーバー）、013はスペクトログラフィソフトです。<br />
+                あと<a href="jssproject/0007/0007_20260216.htm">フィルター・ADSR付き007</a>を追加。<br />
+                <br />
+                AntiGravityのClaude Opus4.6を使い切った+それなりに色々作ったので一旦休憩かな。<br />
+            </div>
+        </div>
+        　<br />
+        <h2>* Novels *</h2>
+        <h3>
+            Novelsと言いつつ、雑多なジャンルの（架空を描いた）創作文たちです。
+        </h3>
+        <hr />
+        <div class="grid-table2">
+            <div class="cell p_left">
+                <a href="novels/nero_no_yume.htm">ネロのゆめ</a>
+            </div>
+            <div class="cell p_left">
+                男の子のある日の夢のお話です。<span class="br-sp"><br /></span>2006年夏ごろに書いた覚え。
+            </div>
+            <div class="cell p_left">
+                <a href="novels/bokurano.htm">ぼくらの天体望遠鏡</a>
+            </div>
+            <div class="cell p_left">
+                小学生の二人についてのお話です。<span class="br-sp"><br /></span>2006年夏ごろに書いた覚え。
+            </div>
+            <div class="cell p_left">
+                <a href="novels/juhyo.htm">樹氷に、追憶を重ねて。</a>
+            </div>
+            <div class="cell p_left">
+                高校生の女の子についてのお話です。<span class="br-sp"><br /></span>2015年ごろに書いた覚え。
+            </div>
+            <div class="cell p_left"><a href="novels/shide.htm">死出の航海</a></div>
+            <div class="cell p_left">
+                現代詩です。<span class="br-sp"><br /></span>2015年ごろに書いた覚え。
+            </div>
+            <div class="cell p_left">
+                <a href="novels/karamatsubayashi.htm">落葉松林にて</a>
+            </div>
+            <div class="cell p_left">
+                現代詩です。<span class="br-sp"><br /></span>2023年ごろに書きました。
+            </div>
+            <div class="cell p_left">
+                <a href="novels/ensoku.htm">遠足の前日</a>
+            </div>
+            <div class="cell p_left">
+                現代詩です。<span class="br-sp"><br /></span>2023年ごろに書きました。
+            </div>
+            <div class="cell p_left">
+                <a href="novels/seimeino.htm">『生命の道』</a>
+            </div>
+            <div class="cell p_left">
+                ある兄妹の（少し衝撃的な）ドライブについての話です。<br />2024年ごろに書きました。
+            </div>
+            <div class="cell p_left">
+                <a href="novels/nebula.htm">『星雲は』</a>
+            </div>
+            <div class="cell p_left">
+                現代詩です。<span class="br-sp"><br /></span>2024年に書きました。
+            </div>
+        </div>
+        <br />
+        <h2>* Diary *</h2>
+        <h3>Twitterに書きづらかったりした日記。</h3>
+        <hr />
+        <div class="grid-table2">
+            <div class="cell p_left">
+                <a href="diary/20250709.htm">2025年第三期</a>
+            </div>
+            <div class="cell p_left">
+                当サイトはじめての日記。すごく暑いですね。
+            </div>
+            <div class="cell p_left">
+                <a href="diary/20251012.htm">2025年第四期</a>
+            </div>
+            <div class="cell p_left">
+                書く頻度がちょっと落ちてます。気楽に書きたい。
+            </div>
+            <div class="cell p_left">
+                <a href="diary/20260103.htm">2026年第一期</a>
+            </div>
+            <div class="cell p_left">Max9/Jitterにどれくらいハマれるか。</div>
+        </div>
+        <br />
+        <h2>* JS Project *</h2>
+        <h3>ChatGPTに習いつつ、色々実験中です。</h3>
+        <hr />
+        <div class="grid-table">
+            <div class="cell">
+                <a href="jssproject/0001_matrix_8bit.htm">## 001 ##</a>
+            </div>
+            <div class="cell p_left">
+                びっしりある8bitの数字が激しく変化します。<span class="br-sp"><br /></span>
+                目がちかちかするかも。
+            </div>
+            <div class="cell">
+                <a href="jssproject/0002_linea_and_blur.htm">## 002 ##</a>
+            </div>
+            <div class="cell p_left">
+                折線を描画後、それがにじむアニメーション。<span class="br-sp"><br /></span>
+                PCブラウザ推奨。
+            </div>
+            <div class="cell">
+                <a href="jssproject/0003_eb_bg.htm">## 003 ##</a>
+            </div>
+            <div class="cell p_left">
+                画像を読み込ませるとゆらぐアニメーション。<span class="br-sp"><br /></span>
+                PCブラウザ推奨。
+            </div>
+            <div class="cell">
+                <a href="jssproject/0004_mathPattern.htm">## 004 ##</a>
+            </div>
+            <div class="cell p_left">数式を与えると画像を生成します。</div>
+            <div class="cell">
+                <a href="jssproject/0005_hexTiling.htm">## 005 ##</a>
+            </div>
+            <div class="cell p_left">
+                画像を読み込ませると万華鏡のような画像を生成します。
+            </div>
+            <div class="cell">
+                <a href="jssproject/0006_PenroseTiling.htm">## 006 ##</a>
+            </div>
+            <div class="cell p_left">↑のペンローズタイル版です。</div>
+            <div class="cell">
+                <a href="jssproject/0007_formulaSynth.htm">## 007 ##</a>
+            </div>
+            <div class="cell p_left">
+                （音が出ます！）数式から波形を生成するシンセサイザーです。<br />
+                音律変更利きます。現状PCブラウザ専用。<br />
+                <a href="jssproject/0007/0007_20260216.htm">ADSR・フィルター付きはこっち。</a><br />
+                （段々波形の表示とスペクトルが追いやられてきたのが悩みｗ）<br />
+            </div>
+            <div class="cell">
+                <a href="jssproject/0008_TEtuning.htm">## 008 ##</a>
+            </div>
+            <div class="cell p_left">
+                TE Tuning, POTE Tuningなど調律法を計算するための電卓です。<br />
+                Prime Basis Qに求めたい素数を、Mapping
+                Vにステップ数を入れてください。<br />
+                最低でも、Xenharmonic.wikiの<a href="https://en.xen.wiki/w/Val">Val</a>の知識を必要とします。<br />
+            </div>
+            <div class="cell">
+                <a href="jssproject/0009/index.html">## 009 ##</a>
+            </div>
+            <div class="cell p_left">
+                与えられたテキストをバグらせるものです。<br />
+                「詳細」モード、かつ「異世界データ」に入力して真価を発揮しそう。<br />
+                自動筆記とか意表を突く表現のためにどうぞ。<br />
+            </div>
+            <div class="cell">
+                <a href="jssproject/0010/index.htm">## 010 ##</a>
+            </div>
+            <div class="cell p_left">
+                与えられた画像をバグっぽく加工するものです。<br />
+                カッコイイ表現が欲しい場合とかにどうぞ。<br />
+            </div>
+            <div class="cell">
+                <a href="jssproject/0011/index.htm">## 011 ##</a>
+            </div>
+            <div class="cell p_left">
+                ASCII画面のテトリスです。モードが3つあります。<br />
+                床蹴りとかもうちょっと吟味してもいいかな + ヘプトミノがまだあんまり実装されてません。気長に。<br />
+            </div>
+            <div class="cell">
+                <a href="jssproject/0012/index.htm">## 012 ##</a>
+            </div>
+            <div class="cell p_left">
+                001の画像版。与えられた画像を16×16の方眼で分割し、色調を変えながら再配置します。
+            </div>
+            <div class="cell">
+                <a href="jssproject/0013/index.htm">## 013 ##</a>
+            </div>
+            <div class="cell p_left">
+                スペクトログラフィを色々できます。まだ未完成。
+            </div>
+        </div>
+        <br />
+        <h2>* SubContents *</h2>
+        <h3>その他のコンテンツ。ゆくゆくはボタンとか作って上とまとめたい。</h3>
+        <hr />
+        <div class="grid-table2">
+            <div class="cell p_left">
+                <a href="img_gallery/gallery.htm">ギャラリー</a>
+            </div>
+            <div class="cell p_left">時々触る生成イラスト集です。</div>
+            <div class="cell p_left">
+                <a href="column/columnIndex.htm">コラム</a>
+            </div>
+            <div class="cell p_left">見る価値を保証できないコラム集です。</div>
+            <div class="cell p_left"><a href="music/music.htm">音楽</a></div>
+            <div class="cell p_left">
+                作曲したり生成したりした音楽が集積されていきます。
+            </div>
+            <div class="cell p_left seoremium">
+                <a href="seoremium/index.htm">seoremium</a>
+            </div>
+            <div class="cell p_left seoremium">es-a is-"seoremium"-nun sa yol!</div>
+        </div>
+        <br />
+        <h2>* my link *</h2>
+        <h3>私の外部活動がまとまっています。</h3>
+        <hr />
+        <div class="grid-table2">
+            <div class="cell p_left">
+                <a href="https://x.com/mel_xen">Twitter (@mel_xen)</a>
+            </div>
+            <div class="cell p_left">
+                ほぼえっち絵RTer + 好きな人を見に行く用。<br />
+                フォローすると、えっちorかわいい絵が流れてきます。<br />
+                色んな方にお世話になっています。m(_ _)m<br /><br />
+            </div>
+            <div class="cell p_left">
+                <a href="https://fedibird.com/@htk5">Fedibird (@htk5)</a>
+            </div>
+            <div class="cell p_left">
+                同じく、いつも色んな方にお世話になっています。<span class="br-sp"><br /></span>
+                m(_ _)m<br /><br />
+            </div>
+            <div class="cell p_left">
+                <a href="https://note.com/mel_xen">note</a>
+            </div>
+            <div class="cell p_left">
+                ときおり思い出したように書かれるnote。<br /><br />
+            </div>
+            <div class="cell p_left">
+                <a href="https://www.pixiv.net/users/99421456">pixiv</a>
+            </div>
+            <div class="cell p_left">ほぼお話置き場。<br /><br /></div>
+            <div class="cell p_left">
+                <a href="https://soundcloud.com/user-722558847">soundcloud</a>
+            </div>
+            <div class="cell p_left">
+                音楽を聴くことが出来ます。<br />
+                データはそのうちこちらにお引っ越しするかも。<br /><br />
+            </div>
+            <div class="cell p_left">
+                <a href="https://www.youtube.com/@kazunoko_m8939/videos">YouTube</a>
+            </div>
+            <div class="cell p_left">
+                YouTubeチャンネルです。<br />ほぼsoundcloudと内容被りで放置気味💦
+            </div>
+        </div>
+        <br />
+        <h2>* すてきな（片思い）リンク *</h2>
+        <h3>お気に入りのページたちをまとめていきます。</h3>
+        <hr />
+        <h4>パズルまわり</h4>
+        <div class="grid-table2">
+            <div class="cell p_left">
+                <a href="https://puzzle-laboratory.hatenadiary.jp/">ペンシルパズル研究所</a>
+            </div>
+            <div class="cell p_left">
+                ペンシルパズルが集まっています。<span class="br-sp"><br /></span>
+                頭をスッキリさせたい時におすすめ。<br /><br />
+            </div>
+            <div class="cell p_left">
+                <a href="https://windmill.thefifthmatt.com/">The Windmill</a>
+            </div>
+            <div class="cell p_left">
+                ファンメイドの<a href="https://store.steampowered.com/app/210970/The_Witness/?l=japanese">風パ (The
+                    Witness)</a>。<span class="br-sp"><br /></span>
+                本家と違って酔わないのがいいところ。<br /><br />
+            </div>
+        </div>
+        <hr />
+        <h4>微分音まわり</h4>
+        <div class="grid-table2">
+            <div class="cell p_left">
+                <a href="https://en.xen.wiki/w/Main_Page">Xenharmonic wiki</a>
+            </div>
+            <div class="cell p_left">
+                微分音関連の情報がまとまっているサイト。<span class="br-sp"><br /></span>
+                座学しよう！<br /><br />
+            </div>
+            <div class="cell p_left">
+                <a href="https://sevish.com/scaleworkshop/?version=2.5.7">Scale Workshop</a>
+            </div>
+            <div class="cell p_left">
+                今すぐ微分音階を鳴らせるサイト。<span class="br-sp"><br /></span>
+                近々、使い方をご紹介します。<br /><br />
+            </div>
+        </div>
+        <hr />
+        <h4>言語まわり</h4>
+        <div class="grid-table2">
+            <div class="cell p_left">
+                <a href="https://www.wiktionary.org/">Wiktionary</a>
+            </div>
+            <div class="cell p_left">
+                言わずと知れたWikipediaと同じ<br />
+                Wikimedia財団が運営する多言語辞書サイト。<br />
+                日本語版もあるのですが、やっぱり英語版がすごく充実しています。<br />
+                英単語の項からTranslationsで色んな国の単語に飛べるのがえらく便利。<br />
+                <br />
+            </div>
+            <div class="cell p_left">
+                <a href="https://wordfree.net/bibles/multiview/index.html">Wordproject</a>
+            </div>
+            <div class="cell p_left">
+                ウェブ上で聖書を閲覧できます<span class="br-sp"><br /></span>
+                （私はクリスチャンじゃないけどね…）<br />
+                リンク先はMultiview機能で<span class="br-sp"><br /></span>
+                色んな国の言葉を並べて読めるので、<br />
+                言語学習に向いてるかも？<br />
+                <br />
+            </div>
+            <div class="cell p_left">
+                <a href="https://050644zf.github.io/ArknightsStoryTextReader/?s=ja_JP#/ja_JP/menu/home">Arknights Story
+                    Text Viewer</a>
+            </div>
+            <div class="cell p_left">
+                名作だがテキスト量があまりに多すぎるソシャゲ、<br />『アークナイツ』のテキストが読めます。<br />
+                中国語や英語などの併記も可能なので、<br />こちらも言語学習に向いているかも？<br />
+                <br />
+            </div>
+            <div class="cell p_left">
+                <a href="https://oracc.museum.upenn.edu/epsd2/index.html">ePSD2 electronic PSD 2nd Edition</a>
+            </div>
+            <div class="cell p_left">
+                米ペンシルバニア大学考古学人類学博物館（Penn Museum）が<br />
+                運営している、シュメール語オンライン辞書プロジェクト。<br />
+                楔型文字について調べられるサイトです。<br />
+                気になる言葉を楔形文字で書いてみるとかっこいいのでは！？<br />
+                [Main glossary]→上の検索欄に英単語を入力で、色々出てくるかも。<br />
+            </div>
+        </div>
+        <br />
+        <h2>* ToDo *</h2>
+        <h3>予定は未定（古い言い回しだな……）</h3>
+        <hr />
+        <div class="p_left">
+            <ul>
+                <li>コンテンツを整理、ボタンを作る（Canvasとか使って素材作り？）</li>
+                <li>BBS設置？（どうかなあ～）</li>
+                <li>FFAdventure（改）とか設置？（なっつ）</li>
+            </ul>
+            <br />
+        </div>
+        <h2>* 更新履歴 *</h2>
+        <div class="grid-table2">
+            <div class="cell p_left">2026/02/20<br /></div>
+            <div class="cell p_left">JS Projectを四件追加+007の更新。</div>
+            <div class="cell p_left">2026/01/13</div>
+            <div class="cell p_left">JS Projectを一件追加。<br /></div>
+            <div class="cell p_left">2026/01/01</div>
+            <div class="cell p_left">
+                トップ絵をお正月仕様にしてみました。<br />
+                7枚くらいのうちからランダムで出ます。<br />
+            </div>
+            <div class="cell p_left">2025/12/26</div>
+            <div class="cell p_left">
+                カウンターを設置しました。<br />
+                同一IPは一日1回まで回ります。ほそぼそと回ってゆけ……。<br />
+            </div>
+            <div class="cell p_left">2025/12/12</div>
+            <div class="cell p_left">
+                トップ絵更新。<br />
+                <a href="img_gallery/gallery.htm">ギャラリー</a>
+                にNSFW的な何かを追加しました。<br />
+                （いにしえのドラッグ・アンド・ドロップとか試してみてください）
+            </div>
+            <div class="cell p_left">2025/12/07</div>
+            <div class="cell p_left">
+                コラムに<a href="column/music/waveform_museum.htm">波形博物館</a>のページを追加。
+            </div>
+            <div class="cell p_left">2025/11/17</div>
+            <div class="cell p_left">
+                <a href="music/music.htm">音楽</a>のページを作成。
+            </div>
+            <div class="cell p_left">2025/10/01</div>
+            <div class="cell p_left">細かく調整、片思いリンクを二件追加。</div>
+            <div class="cell p_left">2025/08/25</div>
+            <div class="cell p_left">
+                <a href="/seoremium/index.htm"><span class="seoremium">seoremium</span></a>のページを作成。
+            </div>
+            <div class="cell p_left">2025/08/13</div>
+            <div class="cell p_left">JS Projectを一件追加。<br /></div>
+            <div class="cell p_left">2025/08/04</div>
+            <div class="cell p_left">JS Projectを三件追加。<br /></div>
+            <div class="cell p_left">2025/07/27</div>
+            <div class="cell p_left">
+                <a href="img_gallery/gallery.htm">ギャラリー</a>を追加。<br />
+            </div>
+            <div class="cell p_left">2025/07/15</div>
+            <div class="cell p_left">JS Projectを一件追加。<br /></div>
+            <div class="cell p_left">2025/07/10</div>
+            <div class="cell p_left">Diaryの欄を追加。<br /></div>
+            <div class="cell p_left">2025/06/24</div>
+            <div class="cell p_left">Novelsを数件追加。<br /></div>
+            <div class="cell p_left">2025/05/14</div>
+            <div class="cell p_left">
+                index.htmlを仮作成。JS Projectを二件追加。<br />
+            </div>
+        </div>
+        <br />
+        <img src="top-image/top-0001.png"
+            alt="トップ画像。横長の構図で、画像の左半分を、青いロングヘア、ベレー帽、灰色の瞳、赤い眼鏡、黒のジャンパースカート、白いワイシャツとタイツ、ローファー、赤いリボンの9歳の少女『水原一埜』が大きく占めます。彼女は体を横向きに座り、ヒマワリを胸に、微笑んだ表情であなたを見つめています。時間帯は薄暮時かもしれません、黄色い満月が山のすぐそばに降りてきているので。少女の背景には何本かの木陰、連なる野山、広がる湖か川は月光を反射しており、その畔には灯篭が一つ輝いています。風が吹いているのか少女の髪は少し揺れ、月光の影になる部分には光の加減のためかピンク色の色調が加わっています。少女の足元には紫色の野花が咲いています。画像の全体的な色調は青を基調としており、涼しく静かな雰囲気を感じるのではないでしょうか。"
+            class="top-image" /><br />
+    </div>
+    <p style="text-align: center; color: #e3e8f1">★☆ since 2025/05/14 ☆★</p>
+</body>
+
+</html>

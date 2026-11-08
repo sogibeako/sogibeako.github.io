@@ -1,0 +1,124 @@
+同じ誕生日の、違う無限 — 制作ノート
+作成日：2026-10-30
+
+入口：index.htm（全5部・28話＋2026-11-04追加補講9話、記号辞典、各話の小問、スペクトル／ファイバー実験）
+
+使用資料（リポジトリルートからの相対パス）
+surreal-mirror/theory/manuscripts/omega-source-spectrum/MAIN.md
+surreal-mirror/theory/manuscripts/omega-source-spectrum/THEOREM-MAP.md
+surreal-mirror/theory/manuscripts/omega-source-spectrum/PROOF-DEPENDENCIES.md
+surreal-mirror/theory/manuscripts/omega-source-spectrum/VERIFICATION.md
+surreal-mirror/theory/manuscripts/omega-source-spectrum/OPEN-PROBLEMS.md
+pub/novels/sibling/2026sib.htm
+pub/nazo/sibling/2026/20261025/_quiz.htm
+追加参照：surreal-mirror/theory/01-EPSILON-ROW.md、02-FINITE-MIRROR.md、EPSILON-THEOREMS.md、FINITE-MIRROR-THEOREMS.md
+追加照合：surreal-mirror/theory/lean/FiniteVeblenAllMinusStretchCoefficient.lean、FiniteVeblenPlusStretchAllRowsExact.lean、ResidualAllFiniteRootsExactBirthdays.lean、OmegaSourceZeroBirthdayExact.lean、ThreeQuarterCanonicalOptions.lean
+補講E〜Gの追加照合：surreal-mirror/theory/lean/MonomialAllRanksHalfExact.lean、PositiveMonomialChildArithmetic.lean、EpsilonDescendingExamples.lean、EpsilonMonomialQuotientObstruction.lean、FiniteVeblenMonomialQuotient.lean
+
+指定パスとの差：研究原稿はpubの外のsurreal-mirror以下にあり、小話はpub/novels/sibling/2026sib.htmにある。見つかった実体を使用した。
+quiz.css：20261025のファイルをそのまま複製。story.cssは図、端末、入力欄など今回の追加要素。
+quiz.js：20261025の実験コードを引き継ぎ、元の実験DOMがないページでも動くよう独立した存在確認を追加。新たに今回のスペクトル／ファイバー実験を追加。旧ページのファイルは変更していない。
+
+数学上の編集方針
+・全員の誕生日qはφω(0)。Γ₀と同一視しない。
+・順序数演算、超現実数の体演算、符号連結を区別。
+・Rは値域の交差の標準的座標づけ。固定入力での通常順序の極限ではない。
+・Xₛ＝V₀(dₛ,₀)を保持。all-minusの残余右尾部Lと行右尾部ωᴸを区別。
+・P/Mは順序型。一般にb＝P＋Mとはならない。
+・plus伸長則のt＞0、sourceの位置0起算、Θ₀＝1を明示。
+・模式図は順序数の実数縮尺ではない。値域の系列間に連続線分があるとも主張しない。
+・ブラウザ実験は有限prefixと指定した無限tailの規則から分類公式を適用する。未知の無限列の判定ではなく、Leanをブラウザで実行するものでもない。
+・保存成功記録の紹介と、今回の再実行を区別。新規Lean証明、再コンパイル、全再ビルドなし。
+・oneThirdと実数1/3の同定をスペクトル証明の前提にしない。補講では研究第1・2章のΦの記法を明示的に採用する。Φ(1,1/3)=V₁(1/3)とsourceとしてoneThirdを選ぶ操作を区別。
+・±2全分類やn変数・崩壊関数は展望。新規性を主張しない。
+
+原稿との章対応
+01 無限個より、ひとつ多い？ — 基礎の解説・作中の計算例
+02 無限を並べる、無限を掛ける — 基礎の解説・作中の計算例
+03 自分自身に戻る数 — 基礎の解説・作中の計算例
+04 イプシロン・ゼロを捕まえろ！ — 基礎の解説・作中の計算例
+05 固定点の、そのまた固定点 — MAIN.md §2.4、§1.2。ε₀の塔とζ₀の説明は基礎解説。
+06 空っぽのゲームがゼロになる — 基礎の解説・作中の計算例
+07 半分の数はどうやって生まれる？ — 基礎の解説・作中の計算例
+08 ＋と−で数を書こう！ — 基礎の解説・作中の計算例
+09 超現実数の誕生日 — MAIN.md §2.1–2.2。有限例は説明用。
+10 超現実数の無限階段 — MAIN.md §2.2の演算の区別。ω/2は基礎の順序体の例。
+11 ωの肩に、半分を載せる — MAIN.md §2.4。omega写像の積公式と半分の例は基礎解説。
+12 固定点の世界にも、住所をつけよう — MAIN.md §2.4、付録A。substructure等の存在は基礎定理として使用。
+13 PとMは、何を数えている？ — MAIN.md §2.1–2.2。交互列は順序型の説明用。
+14 YとZ、二本の尻尾 — MAIN.md §2.3。
+15 尻尾を通すと、何文字になる？ — MAIN.md 定理4.1、式(4.1)–(4.3)。係数の例はその代入計算。
+16 無限に計算するの？ 条件を全部満たすの？ — MAIN.md §2.4–2.5、式(2.1)–(2.3)。
+17 全員、同じ誕生日！？ — MAIN.md 補題3.1、定理3.2（主定理A）。
+18 無限の暗号を解読せよ！ — MAIN.md 定理3.2–3.4（主定理A：符号コード・復号・内在的値域・順序）。
+19 右と左に伸びる、二本の尻尾 — MAIN.md §4.2–4.4、式(4.5)–(4.8)、定理5.5（主定理C）。
+20 最後のマイナスはどこにいた？ — MAIN.md §5.1–5.4（主定理B）、補題4.3。
+21 スペクトルという名の地図 — MAIN.md 補題6.1、定理6.2（主定理D）、§9.1。実験は分類式の有限記述例への適用。
+22 ファイバーの中には何人いる？ — MAIN.md 定理6.3（主定理D：明示的fiberと濃度）。
+23 隣り合う二つの無限 — MAIN.md 定理7.1（主定理E）。中点の存在は順序体からの数学的帰結。
+24 どこまで同じなら、近いの？ — MAIN.md §8.1。連続性の定義を近傍で説明。
+25 未来は決まらない。それでも連続？ — MAIN.md 補題8.1–8.2、定理8.3（主定理F）。
+26 Leanは、何を証明したの？ — THEOREM-MAP.md、VERIFICATION.md §1–2・§7、OPEN-PROBLEMS.md §1・§7。保存状態の紹介であり再監査の報告ではない。
+27 Φ(1, 1/3)は、どこへ行った？ — 01-EPSILON-ROW.md §1.1、MAIN.md §9.1・§9.3、§10。Φ(1,1/3)とoneThirdの行の基点は区別する。有限分数の列は説明用の計算。
+28 まだ見ぬ階層へ — OPEN-PROBLEMS.md §3–4・§9、MAIN.md §10。n変数・崩壊関数は登場人物の目標。
+
+2026-11-04追加の補講（A〜Gは第15話の後、H・Iは第28話の後。元の章番号・アンカーは維持）
+補講A 第二変数の半分――固定点の世界で席を選ぶ — 追加参照：01-EPSILON-ROW.md §1.2・§1.5–1.7、EPSILON-THEOREMS.md。有限入力の正準cutは符号prefixからの計算。
+補講B 第二変数の半分――出力の符号と本当の左右集合 — MAIN.md 定理4.1・§2.3・§5.5の正準option規則、FiniteVeblenAllMinusStretchCoefficient.lean、FiniteVeblenPlusStretchAllRowsExact.lean。個別式はこれらからの数学的帰結。
+補講C 第一変数の半分――鏡を通って、別の行へ — 追加参照：02-FINITE-MIRROR.md §2.4–2.6・§2.10、FINITE-MIRROR-THEOREMS.md F03–F06・F12。3/4・3/2・1/8の式は同規則の展開。
+補講D 第一変数の半分――出力の左右まで開けてみよう — MAIN.md 補題3.1・§2.3・§5.5、OmegaSourceZeroBirthdayExact.leanの有限rootブロック、02-FINITE-MIRROR.md §2.8–2.10。個別の正準cutは既存定理からの数学的帰結。
+補講E 負一番目のイプシロンへ――同じ枝の途中駅 — 01-EPSILON-ROW.md §1.2・§1.7、MAIN.md 定理4.1、MonomialAllRanksHalfExact.lean（monomial_half_exact_allRanks）、PositiveMonomialChildArithmetic.lean。prefix・共終部分cutの個別式は既存定理からの導出。
+補講F 半番目のイプシロンへ――引き算にも駅がある — MonomialAllRanksHalfExact.lean（monomial_ordinalRank_minus_ladder・monomial_half_exact_allRanks）、EpsilonMonomialQuotientObstruction.lean、MAIN.md 定理4.1。減算の個別代入・共終部分cutは数学的導出。
+補講G 半段目の行へ――固定点の駅を、さらに通り抜ける — 02-FINITE-MIRROR.md §2.6、MAIN.md 定理4.1・式(4.3)、FiniteVeblenAllMinusStretchCoefficient.lean。φ₁の順序数固定点反復、伸長則、正準prefix規則を組み合わせた数学的導出。新規Leanコンパイルなし。
+補講H 三分の一の根――無限の道順にも、左右集合を — 03-OMEGA-ROW.md §3.1・§3.6、MAIN.md 主定理A・有限rootの符号定理、ONE-THIRD-ROW-ONE-TWO-CANONICAL-CUTS.md §2–3・§5、OneThirdRowOneCompleteCanonicalSets.lean。中間のε添字表示は補講Gの伸長則の適用。
+補講I 三分の一の行の右へ――Φ(1/3,1)を書いてみよう — 03-OMEGA-ROW.md §3.6・§3.11、04-COMPONENT-SEQUENCE.md §4.3–4.6、MAIN.md 尾部分類、ONE-THIRD-ROW-ONE-TWO-CANONICAL-CUTS.md §4–5、ONE-THIRD-COMPONENT-CLOSED-FORMS-TAIL-SYMMETRY.md「全右componentの閉形式とepsilon添字」、OneThirdRowOneCanonicalCutExplicit.lean。
+追加した個別式は既存の一般伸長則・finite root block・正準prefix規則からの数学的帰結。新しいLean endpointの証明・コンパイルは実施していない。
+
+補講E〜Gの導出と原資料との差
+・01-EPSILON-ROW.mdの上側の目印に関する不等式だけから、prefixやcutの選択を結論しない。
+・MonomialAllRanksHalfExact.leanのmonomial_half_exact_allRanks、monomial_ordinalRank_minus_ladderを代入してη/2、ε₁−ε₀を純粋minus延長に同定。
+・V₀の伸長則からaₙ(η)＝Zη(κ^(n+1))、κ＝ω^(η+1)。sup κ^(n+1)＝η^ω。
+・V₁の伸長則からΦ(1,−1)＝Zε₀(ε₀^ω)、Φ(1,1/2)＝Zε₁(ε₁^ω)。上のprefix列の合併と一致。
+・Φ(1,−ι(α))＝Zε₀(ρ₀・α)。uₙ＝1,ω,ε₀,εε₀,…はζ＝φ₂(0)へ共終し、ρ₀・ζ＝ζ。
+・正準cutの右集合を、尾部長が共終する部分列に縮約。左集合はη未満の全順序数を保持。固定点世界の内部cutと通常cutを区別。
+・これらの個別式・共終部分cutは既存定理からの数学的導出。本文全体や新しい個別endpointをLeanで検証済みとは主張しない。
+
+補講H・Iの追加照合と記号
+・03-OMEGA-ROW.md、04-COMPONENT-SEQUENCE.md、ONE-THIRD-ROW-ONE-TWO-CANONICAL-CUTS.md §2–5、ONE-THIRD-COMPONENT-CLOSED-FORMS-TAIL-SYMMETRY.md「全右componentの閉形式とepsilon添字」を参照。
+・対応Lean：experimental/OneThirdRowOneCompleteCanonicalSets.lean、lean/OneThirdRowOneCanonicalCutExplicit.lean、lean/OneThirdNegativeEndpointComponentLengths.lean。
+・原資料のD・B・uₙを、本補講ではX・W・zₙと呼ぶ。X＝Φ(1/3,0)、W＝Φ(1/3,1)。
+・sourceと1/3の算術的同定を明示的に採用。native_decide由来の依存を持つsource同定と、row構造の定理を区別。
+・根rₙはn≧1に限定。n＝0の有限evaluatorはV₀であり、残余transition積の根r₀と混同しない。
+・Xの有限root鎖・符号位置区間・正準cut・共終／共始部分族のcutを対応づけた。
+・W＝Y_X(Λ)、zₙ＝Y_X(μₙ)。μₙの全添字の閉形式と、z₀・z₁の算術／固定点反復表示を掲載。
+・完全正準集合と、その部分族によるcutを区別。Wの正準右集合はXと同じ。
+・第二入力1ではG_wₙ(1)の単純な列を用いず、残余座標dₙの右childを写す。
+・無限の規則を指定した正確な表示であり、有限のΦ式だけへの縮約や、新規のLean検証は主張しない。
+
+
+表示・操作の検証（2026-10-30）
+・HTMLのタグ対応、IDの一意性、28話＋辞典の構造、全ローカルリンクを確認。
+・quiz.cssが参照元とバイト一致。quiz.jsはnode --check成功。
+・ブラウザで136個のMathJax数式を確認。数式エラー、コンソール警告・エラーなし。
+・初期例(+--, all-plus)、空prefixのall-plus／all-minus、最後の符号の両方向、交互tailを操作確認。
+・不正な文字abcでエラーメッセージを確認。
+・fiberのj=3で8件、j=0で1件、小問の解答開閉を確認。
+・幅390pxで本文・実験を確認。ページ全体の横はみ出しなし、長い数式は枠内スクロール。
+
+追加補講の検証（2026-11-04）
+・HTMLのタグ対応、IDの一意性、28話＋補講4話のアンカーと162件のリンク・アセット参照を確認。
+・ブラウザで187個のMathJax数式を確認。数式エラー、コンソール警告・エラーなし。
+・補講の見出し・会話・数式を実表示で確認。幅1265pxでページ全体の横はみ出しなし。
+
+補講E〜G追加後の検証（2026-11-04）
+・28話＋補講7話のHTMLタグ対応、ID一意性、177件のリンク・アセット参照を確認。quiz.cssは指定元とバイト一致。
+・263個のMathJax数式に描画エラーなし。追加ページ確認中のコンソール警告・エラーなし。
+・3つの枝の図を配置。デスクトップで補講E、幅390pxの設定で補講Gを目視確認。
+・スマートフォン幅でページ全体と各枝の図に横はみ出しなし。長い数式は枠内でスクロール。
+
+補講H・I追加後の検証（2026-11-04）
+・28話＋補講9話、88個のIDの一意性、HTMLタグ対応、188件のリンク・アセット参照、H・Iの第28話直後の配置を確認。
+・quiz.cssは指定元とバイト一致。CSS・JavaScriptの追加変更なし。
+・317個のMathJax数式（Hに22個、Iに32個）に描画エラーなし。確認中のコンソール警告・エラーなし。
+・デスクトップ幅で補講H、幅390pxの設定で補講Iの枝の図を目視確認。ページ全体と追加の図に横はみ出しなし。
+・長い表・数式は既存スタイルによる枠内スクロール。Leanの新規コンパイル・再ビルドは実施していない。

@@ -384,6 +384,27 @@
                 grid-template-columns: 1fr;
             }
 
+            /* スマートフォン用の小さな雨滴バッジ（枠込み132×44px） */
+            .grid-table-menu {
+                grid-template-columns: 148px minmax(0, 1fr);
+            }
+
+            .grid-table-menu .rain-badge {
+                width: 128px;
+                height: 40px;
+            }
+
+            .grid-table-menu .rain-badge .badge-icon {
+                width: 32px;
+            }
+
+            .grid-table-menu .rain-badge .badge-label {
+                font-size: 0.75rem;
+                letter-spacing: 0.06em;
+                padding-right: 4px;
+                white-space: nowrap;
+            }
+
             .annotation {
                 font-size: 0.6rem;
             }

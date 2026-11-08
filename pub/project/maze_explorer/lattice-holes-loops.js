@@ -12,6 +12,8 @@ function observe(state,sheet){
  if(r.lastStep===state.steps)return null;
  const e=state.last;
  if(state.steps!==r.lastStep+1||!e||e.kind==='throat'||e.changed||r.path.at(-1)?.id!==e.from){r.path=[];start(state);return null;}
+ // Waiting advances time but contributes no displacement or loop evidence.
+ if(e.worldDirection===4){r.lastStep=state.steps;return null;}
  const prev=r.path.at(-1),directions=[[0,-1],[1,0],[0,1],[-1,0]],[dx,dy]=directions[e.worldDirection];
  const point={id:state.id,frame:state.frame.join(','),x:prev.x+dx,y:prev.y+dy};
  const index=r.path.findIndex(p=>p.id===point.id&&p.frame===point.frame);r.lastStep=state.steps;
@@ -31,9 +33,11 @@ function setThreshold(state,value){
 }
 function knowledge(state){
  const threshold=state.loopThreshold??3;
- return [...(state.loopExperience?.counts||[])].map(([key,count])=>{
+ const counts=new Map(state.loopExperience?.counts||[]);for(const p of state.markPeriods||[])if(!counts.has(`${p.sheet}:${p.a}:${p.b}`))counts.set(`${p.sheet}:${p.a}:${p.b}`,0);
+ return [...counts].map(([key,count])=>{
   const [sheet,a,b]=key.split(':').map(Number);
-  return {key,sheet,a,b,count,learned:threshold>0&&count>=threshold,remaining:threshold>0?Math.max(0,threshold-count):null};
+  const byMarks=(state.markPeriods||[]).some(p=>p.sheet===sheet&&p.a===a&&p.b===b);
+  return {key,sheet,a,b,count,byMarks,learned:threshold>0&&(byMarks||count>=threshold),remaining:threshold>0?byMarks?0:Math.max(0,threshold-count):null};
  });
 }
 const api={start,observe,setThreshold,knowledge};if(typeof module==='object')module.exports=api;else root.SkewLoops=api;

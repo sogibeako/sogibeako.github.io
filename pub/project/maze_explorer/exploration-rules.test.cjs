@@ -3,12 +3,12 @@ const base={width:21,height:17,topology:'plane',algorithm:'dfs',loops:0},rules={
 for(let i=0;i<100;i++){
  const o=G.choose('main',base,true,'rule-'+i,undefined,undefined,{enabled:true,pool:['plane','torus']},'right',undefined,rules),w=C.generate(o);
  const type=o.keyDoor?'keys':o.warpMode?'warp':o.birdMode?'birds':'plain';types.add(type);
- if(o.keyDoor){a.equal(o.topology,'plane');a(w.puzzle.locks.length);}
+ if(o.keyDoor){a(w.puzzle.locks.length);}
  if(o.warpMode)a(w.warps.size>0);
  if(o.birdMode){a.equal(o.loops,8);a(C.createGame(w).birds.length>0);}
 }
 a.equal(types.size,4);
-a.throws(()=>G.choose('main',{...base,topology:'torus',width:20,height:16},false,'bad',undefined,undefined,undefined,'none',undefined,{enabled:true,pool:['keys']}),/組合せ/);
+a(G.choose('main',{...base,topology:'torus',width:20,height:16},false,'keys',undefined,undefined,undefined,'none',undefined,{enabled:true,pool:['keys']}).keyDoor);
 a.equal(G.choose('main',{...base,loops:20},false,'birds',undefined,undefined,undefined,'none',undefined,{enabled:true,pool:['birds']}).loops,20);
 a.deepEqual(G.choose('main',base,false,'off',undefined,undefined,undefined,'none',undefined,{...rules,enabled:false}),{...base,seed:'off'});
 a.deepEqual(Course.validate({enabled:true,completed:0,steps:0,rules}).rules,rules);

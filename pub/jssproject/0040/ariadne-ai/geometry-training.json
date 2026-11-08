@@ -1,0 +1,397 @@
+{
+  "model": {
+    "format": "ariadne-training",
+    "version": 2,
+    "features": [
+      "HP",
+      "討伐数",
+      "敵の残HP",
+      "杖残量",
+      "凍結数",
+      "身代わり数",
+      "隣接する活動敵",
+      "自由な隣接ノード",
+      "最寄り敵との距離",
+      "停滞反復",
+      "経過ターン",
+      "移動可能領域",
+      "侵入可能な敵",
+      "敵の接近猶予",
+      "出口への自由経路",
+      "凍結による遮断",
+      "凍結による出口閉塞",
+      "身代わりの拘束"
+    ],
+    "weights": [
+      2.9926988990046084,
+      6.104305777698755,
+      0.45475593162700534,
+      -1.0864521255716681,
+      -3.2377863521687686,
+      -3.880215236917138,
+      -4.946534967515618,
+      -0.11648130137473345,
+      -2.338849969860166,
+      -0.5009842738509178,
+      -3.0222339508123692,
+      -0.8532514148391783,
+      -0.11158946808427572,
+      -0.31805857038125396,
+      0.5952719692140818,
+      -2.1017506127245724,
+      -0.0477475943043828,
+      0.9192503509111702
+    ],
+    "generations": 150
+  },
+  "cancelled": false,
+  "history": [
+    {
+      "generation": 149,
+      "reward": 991.025,
+      "clearRate": 0.875
+    },
+    {
+      "generation": 150,
+      "reward": 991.025,
+      "clearRate": 0.875
+    }
+  ],
+  "before": {
+    "reward": 911.7125,
+    "clearRate": 0.875,
+    "episodes": [
+      {
+        "seed": 1000246,
+        "course": "large",
+        "reward": 965.5,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 4,
+        "hp": 15,
+        "turns": 45,
+        "floor": 4,
+        "level": 4,
+        "charges": [
+          0,
+          2,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 1000247,
+        "course": "large",
+        "reward": 984,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 4,
+        "hp": 130,
+        "turns": 116,
+        "floor": 4,
+        "level": 4,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000248,
+        "course": "large",
+        "reward": 1001,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 4,
+        "hp": 50,
+        "turns": 16,
+        "floor": 4,
+        "level": 4,
+        "charges": [
+          2,
+          0,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 1000249,
+        "course": "large",
+        "reward": 953.3,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 4,
+        "hp": 18,
+        "turns": 43,
+        "floor": 4,
+        "level": 4,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000250,
+        "course": "large",
+        "reward": 1158.1,
+        "cleared": true,
+        "dead": false,
+        "kills": 4,
+        "enemies": 4,
+        "hp": 6,
+        "turns": 43,
+        "floor": 4,
+        "level": 4,
+        "charges": [
+          0,
+          1,
+          2,
+          1
+        ]
+      },
+      {
+        "seed": 1000251,
+        "course": "large",
+        "reward": 1148.8,
+        "cleared": true,
+        "dead": false,
+        "kills": 4,
+        "enemies": 4,
+        "hp": 3,
+        "turns": 40,
+        "floor": 4,
+        "level": 4,
+        "charges": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "seed": 1000252,
+        "course": "large",
+        "reward": 85,
+        "cleared": false,
+        "dead": true,
+        "kills": 2,
+        "enemies": 4,
+        "hp": 0,
+        "turns": 12,
+        "floor": 4,
+        "level": 4,
+        "charges": [
+          2,
+          3,
+          3,
+          1
+        ]
+      },
+      {
+        "seed": 1000253,
+        "course": "large",
+        "reward": 998,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 4,
+        "hp": 35,
+        "turns": 16,
+        "floor": 4,
+        "level": 4,
+        "charges": [
+          3,
+          1,
+          3,
+          0
+        ]
+      }
+    ]
+  },
+  "after": {
+    "reward": 889.4999999999999,
+    "clearRate": 0.875,
+    "episodes": [
+      {
+        "seed": 1000246,
+        "course": "large",
+        "reward": 1042.8,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 4,
+        "hp": 113,
+        "turns": 14,
+        "floor": 4,
+        "level": 4,
+        "charges": [
+          3,
+          0,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 1000247,
+        "course": "large",
+        "reward": 1008.4,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 4,
+        "hp": 29,
+        "turns": 12,
+        "floor": 4,
+        "level": 4,
+        "charges": [
+          4,
+          4,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 1000248,
+        "course": "large",
+        "reward": 1174.5,
+        "cleared": true,
+        "dead": false,
+        "kills": 4,
+        "enemies": 4,
+        "hp": 25,
+        "turns": 21,
+        "floor": 4,
+        "level": 4,
+        "charges": [
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000249,
+        "course": "large",
+        "reward": 1029.1,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 4,
+        "hp": 86,
+        "turns": 15,
+        "floor": 4,
+        "level": 4,
+        "charges": [
+          4,
+          0,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 1000250,
+        "course": "large",
+        "reward": -334.5,
+        "cleared": false,
+        "dead": true,
+        "kills": 0,
+        "enemies": 4,
+        "hp": 0,
+        "turns": 15,
+        "floor": 4,
+        "level": 4,
+        "charges": [
+          0,
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000251,
+        "course": "large",
+        "reward": 998.5,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 4,
+        "hp": 45,
+        "turns": 15,
+        "floor": 4,
+        "level": 4,
+        "charges": [
+          2,
+          0,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 1000252,
+        "course": "large",
+        "reward": 966.5,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 4,
+        "hp": 20,
+        "turns": 43,
+        "floor": 4,
+        "level": 4,
+        "charges": [
+          0,
+          1,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 1000253,
+        "course": "large",
+        "reward": 1230.7,
+        "cleared": true,
+        "dead": false,
+        "kills": 4,
+        "enemies": 4,
+        "hp": 117,
+        "turns": 25,
+        "floor": 4,
+        "level": 4,
+        "charges": [
+          3,
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "trainSeeds": [
+    246,
+    247,
+    248,
+    249,
+    250,
+    251,
+    252,
+    253
+  ],
+  "testSeeds": [
+    1000246,
+    1000247,
+    1000248,
+    1000249,
+    1000250,
+    1000251,
+    1000252,
+    1000253
+  ],
+  "course": "large"
+}

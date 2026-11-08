@@ -1,0 +1,114 @@
+{
+  "agent": "sampled-lookahead-v3",
+  "depth": 2,
+  "samples": 3,
+  "criticalScenarios": 1,
+  "turnLimit": 300,
+  "goal": "home",
+  "comparison": {
+    "previous": {
+      "runs": 10,
+      "averageScore": 2741,
+      "maxFloor": 4,
+      "escapes": 0
+    },
+    "current": {
+      "runs": 10,
+      "averageScore": 4368,
+      "maxFloor": 8,
+      "escapes": 0
+    }
+  },
+  "results": [
+    {
+      "seed": 42,
+      "depth": 2,
+      "floor": 4,
+      "score": 4567,
+      "turn": 52,
+      "result": "dead",
+      "elapsedMs": 1069
+    },
+    {
+      "seed": 43,
+      "depth": 2,
+      "floor": 4,
+      "score": 4727,
+      "turn": 88,
+      "result": "dead",
+      "elapsedMs": 1230
+    },
+    {
+      "seed": 44,
+      "depth": 2,
+      "floor": 1,
+      "score": 387,
+      "turn": 14,
+      "result": "dead",
+      "elapsedMs": 166
+    },
+    {
+      "seed": 45,
+      "depth": 2,
+      "floor": 8,
+      "score": 10873,
+      "turn": 152,
+      "result": "dead",
+      "elapsedMs": 3173
+    },
+    {
+      "seed": 46,
+      "depth": 2,
+      "floor": 4,
+      "score": 4259,
+      "turn": 45,
+      "result": "dead",
+      "elapsedMs": 780
+    },
+    {
+      "seed": 47,
+      "depth": 2,
+      "floor": 2,
+      "score": 2457,
+      "turn": 207,
+      "result": "dead",
+      "elapsedMs": 2313
+    },
+    {
+      "seed": 48,
+      "depth": 2,
+      "floor": 2,
+      "score": 1814,
+      "turn": 21,
+      "result": "dead",
+      "elapsedMs": 324
+    },
+    {
+      "seed": 49,
+      "depth": 2,
+      "floor": 2,
+      "score": 1316,
+      "turn": 23,
+      "result": "dead",
+      "elapsedMs": 230
+    },
+    {
+      "seed": 50,
+      "depth": 2,
+      "floor": 7,
+      "score": 11162,
+      "turn": 144,
+      "result": "dead",
+      "elapsedMs": 2351
+    },
+    {
+      "seed": 51,
+      "depth": 2,
+      "floor": 2,
+      "score": 2119,
+      "turn": 38,
+      "result": "dead",
+      "elapsedMs": 690
+    }
+  ]
+}

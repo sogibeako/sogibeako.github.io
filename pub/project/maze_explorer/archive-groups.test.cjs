@@ -19,5 +19,5 @@ const before=g.turns;M.archiveGroups(g);assert.equal(g.turns,before);
 assert.deepEqual(M.archiveGroups(M.createGame(g.world)),[]);
 // Periodic ambiguity is retained until actual learning permits a match.
 const t=M.createGame(M.createArchiveDemo());assert.deepEqual(M.matchEntranceMaps(t,true),[]);assert.equal(M.archiveGroups(t)[0].live,false);
-for(let i=0;i<24;i++)M.move(t,'right');assert.deepEqual(M.matchEntranceMaps(t,true),[0]);assert.equal(M.archiveGroups(t)[0].live,true);
-console.log('PASS: explicit matching only, unknown/ambiguous records remain separate, grouped persistence across warp, original notes/maps preserved, detached results, no turns, reset, learned torus matching.');
+for(let i=0;i<24;i++)M.move(t,'right');assert(t.cognition.matchedArchives.has(0),'after learning, complete containment is absorbed automatically');assert.deepEqual(M.matchEntranceMaps(t,true),[]);assert.equal(M.archiveGroups(t)[0].live,true);
+console.log('PASS: explicit matching and complete containment, unknown/ambiguous records remain separate, grouped persistence across warp, original notes/maps preserved, detached results, no turns, reset, learned torus matching.');

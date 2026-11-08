@@ -1,7 +1,7 @@
 /* Share the learning threshold without rewriting an existing main maze's memories. */
 'use strict';
 (()=>{
- const main=document.getElementById('loopLearning'),fold=document.getElementById('mainFoldLoops'),frames={skew:document.getElementById('skewPilotFrame'),enclosure:document.getElementById('enclosureFrame')};
+ const main=document.getElementById('loopLearning'),fold=document.getElementById('mainFoldLoops'),frames={biaxial:document.getElementById('biaxialFrame'),klein:document.getElementById('kleinFrame'),skew:document.getElementById('skewPilotFrame'),enclosure:document.getElementById('enclosureFrame')};
  const toThreshold={off:'0',three:'3',on:'5'},toMain={'0':'off','3':'three','5':'on'};
  let threshold=toThreshold[main.value]||'3',applying=false,folding=fold.checked;
  function apply(){
@@ -16,7 +16,7 @@
  }
  main.addEventListener('change',()=>{if(!applying){threshold=toThreshold[main.value];apply();}});
  fold.addEventListener('change',()=>{if(!applying)folding=fold.checked;});
- for(const [mode,frame]of Object.entries(frames))frame.addEventListener('load',()=>{
+ for(const [mode,frame]of Object.entries(frames))frame?.addEventListener('load',()=>{
   const control=frame.contentDocument?.getElementById('loopThreshold');
   control?.addEventListener('change',()=>{if(!applying){threshold=control.value;main.value=toMain[threshold];}});
   frame.contentDocument?.getElementById('foldLoops')?.addEventListener('change',()=>{if(!applying)folding=frame.contentDocument.getElementById('foldLoops').checked;});

@@ -3,7 +3,7 @@
 'use strict';
 const J=typeof module==='object'?require('./main-journey.js'):root.MazeMainJourney;
 const Random=typeof module==='object'?require('./random-journey.js'):root.MazeRandomJourney;
-const defaults={width:31,height:23,algorithm:'dfs',seed:'first-walk',loops:0,newestBias:70,roomCount:8,roomPlacement:'bsp',connectionStyle:'tree',warpMode:false,warpStyle:'pair',warpCount:1,warpInvisible:false,keyDoor:false,keyCount:1,birdMode:false,birdCount:1,teleportPolicy:'far',separateMaps:false,topology:'plane',loopLearning:false,learningLaps:5,selfVision:false,shiftX:0,shiftY:0};
+const defaults={width:31,height:23,algorithm:'dfs',seed:'first-walk',loops:0,newestBias:70,roomCount:8,roomPlacement:'bsp',connectionStyle:'tree',warpMode:false,warpStyle:'pair',warpCount:1,warpInvisible:false,keyDoor:false,distantKey:false,keyCount:1,birdMode:false,birdLeap:false,birdCount:1,teleportPolicy:'far',separateMaps:false,topology:'plane',loopLearning:false,learningLaps:5,selfVision:false,shiftX:0,shiftY:0};
 const courses=['same','plain','variety','torus','keys','birds','random'];
 function options(input){
  if(!input||typeof input!=='object'||Array.isArray(input))throw Error('生成条件が不正です。');

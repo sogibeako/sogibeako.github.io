@@ -1,0 +1,25 @@
+{
+  "modelGenerations": 468,
+  "results": [
+    {
+      "seed": 45,
+      "depth": 2,
+      "floor": 3,
+      "turn": 108,
+      "hp": 0,
+      "score": 4345,
+      "dead": true,
+      "safeguards": 3
+    },
+    {
+      "seed": 45,
+      "depth": 3,
+      "floor": 4,
+      "turn": 76,
+      "hp": 100,
+      "score": 4752,
+      "dead": false,
+      "safeguards": 10
+    }
+  ]
+}

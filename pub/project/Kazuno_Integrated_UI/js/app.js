@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let activeBasicInterpreter = null;
     let cliInputResolver = null;
+    let calendarDirty = true;
+    let calendarFrame = null;
+    let cliScrollFrame = null;
     let vfsReadyPromise = Promise.resolve();
     const CLI_MAX_LINES = 600;
     const DONE_TODAY_KEY = 'kazuno_done_today_items';
@@ -386,9 +389,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         AppState.activeTab = tabId;
+        if (tabId === 'calendar' && calendarDirty) renderCalendar();
 
         // CLIタブへ切り替わった場合に入力欄へ自動フォーカス
         if (tabId === 'cli') {
+            scheduleCliScroll();
             const cliInput = document.getElementById('cliInput');
             if (cliInput) {
                 setTimeout(() => {
@@ -1261,6 +1266,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderCalendar() {
+        calendarDirty = true;
+        if (AppState.activeTab !== 'calendar' || calendarFrame !== null) return;
+        calendarFrame = requestAnimationFrame(() => {
+            calendarFrame = null;
+            if (AppState.activeTab !== 'calendar') return;
+            calendarDirty = false;
+            drawCalendar();
+        });
+    }
+
+    function drawCalendar() {
         const titleEl = document.getElementById('calCurrentMonthYear');
         const gridEl = document.getElementById('calendarDays');
         if (!titleEl || !gridEl) return;
@@ -1269,7 +1285,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentMonth = AppState.selectedDate.getMonth();
 
         titleEl.textContent = `${currentYear}年 ${String(currentMonth + 1).padStart(2, '0')}月`;
-        gridEl.innerHTML = '';
+        const cells = document.createDocumentFragment();
+        const dates = {
+            events: new Set(AppState.events.map(e => normalizeDateValue(e.event_date))),
+            todos: new Set(AppState.todos.filter(t => parseInt(t.done) === 0).map(t => t.due_date)),
+            done: new Set(AppState.doneItems.map(item => item.date || item.done_date))
+        };
 
         const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
         const lastDay = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -1283,27 +1304,28 @@ document.addEventListener('DOMContentLoaded', () => {
             const dayNum = prevLastDay - i + 1;
             const tempDate = new Date(currentYear, currentMonth - 1, dayNum);
             const dateStr = `${tempDate.getFullYear()}-${String(tempDate.getMonth() + 1).padStart(2, '0')}-${String(tempDate.getDate()).padStart(2, '0')}`;
-            gridEl.appendChild(createDayCell(dayNum, true, dateStr, todayStr, selectedStr));
+            cells.appendChild(createDayCell(dayNum, true, dateStr, todayStr, selectedStr, dates));
         }
 
         for (let i = 1; i <= lastDay; i++) {
             const tempDate = new Date(currentYear, currentMonth, i);
             const dateStr = `${tempDate.getFullYear()}-${String(tempDate.getMonth() + 1).padStart(2, '0')}-${String(tempDate.getDate()).padStart(2, '0')}`;
-            gridEl.appendChild(createDayCell(i, false, dateStr, todayStr, selectedStr));
+            cells.appendChild(createDayCell(i, false, dateStr, todayStr, selectedStr, dates));
         }
 
-        const totalCells = gridEl.children.length;
+        const totalCells = firstDayIndex + lastDay;
         const nextMonthCells = 42 - totalCells;
         for (let i = 1; i <= nextMonthCells; i++) {
             const tempDate = new Date(currentYear, currentMonth + 1, i);
             const dateStr = `${tempDate.getFullYear()}-${String(tempDate.getMonth() + 1).padStart(2, '0')}-${String(tempDate.getDate()).padStart(2, '0')}`;
-            gridEl.appendChild(createDayCell(i, true, dateStr, todayStr, selectedStr));
+            cells.appendChild(createDayCell(i, true, dateStr, todayStr, selectedStr, dates));
         }
 
+        gridEl.replaceChildren(cells);
         updateCalendarDetails();
     }
 
-    function createDayCell(dayNum, isOtherMonth, dateStr, todayStr, selectedStr) {
+    function createDayCell(dayNum, isOtherMonth, dateStr, todayStr, selectedStr, dates) {
         const cell = document.createElement('div');
         const dayOfWeek = new Date(dateStr).getDay();
         
@@ -1322,9 +1344,9 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
 
         const indicators = cell.querySelector('.day-indicators');
-        const hasEvent = AppState.events.some(e => normalizeDateValue(e.event_date) === dateStr);
-        const hasTodo = AppState.todos.some(t => t.due_date === dateStr && parseInt(t.done) === 0);
-        const hasDone = getDoneItemsForDate(dateStr).length > 0;
+        const hasEvent = dates.events.has(dateStr);
+        const hasTodo = dates.todos.has(dateStr);
+        const hasDone = dates.done.has(dateStr);
 
         if (hasEvent) indicators.innerHTML += '<span class="indicator-dot event"></span>';
         if (hasTodo) indicators.innerHTML += '<span class="indicator-dot todo"></span>';
@@ -2844,6 +2866,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function scheduleCliScroll() {
+        if (AppState.activeTab !== 'cli' || cliScrollFrame !== null) return;
+        cliScrollFrame = requestAnimationFrame(() => {
+            cliScrollFrame = null;
+            const output = document.getElementById('cliOutput');
+            if (output && AppState.activeTab === 'cli') output.scrollTop = output.scrollHeight;
+        });
+    }
+
     function printCli(text, type = '') {
         const output = document.getElementById('cliOutput');
         if (!output) return;
@@ -2856,7 +2887,7 @@ document.addEventListener('DOMContentLoaded', () => {
         while (output.children.length > CLI_MAX_LINES) {
             output.removeChild(output.firstElementChild);
         }
-        output.scrollTop = output.scrollHeight;
+        scheduleCliScroll();
     }
     window.printCli = printCli;
 
@@ -2932,6 +2963,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             case 'calc':
                 handleCalcCommand(args.slice(1));
+                break;
+            case 'matrix':
+            case 'mat':
+                await window.MatrixCli.run(args.slice(1), printCli);
+                break;
+            case 'quat':
+            case 'quaternion':
+                window.HypercomplexCli.run(4, args.slice(1), printCli);
+                break;
+            case 'oct':
+            case 'octonion':
+                window.HypercomplexCli.run(8, args.slice(1), printCli);
                 break;
             case 'hcalc':
                 handleHcalcCommand();
@@ -3245,6 +3288,8 @@ document.addEventListener('DOMContentLoaded', () => {
         printCli('queue stop                - 現在のキュー自動送りを停止します。', 'muted');
         printCli('open <URL>                - 指定したURLをブラウザ別タブで開きます。', 'muted');
         printCli('calc [数式]               - 数式を評価して計算します (引数なしで履歴を表示)。', 'muted');
+        printCli('matrix / mat              - 行列の和・積・固有値・逆行列・疑似逆行列。matrix help で入力例。', 'muted');
+        printCli('quat / oct                - 四元数・八元数の計算。quat help / oct help で入力例。', 'muted');
         printCli('hcalc                     - 計算機能(calc)の利用可能演算子・定数・関数のヘルプを表示します。', 'muted');
         printCli('tab <name> / goto <name>  - 指定タブへ移動します。todo, calendar, pomodoro, video, location, cli, oneirotopia', 'muted');
         printCli('tabs                      - 移動できるタブ名を表示します。', 'muted');

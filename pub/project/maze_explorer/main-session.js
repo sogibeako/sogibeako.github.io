@@ -36,8 +36,9 @@ function replayArrowEdit(g,redo){
  }
  source.pop();destination.push(edit);return true;
 }
-function act(g,kind,...args){
- const fn={warpRecord:M.recordObservedWarp,undoArrow:g=>replayArrowEdit(g,false),redoArrow:g=>replayArrowEdit(g,true),move:M.move,wait:M.waitTurn,mark:M.placeMarker,zero:M.placeZeroMark,zeroAt:M.placeRemoteZeroMark,eraseZeroAt:M.eraseZeroMark,arrow:M.rememberWarpArrow,eraseArrow:M.eraseWarpArrow,curveArrow:M.curveWarpArrow,resetArrowCurve:M.resetWarpArrowCurve,name:M.nameMarker,continue:M.continueExploring,note:M.setArchiveNote,landmark:g=>M.matchLandmarkMaps(g,true),recorded:g=>M.matchRecordedMaps(g,true)}[kind];
+function act(g,kind,...args){globalThis.MainWands?.flush(g);
+ if(g.wands?.oob&&!['move','wait','oobReturn'].includes(kind))return false;
+ const fn={oobReturn:M.returnOob,wands:M.enableWands,cast:M.castWand,warpRecord:M.recordObservedWarp,undoArrow:g=>replayArrowEdit(g,false),redoArrow:g=>replayArrowEdit(g,true),move:M.move,wait:M.waitTurn,mark:M.placeMarker,zero:M.placeZeroMark,zeroAt:M.placeRemoteZeroMark,eraseZeroAt:M.eraseZeroMark,arrow:M.rememberWarpArrow,eraseArrow:M.eraseWarpArrow,curveArrow:M.curveWarpArrow,resetArrowCurve:M.resetWarpArrowCurve,name:M.nameMarker,continue:M.continueExploring,note:M.setArchiveNote,landmark:g=>M.matchLandmarkMaps(g,true),recorded:g=>M.matchRecordedMaps(g,true)}[kind];
  if(!fn)throw Error('未対応の操作です。');
  const editing=['arrow','eraseArrow','curveArrow','resetArrowCurve'].includes(kind);
  const index=editing?(g.warpArrows?.findIndex(a=>a.from===args[0]&&a.to===args[1])??-1):-1;
@@ -58,7 +59,7 @@ function fingerprint(g){
  let h=2166136261;for(let i=0;i<text.length;i++)h=Math.imul(h^text.charCodeAt(i),16777619);
  return (h>>>0).toString(16);
 }
-function encode(g,course){
+function encode(g,course){globalThis.MainWands?.flush(g);
  if(!supported(g))throw Error('この実験用の地形は途中セーブに対応していません。');
  const h=histories.get(g);if(!h||h.overflow)throw Error('操作履歴が不足しているか、保存上限（20,000操作）を超えています。');
  return JSON.stringify({format:'maze-planar-session',version:1,entrance:JSON.parse(C.encode(g,course)),actions:h.actions,check:fingerprint(g)},null,2);
@@ -68,7 +69,7 @@ function* replay(text){
  let d;try{d=JSON.parse(text);}catch{throw Error('JSON形式の保存データではありません。');}
  if(d?.format!=='maze-planar-session'||d.version!==1||!Array.isArray(d.actions)||d.actions.length>limit||typeof d.check!=='string')throw Error('対応する途中セーブではありません。');
  for(const a of d.actions){
-  if(!Array.isArray(a)||!((a.length===4&&a[0]==='curveArrow'&&Number.isInteger(a[1])&&Number.isInteger(a[2])&&Number.isFinite(a[3])&&Math.abs(a[3])<=3)||(a.length===2&&['zeroAt','eraseZeroAt'].includes(a[0])&&Number.isInteger(a[1]))||(a.length===3&&['arrow','eraseArrow','resetArrowCurve'].includes(a[0])&&Number.isInteger(a[1])&&Number.isInteger(a[2]))||(a.length===2&&a[0]==='move'&&Object.hasOwn(M.DIRS,a[1]))||(a.length===1&&['wait','mark','zero','continue','landmark','recorded','undoArrow','redoArrow','warpRecord'].includes(a[0]))||(a.length===3&&a[0]==='name'&&typeof a[1]==='string'&&a[1].length<=2&&typeof a[2]==='string'&&a[2].length<=100)||(a.length===3&&a[0]==='note'&&Number.isInteger(a[1])&&a[1]>=0&&a[1]<limit&&typeof a[2]==='string'&&a[2].length<=200)))throw Error('操作履歴が不正です。');
+  if(!Array.isArray(a)||!((a.length===3&&a[0]==='cast'&&['freeze','push','swap','pull'].includes(a[1])&&Number.isInteger(a[2])&&a[2]>=0&&a[2]<4)||(a.length===1&&['wands','oobReturn'].includes(a[0]))||(a.length===4&&a[0]==='curveArrow'&&Number.isInteger(a[1])&&Number.isInteger(a[2])&&Number.isFinite(a[3])&&Math.abs(a[3])<=3)||(a.length===2&&['zeroAt','eraseZeroAt'].includes(a[0])&&Number.isInteger(a[1]))||(a.length===3&&['arrow','eraseArrow','resetArrowCurve'].includes(a[0])&&Number.isInteger(a[1])&&Number.isInteger(a[2]))||(a.length===2&&a[0]==='move'&&Object.hasOwn(M.DIRS,a[1]))||(a.length===1&&['wait','mark','zero','continue','landmark','recorded','undoArrow','redoArrow','warpRecord'].includes(a[0]))||(a.length===3&&a[0]==='name'&&typeof a[1]==='string'&&a[1].length<=2&&typeof a[2]==='string'&&a[2].length<=100)||(a.length===3&&a[0]==='note'&&Number.isInteger(a[1])&&a[1]>=0&&a[1]<limit&&typeof a[2]==='string'&&a[2].length<=200)))throw Error('操作履歴が不正です。');
  }
  const restored=C.decode(JSON.stringify(d.entrance)),g=restored.game;
  if(!supported(g))throw Error('この空間・ルールの途中再開はまだ未対応です。');

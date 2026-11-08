@@ -1,0 +1,4 @@
+const a=require('node:assert/strict'),H=require('./return-enclosure.js'),Save=require('./return-enclosure-save.js'),fs=require('node:fs');
+(async()=>{const html=fs.readFileSync(__dirname+'/return-enclosure.html','utf8');a.match(html,/<option value="1" selected>/);a.match(html,/<option value="3" hidden disabled>/);
+for(const count of [undefined,0,1,3]){const s=H.create('loop-default',count===undefined?{}:{verticalLoops:count});s.replayMoves=[];a.equal(s.world.verticalLoops,count??1);a.equal(s.world.verticalRoutes.length,(count??1)*2);const restored=await Save.decode(Save.encode(s,0));a.equal(restored.state.world.verticalLoops,count??1);a.deepEqual(restored.state.world.cells,s.world.cells);}
+console.log('Default is one loop per sheet; hidden legacy three-loop option and 0/1/3 save restoration passed');})().catch(e=>{console.error(e);process.exitCode=1});

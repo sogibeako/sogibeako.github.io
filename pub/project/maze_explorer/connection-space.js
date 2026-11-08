@@ -1,7 +1,9 @@
 (function(root){
 'use strict';
+const Wildlife=typeof module==='object'?require('./maze-wildlife.js'):root.MazeWildlife;
 const Features=typeof module==='object'?require('./sheet-features.js'):root.SheetFeatures||{allowed:()=>true,afterMove:()=>{}};
-const directions=[[0,-1],[1,0],[0,1],[-1,0]],names={tripleMaze:'中央の穴でつながる3トーラスのミニ迷路',doubleMaze:'中央の穴でつながる2トーラスのミニ迷路',cornerUnderpass:'曲がるアンダーパス',kleinMaze:'クラインの壺の生成迷路',torusMaze:'トーラスの生成迷路',underpassMaze:'アンダーパスの生成迷路',underpass:'極小の立体交差（アンダーパス）',crossingMaze:'立体交差の生成迷路',crossing:'立体交差（橋と地下通路）',triple:'中央の穴でつながる3トーラス',branch3:'柱の四方で風景が変わる3シート',doubleTwist:'double-twist',cwTwist:'quarter-clockwise-twist',ccwTwist:'quarter-counterclockwise-twist',plane:'平面',cylinder:'円筒',mobius:'メビウス帯',torus:'トーラス',klein:'クラインの壺',sheets:'2シートのトーラス',rotate:'90度回転する境界',chaos:'全辺90度回転（ちょっとひどい）',double:'中央の穴でつながる2トーラス',branch:'柱を周回する2シート',branch4:'柱の四方で風景が変わる2シート'};
+const Notes=typeof module==='object'?require('./sheet-annotations.js'):root.SheetAnnotations;
+const directions=[[0,-1],[1,0],[0,1],[-1,0]],names={tripleMaze:'中央の穴でつながる3トーラスのミニ迷路',doubleMaze:'中央の穴でつながる2トーラスのミニ迷路',cornerUnderpass:'曲がるアンダーパス',kleinMaze:'クラインの壺の生成迷路',torusMaze:'トーラスの生成迷路',underpassMaze:'アンダーパスの生成迷路',underpass:'極小の立体交差（アンダーパス）',crossingMaze:'立体交差の生成迷路',crossing:'立体交差（橋と地下通路）',triple:'中央の穴でつながる3トーラス',branch3:'柱の四方で風景が変わる3シート',quarterCW:'quarter-clockwise',quarterCCW:'quarter-counterclockwise',doubleTwist:'double-twist',cwTwist:'quarter-clockwise-twist',ccwTwist:'quarter-counterclockwise-twist',plane:'平面',cylinder:'円筒',mobius:'メビウス帯',torus:'トーラス',klein:'クラインの壺',sheets:'2シートのトーラス',rotate:'90度回転する境界',chaos:'全辺90度回転（ちょっとひどい）',double:'中央の穴でつながる2トーラス',branch:'柱を周回する2シート',branch4:'柱の四方で風景が変わる2シート'};
 const identity=[0,1,2,3],flip=[2,1,0,3],cw=[1,2,3,0];
 function generate(mode,options={}){
  const world=generateBase(mode,options);
@@ -22,7 +24,7 @@ function generateBase(mode,options={}){
  if(mode==='triple'||mode==='double'&&(options.dimensions||options.holeSize!==undefined))return holeWorld(mode,options);
  const size=8,sheets=mode==='branch3'?3:['sheets','double','branch','branch4'].includes(mode)?2:1,edges=new Map(),id=(x,y,s)=>s*64+y*8+x;
  const cells=new Uint8Array(sheets*64).fill(1);
- if(['chaos','cwTwist','ccwTwist','doubleTwist'].includes(mode))for(const cell of [11,27,28,35,40])cells[cell]=0;
+ if(['chaos','quarterCW','quarterCCW','cwTwist','ccwTwist','doubleTwist'].includes(mode))for(const cell of [11,27,28,35,40])cells[cell]=0;
  if(mode==='double')for(let sheet=0;sheet<2;sheet++)for(const y of [3,4])for(const x of [3,4])cells[id(x,y,sheet)]=0;
  if(['branch','branch4','branch3'].includes(mode)){
   for(let sheet=0;sheet<2;sheet++)cells[id(3,3,sheet)]=0;
@@ -40,7 +42,7 @@ function generateBase(mode,options={}){
   }
  }
  const candidates=new Map();
- if(['chaos','cwTwist','ccwTwist','doubleTwist'].includes(mode)){
+ if(['chaos','quarterCW','quarterCCW','cwTwist','ccwTwist','doubleTwist'].includes(mode)){
   edges.clear();
   for(let from=0;from<64;from++)if(cells[from])for(let d=0;d<4;d++){
    const x=from%8,y=Math.floor(from/8),[dx,dy]=directions[d];let nx=x+dx,ny=y+dy,transform=identity,kind='normal';
@@ -49,7 +51,7 @@ function generateBase(mode,options={}){
     else if(mode==='doubleTwist'){
      if(d%2){nx=(nx+8)%8;ny=7-y;transform=flip;}else{ny=(ny+8)%8;nx=7-x;transform=[0,3,2,1];}
     }else{
-     const t=7-[x,y,7-x,7-y][d],clockwise=mode==='cwTwist',toEdge=(d+(clockwise?1:3))%4;
+     const along=[x,y,7-x,7-y][d],t=['cwTwist','ccwTwist'].includes(mode)?7-along:along,clockwise=['quarterCW','cwTwist'].includes(mode),toEdge=(d+(clockwise?1:3))%4;
      [nx,ny]=[[t,0],[7,t],[7-t,7],[0,7-t]][toEdge];transform=clockwise?[3,0,1,2]:cw;
     }
     kind=mode==='chaos'?'clockwise':'twisted-boundary';
@@ -70,12 +72,12 @@ function generateBase(mode,options={}){
  }
  // Add obstacles after constructing the seams, retaining their blocked destinations for the chart.
  const holes=new Set();if(mode==='double')for(let i=0;i<cells.length;i++)if(!cells[i])holes.add(i);
- if(options.walls&&!['branch','branch4','branch3','chaos','doubleTwist','cwTwist','ccwTwist'].includes(mode)){
+ if(options.walls&&!['branch','branch4','branch3','chaos','doubleTwist','quarterCW','quarterCCW','cwTwist','ccwTwist'].includes(mode)){
   for(const [key,edge] of edges)candidates.set(key,edge);
   for(let sheet=0;sheet<sheets;sheet++)for(const cell of [18,21,46])cells[sheet*64+cell]=0;
   for(const [key,edge] of edges)if(!cells[Number(key.split(':')[0])]||!cells[edge.to])edges.delete(key);
  }
- return {mode,size,sheets,edges,cells,candidates,holes,directed:['chaos','cwTwist','ccwTwist'].includes(mode),start:['branch4','branch3'].includes(mode)?id(4,2,0):mode==='branch'?id(2,2,0):id(1,1,0)};
+ return {mode,size,sheets,edges,cells,candidates,holes,directed:['chaos','quarterCW','quarterCCW','cwTwist','ccwTwist'].includes(mode),start:['branch4','branch3'].includes(mode)?id(4,2,0):mode==='branch'?id(2,2,0):id(1,1,0)};
 }
 // Only the centre has two independent passage cells; all other floor is shared.
 function underpassWorld(options=null){
@@ -198,10 +200,11 @@ function periodicMaze(mode,options){
  const width=options.width??30,height=options.height??26,growth=options.growth??'dfs',seed=String(options.seed??'periodic-1');
  if(![width,height].every(n=>Number.isInteger(n)&&n>=16&&n<=60&&n%2===0))throw Error('周期迷路の幅・高さは16〜60の偶数にしてください。');
  if(!['dfs','prim','growing','kruskal'].includes(growth))throw Error('未対応の生成方式です。');
- const klein=mode==='kleinMaze',w=width/2,h=height/2,n=w*h;
+ const klein=mode==='kleinMaze',shiftY=klein?(options.shiftY??0):0,w=width/2,h=height/2,n=w*h;
+ if(!Number.isInteger(shiftY)||shiftY%2!==0||Math.abs(shiftY)>=height)throw Error('左右境界の縦ずれは、高さ未満の偶数にしてください。');
  let value=2166136261;for(const c of seed+'-periodic')value=Math.imul(value^c.charCodeAt(0),16777619);
  const random=()=>{value+=0x6D2B79F5;let t=Math.imul(value^value>>>15,1|value);t^=t+Math.imul(t^t>>>7,61|t);return ((t^t>>>14)>>>0)/4294967296;};
- const neighbor=(id,d)=>{let x=id%w+directions[d][0],y=Math.floor(id/w)+directions[d][1];if(x<0||x>=w){x=(x+w)%w;if(klein)y=h-1-y;}return ((y+h)%h)*w+x;};
+ const neighbor=(id,d)=>{let x=id%w+directions[d][0],y=Math.floor(id/w)+directions[d][1];if(x<0||x>=w){x=(x+w)%w;if(klein)y=h-1-y+shiftY/2;}return (((y%h)+h)%h)*w+x;};
  const links=new Set(),connect=(id,d)=>{links.add(`${id}:${d}`);links.add(`${neighbor(id,d)}:${(d+2)%4}`);};
  if(growth==='kruskal'){
   const parent=Array.from({length:n},(_,i)=>i),find=a=>{while(parent[a]!==a){parent[a]=parent[parent[a]];a=parent[a];}return a;},pool=[];
@@ -218,14 +221,21 @@ function periodicMaze(mode,options){
  // Add some alternative routes, including seam openings.
  for(let id=0;id<n;id++)for(const d of [1,2])if(random()<.12)connect(id,d);
  connect((Math.floor(random()*h)+1)*w-1,1);connect((h-1)*w+Math.floor(random()*w),2);
+ // Optional learning routes: meander before closing, with the Klein seam's reflection.
+ if(options.guaranteeLoops){
+  let at=w+1;const step=d=>{connect(at,d);at=neighbor(at,d);};
+  for(let y=0;y<h;y++){if(y===1)step(1);if(y===Math.floor(h/2))step(3);step(2);}
+  at=w+1;for(let x=0;x<w;x++){if(x===Math.floor(w/2))step(2);step(1);}
+  while(Math.floor(at/w)!==1)step(2);
+ }
  const area=width*height,cells=new Uint8Array(area),edges=new Map(),candidates=new Map();
- const adjacent=(id,d)=>{let x=id%width+directions[d][0],y=Math.floor(id/width)+directions[d][1],transform=identity,kind='normal';if(x<0||x>=width){x=(x+width)%width;if(klein){y=(height-y)%height;transform=flip;}kind='seam';}if(y<0||y>=height){y=(y+height)%height;kind='seam';}return {to:y*width+x,transform:[...transform],kind};};
+ const adjacent=(id,d)=>{let x=id%width+directions[d][0],y=Math.floor(id/width)+directions[d][1],transform=identity,kind='normal';if(x<0||x>=width){x=(x+width)%width;if(klein){y=((shiftY-y)%height+height)%height;transform=flip;}kind='seam';}if(y<0||y>=height){y=(y+height)%height;kind='seam';}return {to:y*width+x,transform:[...transform],kind};};
  const center=id=>(2*Math.floor(id/w)+1)*width+2*(id%w)+1;
  for(let id=0;id<n;id++){const from=center(id);cells[from]=1;for(let d=0;d<4;d++)if(links.has(`${id}:${d}`))cells[adjacent(from,d).to]=1;}
  for(let id=0;id<area;id++)if(cells[id])for(let d=0;d<4;d++){const e=adjacent(id,d);candidates.set(`${id}:${d}`,e);if(cells[e.to])edges.set(`${id}:${d}`,e);}
  const start=center(0),queue=[start],seen=new Set(queue);for(const id of queue)for(let d=0;d<4;d++){const e=edges.get(`${id}:${d}`);if(e&&!seen.has(e.to)){seen.add(e.to);queue.push(e.to);}}
  if(seen.size!==cells.reduce((a,b)=>a+b,0))throw Error('Disconnected periodic maze');
- return addFloorUnderpasses({mode,seed,growth,wallStyle:'grid',underpassReach:2,size:width,sheets:1,layouts:[{width,height,offset:0}],cells,edges,candidates,start,exit:queue.at(-1),holes:new Set(),stairs:new Set(),crossings:new Set(),directed:false},options.floorUnderpasses??3);
+ return addFloorUnderpasses({mode,seed,growth,shiftY,wallStyle:'grid',underpassReach:2,size:width,sheets:1,layouts:[{width,height,offset:0}],cells,edges,candidates,start,exit:queue.at(-1),holes:new Set(),stairs:new Set(),crossings:new Set(),directed:false},options.floorUnderpasses??3);
 }
 function groundSheet(world,id){const p=world.passages?.find(p=>p.vertical===id);return p?(p.baseSheet??0):position(world,id).sheet;}
 // A local tunnel endpoint can touch a skew seam even when its center is inland.
@@ -277,7 +287,7 @@ function addFloorUnderpasses(world,count){
    for(const id of [...added,v])cells[id]=1;
    for(const id of new Set([h,v,...added,h-width,h+width,h-1,h+1,...ends]))if(cells[id])for(let d=0;d<4;d++){
     edges.delete(`${id}:${d}`);candidates.delete(`${id}:${d}`);if(id===h&&d%2===0||id===v&&d%2===1)continue;
-    const [dx,dy]=directions[d],to=world.lattice?skewStep(world,id===v?h:id,d):(id===v?h:id)+dy*width+dx,target=to===h&&d%2===0?v:to,e={to:target,transform:[...identity],kind:id===v||target===v?'underpass':'normal'};
+    const [dx,dy]=directions[d],to=world.lattice?skewStep(world,id===v?h:id,d):world.layouts[sheet].period?sheetId(world.layouts[sheet],position(world,id===v?h:id).x+dx,position(world,id===v?h:id).y+dy):(id===v?h:id)+dy*width+dx,target=to===h&&d%2===0?v:to,e={to:target,transform:[...identity],kind:id===v||target===v?'underpass':'normal'};
     candidates.set(`${id}:${d}`,e);if(cells[target])edges.set(`${id}:${d}`,e);
    }
    const q=[world.start],seen=new Set(q);for(const id of q)for(let d=0;d<4;d++){const e=edges.get(`${id}:${d}`);if(e&&!seen.has(e.to)){seen.add(e.to);q.push(e.to);}}
@@ -450,13 +460,32 @@ function holeLimit(mode,dimensions){
  return Math.min(...dimensions.map(([w,h],i)=>Math.min(h-4,mode==='triple'&&i===1?Math.floor((w-6)/2):w-4)));
 }
 // Rectangular tori joined in a chain by equally sized square holes.
+// Translation periods use the same half-open lattice as the skew-torus experiment.
+function sheetCanonical(l,x,y){
+ if(!l.period)return {x:(x%l.width+l.width)%l.width,y:(y%l.height+l.height)%l.height};
+ const {width:w,height:h,shiftX:sx,shiftY:sy,minX,minY}=l.period,det=w*h-sx*sy;
+ x+=minX;y+=minY;
+ const a=Math.floor((h*(2*x+1)+sx*(2*y+1))/(2*det)),b=Math.floor((sy*(2*x+1)+w*(2*y+1))/(2*det));
+ return {x:x-a*w+b*sx-minX,y:y+a*sy-b*h-minY};
+}
+function sheetId(l,x,y){const p=sheetCanonical(l,x,y);return l.offset+p.y*l.width+p.x;}
+function sheetPeriods(l){return l.period?[[l.period.width,-l.period.shiftY],[-l.period.shiftX,l.period.height]]:[[l.width,0],[0,l.height]];}
+function periodCoefficients(l,x,y){const [a,b]=sheetPeriods(l),det=a[0]*b[1]-a[1]*b[0];return [(b[1]*x-b[0]*y)/det,(-a[1]*x+a[0]*y)/det];}
 function holeWorld(mode,options){
  const sheets=mode==='triple'?3:2,dimensions=options.dimensions||(sheets===3?[[8,8],[14,8],[8,8]]:[[8,8],[8,8]]);
  if(!Array.isArray(dimensions)||dimensions.length!==sheets||dimensions.some(v=>!Array.isArray(v)||v.length!==2||v.some(n=>!Number.isInteger(n)||n<8||n>24))||sheets===3&&(dimensions[1][0]<12||dimensions[1][0]<=dimensions[1][1]))throw Error('各辺は8〜24、3トーラスの中央は幅12以上かつ横長にしてください。');
  const limit=holeLimit(mode,dimensions),holeSize=options.holeSize==='auto'?Math.min(limit,Math.max(1,Math.floor(Math.min(...dimensions.flat())/4))):(options.holeSize??2);
  if(!Number.isInteger(holeSize)||holeSize<1||holeSize>limit)throw Error(`このマップでは穴の一辺を1〜${limit}マスにしてください。`);
- let count=0;const layouts=dimensions.map(([width,height])=>{const l={width,height,offset:count};count+=width*height;return l;}),cells=new Uint8Array(count).fill(1),holes=new Set(),portals=[],edges=new Map(),candidates=new Map();
+ const shiftX=options.shiftX??0,shiftY=options.shiftY??0;
+ if(![shiftX,shiftY].every(n=>Number.isInteger(n)&&n%2===0&&Math.abs(n)<=2))throw Error('3トーラスのずれ実験は -2・0・2 マスで指定してください。');
+ let count=0;const layouts=dimensions.map(([width,height])=>{
+  if(!shiftX&&!shiftY){const l={width,height,offset:count};count+=width*height;return l;}
+  if(width%2||height%2)throw Error('ずれた3トーラスの辺は偶数にしてください。');
+  const minX=Math.min(0,-shiftX)||0,minY=Math.min(0,-shiftY)||0,l={width:width+Math.abs(shiftX),height:height+Math.abs(shiftY),offset:count,period:{width,height,shiftX,shiftY,minX,minY}};
+  count+=l.width*l.height;return l;
+ }),cells=new Uint8Array(count).fill(1),holes=new Set(),portals=[],edges=new Map(),candidates=new Map();
  const id=(sheet,x,y)=>layouts[sheet].offset+y*layouts[sheet].width+x;
+ const domain=new Set();for(const l of layouts)for(let y=0;y<l.height;y++)for(let x=0;x<l.width;x++){const p=sheetCanonical(l,x,y),n=l.offset+y*l.width+x;if(p.x===x&&p.y===y)domain.add(n);else cells[n]=0;}
  const holePlacement=options.holePlacement??'center';
  if(!['center','offset'].includes(holePlacement))throw Error('未対応の穴の配置です。');
  let hv=2166136261;for(const c of String(options.seed??'double-first')+'-hole-position')hv=Math.imul(hv^c.charCodeAt(0),16777619);
@@ -467,24 +496,30 @@ function holeWorld(mode,options){
   return [{x:choose(2,l.width-2-holeSize),y:choose(2,l.height-2-holeSize)}];
  });
  const hole=(sheet,side)=>{const l=layouts[sheet],p=positions[sheet]?.[sheet===1&&sheets===3?side:0];return {sheet,x:p?.x??(sheet===1&&sheets===3?(side===0?2:l.width-2-holeSize):Math.floor((l.width-holeSize)/2)),y:p?.y??Math.floor((l.height-holeSize)/2),size:holeSize};};
- const links=[];for(let i=0;i<sheets-1;i++){const a=hole(i,1),b=hole(i+1,0);links.push([a,b]);portals.push({...a,target:i+1},{...b,target:i});for(const h of [a,b])for(let y=h.y;y<h.y+holeSize;y++)for(let x=h.x;x<h.x+holeSize;x++){const n=id(h.sheet,x,y);cells[n]=0;holes.add(n);}}
- for(let sheet=0;sheet<sheets;sheet++){const l=layouts[sheet];for(let y=0;y<l.height;y++)for(let x=0;x<l.width;x++){const from=id(sheet,x,y);if(!cells[from])continue;for(let d=0;d<4;d++){const [dx,dy]=directions[d],to=id(sheet,(x+dx+l.width)%l.width,(y+dy+l.height)%l.height);if(cells[to])edges.set(`${from}:${d}`,{to,transform:[...identity],kind:'normal'});}}}
+ const links=[];for(let i=0;i<sheets-1;i++){const a=hole(i,1),b=hole(i+1,0);for(const h of [a,b])if(layouts[h.sheet].period){
+   const l=layouts[h.sheet];if(holePlacement==='center'){h.x-=h.x%2;h.y-=h.y%2;}
+   const fits=(x,y)=>{for(let yy=y-1;yy<=y+holeSize;yy++)for(let xx=x-1;xx<=x+holeSize;xx++)if(xx<0||xx>=l.width||yy<0||yy>=l.height||!domain.has(id(h.sheet,xx,yy)))return false;return portals.filter(p=>p.sheet===h.sheet).every(p=>x>=p.x+holeSize+2||x+holeSize+2<=p.x);};
+   if(!fits(h.x,h.y)){const choices=[];for(let y=2;y<l.height-holeSize;y+=2)for(let x=2;x<l.width-holeSize;x+=2)if(fits(x,y))choices.push({x,y});choices.sort((u,v)=>(u.x-h.x)**2+(u.y-h.y)**2-(v.x-h.x)**2-(v.y-h.y)**2);if(!choices.length)throw Error('ずれた境界と穴の余白を確保できません。穴を小さくしてください。');Object.assign(h,choices[0]);}
+  }links.push([a,b]);portals.push({...a,target:i+1},{...b,target:i});for(const h of [a,b])for(let y=h.y;y<h.y+holeSize;y++)for(let x=h.x;x<h.x+holeSize;x++){const n=id(h.sheet,x,y);cells[n]=0;holes.add(n);}}
+ for(let sheet=0;sheet<sheets;sheet++){const l=layouts[sheet];for(let y=0;y<l.height;y++)for(let x=0;x<l.width;x++){const from=id(sheet,x,y);if(!cells[from])continue;for(let d=0;d<4;d++){const [dx,dy]=directions[d],to=sheetId(l,x+dx,y+dy);if(cells[to])edges.set(`${from}:${d}`,{to,transform:[...identity],kind:'normal'});}}}
  for(const [a,b] of links)for(const [src,dst] of [[a,b],[b,a]])for(let k=0;k<holeSize;k++)for(let d=0;d<4;d++){
   const rim=(h)=>[[h.x+k,h.y-1],[h.x+holeSize,h.y+k],[h.x+k,h.y+holeSize],[h.x-1,h.y+k]][d],u=rim(src),v=rim(dst),wd=(d+2)%4;
   edges.set(`${id(src.sheet,...u)}:${wd}`,{to:id(dst.sheet,...v),transform:d%2===0?[...flip]:[0,3,2,1],kind:'throat'});
  }
  for(const [key,e] of edges)candidates.set(key,e);
  if(options.walls){for(let sheet=0;sheet<sheets;sheet++){const l=layouts[sheet];for(const [x,y] of [[2,2],[l.width-3,2],[l.width-2,l.height-3],[Math.floor(l.width/2),l.height-2]]){const n=id(sheet,x,y);if(!holes.has(n)&&!portals.some(h=>h.sheet===sheet&&x>=h.x-1&&x<=h.x+holeSize&&y>=h.y-1&&y<=h.y+holeSize))cells[n]=0;}}for(const [key,e] of edges)if(!cells[Number(key.split(':')[0])]||!cells[e.to])edges.delete(key);}
- return {mode,size:8,sheets,layouts,portals,holeSize,holePlacement,cells,holes,edges,candidates,directed:false,start:id(0,1,1)};
+ for(const h of portals)for(let y=h.y-1;y<=h.y+holeSize;y++)for(let x=h.x-1;x<=h.x+holeSize;x++)if(!domain.has(id(h.sheet,x,y)))throw Error('ずれた境界と穴が重なります。穴の位置・大きさを変えてください。');
+ return {mode,size:8,sheets,layouts,portals,holeSize,holePlacement,cells,holes,edges,candidates,domain,shiftX,shiftY,directed:false,start:cells[id(0,1,1)]?id(0,1,1):[...domain].find(n=>cells[n]&&position({layouts},n).sheet===0&&position({layouts},n).x%2===1&&position({layouts},n).y%2===1)};
 }
 // A weighted path on a lifted sheet ends one period away, proving its winding.
 function windingRoute(world,sheet,start,axis,random){
- const l=world.layouts[sheet],p=position(world,start),tx=p.x+(axis===1?l.width:0),ty=p.y+(axis===2?l.height:0);
- const id=(x,y)=>l.offset+((y%l.height+l.height)%l.height)*l.width+(x%l.width+l.width)%l.width;
+ const l=world.layouts[sheet],p=position(world,start),vector=sheetPeriods(l)[axis-1],tx=p.x+vector[0],ty=p.y+vector[1];
+ const id=(x,y)=>sheetId(l,x,y);
  const weights=new Map();for(let y=0;y<l.height;y++)for(let x=0;x<l.width;x++)for(const d of [1,2]){const a=id(x,y),b=id(x+directions[d][0],y+directions[d][1]);weights.set([a,b].sort((a,b)=>a-b).join(':'),1+Math.floor(random()*20));}
  const key=(x,y)=>`${x},${y}`,first=key(p.x,p.y),goal=key(tx,ty),best=new Map([[first,0]]),parent=new Map(),queue=[{x:p.x,y:p.y,cost:0}];
  while(queue.length){let i=0;for(let j=1;j<queue.length;j++)if(queue[j].cost<queue[i].cost)i=j;const a=queue[i];queue[i]=queue.at(-1);queue.pop();const k=key(a.x,a.y);if(a.cost!==best.get(k))continue;if(k===goal)break;
-  for(let d=0;d<4;d++){const x=a.x+directions[d][0],y=a.y+directions[d][1];if(x<p.x-l.width||x>tx+l.width||y<p.y-l.height||y>ty+l.height||!world.cells[id(x,y)])continue;
+  for(let d=0;d<4;d++){const x=a.x+directions[d][0],y=a.y+directions[d][1];if(x<Math.min(p.x,tx)-l.width||x>Math.max(p.x,tx)+l.width||y<Math.min(p.y,ty)-l.height||y>Math.max(p.y,ty)+l.height||!world.cells[id(x,y)])continue;
+   const edge=world.edges.get(`${id(a.x,a.y)}:${d}`);if(!edge||edge.kind==='throat'||edge.to!==id(x,y))continue;
    const nk=key(x,y),cost=a.cost+weights.get([id(a.x,a.y),id(x,y)].sort((a,b)=>a-b).join(':'));
    if(cost>=(best.get(nk)??Infinity))continue;best.set(nk,cost);parent.set(nk,{key:k,d});queue.push({x,y,cost});
   }
@@ -500,15 +535,52 @@ function loopsIntact(world){
  }));
 }
 function doubleMaze(options,mode='doubleMaze'){
- const world=holeWorld(mode==='tripleMaze'?'triple':'double',{dimensions:options.dimensions??(mode==='tripleMaze'?[[12,12],[20,12],[12,12]]:[[12,12],[12,12]]),holeSize:options.holeSize??2,holePlacement:options.holePlacement,seed:options.seed,walls:false});
+ const world=holeWorld(mode==='tripleMaze'?'triple':'double',{dimensions:options.dimensions??(mode==='tripleMaze'?[[12,12],[20,12],[12,12]]:[[12,12],[12,12]]),holeSize:options.holeSize??2,holePlacement:options.holePlacement,seed:options.seed,walls:false,shiftX:mode==='tripleMaze'?options.shiftX:0,shiftY:mode==='tripleMaze'?options.shiftY:0});
+ world.tripleRoute=mode==='tripleMaze'?(options.tripleRoute??'chain'):'chain';
+ if(!['chain','return'].includes(world.tripleRoute))throw Error('未対応の3シート経路です。');
+ world.returnShape=options.returnShape??'rectangle';
+ if(!['rectangle','irregular'].includes(world.returnShape))throw Error('未対応の囲いの形です。');
+ const enclosureWalls=new Set();let returnExit=null;
+ if(world.tripleRoute==='return'){
+  if(world.holePlacement!=='center'||world.holeSize<3||world.layouts.some(l=>(l.period?.width??l.width)<16||(l.period?.height??l.height)<16)||(world.layouts[1].period?.width??world.layouts[1].width)<20)throw Error('3シート往復は穴3以上・従来位置・各辺16以上・B幅20以上で試してください。');
+  const half=Math.floor(world.holeSize/2),a=world.portals.find(p=>p.sheet===0),b=world.portals.filter(p=>p.sheet===1).sort((a,b)=>a.x-b.x);
+  const boxes=[{sheet:0,left:a.x+half,top:a.y+half,right:world.layouts[0].width-2,bottom:world.layouts[0].height-2},
+   {sheet:1,left:b[0].x+half,top:b[0].y+half,right:b[1].x+half,bottom:world.layouts[1].height-2}];
+  world.returnEnclosures=boxes;
+  let shapeSeed=2166136261;for(const c of String(options.seed??'double-first')+'-enclosure-shape')shapeSeed=Math.imul(shapeSeed^c.charCodeAt(0),16777619);
+  const pickShape=values=>{shapeSeed=(Math.imul(shapeSeed,1664525)+1013904223)>>>0;return values[Math.floor(shapeSeed/4294967296*values.length)];};
+  for(const box of boxes){
+   const l=world.layouts[box.sheet],holes=world.portals.filter(p=>p.sheet===box.sheet),starts=[];
+   if(l.period){
+    while(box.bottom>box.top+3&&Array.from({length:box.right-box.left+1},(_,i)=>box.left+i).some(x=>!world.domain.has(l.offset+box.bottom*l.width+x)))box.bottom-=2;
+    while(box.right>box.left+3&&Array.from({length:box.bottom-box.top+1},(_,i)=>box.top+i).some(y=>!world.domain.has(l.offset+y*l.width+box.right)))box.right-=2;
+   }
+   for(let x=box.left+2;x<=box.right-4;x++)if(x%2===0)starts.push(x);
+   const clearance=box.bottom-Math.max(box.top+3,...holes.map(p=>p.y+p.size+1));
+   if(world.returnShape==='irregular'&&starts.length&&clearance>=2){
+    const start=pickShape(starts),ends=[];for(let x=start+2;x<=box.right-2;x+=2)ends.push(x);
+    const depths=[];for(let n=2;n<=Math.min(4,clearance);n+=2)depths.push(n);
+    box.notch={start,end:pickShape(ends),depth:pickShape(depths)};
+   }
+   const bottom=x=>box.notch&&x>=box.notch.start&&x<=box.notch.end?box.bottom-box.notch.depth:box.bottom;
+   const wall=(x,y)=>y===box.top||(x===box.left||x===box.right)&&y<=bottom(x)||y===bottom(x)||box.notch&&(x===box.notch.start||x===box.notch.end)&&y>=bottom(x);
+   for(let y=box.top;y<=box.bottom;y++)for(let x=box.left;x<=box.right;x++)if(wall(x,y)){const id=l.offset+y*l.width+x;world.cells[id]=0;enclosureWalls.add(id);}
+  }
+  const box=boxes[0],l=world.layouts[0];returnExit=l.offset+(box.bottom-1)*l.width+box.right-1;
+  if(world.holes.has(returnExit)||!world.cells[returnExit])throw Error('囲いの出口を配置できません。穴を小さくしてください。');
+  for(const [key,e]of world.edges)if(!world.cells[Number(key.split(':')[0])]||!world.cells[e.to])world.edges.delete(key);
+ }
  world.wallStyle=options.wallStyle??'dense';
  if(!['dense','grid'].includes(world.wallStyle))throw Error('未対応の壁配置です。');
  if(world.wallStyle==='grid'&&world.layouts.some(l=>l.width%2||l.height%2))throw Error('格子状の壁では各辺を偶数にしてください。');
- world.mode=mode;world.seed=String(options.seed??'double-first');world.growth=options.growth??'walls';world.loopStyle=options.loopStyle??'meander';
+ world.mode=mode;world.seed=String(options.seed??'double-first');world.growth=options.growth??'walls';world.loopStyle=world.tripleRoute==='return'||world.shiftX||world.shiftY?'meander':options.loopStyle??'meander';
  if(!['straight','meander'].includes(world.loopStyle))throw Error('未対応の周回路です。');
- if(!['walls','dfs','prim','growing'].includes(world.growth))throw Error('未対応の2トーラス生成方式です。');
- const protectedCells=new Set([world.start]);
+ if(!['walls','dfs','prim','growing',...(mode==='tripleMaze'?['kruskal','hunt','wilson','rooms']:[])].includes(world.growth))throw Error('未対応の2トーラス生成方式です。');
+ if(['kruskal','wilson'].includes(world.growth)&&world.wallStyle!=='grid')throw Error('Kruskal・Wilson法は格子状の壁で使用してください。');
+ const protectedCells=new Set([world.start,...(returnExit===null?[]:[returnExit])]);
  for(const p of world.portals){const l=world.layouts[p.sheet];for(let y=p.y-1;y<=p.y+p.size;y++)for(let x=p.x-1;x<=p.x+p.size;x++)protectedCells.add(l.offset+y*l.width+x);}
+ const roomDomain=world.growth==='rooms'?new Set(Array.from(world.cells.keys()).filter(id=>world.cells[id])):null;
+ const roomEdges=roomDomain?new Map(world.edges):null;
  // Keep lattice pillars intact; the hole rim is a deliberate exception.
  if(world.wallStyle==='grid'){
   for(let id=0;id<world.cells.length;id++){const p=position(world,id);if(p.x%2===0&&p.y%2===0&&!protectedCells.has(id))world.cells[id]=0;}
@@ -520,8 +592,10 @@ function doubleMaze(options,mode='doubleMaze'){
  world.guaranteedLoops=world.layouts.map((l,sheet)=>{
   const holes=world.portals.filter(p=>p.sheet===sheet),rows=Array.from({length:l.height},(_,i)=>i).filter(y=>(world.wallStyle!=='grid'||y%2===1)&&holes.every(hole=>y<hole.y-1||y>hole.y+hole.size)),cols=Array.from({length:l.width},(_,i)=>i).filter(x=>(world.wallStyle!=='grid'||x%2===1)&&holes.every(hole=>x<hole.x-1||x>hole.x+hole.size));
   const row=rows[Math.floor(random()*rows.length)],column=cols[Math.floor(random()*cols.length)];
-  const horizontal=world.loopStyle==='straight'?{start:l.offset+row*l.width,directions:Array(l.width).fill(1)}:windingRoute(world,sheet,l.offset+row*l.width,1,random);
-  const vertical=world.loopStyle==='straight'?{start:l.offset+column,directions:Array(l.height).fill(2)}:windingRoute(world,sheet,l.offset+column,2,random);
+  const available=Array.from({length:l.width*l.height},(_,i)=>l.offset+i).filter(id=>world.cells[id]&&(!l.period||!world.returnEnclosures?.some(b=>b.sheet===sheet&&position(world,id).x>=b.left&&position(world,id).x<=b.right&&position(world,id).y>=b.top&&position(world,id).y<=b.bottom)));
+  const hstart=world.cells[l.offset+row*l.width]?l.offset+row*l.width:available[0],vstart=world.cells[l.offset+column]?l.offset+column:available[0];
+  const horizontal=world.loopStyle==='straight'?{start:l.offset+row*l.width,directions:Array(l.width).fill(1)}:windingRoute(world,sheet,hstart,1,random);
+  const vertical=world.loopStyle==='straight'?{start:l.offset+column,directions:Array(l.height).fill(2)}:windingRoute(world,sheet,vstart,2,random);
   for(const path of [horizontal,vertical]){let id=path.start;protectedCells.add(id);for(const d of path.directions){id=world.edges.get(`${id}:${d}`).to;protectedCells.add(id);}}
   return {sheet,horizontal,vertical};
  });
@@ -560,7 +634,56 @@ function doubleMaze(options,mode='doubleMaze'){
    };
    const active=[...live];for(let i=active.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[active[i],active[j]]=[active[j],active[i]];}
    const carve=path=>{for(const id of path)live.add(id);};
-   if(world.growth==='prim'){
+   if(world.growth==='kruskal'){
+    const parent=new Map(),find=id=>{if(!parent.has(id))parent.set(id,id);let root=id;while(parent.get(root)!==root)root=parent.get(root);while(parent.get(id)!==id){const next=parent.get(id);parent.set(id,root);id=next;}return root;},join=(a,b)=>parent.set(find(a),find(b));
+    // Contract the connected reserved circuits/rims before shuffling lattice edges.
+    for(const id of live)for(const to of neighbors(id))if(live.has(to))join(id,to);
+    const sites=Array.from(world.cells.keys()).filter(id=>world.cells[id]&&(live.has(id)||(position(world,id).x%2===1&&position(world,id).y%2===1))),edges=[];
+    for(const id of sites)for(const path of extensions(id))edges.push({id,path});
+    for(let i=edges.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[edges[i],edges[j]]=[edges[j],edges[i]];}
+    for(const {id,path}of edges){const to=path.at(-1);if(find(id)===find(to))continue;join(id,to);live.add(id);carve(path);}
+    const connected=new Set([world.start]),queue=[world.start];for(const id of queue)for(const to of neighbors(id))if(live.has(to)&&!connected.has(to)){connected.add(to);queue.push(to);}
+    for(const id of live)if(!connected.has(id))live.delete(id);
+   }else if(world.growth==='wilson'){
+    // The reserved loops form a connected root. Walk on an undirected lattice
+    // graph, erasing cycles before attaching each new branch to that root.
+    const graph=new Map(),add=(from,to,path)=>{if(!graph.has(from))graph.set(from,[]);graph.get(from).push({to,path});};
+    for(let id=0;id<world.cells.length;id++){
+     const p=position(world,id);if(!world.cells[id]||live.has(id)||p.x%2!==1||p.y%2!==1)continue;
+     for(let d=0;d<4;d++){
+      let at=id;const path=[];
+      for(let n=0;n<2;n++){
+       const e=world.edges.get(`${at}:${d}`);if(!e||e.kind==='throat')break;
+       at=e.to;path.push(at);const q=position(world,at);
+       if(live.has(at)||(q.x%2===1&&q.y%2===1)){
+        add(id,at,[...path]);add(at,id,[id,...path.slice(0,-1)].reverse());break;
+       }
+      }
+     }
+    }
+    // Exclude components separated from the root by holes or enclosure walls.
+    const reachable=new Set(live),queue=[...live];
+    for(const id of queue)for(const e of graph.get(id)||[])if(!reachable.has(e.to)){reachable.add(e.to);queue.push(e.to);}
+    let budget=Math.max(100000,graph.size*graph.size*20);
+    for(const start of queue){
+     if(live.has(start))continue;
+     const nodes=[start],links=[],indices=new Map([[start,0]]);
+     while(!live.has(nodes.at(-1))){
+      if(--budget<0)throw Error('Wilson法の生成が制限歩数を超えました。別のシードをお試しください。');
+      const choices=graph.get(nodes.at(-1)),edge=choices[Math.floor(random()*choices.length)],index=indices.get(edge.to);
+      if(index!==undefined){for(const id of nodes.slice(index+1))indices.delete(id);nodes.length=index+1;links.length=index;}
+      else{links.push(edge.path);indices.set(edge.to,nodes.length);nodes.push(edge.to);}
+     }
+     live.add(start);for(const path of links)carve(path);
+    }
+   }else if(world.growth==='hunt'){
+    let at=active[0];
+    while(true){
+     let choices=extensions(at);
+     if(!choices.length){at=active.find(id=>extensions(id).length);if(at===undefined)break;choices=extensions(at);}
+     const path=choices[Math.floor(random()*choices.length)];carve(path);at=path.at(-1);active.push(at);
+    }
+   }else if(world.growth==='prim'){
     const frontier=active.flatMap(extensions);
     while(frontier.length){const i=Math.floor(random()*frontier.length),path=frontier[i];frontier[i]=frontier.at(-1);frontier.pop();
      if(live.has(path.at(-1)))continue;carve(path);frontier.push(...extensions(path.at(-1)));
@@ -572,7 +695,14 @@ function doubleMaze(options,mode='doubleMaze'){
   }else{
   const eligible=id=>!live.has(id)&&neighbors(id).filter(n=>live.has(n)).length===1;
   const active=[...live];for(let i=active.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[active[i],active[j]]=[active[j],active[i]];}
-  if(world.growth==='prim'){
+  if(world.growth==='hunt'){
+   let at=active[0];
+   while(true){
+    let choices=neighbors(at).filter(eligible);
+    if(!choices.length){const next=pool.find(eligible);if(next===undefined)break;live.add(next);at=next;continue;}
+    at=choices[Math.floor(random()*choices.length)];live.add(at);
+   }
+  }else if(world.growth==='prim'){
    const frontier=active.flatMap(neighbors);
    while(frontier.length){const i=Math.floor(random()*frontier.length),id=frontier[i];frontier[i]=frontier.at(-1);frontier.pop();if(!eligible(id))continue;live.add(id);frontier.push(...neighbors(id));}
   }else while(active.length){
@@ -580,17 +710,43 @@ function doubleMaze(options,mode='doubleMaze'){
    if(!choices.length){active.splice(i,1);continue;}const id=choices[Math.floor(random()*choices.length)];live.add(id);active.push(id);
   }
   }
+  if(world.growth==='rooms'){
+   world.rooms=[];
+   // Widen existing corridors only inside the original walkable domain.
+   // In particular, never reopen an enclosure wall or a hole boundary.
+   for(let sheet=0;sheet<world.sheets;sheet++){
+    const l=world.layouts[sheet],anchors=[...roomDomain].filter(id=>position(world,id).sheet===sheet&&live.has(id));
+    for(let i=anchors.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[anchors[i],anchors[j]]=[anchors[j],anchors[i]];}
+    const target=Math.max(1,Math.min(4,Math.floor(anchors.length/100)));let placed=0;
+    for(const anchor of anchors){
+     if(placed>=target)break;
+     const p=position(world,anchor),width=3+Math.floor(random()*3),height=3+Math.floor(random()*3),left=p.x-Math.floor(random()*width),top=p.y-Math.floor(random()*height);
+     if(left<1||top<1||left+width>=l.width||top+height>=l.height)continue;
+     if(world.portals.some(h=>h.sheet===sheet&&left<h.x+h.size+2&&left+width>h.x-2&&top<h.y+h.size+2&&top+height>h.y-2))continue;
+     if(world.rooms.some(b=>b.sheet===sheet&&left<b.left+b.width+1&&left+width>b.left-1&&top<b.top+b.height+1&&top+height>b.top-1))continue;
+     const ids=[];for(let y=top;y<top+height;y++)for(let x=left;x<left+width;x++)ids.push(l.offset+y*l.width+x);
+     if(ids.some(id=>!roomDomain.has(id))||ids.every(id=>live.has(id)))continue;
+     for(const id of ids)live.add(id);world.rooms.push({sheet,left,top,width,height});placed++;
+    }
+   }
+   // Restore physical edges removed for lattice pillars, using the original
+   // topology so skew seams and the required sheet detour stay unchanged.
+   for(const [key,edge]of roomEdges)if(live.has(Number(key.split(':')[0]))&&live.has(edge.to))world.edges.set(key,edge);
+  }
   world.cells=Uint8Array.from(world.cells,(_,id)=>live.has(id)?1:0);removed=floors-live.size;
  }
+ world.holeApproach=options.holeApproach??'open';
+ if(!['open','screened'].includes(world.holeApproach))throw Error('未対応の穴への見通しです。');
  world.holeRimWalls=Boolean(options.holeRimWalls);
  world.holeRimWallCount=0;
  if(world.holeRimWalls){
   // Thin the rim only after generation, keeping every reserved winding circuit.
-  const keep=new Set([world.start]);
+  const keep=new Set([world.start,...(returnExit===null?[]:[returnExit])]);
   for(const loop of world.guaranteedLoops)for(const path of [loop.horizontal,loop.vertical]){let id=path.start;keep.add(id);for(const d of path.directions){id=world.edges.get(`${id}:${d}`).to;keep.add(id);}}
-  const rim=[];for(const p of world.portals){const l=world.layouts[p.sheet];for(let y=p.y-1;y<=p.y+p.size;y++)for(let x=p.x-1;x<=p.x+p.size;x++){const id=l.offset+y*l.width+x;if(world.cells[id]&&!keep.has(id))rim.push(id);}}
+  const screened=world.holeApproach==='screened',rim=[],rimSet=new Set(),reach=screened?2:1;
+  for(const p of world.portals){const l=world.layouts[p.sheet];for(let y=Math.max(0,p.y-reach);y<=Math.min(l.height-1,p.y+p.size+reach-1);y++)for(let x=Math.max(0,p.x-reach);x<=Math.min(l.width-1,p.x+p.size+reach-1);x++){const id=l.offset+y*l.width+x;if(world.cells[id]&&!keep.has(id)&&(!screened||!rimSet.has(id))){rim.push(id);rimSet.add(id);}}}
   for(let i=rim.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[rim[i],rim[j]]=[rim[j],rim[i]];}
-  const target=Math.max(1,Math.ceil(rim.length*.45));
+  const target=Math.max(1,Math.ceil(rim.length*(screened ? .9 : .45)));
   for(const id of rim){if(world.holeRimWallCount>=target)break;world.cells[id]=0;
    if(reachable().length!==world.cells.reduce((a,b)=>a+b,0)){world.cells[id]=1;continue;}world.holeRimWallCount++;
   }
@@ -599,17 +755,22 @@ function doubleMaze(options,mode='doubleMaze'){
  for(const [key,e] of world.edges)if(!world.cells[Number(key.split(':')[0])]||!world.cells[e.to])world.edges.delete(key);
  // Verify actual cycles, not merely the presence of an open boundary edge.
  for(const {sheet,horizontal,vertical} of world.guaranteedLoops){const l=world.layouts[sheet];
-  for(const [path,expectedX,expectedY] of [[horizontal,l.width,0],[vertical,0,l.height]]){
+  for(const [path,expectedX,expectedY] of [[horizontal,...sheetPeriods(l)[0]],[vertical,...sheetPeriods(l)[1]]]){
    let id=path.start,x=0,y=0;for(const d of path.directions){const e=world.edges.get(`${id}:${d}`);if(!e||position(world,e.to).sheet!==sheet)throw Error('上下・左右の周回路を確保できません。');id=e.to;x+=directions[d][0];y+=directions[d][1];}
    if(id!==path.start||x!==expectedX||y!==expectedY)throw Error('指定方向の周回路が閉じていません。');
   }
  }
  // End on the other torus so the central connection is part of the route.
- world.exit=reachable().filter(id=>position(world,id).sheet===world.sheets-1).at(-1);
+ world.exit=returnExit??reachable().filter(id=>position(world,id).sheet===world.sheets-1).at(-1);
  world.wallCount=world.cells.filter(n=>!n).length-world.holes.size;
- world.underpassProtected=[...world.holes,...world.portals.flatMap(p=>{const l=world.layouts[p.sheet],ids=[];for(let y=p.y-1;y<=p.y+p.size;y++)for(let x=p.x-1;x<=p.x+p.size;x++)ids.push(l.offset+y*l.width+x);return ids;})];
+ world.underpassProtected=[...Array.from({length:world.cells.length},(_,id)=>id).filter(id=>!world.domain.has(id)),...enclosureWalls,...world.holes,...world.portals.flatMap(p=>{const l=world.layouts[p.sheet],ids=[];for(let y=p.y-1;y<=p.y+p.size;y++)for(let x=p.x-1;x<=p.x+p.size;x++)ids.push(l.offset+y*l.width+x);return ids;})];
  world.underpassReach=2;const physicalLength=world.cells.length;addFloorUnderpasses(world,options.floorUnderpasses??0);
- world.wallCount=world.cells.slice(0,physicalLength).filter(n=>!n).length-world.holes.size;return world;
+ world.wallCount=world.cells.slice(0,physicalLength).filter(n=>!n).length-world.holes.size;
+ if(world.tripleRoute==='return'){
+  const visit=blocked=>{const q=[world.start],seen=new Set(q);for(const id of q)for(let d=0;d<4;d++){const e=world.edges.get(`${id}:${d}`);if(e&&world.cells[e.to]&&groundSheet(world,e.to)!==blocked&&!seen.has(e.to)){seen.add(e.to);q.push(e.to);}}return seen;};
+  if(visit(-1).size!==world.cells.reduce((n,c)=>n+c,0)||!visit(-1).has(world.exit)||visit(1).has(world.exit)||visit(2).has(world.exit)||!loopsIntact(world))throw Error('3シート往復の経路条件を満たせません。条件を変えて生成してください。');
+ }
+ return world;
 }
 function position(world,id){
  if(world.layouts){const sheet=world.layouts.findIndex(l=>id>=l.offset&&id<l.offset+l.width*l.height),l=world.layouts[sheet];return l?{sheet,x:(id-l.offset)%l.width,y:Math.floor((id-l.offset)/l.width)}:{sheet:-1,x:0,y:0};}
@@ -634,29 +795,102 @@ function randomDoubleOptions(seed,world,groups={}){
 function randomTripleOptions(seed,world,groups={}){
  let value=2166136261;for(const c of String(seed)+'-conditions')value=Math.imul(value^c.charCodeAt(0),16777619);
  const pick=values=>{value=(Math.imul(value,1664525)+1013904223)>>>0;return values[Math.floor(value/4294967296*values.length)];};
- const options={seed,growth:world.growth,wallStyle:world.wallStyle,dimensions:world.layouts.slice(0,3).map(l=>[l.width,l.height]),holeSize:world.holeSize,holeRimWalls:world.holeRimWalls,holePlacement:world.holePlacement??'center',loopStyle:world.loopStyle,floorUnderpasses:world.floorUnderpasses??0,underpassShape:world.underpassShape};
- if(groups.generation){options.growth=pick(['walls','dfs','prim','growing']);options.wallStyle=pick(['dense','grid']);}
+ const options={seed,ruleMode:world.ruleMode??'plain',shiftX:world.shiftX??0,shiftY:world.shiftY??0,tripleRoute:world.tripleRoute??'chain',returnShape:world.returnShape??'rectangle',growth:world.growth,wallStyle:world.wallStyle,dimensions:world.layouts.slice(0,3).map(l=>[l.period?.width??l.width,l.period?.height??l.height]),holeSize:world.holeSize,holeRimWalls:world.holeRimWalls,holeApproach:world.holeApproach??'open',holePlacement:world.holePlacement??'center',loopStyle:world.loopStyle,floorUnderpasses:world.floorUnderpasses??0,underpassShape:world.underpassShape};
+ if(groups.generation){options.wallStyle=pick(['dense','grid']);options.growth=pick(['walls','dfs','prim','growing','hunt','rooms',...(options.wallStyle==='grid'?['kruskal','wilson']:[])]);}
  if(groups.size){
   const min=groups.hole?1:options.holeSize,evens=[16,18,20,22,24];
   const sides=evens.filter(n=>n>=min+4);
-  const central=[];for(const width of evens)for(const height of evens)if(width>height&&width>=2*min+6&&height>=min+4)central.push([width,height]);
+  const central=[];for(const width of evens)for(const height of evens)if((options.tripleRoute!=='return'||width>=20)&&width>height&&width>=2*min+6&&height>=min+4)central.push([width,height]);
   options.dimensions=[[pick(sides),pick(sides)],pick(central),[pick(sides),pick(sides)]];
  }
- if(options.dimensions.flat().some(n=>n%2)&&groups.generation)options.wallStyle='dense';
- if(groups.hole){options.holeSize=pick([1,2,3,4].filter(n=>n<=holeLimit('triple',options.dimensions)));options.holeRimWalls=pick([false,true]);}
- if(groups.loop)options.loopStyle=pick(['straight','meander']);
+ if(options.dimensions.flat().some(n=>n%2)&&groups.generation){options.wallStyle='dense';if(['kruskal','wilson'].includes(options.growth))options.growth='prim';}
+ if(groups.hole){options.holeSize=pick([1,2,3,4].filter(n=>(options.tripleRoute!=='return'||n>=3)&&n<=holeLimit('triple',options.dimensions)));options.holeRimWalls=pick([false,true]);}
+ if(groups.loop)options.loopStyle=options.tripleRoute==='return'?'meander':pick(['straight','meander']);
  if(groups.underpasses){options.floorUnderpasses=pick([0,1,2,3,4]);options.underpassShape=pick(['straight','mixed','corners']);}
  return options;
 }
-function create(mode,options={}){const world=generate(mode,options);return {world,id:world.start,frame:[...identity],x:0,y:0,steps:0,history:[{x:0,y:0,id:world.start}],last:null};}
-function move(state,direction,truth=false){
+function create(mode,options={}){const world=generate(mode,options),state={world,id:world.start,frame:[...identity],x:0,y:0,steps:0,history:[{x:0,y:0,id:world.start}],last:null};if(mode==='crossingMaze'&&options.ruleMode&&options.ruleMode!=='plain'){if(options.ruleMode!=='birds')throw Error('未対応の立体交差探索ルールです。');world.ruleMode='birds';world.domain=new Set(world.cells.map((v,id)=>v?id:-1).filter(id=>id>=0));Features.install(state,{birds:true,birdAcross:true,birdLeap:true,birdWander:true});}if(mode==='tripleMaze'){world.ruleMode=options.ruleMode??'plain';if(!['plain','keys','warp','warpHidden','warpKeys','warpHiddenKeys','birds','birdsKeys','warpBirds','warpHiddenBirds','warpAll','warpHiddenAll'].includes(world.ruleMode))throw Error('未対応の3トーラス探索ルールです。');if(world.ruleMode!=='plain')Features.install(state,{keys:['keys','warpKeys','warpHiddenKeys','birdsKeys','warpAll','warpHiddenAll'].includes(world.ruleMode),...(['birds','birdsKeys','warpBirds','warpHiddenBirds','warpAll','warpHiddenAll'].includes(world.ruleMode)?{birds:true,birdAcross:true,birdLeap:true,birdWander:true}:{}),warp:['warp','warpHidden','warpKeys','warpHiddenKeys','warpBirds','warpHiddenBirds','warpAll','warpHiddenAll'].includes(world.ruleMode),warpInvisible:['warpHidden','warpHiddenKeys','warpHiddenBirds','warpHiddenAll'].includes(world.ruleMode),distantKey:true,avoidWarpTrap:true});}return state;}
+// Keep winding experience per sheet; hole transfers never count as walking a loop.
+function tripleLoopProgress(state){
+ if(state.world.mode!=='tripleMaze')return null;
+ return state.tripleLoops??={counts:Array.from({length:3},()=>[0,0]),sheet:groundSheet(state.world,state.id),x:0,y:0,points:new Map([[state.id,[0,0]]])};
+}
+// A completed atlas reveals terrain in the current local frame, without moving the camera.
+function completedTripleView(state,radius=8){
+ if(!state.atlasComplete)return [];
+ const world=state.world,sheet=groundSheet(world,state.id),l=world.layouts?.[sheet]??{width:8,height:8,offset:sheet*64};
+ const lane=world.passages?.find(p=>p.vertical===state.id),here=position(world,lane?lane.horizontal:state.id);
+ const right=directions[state.frame[1]],down=directions[state.frame[2]],wrap=(n,p)=>(n%p+p)%p,result=[];
+ for(let y=-radius;y<=radius;y++)for(let x=-radius;x<=radius;x++){
+  let gx=here.x+x*right[0]+y*down[0],gy=here.y+x*right[1]+y*down[1];
+  if(['tripleMaze','doubleMaze','torusMaze','kleinMaze'].includes(world.mode)){
+   if(world.mode==='kleinMaze'&&Math.abs(Math.floor(gx/l.width))%2)gy=(world.shiftY??0)-gy;
+   ({x:gx,y:gy}=sheetCanonical(l,gx,gy));
+  }else if(gx<0||gy<0||gx>=l.width||gy>=l.height)continue;
+  let id=l.offset+gy*l.width+gx;if(world.holes.has(id))continue;
+  // Apply the same approach-dependent cross-section as the live view, even
+  // outside sight range. Coordinates are relative to this periodic copy.
+  let hidden=false;
+  for(const crossing of world.passages||[]){
+   if((crossing.baseSheet??0)!==sheet||Math.abs(gx-crossing.cx)>1||Math.abs(gy-crossing.cy)>1)continue;
+   const axis=state.id===crossing.horizontal?'horizontal':state.id===crossing.vertical?'vertical':passageApproach(crossing,gx-crossing.cx-x*right[0]-y*down[0],gy-crossing.cy-x*right[1]-y*down[1]);
+   if(id===crossing.horizontal)id=axis==='vertical'?crossing.vertical:crossing.horizontal;
+   if(underpassHidden({...world,...crossing},id,axis))hidden=true;
+  }
+  result.push({x,y,id,wall:hidden||!world.cells[id],frame:[...state.frame]});
+ }
+ return result;
+}
+// Project only remembered cells through learned periods; never change the player's frame or chart.
+function foldedTripleMemory(state,chart,radius=8){
+ const sheet=groundSheet(state.world,state.id),l=state.world.layouts[sheet],counts=tripleLoopProgress(state)?.counts[sheet]??[0,0];
+ const right=directions[state.frame[1]],down=directions[state.frame[2]];
+ const vectors=sheetPeriods(l).map(v=>[v[0]*right[0]+v[1]*right[1],v[0]*down[0]+v[1]*down[1]]),[a,b]=vectors,det=a[0]*b[1]-a[1]*b[0];
+ const output=new Map();
+ for(const record of chart.cells.values()){
+  const own=record.id>=0&&groundSheet(state.world,record.id)===sheet,rx=record.x-state.x,ry=record.y-state.y;
+  const ca=(-b[1]*rx+b[0]*ry)/det,cb=(a[1]*rx-a[0]*ry)/det;
+  const ra=radius*(Math.abs(b[0])+Math.abs(b[1]))/Math.abs(det),rb=radius*(Math.abs(a[0])+Math.abs(a[1]))/Math.abs(det);
+  const ranges=[[ca,ra],[cb,rb]].map(([c,r],i)=>own&&counts[i]>=3?[Math.ceil(c-r),Math.floor(c+r)]:[0,0]);
+  for(let i=ranges[0][0];i<=ranges[0][1];i++)for(let j=ranges[1][0];j<=ranges[1][1];j++){
+   const x=rx+i*a[0]+j*b[0],y=ry+i*a[1]+j*b[1];if(Math.abs(x)<=radius&&Math.abs(y)<=radius)output.set(`${x},${y}`,{...record,x,y});
+  }
+ }
+ return [...output.values()];
+}
+function observeTripleLoop(state){
+ const p=tripleLoopProgress(state);if(!p)return;
+ const sheet=groundSheet(state.world,state.id),last=state.last;
+ if(sheet!==p.sheet||['throat','warp','teleport','wand'].includes(last.kind)){p.sheet=sheet;p.x=p.y=0;p.points=new Map([[state.id,[0,0]]]);return;}
+ const d=directions[last.worldDirection];p.x+=d[0];p.y+=d[1];
+ const previous=p.points.get(state.id),l=state.world.layouts[sheet];
+ if(previous){const dx=p.x-previous[0],dy=p.y-previous[1];
+  const [a,b]=periodCoefficients(l,dx,dy);
+  if(Number.isInteger(a)&&Number.isInteger(b)&&(a||b)){
+   p.counts[sheet][0]=Math.min(3,p.counts[sheet][0]+Math.abs(a));
+   p.counts[sheet][1]=Math.min(3,p.counts[sheet][1]+Math.abs(b));
+   p.points.clear();
+  }
+ }
+ p.points.set(state.id,[p.x,p.y]);
+}
+function move(state,direction,truth=false){globalThis.GraphWands?.flush(state);
+ if(state.wands)state.wandInterrupted=!!state.wands.frozen;
+ if(state.wands?.frozen){state.wands.frozen--;direction=4;}
+ Wildlife?.ensure(state,Wildlife.graph(state));
+ if(direction===4){state.steps++;state.last={from:state.id,to:state.id,worldDirection:4,localDirection:4,kind:'wait',changed:false};Features.afterMove(state,true);(globalThis.GraphWands?.after||((s,fn)=>fn()))(state,()=>{Wildlife?.graphTick(state);state.history.push({x:state.x,y:state.y,id:state.id});if(state.history.length>1000)state.history.shift();});return true;}
  if(!Number.isInteger(direction)||direction<0||direction>3)return false;
- const wd=truth?direction:state.frame[direction],edge=state.world.edges.get(`${state.id}:${wd}`);if(!edge||!Features.allowed(state,edge.to))return false;
+ const wd=truth?direction:state.frame[direction],edge=state.world.edges.get(`${state.id}:${wd}`);if(!edge||!Features.allowed(state,edge.to)){const R=typeof module==='object'?require('./reflecting-walls.js'):globalThis.ReflectingWalls;R?.bump(state,state.id,wd);return false;}
+ tripleLoopProgress(state);
  const local=state.frame.indexOf(wd),[dx,dy]=directions[local],from=state.id;
- state.id=edge.to;state.x+=dx;state.y+=dy;state.frame=state.frame.map(d=>edge.transform[d]);state.steps++;
+ Wildlife?.enter(state,Wildlife.graph(state),from,edge.to);state.id=edge.to;state.x+=dx;state.y+=dy;state.frame=state.frame.map(d=>edge.transform[d]);state.steps++;
  state.last={from,to:edge.to,worldDirection:wd,localDirection:local,kind:edge.kind,changed:edge.transform.some((d,i)=>d!==i)};
+ if(state.world.branchMaze)state.last.entered=edge.to;
  Features.afterMove(state);
- state.history.push({x:state.x,y:state.y,id:state.id});if(state.history.length>1000)state.history.shift();return true;
+ (globalThis.GraphWands?.after||((s,fn)=>fn()))(state,()=>{Wildlife?.graphTick(state);
+ if(state.world.mode==='tripleMaze'&&state.last.kind==='warp'){const seen=state.features.warpTraversed??=[];if(!seen.includes(state.last.from))seen.push(state.last.from);}
+ observeTripleLoop(state);
+ state.history.push({x:state.x,y:state.y,id:state.id});if(state.history.length>1000)state.history.shift();});return true;
 }
 function quadrant(x,y){return y<=3?(x<=3?0:1):(x<=3?3:2);}
 function quadrantSheets(state){
@@ -746,15 +980,15 @@ function holeView(state,radius,metrics){
  if(metrics)Object.assign(metrics,{queued:queue.length,states:seen.size,tiles:tiles.size,radius});return [...tiles.values()];
 }
 // Topowalk-style local chart: nearest floor wins; walls win ties, only chosen floor expands.
-function nearestView(state,radius=4,metrics=null){
+function nearestView(state,radius=4,metrics=null,trackSeams=false){
  if(!Number.isInteger(radius)||radius<0||radius>6)throw Error('Invalid preview radius');
  if(['double','triple','doubleMaze','tripleMaze'].includes(state.world.mode))return holeView(state,radius,metrics);
- const queue=[{x:0,y:0,id:state.id,frame:state.frame,depth:0}],tiles=new Map(),seen=new Set();
+ const queue=[{x:0,y:0,id:state.id,frame:state.frame,depth:0,seams:0}],tiles=new Map(),seen=new Set();
  const underpass=Boolean(state.world.passages?.length),passages=underpass?(state.world.passages||[state.world]):[];
  for(const p of queue){
   if(underpass&&p.id>=0&&passages.some(c=>{
    let axis=underpassAxis(state,c);
-   if(['kleinMaze','torusMaze'].includes(state.world.mode)&&state.id!==c.horizontal&&state.id!==c.vertical){
+   if(['kleinMaze','torusMaze','doubleTwist','quarterCW','quarterCCW','cwTwist','ccwTwist'].includes(state.world.mode)&&state.id!==c.horizontal&&state.id!==c.vertical){
     // Locate the observer in this visible copy of the crossing, not across the
     // discontinuous coordinates of the fundamental rectangle.
     const at=position(state.world,p.id),right=directions[p.frame[1]],down=directions[p.frame[2]];
@@ -766,12 +1000,12 @@ function nearestView(state,radius=4,metrics=null){
   const key=`${p.x},${p.y}`,signature=`${key}:${p.id}:${p.frame}`;if(seen.has(signature))continue;seen.add(signature);
   const wall=!state.world.cells[p.id],prev=tiles.get(key);
   if(prev&&(prev.distance<p.depth||(prev.distance===p.depth&&(prev.wall||!wall))))continue;
-  tiles.set(key,{x:p.x,y:p.y,id:p.id,frame:[...p.frame],wall,distance:p.depth,wallCandidate:wall,floorCandidate:!wall,selfCandidate:!wall&&p.id===state.id});
+  tiles.set(key,{x:p.x,y:p.y,id:p.id,frame:[...p.frame],wall,distance:p.depth,...(trackSeams?{seams:p.seams}:{}),wallCandidate:wall,floorCandidate:!wall,selfCandidate:!wall&&p.id===state.id});
   if(wall||p.depth>=radius)continue;
   // Match the original's true-world N,E,S,W tie order.
   for(let wd=0;wd<4;wd++){
    const d=p.frame.indexOf(wd),[dx,dy]=directions[d],edge=(state.world.candidates.size?state.world.candidates:state.world.edges).get(`${p.id}:${wd}`);
-   queue.push({x:p.x+dx,y:p.y+dy,id:edge?edge.to:-1,frame:edge?p.frame.map(n=>edge.transform[n]):p.frame,depth:p.depth+1});
+   queue.push({x:p.x+dx,y:p.y+dy,id:edge?edge.to:-1,frame:edge?p.frame.map(n=>edge.transform[n]):p.frame,depth:p.depth+1,seams:p.seams+(edge&&edge.kind!=='normal'&&edge.kind!=='underpass'?1:0)});
   }
  }
  if(metrics)Object.assign(metrics,{queued:queue.length,states:seen.size,tiles:tiles.size,radius});return [...tiles.values()];
@@ -781,7 +1015,13 @@ function nearestView(state,radius=4,metrics=null){
 function observeAtlas(state,memory=new Set()){
  if(!['crossing','crossingMaze','kleinMaze','torusMaze','doubleMaze','tripleMaze'].includes(state.world.mode))return {memory,visible:new Set()};
  const visible=new Set(nearestView(state).filter(p=>p.id>=0).map(p=>p.id));
- for(const id of visible)memory.add(id);return {memory,visible};
+ for(const id of visible)memory.add(id);
+ if(state.world.mode==='tripleMaze'){
+  memory.add(state.id);
+  state.atlasComplete=state.world.cells.every((floor,id)=>!floor||memory.has(id));
+  if(state.atlasComplete)for(let id=0;id<state.world.cells.length;id++)if(!state.world.holes.has(id)&&(!state.world.domain||state.world.domain.has(id)||state.world.cells[id]))memory.add(id);
+ }
+ return {memory,visible};
 }
 // Unfold the experience along the walked path, across sheet changes as well.
 // This chart uses perceived coordinates, never the fundamental sheet rectangle.
@@ -821,11 +1061,16 @@ function observeRegions(state,book={records:new Map(),owners:new Map(),nextNumbe
 }
 // Keep charts consistent with observed appearances, without erasing conflicting memories.
 function observeWalkingMap(state,book={charts:[],active:-1},view=nearestView(state)){
+ if(['crossing','crossingMaze','underpass','underpassMaze','cornerUnderpass','torusMaze','doubleMaze','tripleMaze','kleinMaze'].includes(state.world.mode)||state.world.mode==='double'&&state.world.lattice){
+  if(!state.seenFloors){state.seenFloors=new Set();for(const chart of book.charts)for(const p of chart.cells.values())if(!p.wall&&state.world.cells[p.id])state.seenFloors.add(p.id);}
+  state.seenFloors.add(state.id);for(const p of view)if(!p.wall&&state.world.cells[p.id])state.seenFloors.add(p.id);
+  state.atlasComplete=!!state.atlasComplete||state.seenFloors.size===state.world.cells.reduce((sum,v)=>sum+v,0);
+ }
  const sheet=groundSheet(state.world,state.id),underpass=Boolean(state.world.passages?.length),standalone=['underpass','underpassMaze','cornerUnderpass'].includes(state.world.mode);
  // Across-stair glimpses stay in the live view; archive the layer being explored.
  const here=position(state.world,state.id);
  const observations=view.filter(p=>standalone||p.id<0||groundSheet(state.world,p.id)===sheet).map(p=>{
-  const record={...p,x:p.x+state.x,y:p.y+state.y,signature:p.wall?'wall':`floor:${standalone?0:groundSheet(state.world,p.id)}`};
+  const record={...p,x:p.x+state.x,y:p.y+state.y,...(!p.wall&&state.features?.marks.has(p.id)?{mark:state.features.marks.get(p.id)}:{}),signature:p.wall?'wall':`floor:${standalone?0:groundSheet(state.world,p.id)}`};
   if(underpass){const right=directions[state.frame[1]],down=directions[state.frame[2]];
    record.groundX=here.x+p.x*right[0]+p.y*down[0];record.groundY=here.y+p.x*right[1]+p.y*down[1];
    // Compare actual locations modulo the seam, while leaving chart x/y unfolded.
@@ -834,9 +1079,10 @@ function observeWalkingMap(state,book={charts:[],active:-1},view=nearestView(sta
     const a=Math.floor((l.height*(2*gx+1)+l.shiftX*(2*gy+1))/(2*l.determinant)),b=Math.floor((l.shiftY*(2*gx+1)+l.width*(2*gy+1))/(2*l.determinant));
     record.groundX=gx-a*l.width+b*l.shiftX-state.world.minX;record.groundY=gy+a*l.shiftY-b*l.height-state.world.minY;
    }else if(['kleinMaze','torusMaze','doubleMaze','tripleMaze'].includes(state.world.mode)){
-    const {width,height}=state.world.layouts[sheet],wrap=Math.floor(record.groundX/width);
+    const layout=state.world.layouts[sheet],{width,height}=layout,wrap=Math.floor(record.groundX/width);
+    if(layout.period){const c=sheetCanonical(layout,record.groundX,record.groundY);record.groundX=c.x;record.groundY=c.y;}
     record.groundX=((record.groundX%width)+width)%width;
-    if(state.world.mode==='kleinMaze'&&Math.abs(wrap)%2)record.groundY=-record.groundY;
+    if(state.world.mode==='kleinMaze'&&Math.abs(wrap)%2)record.groundY=(state.world.shiftY??0)-record.groundY;
     record.groundY=((record.groundY%height)+height)%height;
    }
    record.groundSheet=sheet;record.underpassProjection=state.world.passages.some(c=>(c.baseSheet??0)===sheet&&Math.abs(record.groundX-c.cx)<=1&&Math.abs(record.groundY-c.cy)<=1);
@@ -853,7 +1099,7 @@ function observeWalkingMap(state,book={charts:[],active:-1},view=nearestView(sta
  // On returning through a known hole, register the saved sheet chart against
  // a visible remembered floor, or the shared sheet frame for disconnected pockets.
  // Keep unseen records as well as the saved chart identity.
- if((['doubleMaze','tripleMaze'].includes(state.world.mode)||(state.world.mode==='double'&&state.world.lattice))&&state.last?.kind==='throat'&&book.lastArrivalStep!==state.steps){
+ if((['doubleMaze','tripleMaze'].includes(state.world.mode)||(state.world.mode==='double'&&state.world.lattice))&&['throat','wand'].includes(state.last?.kind)&&(state.last.kind==='throat'||!book.charts[book.active]||!fits(book.charts[book.active]))&&book.lastArrivalStep!==state.steps){
   book.lastArrivalStep=state.steps;
   registration:for(const saved of [...book.charts].reverse()){
    if(![...saved.cells.values()].some(p=>!p.wall&&groundSheet(state.world,p.id)===sheet))continue;
@@ -879,6 +1125,8 @@ function observeWalkingMap(state,book={charts:[],active:-1},view=nearestView(sta
    }
   }
  }
+ const relocated=state.features?.last&&state.features.last.kind!=='wand'&&book.lastTransferStep!==state.steps;
+ if(relocated){book.lastTransferStep=state.steps;book.charts.push({number:Math.max(0,...book.charts.map(c=>c.number))+1,cells:new Map()});book.active=book.charts.length-1;}
  let chart=book.charts[book.active],switched=false;
  if(!chart||!fits(chart)){
   const alternatives=book.charts.filter(fits).map(c=>({c,overlap:observations.filter(p=>!p.wall&&c.cells.has(`${p.x},${p.y}`)).length})).filter(v=>v.overlap>0).sort((a,b)=>b.overlap-a.overlap);
@@ -887,6 +1135,40 @@ function observeWalkingMap(state,book={charts:[],active:-1},view=nearestView(sta
   book.active=book.charts.indexOf(chart);switched=true;
  }
  for(const p of observations)chart.cells.set(`${p.x},${p.y}`,p);
+ // A uniquely recorded numbered landmark anchors a displaced chart. Require
+ // every overlapping appearance to agree before committing the alignment.
+ if(state.features?.marks.size){
+  for(const saved of [...book.charts]){if(saved===chart)continue;
+   const current=[...chart.cells.values()],prior=[...saved.cells.values()];
+   for(const now of observations.filter(p=>p.mark&&p.frame)){
+    const anchors=prior.filter(p=>p.mark===now.mark&&p.frame);
+    if(anchors.length!==1||current.filter(p=>p.mark===now.mark).length!==1)continue;
+    const old=anchors[0],change=old.frame.map(d=>now.frame.indexOf(d)),right=directions[change[1]],down=directions[change[2]],aligned=new Map();let conflict=false;
+    for(const p of prior){const dx=p.x-old.x,dy=p.y-old.y,x=now.x+dx*right[0]+dy*down[0],y=now.y+dx*right[1]+dy*down[1],record={...p,x,y,frame:p.frame?identity.map(d=>p.frame[change.indexOf(d)]):undefined};
+     const existing=chart.cells.get(`${x},${y}`);if(existing&&(!compatible(existing,record)||(existing.mark&&record.mark&&existing.mark!==record.mark))){conflict=true;break;}aligned.set(`${x},${y}`,record);
+    }
+    if(conflict)continue;for(const [key,p]of aligned)if(!chart.cells.has(key))chart.cells.set(key,p);
+    book.onMerge?.(saved,chart,{right,down,ty:now.y-old.x*right[1]-old.y*down[1]});
+    book.charts.splice(book.charts.indexOf(saved),1);book.markMatches=(book.markMatches||0)+1;break;
+   }
+  }book.active=book.charts.indexOf(chart);
+ }
+
+ // Absorb only fully contained records in the same registered coordinates.
+ // Real cell, sheet, orientation and landmark must agree; never infer a transform
+ // from a repeated-looking patch or discard the larger page's unexplored edges.
+ const contains=(large,small)=>small.cells.size>0&&large.cells.size>=small.cells.size&&[...small.cells].every(([key,p])=>{const q=large.cells.get(key);return q&&q.id===p.id&&q.wall===p.wall&&q.signature===p.signature&&(!p.mark||p.mark===q.mark)&&(!p.frame||q.frame&&p.frame.every((d,i)=>d===q.frame[i]));});
+ for(const other of [...book.charts]){
+  if(other===chart||!book.charts.includes(other))continue;
+  let kept,removed;
+  if(contains(chart,other)&&!(chart.cells.size===other.cells.size&&other.number<chart.number)){kept=chart;removed=other;}
+  else if(contains(other,chart)){kept=other;removed=chart;for(const [key,p]of chart.cells)kept.cells.set(key,p);switched=true;}
+  else continue;
+  book.onMerge?.(removed,kept,{right:[1,0],down:[0,1],ty:0});
+  book.charts.splice(book.charts.indexOf(removed),1);chart=kept;
+ }
+ book.active=book.charts.indexOf(chart);
+
  if(underpass){
   // Reconcile compatible fragments without discarding their unexplored-in-this-chart areas.
   let merged=true;while(merged){merged=false;for(const other of [...book.charts]){
@@ -896,11 +1178,24 @@ function observeWalkingMap(state,book={charts:[],active:-1},view=nearestView(sta
    }
    if(conflict||!sharedFloor)continue;
    for(const [key,p] of other.cells)if(!chart.cells.has(key))chart.cells.set(key,p);
+   book.onMerge?.(other,chart,{right:[1,0],down:[0,1],ty:0});
    book.charts.splice(book.charts.indexOf(other),1);merged=true;
   }}
   book.active=book.charts.indexOf(chart);
  }
 
+ // Repeated landmarks in one registered chart reveal a period, even if the
+ // physical journey between them was interrupted by a warp. Isolated charts
+ // never contribute their arbitrary teleport displacement.
+ if(state.world.lattice&&state.features?.marks.size){
+  const groups=new Map();for(const p of chart.cells.values())if(p.mark&&!p.wall&&p.frame){const key=p.mark+':'+p.frame.join(',');if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p);}
+  const l=state.world.lattice,right=directions[state.frame[1]],down=directions[state.frame[2]];
+  for(const records of groups.values()){const origin=records[0];for(const p of records.slice(1)){
+   const dx=p.x-origin.x,dy=p.y-origin.y,x=dx*right[0]+dy*down[0],y=dx*right[1]+dy*down[1];let a=(l.height*x+l.shiftX*y)/l.determinant,b=(l.shiftY*x+l.width*y)/l.determinant;
+   if(!Number.isInteger(a)||!Number.isInteger(b)||!a&&!b)continue;if(a<0||!a&&b<0){a=-a;b=-b;}a=a||0;b=b||0;
+   const periods=state.markPeriods||(state.markPeriods=[]);if(!periods.some(v=>v.sheet===sheet&&v.a===a&&v.b===b))periods.push({sheet,a,b,mark:p.mark});
+  }}
+ }
  return {book,chart,switched,visible:new Set(observations.map(p=>`${p.x},${p.y}`))};
 }
 // Structural statistics for the reciprocal crossing graphs, including stairs.
@@ -916,7 +1211,7 @@ function crossingStats(world){
  return {floors,deadEnds,junctions,reachable:distances.size,exitSteps:distances.get(world.exit)??null};
 }
 // Versioned local snapshot: retain the generated graph, not just its seed.
-function encodeSave(snapshot){
+function encodeSave(snapshot){globalThis.GraphWands?.flush(snapshot.state);
  return JSON.stringify({format:snapshot?.state?.world?.mode==='tripleMaze'?'connection-triple-save':'connection-double-save',version:1,savedAt:new Date().toISOString(),snapshot},(_,v)=>v instanceof Map?{saveType:'Map',values:[...v]}:v instanceof Set?{saveType:'Set',values:[...v]}:v instanceof Uint8Array?{saveType:'Cells',values:[...v]}:v);
 }
 function decodeSave(text){
@@ -933,7 +1228,11 @@ function decodeSave(text){
  const s=data.snapshot,st=s?.state,w=st?.world,validFrame=f=>Array.isArray(f)&&f.length===4&&new Set(f).size===4&&f.every(n=>Number.isInteger(n)&&n>=0&&n<4);
  const fail=()=>{throw Error('保存データの内容が不正です。');};
  if(!w||!['doubleMaze','tripleMaze'].includes(w.mode)||w.sheets!==(w.mode==='tripleMaze'?3:2)||data.format!==(w.mode==='tripleMaze'?'connection-triple-save':'connection-double-save')||!(w.cells instanceof Uint8Array)||w.cells.length>10000||!Array.isArray(w.layouts)||w.layouts.length<w.sheets||!(w.edges instanceof Map)||!(w.candidates instanceof Map)||!(w.holes instanceof Set)||!Array.isArray(w.portals))fail();
- let length=0;for(const l of w.layouts){if(!Number.isInteger(l.width)||!Number.isInteger(l.height)||l.width<8||l.width>24||l.height<8||l.height>24||l.offset!==length)fail();length+=l.width*l.height;}if(length!==w.cells.length)fail();
+ let length=0;for(const l of w.layouts){
+  const p=l.period,max=p?26:24;
+  if(p&&(w.mode!=='tripleMaze'||![p.width,p.height].every(n=>Number.isInteger(n)&&n>=8&&n<=24&&n%2===0)||![p.shiftX,p.shiftY].every(n=>Number.isInteger(n)&&n%2===0&&Math.abs(n)<=2)||p.minX!==Math.min(0,-p.shiftX)||p.minY!==Math.min(0,-p.shiftY)||l.width!==p.width+Math.abs(p.shiftX)||l.height!==p.height+Math.abs(p.shiftY)||!(w.domain instanceof Set)))fail();
+  if(!Number.isInteger(l.width)||!Number.isInteger(l.height)||l.width<8||l.width>max||l.height<8||l.height>max||l.offset!==length)fail();length+=l.width*l.height;
+ }if(length!==w.cells.length)fail();
  if(!Number.isInteger(st.id)||!w.cells[st.id]||!validFrame(st.frame)||![st.x,st.y,st.steps].every(Number.isSafeInteger)||st.steps<0||!Array.isArray(st.history))fail();
  for(const map of [w.edges,w.candidates])for(const [key,e] of map){const parts=String(key).split(':').map(Number);if(parts.length!==2||!Number.isInteger(parts[0])||parts[0]<0||parts[0]>=length||!Number.isInteger(parts[1])||parts[1]<0||parts[1]>3||!Number.isInteger(e.to)||e.to<0||e.to>=length||!validFrame(e.transform))fail();if(map===w.edges&&(!w.cells[parts[0]]||!w.cells[e.to]))fail();}
  if(!(s.atlasMemory instanceof Set)||!(s.journeyMap?.cells instanceof Map)||!(s.regionBook?.records instanceof Map)||!(s.regionBook?.owners instanceof Map)||!Array.isArray(s.walkingBook?.charts)||!s.walkingBook.charts.every(c=>c.cells instanceof Map)||!Number.isSafeInteger(s.journey?.number)||s.journey.number<1||!Number.isSafeInteger(s.journey.steps)||s.journey.steps<0||!s.controls)fail();
@@ -947,7 +1246,15 @@ function decodeSave(text){
  for(const [id,n] of s.regionBook.owners)if(!cellId(id)||!Number.isSafeInteger(n)||n<1)fail();
  for(const c of Object.values(s.controls))if(!c||typeof c.value!=='string'||typeof c.checked!=='boolean')fail();
  for(const p of w.passages||[])if(!cellId(p.horizontal)||!cellId(p.vertical)||!Number.isInteger(p.baseSheet)||p.baseSheet<0||p.baseSheet>=w.sheets||!Number.isInteger(p.cx)||!Number.isInteger(p.cy))fail();
+ if(st.tripleLoops!==undefined){const p=st.tripleLoops;
+  if(w.mode!=='tripleMaze'||!p||!Array.isArray(p.counts)||p.counts.length!==3||p.counts.some(c=>!Array.isArray(c)||c.length!==2||c.some(n=>!Number.isInteger(n)||n<0||n>3))||!Number.isInteger(p.sheet)||p.sheet<0||p.sheet>=3||![p.x,p.y].every(Number.isSafeInteger)||!(p.points instanceof Map)||p.points.size>length)fail();
+  for(const [id,xy] of p.points)if(!cellId(id)||!Array.isArray(xy)||xy.length!==2||!xy.every(Number.isSafeInteger))fail();
+ }
+ if(w.mode==='tripleMaze'){if(!['plain','keys','warp','warpHidden','warpKeys','warpHiddenKeys','birds','birdsKeys','warpBirds','warpHiddenBirds','warpAll','warpHiddenAll'].includes(w.ruleMode??'plain'))fail();if(['keys','warpKeys','warpHiddenKeys','birdsKeys','warpAll','warpHiddenAll'].includes(w.ruleMode)&&!st.features?.options?.keys)fail();if(['warp','warpHidden','warpKeys','warpHiddenKeys','warpBirds','warpHiddenBirds','warpAll','warpHiddenAll'].includes(w.ruleMode)&&!st.features?.options?.warp)fail();if(['warpHidden','warpHiddenKeys','warpHiddenBirds','warpHiddenAll'].includes(w.ruleMode)&&!st.features?.options?.warpInvisible)fail();if(['birds','birdsKeys','warpBirds','warpHiddenBirds','warpAll','warpHiddenAll'].includes(w.ruleMode)&&!st.features?.options?.birds)fail();Features.validate(st);if(st.features?.warpTraversed!==undefined&&(!Array.isArray(st.features.warpTraversed)||new Set(st.features.warpTraversed).size!==st.features.warpTraversed.length||st.features.warpTraversed.some(id=>!st.features.warps.has(id))))fail();}
+ if(w.mode==='tripleMaze'){(typeof module==='object'?require('./graph-wands.js'):root.GraphWands).validate(st);(typeof module==='object'?require('./graph-oob.js'):root.GraphOob).validate(st);}
+ if(st.annotations)(Notes||root.SheetAnnotations).validate(st);
+ if(st.tripleNotesRecorded!==undefined&&(!Array.isArray(st.tripleNotesRecorded)||new Set(st.tripleNotesRecorded).size!==st.tripleNotesRecorded.length||st.tripleNotesRecorded.some(id=>!st.features?.warpTraversed?.includes(id))))fail();
  return data;
 }
-const api={repairSkewSeams,bendUnderpasses,addFloorUnderpasses,randomTripleOptions,encodeSave,decodeSave,randomDoubleOptions,observeJourneyMap,observeRegions,underpassSymbol,groundSheet,underpassAxis,crossingStats,observeWalkingMap,observeAtlas,holeLimit,position,names,directions,generate,create,move,quadrantSheets,branchView,branchRayView,candidateView,nearestView};if(typeof module==='object')module.exports=api;else root.ConnectionSpace=api;
+const api={underpassHidden,passageApproach,sheetCanonical,sheetPeriods,periodCoefficients,completedTripleView,foldedTripleMemory,tripleLoopProgress,repairSkewSeams,bendUnderpasses,addFloorUnderpasses,randomTripleOptions,encodeSave,decodeSave,randomDoubleOptions,observeJourneyMap,observeRegions,underpassSymbol,groundSheet,underpassAxis,crossingStats,observeWalkingMap,observeAtlas,holeLimit,position,names,directions,generate,create,move,quadrantSheets,branchView,branchRayView,candidateView,nearestView};if(typeof module==='object')module.exports=api;else root.ConnectionSpace=api;
 })(typeof globalThis==='object'?globalThis:this);

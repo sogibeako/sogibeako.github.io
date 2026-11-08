@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict'),M=require('./core.js');
+const g=M.createGame(M.generate({separateMaps:true}));M.move(g,'down');M.placeMarker(g);
+g.cognition.archives.push({nodes:new Map(g.cognition.memory_nodes)});
+const memory=JSON.stringify([...g.cognition.archives[0].nodes]),turns=g.turns,position=g.player.world_position;
+assert.ok(M.nameMarker(g,'1','  長い廊下の分岐  '));assert.equal(M.markerTitle(g,'1'),'目印 1「長い廊下の分岐」');
+assert.deepEqual(M.matchLandmarkMaps(g),[0]);assert.equal(M.featureAt(g,position),'1');
+assert.ok(!M.nameMarker(g,'2','未設置'));assert.ok(!M.nameMarker(g,'1','あ'.repeat(25)));assert.ok(!M.nameMarker(g,'1','二\n行'));assert.ok(!M.nameMarker(g,'1',null));
+assert.equal(M.markerTitle(g,'1'),'目印 1「長い廊下の分岐」');
+assert.ok(M.nameMarker(g,'1','🧭'.repeat(24)));assert.ok(M.nameMarker(g,'1','<b>目印</b>'));assert.equal(M.currentLandmark(g).label,'目印 1「<b>目印</b>」');
+assert.deepEqual(M.matchLandmarkMaps(g,true),[0]);assert.equal(JSON.stringify([...g.cognition.archives[0].nodes]),memory);assert.equal(g.turns,turns);assert.equal(g.player.world_position,position);
+assert.ok(M.nameMarker(g,'1','   '));assert.equal(M.markerTitle(g,'1'),'目印 1');assert.equal(M.createGame(g.world).markerNames.size,0);
+console.log('PASS: names preserve marker identity/matching and archives, trimmed text, Unicode limit, invalid input unchanged, rename/removal, reset, no turns or movement.');

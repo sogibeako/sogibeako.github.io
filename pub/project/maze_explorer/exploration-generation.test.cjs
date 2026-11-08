@@ -21,6 +21,6 @@ for(let i=0;i<30;i++){
  assert.equal(G.choose('skew',{},true,'p'+i,pools).growth,'growing');
 }
 assert.throws(()=>G.choose('main',{topology:'torus'},true,'seed',{main:['division','eller'],skew:['dfs']}),/対応する生成方式/);
-assert.throws(()=>G.validatePools({main:[],skew:['dfs']}));assert.throws(()=>G.validatePools({main:['dfs'],skew:['rooms']}));
+assert.throws(()=>G.validatePools({main:[],skew:['dfs']}));assert.throws(()=>G.validatePools({main:['dfs'],skew:['unknown']}));
 const savedPools=B.unpack(B.encode('main','skew','main',{enabled:true,completed:2,steps:10,generators:pools})).course.generators;assert.deepEqual(savedPools,pools);savedPools.main.push('dfs');assert.equal(pools.main.length,2);
 console.log('Generator pools: single-choice draws, topology filtering, empty/invalid rejection, no supported choice and save round trip passed.');

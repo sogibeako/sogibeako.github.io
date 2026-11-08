@@ -1,0 +1,8 @@
+// node ariadne-ai/compare.cjs [model.json] [runs=10] [firstSeed=42] [output.json]
+const fs=require('node:fs'),AI=require('./ai.js'),T=require('./training.js');
+const model=T.validate(JSON.parse(fs.readFileSync(process.argv[2]||'ariadne-ai/training-result-model.json','utf8'))),runs=Number(process.argv[3]||10),first=Number(process.argv[4]||42),output=process.argv[5]||'ariadne-ai/adventure-comparison.json';
+if(!Number.isInteger(runs)||runs<1||runs>100||!Number.isInteger(first))throw Error('runs must be 1–100, firstSeed an integer');
+const results=[];
+for(let i=0;i<runs;i++)for(const mode of ['classic','trained']){const seed=(first+i)>>>0,g=AI.create(seed),memory=new Map();while(!g.ended&&g.turn<300){const learnedValue=mode==='trained'?T.adventureValue(g,model,memory):null;const decision=AI.decide(g,{depth:2,memory,learnedValue});const key=g.floor+':'+g.player;memory.set(key,(memory.get(key)||0)+1);AI.apply(g,decision.action);}const row={seed,mode,floor:g.floor,score:g.score,kills:g.kills,level:g.level,turn:g.turn,result:g.won?'escaped':g.dead?'dead':'turn-limit'};results.push(row);console.log(JSON.stringify(row));}
+const summaries={};for(const mode of ['classic','trained']){const rows=results.filter(r=>r.mode===mode);summaries[mode]={runs,averageScore:Math.round(rows.reduce((s,r)=>s+r.score,0)/runs),averageFloor:rows.reduce((s,r)=>s+r.floor,0)/runs,maxFloor:Math.max(...rows.map(r=>r.floor)),escapes:rows.filter(r=>r.result==='escaped').length,turnLimits:rows.filter(r=>r.result==='turn-limit').length};}
+fs.writeFileSync(output,JSON.stringify({model,depth:2,turnLimit:300,summaries,results},null,2));console.log(JSON.stringify(summaries));

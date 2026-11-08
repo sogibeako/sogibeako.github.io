@@ -1,0 +1,407 @@
+'use strict';
+const S=ConnectionSpace,$=id=>document.getElementById(id),canvas=$('spaceMap'),ctx=canvas.getContext('2d');
+const descriptions={tripleMaze:'A（緑）→B（紫）→C（青）の3枚をつなぐ生成迷路です。横長のBには二つの穴があります。通常の出口はC、作例3型の往復ではAの囲い内です。各シートに上下・左右の周回路を残します。',doubleMaze:'緑と紫のトーラスを、同じ大きさの中央の穴でつないだ迷路です。中央の穴の接続を保ち、選んだ方式で通路と壁を生成します。入口は緑、出口 > は紫です。',cornerUnderpass:'同じ位置に、別々の曲がり角があります。下・右からは┌、上・左からは┘が見えます。中央では記号の線に沿って曲がり、反対側の通路には乗り移れません。',kleinMaze:'左右の境界で上下が反転し、上下はそのままつながる生成迷路です。操作は見えている方向に従います。出口 > を探してください。',torusMaze:'上下・左右がつながる生成迷路です。アンダーパスでは曲がらず、交差する通路を抜けられます。',underpassMaze:'枝道の途中に小さなアンダーパスが現れます。縦道と横道は交差点で曲がれず、抜けると同じ地上へ戻ります。出口 > を探してください。シードで地形と交差の位置が変わります。',underpass:'中央の1マスだけ縦道と横道が別々になっています。上下からは縦道、左右からは横道として見え、交差点では曲がれません。外周を回ると反対側の通路へ行けます。斜めからは近い入口側を優先し、同距離なら横道を優先します。',crossingMaze:'立体交差と2つの階段を残し、その周りへ枝道を生成します。緑は上層、紫は下層。出口 > を探してください。交差点では別の層へ曲がれません。同じシードで同じ迷路を再現できます。',crossing:'緑の上層は東西の橋、紫の下層は南北の通路です。同じ4列・4行で交差しますが、上下はつながらず、階段でだけ行き来できます。初期位置から右1歩が橋の交差部。初期位置から左→上→上→右→右→下→下で、その真下へ着きます。階段は△（上層）・▽（下層）、交差部の線記号は表示しません。',triple:'緑→紫→青の3トーラスを、同じ大きさの穴でつなぎます。横長の中央シートには左右2つの穴があり、それぞれ両端のシートにつながります。外周は各シート内で循環します。',branch3:'右上から下2→左2→上2→右2で柱を1周。風景がA→B→Cと順に変わり、3周で元に戻ります。逆回りでは逆順に変わります。見えるシートは視線の経路で選びます。',quarterCW:'Topowalkのquarter-clockwise：接続先辺を時計回りに選びます。辺上の位置は反転せず、視点は反時計回り90度に変化します。逆操作で元に戻るとは限りません。',quarterCCW:'Topowalkのquarter-counterclockwise：接続先辺を反時計回りに選びます。辺上の位置は反転せず、視点は時計回り90度に変化します。逆操作で元に戻るとは限りません。',doubleTwist:'Topowalkのdouble-twist：左右の外周で上下反転、上下の外周で左右反転します。',cwTwist:'Topowalkのquarter-clockwise-twist：接続先辺を時計回りに選び、辺上の位置を逆順にします。向きは元ファイル通り反時計回り90度です。',ccwTwist:'Topowalkのquarter-counterclockwise-twist：接続先辺を反時計回りに選び、辺上の位置を逆順にします。向きは元ファイル通り時計回り90度です。',chaos:'全辺を越えるたび時計回り90度回転します。上→左、右→上、下→右、左→下へ接続し、逆操作でも元に戻るとは限りません。4歩以内の接続をたどり、近い候補を優先・同距離なら壁を表示します。移動は現在地からの実際の接続で判定します。',branch4:'右上から下2→左2→上2→右2で柱を1周します。反対側の区画から順にA→Bへ変わり、2周で元へ戻ります。主観図は視線が柱のどちら側を通るかで風景が変わります。チェックを外すと遮蔽なしで切替を比較できます。',branch:'中央の # を囲んで1周すると別の風景へ、2周すると元へ戻ります。最初の位置から右2→下2→左2→上2で1周です。緑の風景にはA、紫の風景にはBがあり、壁の配置も一部異なります。外周は行き止まり。切れ目は真世界だけに点線で表示します。',double:'各シートの外周は、そのシート内で通常のトーラスとして接続します。中央の黒い穴の水色の縁を越えると、別シートの穴の対応する縁へ移ります。境界に垂直な向きは反転します。主観にも穴の先をたどった周辺4歩を表示します。別の位置に自分の像が現れる場合は@で表示します。',plane:'四辺は行き止まりです。',cylinder:'左右だけがつながります。上下は行き止まりです。',mobius:'左右が上下反転してつながります。上下は行き止まりです。右8歩で反転、右16歩で位置と向きが戻ります。',torus:'左右・上下がそのままつながります。',klein:'左右は上下反転、上下はそのままつながります。',sheets:'左右境界を越えると別シートへ移ります。上下は同じシート内でつながります。右16歩で元のシートへ戻ります。',rotate:'右辺→上辺、左辺→下辺で時計回り90度回転します（対応位置は逆順）。逆に越えると反時計回りです。'};
+let state=S.create('plane',{walls:true}),truth=false,atlasShown=false,atlasMemory=new Set(),walkingBook={charts:[],active:-1},browsedChart=0;
+let journey={number:1,steps:0},crossRender='hybrid';
+let journeyMap={cells:new Map()};
+let regionBook={records:new Map(),owners:new Map(),nextNumber:1};
+const statisticsCache=new WeakMap();
+const tripleNotes=window.SheetAnnotations?.attach(canvas,()=>state,()=>draw(),{active:()=>state.world.mode==='tripleMaze'&&!state.wands?.oob,beforeEdit:()=>window.TripleExplorationAdapter?.pause()});
+const wandUI=GraphWandControls.attach(()=>state,()=>draw(),()=>truth,canvas,{visible:()=>new Set(S.nearestView(state,4).filter(p=>!p.wall).map(p=>p.id)),recordCast:(spell,d)=>{if(state.world.mode==='crossingMaze')CrossingSave.recordCast(state,spell,d);}});
+function drawRegions(view){
+ const enabled=['doubleMaze','tripleMaze'].includes(state.world.mode);$('regionAtlas').hidden=!enabled;if(!enabled)return;
+ const {regions,current}=S.observeRegions(state,regionBook,view),choice=$('regionChoice'),selected=Number(choice.value)||0;
+ choice.replaceChildren(new Option('現在の区画','0'),...regions.map(r=>new Option(`区画 ${r.number} · ${'ABC'[r.sheet]} · ${r.ids.length}床${r.complete?' · 周囲確認済み':''}`,String(r.number))));
+ const region=regions.find(r=>r.number===selected)||current;choice.value=regions.some(r=>r.number===selected)?String(selected):'0';
+ if(!region)return;
+ $('regionStatus').textContent=`区画 ${region.number} / シート ${'ABC'[region.sheet]} / 記録した床 ${region.ids.length}マス / ${region.complete?'周囲の通路を確認済み':'まだ先につながる可能性があります'}${region===current?' / 現在いる区画':''}。`;
+ const canvas=$('regionMap'),ctx=canvas.getContext('2d'),w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h)return;
+ const dpr=window.devicePixelRatio||1;canvas.width=w*dpr;canvas.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#0b161c';ctx.fillRect(0,0,w,h);
+ const points=[...region.records.values()].map(p=>({...p,...S.position(state.world,p.id)})),minX=Math.min(...points.map(p=>p.x))-1,minY=Math.min(...points.map(p=>p.y))-1,maxX=Math.max(...points.map(p=>p.x))+1,maxY=Math.max(...points.map(p=>p.y))+1;
+ const size=Math.min(24,(w-20)/(maxX-minX+1),(h-20)/(maxY-minY+1)),ox=(w-(maxX-minX+1)*size)/2,oy=(h-(maxY-minY+1)*size)/2;
+ for(const p of points.sort((a,b)=>Number(a.id===state.id)-Number(b.id===state.id))){const x=ox+(p.x-minX)*size,y=oy+(p.y-minY)*size;ctx.fillStyle=p.id===state.id?'#b9dbc6':p.wall?'#738887':['#284443','#453251','#234b64'][region.sheet];ctx.fillRect(x,y,size-1,size-1);ctx.font=`${size*.7}px monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=p.id===state.id?'#10252b':'#edba72';const actorGlyph=p.id===state.id?'@':p.wall?'#':window.SheetFeatures?.glyph(state,p.id)||S.underpassSymbol(state.world,p.id)||'.';globalThis.MazeWildlife?.paint(ctx,state,p.id,actorGlyph,x+size/2,y+size/2,size);ctx.fillText(actorGlyph,x+size/2,y+size/2);if(region.entrances.includes(p.id)){ctx.strokeStyle='#75c5db';ctx.lineWidth=1.5;ctx.strokeRect(x+1,y+1,size-3,size-3);}}
+}
+function draw(){if(state.wands?.oob){const w=canvas.clientWidth,h=canvas.clientHeight,dpr=devicePixelRatio||1;canvas.width=w*dpr;canvas.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);tripleNotes?.render(ctx,[],0,0,24);GraphOob.draw(ctx,state,w,h);window.dispatchEvent(new Event('exploration-change'));return;}if(state.world.mode==='crossingMaze')CrossingSave.enableWands(state);else GraphWands.init(state);wandUI.state();
+ $('tripleMarkControls').hidden=state.world.mode!=='tripleMaze';
+ if(state.world.mode==='tripleMaze'&&tripleNotes)window.TripleWarpArrows?.syncNotes(state,window.SheetAnnotations);
+ const warpTiles=[],warpEndpoints=tripleNotes&&state.world.mode==='tripleMaze'?new Set(state.annotations?.zeros||[]):window.TripleWarpArrows?.endpoints(state)??new Set();
+ const loopProgress=S.tripleLoopProgress(state);
+ $('tripleFoldControl').hidden=!loopProgress;
+ if($('tripleLoopStatus')){$('tripleLoopStatus').hidden=!loopProgress;if(loopProgress)$('tripleLoopStatus').textContent='方向感覚（3周で理解）：'+loopProgress.counts.map((c,i)=>'ABC'[i]+' 横 '+c[0]+'/3・縦 '+c[1]+'/3'+(c.every(n=>n===3)?' 理解済み':'')).join(' ／ ');}
+ $('crossAutoControls').hidden=!['crossingMaze','tripleMaze'].includes(state.world.mode);
+ const atlasMode=['crossing','crossingMaze','kleinMaze','torusMaze','doubleMaze','tripleMaze'].includes(state.world.mode),atlas=atlasMode&&atlasShown,observation=S.observeAtlas(state,atlasMemory),visible=observation.visible;
+ $('spaceAtlas').hidden=!atlasMode;$('spaceAtlas').setAttribute('aria-pressed',String(atlas));
+ const full=truth||atlas;
+ const preview=!['branch4','branch3'].includes(state.world.mode),metrics={},candidates=preview?S.nearestView(state,4,metrics):[];
+ const continuous=state.world.mode==='doubleMaze'?S.observeJourneyMap(state,journeyMap,candidates):null;
+ const joined=continuous&&$('doubleContinuousMemory').checked;
+ drawRegions(candidates);
+ const walkingMode=atlasMode||['underpass','underpassMaze','cornerUnderpass'].includes(state.world.mode);
+ const walking=walkingMode?S.observeWalkingMap(state,walkingBook,candidates):null;
+ if(state.atlasComplete)for(let id=0;id<state.world.cells.length;id++)if(!state.world.holes.has(id))atlasMemory.add(id);
+ if(state.world.mode==='tripleMaze')$('tripleMarkStatus').textContent='目印 '+(state.features?.marks.size??0)+'/9 ／ 照合 '+(walkingBook.markMatches??0)+'回';
+
+ $('chartBrowser').hidden=!walkingMode;
+ const chooser=$('chartChoice');if(chooser.options.length!==walkingBook.charts.length+1){chooser.replaceChildren(new Option('現在の探索', '0'),...walkingBook.charts.map(c=>new Option(`主観地図 ${c.number}`,String(c.number))));}chooser.value=String(browsedChart);
+ const archived=walkingMode&&!full&&browsedChart?walkingBook.charts.find(c=>c.number===browsedChart):null;
+ let bounds=null;if(archived){const points=[...archived.cells.values()];bounds={minX:Math.min(...points.map(p=>p.x))-1,minY:Math.min(...points.map(p=>p.y))-1,maxX:Math.max(...points.map(p=>p.x))+1,maxY:Math.max(...points.map(p=>p.y))+1};}
+ const width=canvas.clientWidth,height=canvas.clientHeight,dpr=window.devicePixelRatio||1;canvas.width=width*dpr;canvas.height=height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle='#0b161c';ctx.fillRect(0,0,width,height);
+ const layouts=state.world.layouts?.slice(0,state.world.sheets)||Array.from({length:state.world.sheets},(_,i)=>({width:8,height:8,offset:i*64})),starts=[];let total=0;for(const l of layouts){starts.push(total);total+=l.width+1;}
+ const four=['branch4','branch3'].includes(state.world.mode),columns=bounds?bounds.maxX-bounds.minX+1:full?total:four?8:17,rows=bounds?bounds.maxY-bounds.minY+1:full?Math.max(...layouts.map(l=>l.height))+2:four?8:17,tile=['crossingMaze','tripleMaze'].includes(state.world.mode)&&!full&&!archived?Math.min(24,(width-20)/19):Math.min((width-24)/columns,(height-30)/rows),ox=(width-columns*tile)/2,oy=(height-rows*tile)/2;
+ function cell(x,y,id,player=false,selfImage=false,remembered=false,frame=[0,1,2,3],oldSheet=false,wallOverride=null){
+  if((full||archived||four)&&(x<0||x>=columns||y<0||y>=rows))return;if(full&&(state.world.holes.has(id)||state.world.domain&&!state.world.domain.has(id)&&!state.world.cells[id]))return;if(atlas&&!atlasMemory.has(id))return;
+  const crossing=['crossingMaze','tripleMaze'].includes(state.world.mode),dim=remembered||atlas&&!visible.has(id),branch=['branch','branch4','branch3'].includes(state.world.mode),wall=wallOverride??!state.world.cells[id],sheet=S.groundSheet(state.world,id);
+  const symbol=S.underpassSymbol(state.world,id,frame),mark=player?'@':wall?'#':selfImage?'@':(warpEndpoints.has(id)?'0':window.SheetFeatures?.glyph(state,id,!remembered))|| (id===state.world.exit?'>':state.world.stairs?.has(id)?(sheet===0?'△':'▽'):id===state.world.start?'<':symbol|| (branch&&id%64===20?'ABC'[sheet]:''));
+  const px=ox+x*tile,py=oy+y*tile;
+  warpTiles.push({id,x:px+tile/2,y:py+tile/2,wall});
+  if(crossing){
+   const glyph=mark||'.',ascii=crossRender==='ascii',terrain=glyph==='#'||glyph==='.';
+   ctx.globalAlpha=oldSheet?.18:1;
+   if(!ascii||player){ctx.fillStyle=player?'#fff5a9':wall?(dim?'#34474d':'#77918e'):sheet===0?(dim?'#192e33':'#36534e'):sheet===1?(dim?'#292337':'#453251'):(dim?'#192f3c':'#234b64');ctx.fillRect(px,py,tile-(tile>8?1:0),tile-(tile>8?1:0));}
+   if(crossRender!=='tiles'||!terrain){
+    ctx.font=ascii?`${tile*.88}px Consolas, "Liberation Mono", monospace`:terrain?`${Math.max(7,tile*.65)}px Consolas, monospace`:`bold ${Math.max(7,tile*.8)}px monospace`;
+    ctx.fillStyle=player?'#142729':ascii&&terrain?(sheet===0?(wall?'#94b0b0':'#b3ccc5'):sheet===1?(wall?'#b6a1c7':'#c9a8df'):(wall?'#93bbd2':'#a7d6ef')):terrain?(dim?'#7e8c82':'#e3dab0'):'#f1c583';
+    if(ascii&&dim)ctx.globalAlpha=.42;
+    ctx.textAlign='center';ctx.textBaseline='middle';globalThis.MazeWildlife?.paint(ctx,state,id,glyph,px+tile/2,py+tile/2,tile);ctx.fillText(glyph,px+tile/2,py+tile/2);
+   }
+  }else{
+   ctx.globalAlpha=oldSheet?.18:dim?.42:1;ctx.fillStyle=player?'#fff5a9':wall?'#738887':['#284443','#453251','#234b64'][sheet]||'#284443';ctx.fillRect(px,py,tile-1,tile-1);ctx.font=`${tile*.7}px monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=player?'#10252b':'#edba72';globalThis.MazeWildlife?.paint(ctx,state,id,mark,px+tile/2,py+tile/2,tile);if(mark)ctx.fillText(mark,px+tile/2,py+tile/2);
+  }
+  ctx.globalAlpha=1;
+  if(wall)globalThis.ReflectingWalls?.paint(ctx,state,id,px+tile/2,py+tile/2,tile);
+  const shot=wandUI.projectile();if(!wall&&WandFlight.matches(shot,id)){ctx.fillStyle=WandFlight.color(wandUI.projectile());ctx.fillRect(px,py,tile-1,tile-1);ctx.fillStyle='#fff2ff';ctx.font=`bold ${tile*.8}px monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(shot.tail?'↶':'*',px+tile/2,py+tile/2);}
+ }
+
+ if(['underpass','underpassMaze','cornerUnderpass'].includes(state.world.mode)&&truth){
+  // Two local cross-sections of the same shared ground, not separate full sheets.
+  for(let section=0;section<2;section++){ctx.fillStyle='#b9dbc6';ctx.font='14px sans-serif';ctx.textAlign='left';ctx.fillText(section?'真世界 · 交差の縦道':'真世界 · 交差の横道',ox+starts[section]*tile,oy+tile*.5);
+   for(let y=0;y<layouts[0].height;y++)for(let x=0;x<layouts[0].width;x++){let id=y*layouts[0].width+x;
+    if(section){const crossing=state.world.passages.find(p=>p.horizontal===id);if(crossing)id=crossing.vertical;}
+    cell(starts[section]+x,y+1,id,id===state.id);
+   }
+   for(const crossing of state.world.passages){if(crossing.arms)continue;const bx=ox+(starts[section]+crossing.cx)*tile,by=oy+(crossing.cy+1)*tile;ctx.strokeStyle='#edba72';ctx.lineWidth=3;ctx.beginPath();
+   if(section){ctx.moveTo(bx,by);ctx.lineTo(bx,by+tile);ctx.moveTo(bx+tile,by);ctx.lineTo(bx+tile,by+tile);}else{ctx.moveTo(bx,by);ctx.lineTo(bx+tile,by);ctx.moveTo(bx,by+tile);ctx.lineTo(bx+tile,by+tile);}ctx.stroke();}
+  }
+ }else if(archived){for(const p of archived.cells.values())cell(p.x-bounds.minX,p.y-bounds.minY,p.id,false,false,false,p.frame);}
+ else if(full){for(let sheet=0;sheet<state.world.sheets;sheet++){
+  ctx.fillStyle='#b9dbc6';ctx.font='14px sans-serif';ctx.textAlign='left';ctx.fillText(`${['crossing','crossingMaze'].includes(state.world.mode)?(sheet===0?'上層 · 東西の橋':'下層 · 南北の通路'):'シート '+ 'ABC'[sheet]} · ${layouts[sheet].period?'周期 ':''}${layouts[sheet].period?.width??layouts[sheet].width}×${layouts[sheet].period?.height??layouts[sheet].height}`,ox+starts[sheet]*tile,oy+tile*.5);
+  const l=layouts[sheet];for(let id=l.offset;id<l.offset+l.width*l.height;id++){const p=S.position(state.world,id);const local=state.world.passages?.find(c=>c.horizontal===id);const display=local&&(state.id===local.vertical||atlas&&!atlasMemory.has(id)&&atlasMemory.has(local.vertical))?local.vertical:id;cell(starts[sheet]+p.x,1+p.y,display,display===state.id);}
+  if(['branch','branch4','branch3'].includes(state.world.mode)){
+   ctx.strokeStyle='#edba72';ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(ox+(starts[sheet]+(four?0:4))*tile,oy+5*tile);ctx.lineTo(ox+(starts[sheet]+(four?3:8))*tile,oy+5*tile);ctx.stroke();ctx.setLineDash([]);
+  }
+  const portals=state.world.portals||(state.world.mode==='double'?[{sheet,x:3,y:3,target:1-sheet}]:[]);
+  for(const h of portals.filter(h=>h.sheet===sheet)){
+   const hs=h.size||2;
+   ctx.strokeStyle='#75c5db';ctx.lineWidth=3;ctx.strokeRect(ox+(starts[sheet]+h.x)*tile,oy+(h.y+1)*tile,hs*tile,hs*tile);
+   ctx.fillStyle='#75c5db';ctx.font=`${tile*.4}px sans-serif`;ctx.textAlign='center';ctx.fillText(`↔ ${'ABC'[h.target]}`,ox+(starts[sheet]+h.x+hs/2)*tile,oy+(h.y+1+hs/2)*tile);
+  }
+ }}else if(four){for(const p of ($('spaceOcclusion').checked?S.branchRayView(state):S.branchView(state,false)))cell(p.x,p.y,p.id,p.id===state.id);}
+ else if(preview){
+  if(!joined&&walking&&state.world.mode==='doubleMaze'&&$('doubleKeepMemory').checked){
+   const drawn=new Set();for(const chart of [...walkingBook.charts].reverse())if(chart!==walking.chart)for(const [key,p] of chart.cells){
+    if(drawn.has(key)||walking.chart.cells.has(key)||walking.visible.has(key))continue;
+    drawn.add(key);cell(p.x-state.x+8,p.y-state.y+8,p.id,false,false,true,p.frame,true);
+   }
+  }
+  const remembered=joined?continuous:walking;
+  if(remembered){
+   if(state.atlasComplete){for(const p of S.completedTripleView(state,Math.ceil(Math.max(width,height)/tile/2)+1))cell(p.x+8,p.y+8,p.id,false,!p.wall&&p.id===state.id,false,p.frame,false,p.wall);}
+   else if(state.world.mode==='tripleMaze'&&$('tripleFoldLoops').checked){for(const p of S.foldedTripleMemory(state,remembered.chart,Math.ceil(Math.max(width,height)/tile/2)+1))cell(p.x+8,p.y+8,p.id,false,!p.wall&&p.id===state.id,true,p.frame);}
+   else for(const [key,p] of remembered.chart.cells)if(!remembered.visible.has(key))cell(p.x-state.x+8,p.y-state.y+8,p.id,false,false,true,p.frame);
+  }for(const p of candidates)cell(p.x+8,p.y+8,p.id,false,!p.wall&&p.selfCandidate,false,p.frame);cell(8,8,state.id,true);}
+
+ if(state.world.mode==='tripleMaze'&&tripleNotes)tripleNotes.render(ctx,warpTiles.map(p=>({...p,x:p.x/tile-.5,y:p.y/tile-.5})),0,0,tile);
+ else window.TripleWarpArrows?.draw(ctx,state,warpTiles,tile);
+ $('underpassShapeControl').hidden=!['underpass','underpassMaze','crossingMaze','kleinMaze','torusMaze','doubleMaze','tripleMaze'].includes(state.world.mode);
+ $('tripleMazeGeneration').hidden=state.world.mode!=='tripleMaze';
+ $('doubleMazeGeneration').hidden=state.world.mode!=='doubleMaze';
+ $('periodicGeneration').hidden=!['kleinMaze','torusMaze'].includes(state.world.mode);
+ $('underpassGeneration').hidden=state.world.mode!=='underpassMaze';
+ $('tripleCustomSize').hidden=$('tripleMazeSize').value!=='custom';
+ $('explorationSave').hidden=!['doubleMaze','tripleMaze'].includes(state.world.mode);
+ $('journeyHint').hidden=!['underpassMaze','crossingMaze','doubleMaze','tripleMaze'].includes(state.world.mode);
+ $('underpassExitNext').hidden=!['underpassMaze','crossingMaze','doubleMaze','tripleMaze'].includes(state.world.mode);
+ $('underpassExitNext').disabled=!['underpassMaze','crossingMaze','doubleMaze','tripleMaze'].includes(state.world.mode)||state.id!==state.world.exit;
+ $('crossingGeneration').hidden=state.world.mode!=='crossingMaze';
+ $('crossingStatistics').hidden=state.world.mode!=='crossingMaze';
+ if(state.world.mode==='crossingMaze'){
+  if(!statisticsCache.has(state.world))statisticsCache.set(state.world,S.crossingStats(state.world));
+  const stats=statisticsCache.get(state.world);
+  $('crossingStatisticsText').textContent=`床 ${stats.floors}マス ／ 行き止まり ${stats.deadEnds}か所 ／ 分岐 ${stats.junctions}か所 ／ 入口→出口の最短 ${stats.exitSteps??'到達不能'}${stats.exitSteps===null?'':'歩'}`;
+ }
+
+ $('spaceSizes').hidden=!['double','triple'].includes(state.world.mode);$('sheetCSize').hidden=state.world.mode!=='triple';updateHoleHint();
+ $('spaceOcclusionControl').hidden=!four;$('spaceViewHint').hidden=four;$('spaceViewHint').textContent=['double','triple','doubleMaze','tripleMaze'].includes(state.world.mode)?'穴の周辺表示：現在のシートを優先します。別シートの壁は表示せず、その先へは展開しません。異なる色の床は穴の向こうのシートです。':'Topowalk参考の周辺表示：近い候補を優先し、同距離なら壁を表示します。壁の先へは展開せず、周辺4歩までを描きます。';
+ $('spaceSubjective').textContent=walkingMode?'0 · 主観の視界と記憶':'0 · 主観の周辺表示';
+ if(atlasMode&&!atlas&&!truth)$('spaceViewHint').textContent='明るい範囲は現在の視界、暗い部分はこの地図の記憶です。風景が記憶と矛盾すると別の地図へ切り替えます。Mで上下層の探索地図を確認できます。';
+ $('spaceDescription').textContent=descriptions[state.world.mode];$('spaceSubjective').setAttribute('aria-pressed',String(!truth&&!atlas&&!archived));$('spaceTruth').setAttribute('aria-pressed',String(truth));
+ if(atlas)$('spaceViewHint').textContent='探索地図：明るいマスは現在の周辺表示、暗いマスは記憶。未探索は空白です。上下層は別々に記録します。Mで周辺表示に戻ります。';
+ if(state.world.floorUnderpasses&&!truth&&!atlas&&!archived)$('spaceViewHint').textContent='明るい範囲は視界、暗い範囲は記憶です。同じ階のアンダーパスによる見え方の違いは自動統合します。階段で移った別の階とは分けて記録します。';
+ if(archived)$('spaceViewHint').textContent=`主観地図 ${archived.number} の記録全体を閲覧中です。現在の視界や @ は重ねません。0 または「探索に戻る」で戻れます。移動キーは探索へ戻って1歩進みます。`;
+ if(['kleinMaze','torusMaze'].includes(state.world.mode)&&!archived)$('spaceViewHint').textContent=truth?'真世界の全体図です。上下は接続し、左右はクラインでは上下反転、トーラスではそのまま接続します。':atlas?'探索した範囲を真世界の配置で表示します。未探索は空白です。':'主観の視界と記憶です。境界を越えても歩いた方向へ地図をつなぎ、未理解の周期は折りたたまずに展開します。';
+ const here={...S.position(state.world,state.id),sheet:S.groundSheet(state.world,state.id)};
+ $('spaceStatus').textContent=`${state.steps}歩 / シート ${here.sheet+1} / 真世界 ${here.x+1}列・${here.y+1}行 / 主観 (${state.x}, ${state.y})。主観の上は真世界の${['上','右','下','左'][state.frame[0]]}、主観の右は真世界の${['上','右','下','左'][state.frame[1]]}です。`;
+ if(['crossingMaze','underpassMaze','doubleMaze','tripleMaze'].includes(state.world.mode))$('spaceStatus').textContent+=` 連続探索：${journey.number}枚目 / ${journey.number-1}枚踏破 / 通算 ${journey.steps+state.steps}歩。`;
+ if(archived)$('spaceStatus').textContent+=` 閲覧中：主観地図 ${archived.number}。記録した床 ${[...archived.cells.values()].filter(p=>!p.wall).length}マス。`;
+ if(walking)$('spaceStatus').textContent+=joined&&!archived&&!truth&&!atlas?' 連続する主観地図。':` 主観地図 ${walking.chart.number} / ${walking.book.charts.length}枚。`;
+ if(state.atlasComplete)$('spaceStatus').textContent+=' 全床視認済み：壁を含む完成地図を表示中。';
+ if(atlasMode)$('spaceStatus').textContent+=` 地図に記録した床 ${[...atlasMemory].filter(id=>state.world.cells[id]).length}マス。`;
+ if(state.world.mode==='crossingMaze')$('spaceStatus').textContent+=` シード ${state.world.seed} / ${{dfs:'DFS型',frontier:'各所から枝道',growing:'Growing Tree型',hunt:'Hunt-and-Kill型',prim:'Prim型',kruskal:'Kruskal型'}[state.world.growth]}${state.world.growth==='growing'?'（長い道 '+state.world.newestBias+'%）':''} / ${state.world.wallStyle==='grid'?'格子状の壁':'密な枝道'}。${state.id===state.world.exit?'出口に到達しました！ > で次の迷路へ。移動すれば探索を続けられます。':''}`;
+ if(['underpass','underpassMaze','cornerUnderpass'].includes(state.world.mode)){if(!state.world.passages.some(p=>p.arms))$('spaceStatus').textContent+=` 基準の交差は${S.underpassAxis(state)==='vertical'?'縦道':'横道'}を優先表示。`;$('spaceViewHint').textContent=truth?'同じ真世界を、交差の横道・縦道に分けて表示します。交差の金色の線は、その通路から曲がれない方向です。外側の床は共通です。':'中央の3×3は近い入口側の通路を表示します。交差点では直進・引き返しだけができます。';}
+ if(['underpass','underpassMaze','cornerUnderpass'].includes(state.world.mode)&&!truth)$('spaceViewHint').textContent=archived?`主観地図 ${archived.number} の記録です。0で探索へ戻ります。`:'明るい範囲は現在の視界、暗い範囲は記憶です。アンダーパスの見え方だけが違う部分は同じ地図として扱い、交差は新しい観測で更新します。地図の選択欄で見返せます。';
+ if(state.world.mode==='underpassMaze')$('spaceStatus').textContent+=` シード ${state.world.seed} / ${{dfs:'DFS型',frontier:'各所から枝道',growing:'Growing Tree型',hunt:'Hunt-and-Kill型',prim:'Prim型'}[state.world.growth]} / 交差 ${state.world.passages.length}か所（目標 ${state.world.requestedCount}） / ${state.world.passages.some(p=>p.arms)?'曲がる通路を含む':state.world.route==='required'?'縦→大回り→横の通過が必須':'周回路あり'}。${state.id===state.world.exit?'出口に到達しました！ > で次の迷路へ。移動すれば探索を続けられます。':''}`;
+ if(state.world.mode==='crossingMaze')$('spaceStatus').textContent+=` 階段：${state.world.stairPlacement==='random'?(state.world.stairPlacementFallback?'候補不足のため従来配置':'ランダム配置'):'対角配置'}。`;
+ if(['kleinMaze','torusMaze'].includes(state.world.mode))$('spaceStatus').textContent+=` ${state.world.growth} / シード ${state.world.seed} / アンダーパス ${state.world.passages?.length??0}か所。${state.id===state.world.exit?'出口に到達しました！ Shift+Nで別の迷路を生成できます。':''}`;
+ if(state.world.mode==='crossingMaze'&&state.world.floorUnderpasses)$('spaceStatus').textContent+=` 各階内のアンダーパス：上層 ${state.world.passages.filter(p=>p.baseSheet===0).length} / 下層 ${state.world.passages.filter(p=>p.baseSheet===1).length}（各階目標 ${state.world.floorUnderpasses}）。`;
+ if(state.world.mode==='tripleMaze'){$('spaceStatus').textContent+=(state.features?.options.keys?(state.features.hasKey?' 鍵取得済み。':' 鍵 a を探して扉 + を開けてください。'):'');$('spaceStatus').textContent+=` 3トーラス / 横ずれ ${state.world.shiftX??0}・縦ずれ ${state.world.shiftY??0} / ${state.world.tripleRoute==='return'?'A→B→C→B→A 必須 / ':''}${state.world.holeRimWalls?(state.world.holeApproach==='screened'?'穴の見通しを遮る壁':'穴の縁に壁あり'):'穴の縁は開放'} / ${state.world.growth} / ${state.world.wallStyle==='grid'?'格子状の壁':'密な枝道'} / シード ${state.world.seed} / 穴 ${state.world.holeSize}×${state.world.holeSize} / 交差 ${['A','B','C'].map((n,i)=>n+' '+(state.world.passages||[]).filter(p=>p.baseSheet===i).length).join('・')}。${state.id===state.world.exit?($('tripleRandomNext').checked?'出口に到達しました！ > で選んだ項目を抽選して次へ。移動すれば探索を続けられます。':'出口に到達しました！ > で同じ条件の次の迷路へ。移動すれば探索を続けられます。'):''}`;}
+ if(state.world.mode==='doubleMaze'){$('spaceStatus').textContent+=` ${{walls:'連結を保つ壁配置',dfs:'DFS型',prim:'Prim型',growing:'Growing Tree型'}[state.world.growth]} / シード ${state.world.seed} / ${state.world.wallStyle==='grid'?'格子状の壁':'密な枝道'} / アンダーパス A ${(state.world.passages||[]).filter(p=>p.baseSheet===0).length}・B ${(state.world.passages||[]).filter(p=>p.baseSheet===1).length}か所 / 壁 ${state.world.wallCount}マス${state.world.holeRimWalls?`（穴の周囲に追加 ${state.world.holeRimWallCount}）`:""}。各シートに上下・左右の周回路あり（${state.world.loopStyle==='straight'?'直線型':'曲がる経路も許可'}）。${state.id===state.world.exit?($('doubleRandomNext').checked?'出口に到達しました！ > で選んだ項目を抽選して次へ。移動すれば探索を続けられます。':'出口に到達しました！ > で同じ条件の次の迷路へ。移動すれば探索を続けられます。'):''}`;if(!archived)$('spaceViewHint').textContent=joined&&!truth&&!atlas?'穴を越えて歩いた位置に記憶をつなぎます。暗い部分は過去の観測、明るい部分は現在の視界です。重なる風景は最新の観測を優先します。':truth?'2つのトーラスの全体図です。外周は各シート内でつながり、中央の穴は別シートへつながります。':atlas?'探索済みの範囲を各シートに記録します。未探索は空白です。':($('doubleKeepMemory').checked?'以前のシートの記憶を薄く残し、現在の視界を優先します。重なる記録は地図の選択欄やMで見返せます。':'現在のシートの記憶だけを表示します。以前の記録は地図の選択欄やMで見返せます。');}
+ if(state.world.holeSize)$('spaceStatus').textContent+=` 穴 ${state.world.holeSize}×${state.world.holeSize}。`;
+ if(preview)$('spaceStatus').textContent+=` 周辺4歩：候補状態 ${metrics.states}件 / 表示 ${metrics.tiles}マス / 別の位置の自分 ${candidates.filter(p=>!p.wall&&p.selfCandidate&&(p.x!==0||p.y!==0)).length}体。`;
+ if(four&&$('spaceOcclusion').checked)$('spaceStatus').textContent+=' 視線ごとに柱の切れ目をたどり、見えるシートを選びます。';
+ if(four&&!$('spaceOcclusion').checked){const q=S.quadrantSheets(state).map(n=>'ABC'[n]);$('spaceStatus').textContent+=` 区画：左上 ${q[0]} / 右上 ${q[1]} / 右下 ${q[2]} / 左下 ${q[3]}。`;}
+ if(['crossing','crossingMaze'].includes(state.world.mode))$('spaceStatus').textContent+=` ${here.sheet===0?'上層の橋':'下層の通路'}にいます。${state.world.crossings.has(state.id)?'ここは立体交差。別の層へは曲がれません。':''}${state.last?.kind==='stairs'?'階段で層を移りました。':''}`;
+ if(state.last?.kind==='throat')$('spaceStatus').textContent+=' 穴の縁を越え、別のシートへ移りました。';
+ if(state.world.underpassShape==='mixed'&&state.world.passages?.length)$('spaceStatus').textContent+=` 直進 ${state.world.passages.filter(p=>!p.arms).length} / 曲がる ${state.world.passages.filter(p=>p.arms).length}。`;
+ if(state.world.passages?.some(p=>p.arms)){$('spaceStatus').textContent+=` 曲がる交差 ${state.world.passages.filter(p=>p.arms).length}か所。`;$('spaceViewHint').textContent='記号の線が通れる方向です。┌ は右・下、┘ は左・上、┐ は左・下、└ は右・上。同じ位置のもう一方の通路へは乗り移れません。';}
+ canvas.setAttribute('aria-label',`${S.names[state.world.mode]}、${archived?'主観地図 '+archived.number+' 閲覧':atlas?'探索地図':truth?'真世界':'主観'}、${state.steps}歩、シート${here.sheet+1}`);
+}
+function reset(continuing=false){
+ const mode=$('spaceMode').value,options={walls:true,seed:$('crossingSeed').value,underpassShape:mode==='cornerUnderpass'?'corners':$('underpassShape').value};
+ if(['double','triple'].includes(mode))options.dimensions=['A','B','C'].slice(0,mode==='triple'?3:2).map(n=>[Number($('size'+n+'Width').value),Number($('size'+n+'Height').value)]);
+ if(['kleinMaze','torusMaze'].includes(mode)){options.width=Number($('periodicWidth').value);options.height=Number($('periodicHeight').value);options.growth=$('periodicGrowth').value;options.floorUnderpasses=Number($('periodicUnderpasses').value);options.seed=$('periodicSeed').value;}
+ if(mode==='doubleMaze'){options.holePlacement=$('doubleHolePlacement').value||'center';options.holeRimWalls=$('doubleRimWalls').checked;options.wallStyle=$('doubleWallStyle').value;options.floorUnderpasses=Number($('doubleUnderpasses').value);options.seed=$('doubleMazeSeed').value;options.growth=$('doubleMazeGrowth').value;options.loopStyle=$('doubleLoopStyle').value;options.dimensions=['A','B'].map(n=>[Number($('double'+n+'Width').value),Number($('double'+n+'Height').value)]);options.holeSize=Number($('doubleHoleSize').value);}
+ if(mode==='tripleMaze'){options.ruleMode=$('tripleRuleMode').value||'plain';options.shiftX=Number($('tripleShiftX').value)||0;options.shiftY=Number($('tripleShiftY').value)||0;options.tripleRoute=$('tripleRoute').value||'chain';options.returnShape=$('tripleReturnShape').value||'rectangle';options.seed=$('tripleMazeSeed').value;options.growth=$('tripleMazeGrowth').value;options.wallStyle=$('tripleWallStyle').value;options.holePlacement=$('tripleHolePlacement').value||'center';options.holeRimWalls=$('tripleRimWalls').checked;options.holeApproach=$('tripleHoleApproach').value||'open';options.floorUnderpasses=Number($('tripleUnderpasses').value);options.loopStyle=$('tripleLoopStyle').value;options.holeSize=Number($('tripleHoleSize').value);options.dimensions=$('tripleMazeSize').value==='custom'?['A','B','C'].map(n=>[Number($('triple'+n+'Width').value),Number($('triple'+n+'Height').value)]):$('tripleMazeSize').value==='large'?[[20,20],[24,20],[20,20]]:$('tripleMazeSize').value==='medium'?[[16,16],[24,16],[16,16]]:[[12,12],[20,12],[12,12]];}
+ if(mode==='underpassMaze'){options.variety=$('underpassVariety').value;options.growth=$('underpassGrowth').value;options.count=Number($('underpassCount').value);options.route=$('underpassRoute').value;options.seed=$('underpassSeed').value;options.width=Number($('underpassWidth').value);options.height=Number($('underpassHeight').value);}
+ if(mode==='crossingMaze'){options.ruleMode=$('crossingRuleMode').value||'plain';options.stairPlacement=$('crossingStairs').value;options.floorUnderpasses=$('floorUnderpassesEnabled').checked?Number($('floorUnderpassesCount').value):0;options.growth=$('crossingGrowth').value;options.newestBias=Number($('crossingBias').value);options.wallStyle=$('crossingWallStyle').value;options.width=Number($('crossingWidth').value);options.height=Number($('crossingHeight').value);}
+ if(options.dimensions&&!['doubleMaze','tripleMaze'].includes(mode))options.holeSize=$('holeSize').value==='auto'?'auto':Number($('holeSize').value);
+ try{const next=S.create(mode,options);journey=continuing===true?{number:journey.number+1,steps:journey.steps+state.steps}:{number:1,steps:0};state=next;if(mode==='tripleMaze')syncTripleControls();journeyMap={cells:new Map()};regionBook={records:new Map(),owners:new Map(),nextNumber:1};$('regionChoice').value='0';atlasMemory=new Set();walkingBook={charts:[],active:-1};browsedChart=0;$('sizeError').textContent='';draw();canvas.focus();}catch(error){$('spaceMode').value=state.world.mode;$('sizeError').textContent=error.message;}
+}
+function updateHoleHint(){
+ const mode=$('spaceMode').value,dims=['A','B','C'].slice(0,mode==='triple'?3:2).map(n=>[Number($('size'+n+'Width').value),Number($('size'+n+'Height').value)]),limit=S.holeLimit(mode,dims);
+ $('holeHint').textContent=`現在の入力サイズでの上限：${Math.max(0,limit)}×${Math.max(0,limit)}。外周から2マス、中央Bの穴どうしにも2マス以上の通路を残します。自動は最も短い辺のおよそ1/4です。`;
+}
+for(const input of document.querySelectorAll('#spaceSizes input'))input.addEventListener('input',updateHoleHint);
+function nextCrossing(continuing=false){ $('crossingSeed').value='bridge-'+Math.random().toString(36).slice(2,10);reset(continuing===true);}
+$('crossingGrowth').addEventListener('change',()=>{$('crossingBiasControl').hidden=$('crossingGrowth').value!=='growing';});
+$('crossingWallStyle').addEventListener('change',()=>{const min=$('crossingWallStyle').value==='grid'?15:8;for(const name of ['crossingWidth','crossingHeight']){$(name).min=String(min);if(Number($(name).value)<min)$(name).value=String(min);}});
+function nextUnderpass(continuing=false){$('underpassSeed').value='underpass-'+Math.random().toString(36).slice(2,10);reset(continuing===true);}
+function advanceGeneratedMaze(){if(state.wands?.oob){if(state.world.mode==='crossingMaze')CrossingSave.returnOob(state);else GraphWands.returnOob(state);draw();return;}
+ if(window.CrossingEmbedded&&window.parent?.ExplorationHost?.advance(state.world.mode==='tripleMaze'?'triple':'crossing'))return;
+ if(!['underpassMaze','crossingMaze','doubleMaze','tripleMaze'].includes(state.world.mode))return;
+ if(state.id!==state.world.exit){$('spaceStatus').textContent+=' 次の迷路へは出口 > の上で > を押してください。';return;}
+ const world=state.world;
+ $('underpassShape').value=world.underpassShape??'straight';
+ if(world.mode==='doubleMaze'){
+  for(const [i,n] of ['A','B'].entries()){$('double'+n+'Width').value=world.layouts[i].width;$('double'+n+'Height').value=world.layouts[i].height;}
+  $('doubleMazeGrowth').value=world.growth;$('doubleWallStyle').value=world.wallStyle;
+  $('doubleLoopStyle').value=world.loopStyle;$('doubleHoleSize').value=world.holeSize;
+  $('doubleHolePlacement').value=world.holePlacement??'center';$('doubleRimWalls').checked=world.holeRimWalls;$('doubleUnderpasses').value=world.floorUnderpasses??0;
+  truth=false;atlasShown=false;nextDoubleMaze(true);return;
+ }
+ if(world.mode==='tripleMaze'){
+  $('tripleMazeSize').value='custom';
+  for(const [i,n] of ['A','B','C'].entries()){$('triple'+n+'Width').value=world.layouts[i].period?.width??world.layouts[i].width;$('triple'+n+'Height').value=world.layouts[i].period?.height??world.layouts[i].height;}
+  $('tripleMazeGrowth').value=world.growth;$('tripleWallStyle').value=world.wallStyle;
+  $('tripleLoopStyle').value=world.loopStyle;$('tripleHoleSize').value=world.holeSize;
+  $('tripleShiftX').value=world.shiftX??0;$('tripleShiftY').value=world.shiftY??0;$('tripleReturnShape').value=world.returnShape??'rectangle';$('tripleRoute').value=world.tripleRoute??'chain';$('tripleHoleApproach').value=world.holeApproach??'open';$('tripleHolePlacement').value=world.holePlacement??'center';$('tripleRimWalls').checked=world.holeRimWalls;$('tripleUnderpasses').value=world.floorUnderpasses??0;
+  truth=false;atlasShown=false;nextTripleMaze(true);return;
+ }
+ if(world.mode==='crossingMaze'){
+  $('crossingRuleMode').value=world.ruleMode??'plain';
+  $('crossingWidth').value=world.layouts[0].width;$('crossingHeight').value=world.layouts[0].height;
+  $('crossingGrowth').value=world.growth;$('crossingBias').value=world.newestBias??70;
+  $('crossingWallStyle').value=world.wallStyle??'dense';
+  for(const name of ['crossingWidth','crossingHeight'])$(name).min=world.wallStyle==='grid'?'15':'8';
+  $('crossingBiasControl').hidden=world.growth!=='growing';$('crossingStairs').value=world.stairPlacement??'diagonal';
+  $('floorUnderpassesEnabled').checked=Boolean(world.floorUnderpasses);
+  $('floorUnderpassesCount').value=world.floorUnderpasses||2;
+  truth=false;atlasShown=false;nextCrossing(true);return;
+ }
+ $('underpassWidth').value=world.layouts[0].width;$('underpassHeight').value=world.layouts[0].height;
+ $('underpassVariety').value=world.variety;$('underpassGrowth').value=world.growth;$('underpassCount').value=world.requestedCount;$('underpassRoute').value=world.route;
+ truth=false;atlasShown=false;nextUnderpass(true);
+}
+$('underpassExitNext').addEventListener('click',advanceGeneratedMaze);
+function nextDoubleMaze(continuing=false){
+ const seed='double-'+Math.random().toString(36).slice(2,10);$('doubleMazeSeed').value=seed;
+ if(continuing===true&&$('doubleRandomNext').checked){
+  const o=S.randomDoubleOptions(seed,state.world,{generation:$('randomDoubleGeneration').checked,size:$('randomDoubleSize').checked,hole:$('randomDoubleHole').checked,loop:$('randomDoubleLoop').checked,underpasses:$('randomDoubleUnderpasses').checked});
+  for(const [i,n] of ['A','B'].entries()){$('double'+n+'Width').value=o.dimensions[i][0];$('double'+n+'Height').value=o.dimensions[i][1];}
+  $('doubleMazeGrowth').value=o.growth;$('doubleWallStyle').value=o.wallStyle;$('doubleHoleSize').value=o.holeSize;$('doubleHolePlacement').value=o.holePlacement;$('doubleRimWalls').checked=o.holeRimWalls;
+  $('doubleLoopStyle').value=o.loopStyle;$('doubleUnderpasses').value=o.floorUnderpasses;$('underpassShape').value=o.underpassShape;
+ }
+ reset(continuing===true);
+}
+const doubleSaveKey='maze-explorer.connections.double-save.v1';
+function explorationSaveKey(){return state.world.mode==='tripleMaze'?'maze-explorer.connections.triple-save.v1':doubleSaveKey;}
+const savedControlIds=['tripleRuleMode','tripleShiftX','tripleShiftY','tripleFoldLoops','tripleReturnShape','tripleRoute','tripleHoleApproach','doubleHolePlacement','tripleHolePlacement','tripleRandomNext','randomTripleGeneration','randomTripleSize','randomTripleHole','randomTripleLoop','randomTripleUnderpasses','tripleAWidth','tripleAHeight','tripleBWidth','tripleBHeight','tripleCWidth','tripleCHeight','tripleMazeSize','tripleMazeSeed','tripleMazeGrowth','tripleWallStyle','tripleHoleSize','tripleRimWalls','tripleLoopStyle','tripleUnderpasses','doubleAWidth','doubleAHeight','doubleBWidth','doubleBHeight','doubleMazeSeed','doubleMazeGrowth','doubleWallStyle','doubleHoleSize','doubleRimWalls','doubleLoopStyle','doubleUnderpasses','underpassShape','doubleRandomNext','randomDoubleGeneration','randomDoubleSize','randomDoubleHole','randomDoubleLoop','randomDoubleUnderpasses','doubleContinuousMemory','doubleKeepMemory'];
+function doubleSnapshot(){
+ const controls=Object.fromEntries(savedControlIds.map(id=>[id,{value:String($(id).value),checked:Boolean($(id).checked)}]));
+ return {state,journey,journeyMap,regionBook,atlasMemory,walkingBook,controls};
+}
+function saveDoubleExploration(){
+ try{
+  if(!['doubleMaze','tripleMaze'].includes(state.world.mode))return;
+  window.localStorage.setItem(explorationSaveKey(),S.encodeSave(doubleSnapshot()));
+  $('doubleSaveStatus').textContent=`保存しました：${state.world.seed} / ${state.steps}歩 / ${journey.number}枚目。`;
+ }catch(error){$('doubleSaveStatus').textContent='保存できませんでした。保存領域の空きやブラウザー設定を確認してください。';}
+}
+function syncTripleControls(){const w=state.world;$('tripleRuleMode').value=w.ruleMode??'plain';$('spaceMode').value='tripleMaze';$('tripleMazeSize').value='custom';$('tripleCustomSize').hidden=false;for(const [i,n]of ['A','B','C'].entries()){const l=w.layouts[i];$('triple'+n+'Width').value=l.period?.width??l.width;$('triple'+n+'Height').value=l.period?.height??l.height;}
+ for(const [id,key]of [['tripleMazeSeed','seed'],['tripleMazeGrowth','growth'],['tripleWallStyle','wallStyle'],['tripleHoleSize','holeSize'],['tripleHolePlacement','holePlacement'],['tripleRoute','tripleRoute'],['tripleReturnShape','returnShape'],['tripleHoleApproach','holeApproach'],['tripleLoopStyle','loopStyle'],['tripleUnderpasses','floorUnderpasses'],['tripleShiftX','shiftX'],['tripleShiftY','shiftY'],['underpassShape','underpassShape']])$(id).value=String(w[key]??0);$('tripleRimWalls').checked=w.holeRimWalls;
+}
+function restoreDoubleText(text){
+ const {snapshot:s,savedAt}=S.decodeSave(text),previous=doubleSnapshot(),display={truth,atlasShown,browsedChart,mode:$('spaceMode').value,region:$('regionChoice').value};
+ try{
+ state=s.state;journey=s.journey;journeyMap=s.journeyMap;regionBook=s.regionBook;atlasMemory=s.atlasMemory;walkingBook=s.walkingBook;
+ $('doubleHolePlacement').value='center';$('tripleHolePlacement').value='center';$('tripleFoldLoops').checked=true;$('tripleShiftX').value='0';$('tripleShiftY').value='0';$('tripleHoleApproach').value='open';$('tripleRoute').value='chain';$('tripleReturnShape').value='rectangle';
+ $('tripleRandomNext').checked=false;
+ for(const id of savedControlIds)if(s.controls[id]){$(id).value=s.controls[id].value;$(id).checked=Boolean(s.controls[id].checked);}
+ if(state.world.mode==='tripleMaze')syncTripleControls();
+ $('spaceMode').value=state.world.mode;truth=false;atlasShown=false;browsedChart=0;$('regionChoice').value='0';$('sizeError').textContent='';
+ draw();$('doubleSaveStatus').textContent=`再開しました：${state.world.seed} / ${state.steps}歩（保存日時 ${new Date(savedAt).toLocaleString()}）。`;canvas.focus();
+ }catch(error){
+  ({state,journey,journeyMap,regionBook,atlasMemory,walkingBook}=previous);
+  ({truth,atlasShown,browsedChart}=display);$('spaceMode').value=display.mode;$('regionChoice').value=display.region;
+  for(const id of savedControlIds){$(id).value=previous.controls[id].value;$(id).checked=previous.controls[id].checked;}
+  try{draw();}catch{}throw error;
+ }
+}
+function loadDoubleExploration(){
+ try{const text=window.localStorage.getItem(explorationSaveKey());if(!text){$('doubleSaveStatus').textContent='保存した探索はまだありません。';return;}restoreDoubleText(text);}
+ catch(error){$('doubleSaveStatus').textContent='保存した探索を読み込めませんでした。'+error.message;}
+}
+function exportDoubleExploration(){
+ let url;
+ try{
+  if(!['doubleMaze','tripleMaze'].includes(state.world.mode))return;
+  const text=S.encodeSave(doubleSnapshot());S.decodeSave(text);
+  url=URL.createObjectURL(new Blob([text],{type:'application/json'}));
+  const link=document.createElement('a');link.href=url;link.download=`maze-${state.world.mode==='tripleMaze'?'triple':'double'}-${String(state.world.seed).replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,80)}-${state.steps}steps.json`;
+  document.body.appendChild(link);link.click();link.remove();
+  $('doubleSaveStatus').textContent='探索ファイルのダウンロードを開始しました。ブラウザーの保存先を確認してください。';
+ }catch(error){$('doubleSaveStatus').textContent='書き出せませんでした。'+error.message;}
+ finally{if(url)setTimeout(()=>URL.revokeObjectURL(url),1000);}
+}
+async function importDoubleExploration(file){
+ if(!file)return;
+ try{if(file.size>20000000)throw Error('20MB以下の探索ファイルを選んでください。');const text=await file.text();restoreDoubleText(text);}
+ catch(error){$('doubleSaveStatus').textContent='ファイルを読み込めませんでした。'+error.message;}
+ finally{$('doubleSaveFile').value='';}
+}
+$('exportDoubleExploration').addEventListener('click',exportDoubleExploration);
+$('importDoubleExploration').addEventListener('click',()=>$('doubleSaveFile').click());
+$('doubleSaveFile').addEventListener('change',e=>importDoubleExploration(e.target.files[0]));
+$('saveDoubleExploration').addEventListener('click',saveDoubleExploration);$('loadDoubleExploration').addEventListener('click',loadDoubleExploration);
+$('doubleKeepMemory').addEventListener('change',draw);$('doubleRandomNext').addEventListener('change',draw);
+$('generateDoubleMaze').addEventListener('click',reset);$('nextDoubleMaze').addEventListener('click',nextDoubleMaze);
+$('tripleMazeSize').addEventListener('change',()=>{$('tripleCustomSize').hidden=$('tripleMazeSize').value!=='custom';});
+function nextTripleMaze(continuing=false){
+ const seed='triple-'+Math.random().toString(36).slice(2,10);$('tripleMazeSeed').value=seed;
+ {
+  // Next/skip uses the applied world, not stale or unsubmitted form fields.
+  const o=S.randomTripleOptions(seed,state.world,$('tripleRandomNext').checked?{generation:$('randomTripleGeneration').checked,size:$('randomTripleSize').checked,hole:$('randomTripleHole').checked,loop:$('randomTripleLoop').checked,underpasses:$('randomTripleUnderpasses').checked}:{});
+  $('tripleMazeSize').value='custom';
+  for(const [i,n] of ['A','B','C'].entries()){$('triple'+n+'Width').value=o.dimensions[i][0];$('triple'+n+'Height').value=o.dimensions[i][1];}
+  $('tripleRuleMode').value=o.ruleMode??'plain';$('tripleMazeGrowth').value=o.growth;$('tripleWallStyle').value=o.wallStyle;$('tripleHoleSize').value=o.holeSize;$('tripleShiftX').value=o.shiftX??0;$('tripleShiftY').value=o.shiftY??0;$('tripleReturnShape').value=o.returnShape??'rectangle';$('tripleRoute').value=o.tripleRoute??'chain';$('tripleHoleApproach').value=o.holeApproach??'open';$('tripleHolePlacement').value=o.holePlacement;$('tripleRimWalls').checked=o.holeRimWalls;
+  $('tripleLoopStyle').value=o.loopStyle;$('tripleUnderpasses').value=o.floorUnderpasses;$('underpassShape').value=o.underpassShape;
+ }
+ reset(continuing===true);
+}
+$('tripleRandomNext').addEventListener('change',draw);
+$('generateTripleMaze').addEventListener('click',reset);$('nextTripleMaze').addEventListener('click',nextTripleMaze);
+function nextPeriodic(){$('periodicSeed').value='periodic-'+Math.random().toString(36).slice(2,10);reset();}
+$('generatePeriodic').addEventListener('click',reset);$('nextPeriodic').addEventListener('click',nextPeriodic);
+$('generateUnderpass').addEventListener('click',reset);$('nextUnderpass').addEventListener('click',nextUnderpass);
+$('generateCrossing').addEventListener('click',reset);$('nextCrossing').addEventListener('click',nextCrossing);
+$('applySizes').addEventListener('click',reset);
+$('tripleMark').onclick=()=>{if(state.wands?.oob)return;window.TripleExplorationAdapter?.pause();window.SheetFeatures.mark(state);draw();canvas.focus();};
+$('tripleMatch').onclick=()=>{if(state.wands?.oob)return;window.TripleExplorationAdapter?.pause();draw();$('tripleMarkStatus').textContent='目印 '+(state.features?.marks.size??0)+'/9 ／ 照合 '+(walkingBook.markMatches??0)+'回（見えている数字を照合）';canvas.focus();};
+function move(d){if(state.wands?.oob){if(state.world.mode==='crossingMaze')S.move(state,d);else GraphOob.move(state,d);draw();return;}if(wandUI.busy())return;browsedChart=0;if(S.move(state,d,truth))GraphWands.after(state,()=>draw());else {draw();$('spaceStatus').textContent+=' この辺は行き止まりです。';}}
+$('doubleContinuousMemory').addEventListener('change',draw);
+$('regionChoice').addEventListener('change',draw);$('regionAtlas').addEventListener('toggle',draw);
+$('spaceOcclusion').addEventListener('change',draw);
+$('spaceMode').addEventListener('change',()=>{if($('spaceMode').value==='triple'){$('sizeBWidth').value=14;$('sizeBHeight').value=8;}reset();});$('spaceReset').addEventListener('click',reset);
+function toggleAtlas(){browsedChart=0;atlasShown=!atlasShown;truth=false;draw();canvas.focus();}
+$('chartChoice').addEventListener('change',()=>{browsedChart=Number($('chartChoice').value);truth=false;atlasShown=false;draw();canvas.focus();});
+$('returnToWalk').addEventListener('click',()=>{browsedChart=0;truth=false;atlasShown=false;draw();canvas.focus();});
+$('spaceAtlas').addEventListener('click',toggleAtlas);
+for(const [id,value] of [['spaceSubjective',false],['spaceTruth',true]])$(id).addEventListener('click',()=>{truth=value;atlasShown=false;browsedChart=0;draw();canvas.focus();});
+for(const b of document.querySelectorAll('[data-direction]'))b.addEventListener('click',()=>move(Number(b.dataset.direction)));
+document.addEventListener('keydown',e=>{if(e.isComposing||e.ctrlKey||e.metaKey||e.altKey||e.target.closest('input,select,textarea,[contenteditable=true]'))return;if(state.world.mode==='tripleMaze'&&['m','c'].includes(e.key.toLowerCase())){e.preventDefault();if(!e.repeat)$(e.key.toLowerCase()==='m'?'tripleMark':'tripleMatch').click();return;}if(['underpassMaze','crossingMaze','doubleMaze','tripleMaze'].includes(state.world.mode)&&e.key==='>'){e.preventDefault();if(!e.repeat)advanceGeneratedMaze();return;}if(state.world.mode==='underpassMaze'&&e.shiftKey&&e.key.toLowerCase()==='n'){e.preventDefault();if(!e.repeat)nextUnderpass();return;}if(state.world.mode==='crossingMaze'&&e.shiftKey&&e.key.toLowerCase()==='n'){e.preventDefault();if(!e.repeat)nextCrossing();return;}if(state.world.mode==='tripleMaze'&&e.shiftKey&&e.key.toLowerCase()==='n'){e.preventDefault();if(!e.repeat)nextTripleMaze();return;}if(state.world.mode==='doubleMaze'&&e.shiftKey&&e.key.toLowerCase()==='n'){e.preventDefault();if(!e.repeat)nextDoubleMaze();return;}if(['kleinMaze','torusMaze'].includes(state.world.mode)&&e.shiftKey&&e.key.toLowerCase()==='n'){e.preventDefault();if(!e.repeat)nextPeriodic();return;}if(['crossing','crossingMaze','kleinMaze','torusMaze','doubleMaze','tripleMaze'].includes(state.world.mode)&&e.key.toLowerCase()==='m'){e.preventDefault();if(!e.repeat)toggleAtlas();return;}const d={'.':4,ArrowUp:0,ArrowRight:1,ArrowDown:2,ArrowLeft:3,k:0,l:1,j:2,h:3}[e.key];if(d!==undefined){e.preventDefault();move(d);}else if(e.key==='0'||e.key==='1'){e.preventDefault();truth=e.key==='1';atlasShown=false;browsedChart=0;draw();}});
+$('tripleFoldLoops').onchange=()=>draw();
+$('tryTripleReturn').onclick=()=>{$('tripleReturnShape').value='irregular';$('tripleRoute').value='return';$('tripleMazeSize').value='large';$('tripleMazeGrowth').value='prim';$('tripleWallStyle').value='grid';$('tripleHoleSize').value='4';$('tripleHolePlacement').value='center';$('tripleLoopStyle').value='meander';reset();};
+// Status text can change the scroll layout after a sheet transition. Keep the
+// bitmap synchronized with its CSS size without waiting for another move.
+if(typeof ResizeObserver!=='undefined')new ResizeObserver(()=>{
+ const width=canvas.clientWidth,height=canvas.clientHeight,dpr=window.devicePixelRatio||1;
+ if(width>0&&height>0&&(Math.abs(canvas.width-width*dpr)>1||Math.abs(canvas.height-height*dpr)>1))draw();
+}).observe(canvas);
+window.addEventListener('resize',draw);draw();
+
+// First integration stage: use ordinary movement and map observation in the lab.
+(()=>{const P=CrossingAutowalk,visits=new WeakMap();let run=null,timer=null;
+function seen(){let value=visits.get(state);if(!value){value=new Set(state.history.map(p=>p.id));visits.set(state,value);}value.add(state.id);if(['warp','teleport'].includes(state.last?.kind))value.add(state.last.from);return value;}
+function pendingLoops(){return run&&run.mode!=='exit'&&state.world.mode==='tripleMaze'?S.tripleLoopProgress(state).counts.flat().filter(n=>n<3).length:0;}
+function readyToAdvance(){return state.id===state.world.exit&&(run.mode==='exit'||([...run.targets].every(id=>seen().has(id))&&!pendingLoops()&&!P.warpPending(state).length));}
+function stop(message){clearTimeout(timer);timer=null;run=null;$('crossAutoStart').disabled=false;$('crossAutoStop').disabled=true;if(message)$('crossAutoStatus').textContent=message;}
+function tick(){if(!run)return;if(state.wands?.oob){stop('境界の外へ到着しました。');return;}if(wandUI.busy()){timer=setTimeout(tick,30);return;}if(run.state!==state){stop('迷路が変更されたため停止しました。');return;}
+ if(state.wands?.frozen){S.move(state,4,true);GraphWands.after(state,()=>draw());timer=setTimeout(tick,Number($('crossAutoSpeed').value));return;}
+ if(state.world.mode==='tripleMaze')window.SheetFeatures.autoMark(state);
+ const known=seen(),missing=[...run.targets].filter(id=>!known.has(id)).length;
+ let path=run.mode!=='exit'&&(missing||P.warpPending(state).length)?P.explore(state,known):P.route(state,id=>id===state.world.exit);
+ if(run.mode!=='exit'&&!missing&&!P.warpPending(state).length&&state.world.mode==='tripleMaze'){
+  const progress=S.tripleLoopProgress(state),sheet=progress.counts.findIndex(c=>c.some(n=>n<3));
+  if(run.circuit?.length)path=[state.frame.indexOf(run.circuit.shift())];
+  else if(sheet>=0){
+   const axis=progress.counts[sheet][0]<3?'horizontal':'vertical',circuit=state.world.guaranteedLoops?.find(l=>l.sheet===sheet)?.[axis];
+   if(!circuit){stop('この保存には周回経路がありません。探索を保持して停止しました。');return;}
+   path=P.route(state,id=>id===circuit.start);
+   if(path?.length===0){run.circuit=[...circuit.directions];path=[state.frame.indexOf(run.circuit.shift())];}
+  }
+ }
+ const strollPath=run.mode==='stroll'&&!missing&&!P.warpPending(state).length&&!pendingLoops()?MazeStroll.route(state,MazeWildlife.graph(state),state.frame,state.world.exit):null;const roaming=!!strollPath?.length;if(roaming)path=strollPath;
+ if(state.features?.bird!=null&&missing>0){const detour=window.ExplorationSolver?.connectedBirdDetour(state);if(detour?.length)path=[state.frame.indexOf(detour[0])];}
+ if(path===null){stop('現在地から到達できない床が残っています。探索を保持して停止しました。');return;}
+ if(!path.length){if(!readyToAdvance()){stop('探索またはループ理解が残っています。次の迷路へは進みません。');return;}$('crossAutoStatus').textContent=run.mode!=='exit'&&state.world.mode==='tripleMaze'?'全床探索・A/B/Cの縦横ループ理解が完了。出口から次の迷路へ進みます。':'出口に到着しました。次の迷路へ進みます。';timer=setTimeout(()=>{if(!run)return;if(run.state!==state){stop('迷路が変更されたため停止しました。');return;}if(!readyToAdvance()){tick();return;}const previous=state;advanceGeneratedMaze();if(state===previous){stop('次の迷路を生成できませんでした。');return;}run.state=state;run.circuit=null;run.targets=P.targets(state);tick();},700);return;}
+ if(!S.move(state,path[0],false)){stop('移動できなかったため停止しました。');return;}if(roaming)MazeStroll.advance(state,state.id);if(state.last?.kind==='teleport')run.circuit=null;browsedChart=0;GraphWands.after(state,()=>{seen();draw();});
+ const remaining=[...run.targets].filter(id=>!seen().has(id)).length;$('crossAutoStatus').textContent=(roaming?'散歩 '+MazeStroll.record(state).steps+' / 2000歩 ／ ':'')+(run.mode!=='exit'?'全床探索':'出口優先')+'：訪問 '+(run.targets.size-remaining)+' / '+run.targets.size+'・未訪問 '+remaining+(run.mode!=='exit'&&state.world.mode==='tripleMaze'?(remaining?' ／ 床を探索中':pendingLoops()?' ／ ループ理解中（残り '+pendingLoops()+'方向）':' ／ 全6方向を理解済み・出口へ'): '');
+ timer=setTimeout(tick,Number($('crossAutoSpeed').value));
+}
+function start(mode){if(run?.mode===mode){stop('自動歩行を停止しました。');return;}stop();if(!['crossingMaze','tripleMaze'].includes(state.world.mode)){$('crossAutoStatus').textContent='空間から「立体交差」または「3トーラス」の生成迷路を選んでください。';return;}$('crossAutoMode').value=mode;run={state,mode,targets:P.targets(state)};$('crossAutoStart').disabled=true;$('crossAutoStop').disabled=false;tick();}
+window.CrossingExplorationAdapter={autoOobPlan:()=>wandUI.autoOobPlan(true),autoOobCast:d=>wandUI.autoOobCast(d),autoOob:()=>!!state.wands?.oob,autoBusy:()=>wandUI.busy(),autoFrozen:()=>state.wands?.frozen||0,autoWait:()=>{S.move(state,4,true);GraphWands.after(state,()=>{seen();draw();});},wands:()=>wandUI,autoDynamic:()=>state.features?.bird!=null,autoRelocated:()=>['teleport','wand'].includes(state.last?.kind)||!!state.features?.last,autoStallLimit:()=>4000,autoDetour:()=>window.ExplorationSolver?.connectedBirdDetour(state)?.map(d=>state.frame.indexOf(d)),consoleStatus:()=>({world:state.world,actions:state.steps,cells:state.world.cells,seen:atlasMemory,complete:state.atlasComplete}),
+ courseOptions:()=>CrossingSave.options(state.world),
+ courseFresh:options=>CrossingSave.prepare(CrossingSave.snapshot(S.create('crossingMaze',options),{number:1,steps:0},{truth,render:crossRender})),
+ courseEnter(saved){this.apply(saved);},
+ snapshot:()=>CrossingSave.snapshot(state,journey,{truth,render:crossRender}),prepare:text=>CrossingSave.prepare(text),
+ apply(saved){stop();state=saved.state;journey=saved.journey;atlasMemory=saved.atlasMemory;walkingBook=saved.walkingBook;visits.set(state,new Set(saved.visited));truth=saved.display.truth;crossRender=saved.display.render;atlasShown=false;browsedChart=0;
+  const o=CrossingSave.options(state.world);$('crossingRuleMode').value=o.ruleMode??'plain';for(const [id,key]of [['crossingSeed','seed'],['crossingWidth','width'],['crossingHeight','height'],['crossingGrowth','growth'],['crossingBias','newestBias'],['crossingWallStyle','wallStyle'],['crossingStairs','stairPlacement'],['floorUnderpassesCount','floorUnderpasses'],['underpassShape','underpassShape']])$(id).value=String(o[key]);
+  $('floorUnderpassesEnabled').checked=o.floorUnderpasses>0;draw();canvas.focus();
+ },pause:()=>stop(),progress:()=>({token:state,steps:state.steps,exit:state.id===state.world.exit}),autoPosition:()=>state.id,autoStroll:()=>MazeStroll.route(state,MazeWildlife.graph(state),state.frame,state.world.exit),
+ autoTargets:()=>P.targets(state),autoPlan:()=>P.route(state,id=>id===state.world.exit)??[],autoExplore(known){for(const id of seen())known.add(id);return P.explore(state,known);},
+ autoMove(d){if(wandUI.busy())return;browsedChart=0;if(S.move(state,d,false))GraphWands.after(state,()=>{seen();draw();});},autoNext(){advanceGeneratedMaze();}
+};
+// Native triple-torus state is retained behind the shared host controls.
+
+window.TripleExplorationAdapter={autoOobPlan:()=>wandUI.autoOobPlan(true),autoOobCast:d=>wandUI.autoOobCast(d),autoOob:()=>!!state.wands?.oob,autoBusy:()=>wandUI.busy(),autoFrozen:()=>state.wands?.frozen||0,autoWait:()=>{S.move(state,4,true);draw();},wands:()=>wandUI,consoleStatus:()=>({world:state.world,actions:state.steps,cells:state.world.cells,seen:atlasMemory,complete:state.atlasComplete}),
+ pause:()=>stop(),progress:()=>({token:state,steps:state.steps,exit:state.id===state.world.exit}),
+ courseOptions:()=>S.randomTripleOptions(state.world.seed,state.world,{}),
+ snapshot:()=>S.encodeSave({...doubleSnapshot(),display:{truth,render:crossRender},visited:seen()}),
+ prepare(text){const saved=S.decodeSave(text).snapshot;if(saved.state.world.mode!=='tripleMaze')throw Error('3トーラスの保存を選んでください。');if(saved.display&&(!['tiles','ascii','hybrid'].includes(saved.display.render)||typeof saved.display.truth!=='boolean'))throw Error('表示設定が不正です。');return saved;},
+ apply(saved){stop();restoreDoubleText(S.encodeSave(saved));visits.set(state,new Set(saved.visited??state.history.map(p=>p.id)));truth=saved.display?.truth??false;crossRender=saved.display?.render??crossRender;syncTripleControls();draw();canvas.focus();},
+ courseFresh(options){return this.prepare(S.encodeSave({state:S.create('tripleMaze',options),journey:{number:1,steps:0},journeyMap:{cells:new Map()},regionBook:{records:new Map(),owners:new Map(),nextNumber:1},atlasMemory:new Set(),walkingBook:{charts:[],active:-1},controls:doubleSnapshot().controls,display:{truth,render:crossRender},visited:new Set()}));},
+ courseEnter(saved){this.apply(saved);},
+ autoPosition:()=>state.id,autoStroll:()=>MazeStroll.route(state,MazeWildlife.graph(state),state.frame,state.world.exit),autoTargets:()=>P.targets(state),autoPlan:()=>P.route(state,id=>id===state.world.exit)??[],
+ autoExplore(known){for(const id of seen())known.add(id);return P.explore(state,known);},
+ autoDynamic:()=>state.features?.bird!=null,autoRelocated:()=>['teleport','wand'].includes(state.last?.kind)||!!state.features?.last||!!state.wandInterrupted,autoStallLimit:()=>4000,autoTraversed:()=>['warp','teleport'].includes(state.last?.kind)?[state.last.from,state.id]:[state.id],autoDetour:()=>window.ExplorationSolver?.connectedBirdDetour(state)?.map(d=>state.frame.indexOf(d)),autoPrepare:()=>{if(window.SheetFeatures.autoMark(state))draw();},autoWarpPending:()=>P.warpPending(state).length,autoRequireLoops:()=>true,autoLoopPending:()=>S.tripleLoopProgress(state).counts.flat().filter(n=>n<3).length,
+ autoLoop(){const progress=S.tripleLoopProgress(state),sheet=progress.counts.findIndex(c=>c.some(n=>n<3));if(sheet<0)return null;const axis=progress.counts[sheet][0]<3?'horizontal':'vertical',c=state.world.guaranteedLoops?.find(l=>l.sheet===sheet)?.[axis];if(!c)throw Error('周回路がない保存です。探索を保持して停止します。');const path=P.route(state,id=>id===c.start);if(path===null)throw Error('周回路へ到達できません。');return path.length?path:c.directions.map(d=>state.frame.indexOf(d));},
+ autoMove(d){if(wandUI.busy())return;browsedChart=0;if(S.move(state,d,false))GraphWands.after(state,()=>{seen();draw();});},
+ autoNext(){const display=truth;advanceGeneratedMaze();truth=display;draw();}
+};
+$('crossAutoStart').onclick=()=>start($('crossAutoMode').value);$('crossAutoStop').onclick=()=>stop('自動歩行を停止しました。');$('crossAutoMode').onchange=()=>stop('探索方針を変更しました。');
+document.addEventListener('keydown',e=>{if(window.CrossingEmbedded)return;if(e.isComposing||e.ctrlKey||e.altKey||e.metaKey||e.target.closest('input,select,textarea,[contenteditable=true]'))return;if(!['crossingMaze','tripleMaze'].includes(state.world.mode))return;const k=e.key.toLowerCase();if(e.shiftKey&&['a','g','r'].includes(k)){e.preventDefault();e.stopImmediatePropagation();if(!e.repeat)start(k==='r'?'stroll':k==='a'?'explore':'exit');return;}if(['+','=','-'].includes(k)){e.preventDefault();const speeds=[700,250,80,40,20,10],i=speeds.indexOf(Number($('crossAutoSpeed').value));$('crossAutoSpeed').value=String(speeds[Math.max(0,Math.min(5,i+(k==='-'?-1:1)))]);return;}if(['arrowup','arrowdown','arrowleft','arrowright','h','j','k','l','escape','>','n'].includes(k))stop('手動操作に切り替えました。');},true);
+document.addEventListener('click',e=>{if(run&&!e.target.closest('#crossAutoControls'))stop('手動操作に切り替えました。');},true);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stop('画面を離れたため停止しました。');});
+if(typeof location!=='undefined'){const mode=new URLSearchParams(location.search).get('space');if(Object.hasOwn(S.names,mode)){$('spaceMode').value=mode;reset();}}
+})();
+
+$('tripleMazeGrowth').addEventListener('change',()=>{if(['kruskal','wilson'].includes($('tripleMazeGrowth').value))$('tripleWallStyle').value='grid';});

@@ -1,0 +1,130 @@
+/* 共通要素は pub/novels/sibling/2026sib.htm の値に合わせる。 */
+body {
+    font-size: 1rem;
+    background-color: #111822;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+    line-height: 1.6;
+}
+h1 {
+    background-color: #609aa0;
+    color: black;
+    padding: 0.5em;
+}
+h2 {
+    background-color: #6290b1;
+    color: black;
+    padding: 0.2em;
+}
+h3 {
+    background-color: #fde5c5;
+    color: black;
+    padding: 0.1em;
+}
+.wrapper {
+    max-width: 700px;
+    width: min(80%, 700px);
+    margin: 50px auto;
+    padding: 20px;
+    border: 0px solid #111;
+    background-color: #afd3e6;
+    font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", "sans-serif";
+}
+.inner_wrapper {
+    width: 90%;
+    max-width: 600px;
+    margin: 10px auto;
+    padding: 20px;
+    border: 1px solid #111;
+    background-color: #ffffee;
+    font-family: "Segoe UI", "Arial Unicode MS", "MS PGothic", sans-serif;
+}
+dd {
+    margin-bottom: 1.0em;
+}
+dt {
+    font-weight: bold;
+}
+.stage {
+    margin: 1.6em 0;
+    text-align: center;
+    font-weight: bold;
+}
+blockquote {
+    margin: 1em 0 1.4em 1em;
+    padding: 0.6em 1em;
+    border-left: 4px solid #609aa0;
+    background: #eef3f7;
+}
+blockquote p {
+    margin: 0.35em 0;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+}
+table th,
+table td {
+    border: 1px solid #666;
+    padding: 0.4em 0.6em;
+    text-align: left;
+}
+ol {
+    font-weight: bold;
+}
+.ending {
+    font-size: 1.2rem;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+}
+
+summary { cursor: pointer; font-weight: bold; text-decoration: underline solid #000; }
+img { width: 100%; max-width: 800px; height: auto; display: block; margin: 0 auto; }
+
+/* このページ固有の補足・実験・数式。共通要素の色や文字サイズは継承する。 */
+html { scroll-behavior: smooth; }
+.inner_wrapper { scroll-margin-top: 16px; }
+.date, .subtitle { font-weight: bold; }
+figure { margin: 1.6em 0; }
+figcaption, .source, footer, .quiet { font-size: .9em; }
+.quiet { border-top: 1px dashed #609aa0; padding-top: 1em; }
+.reading-guide { padding: 18px 22px; background: #e3e8f1; border: 1px solid #111; }
+a:focus-visible, summary:focus-visible, select:focus-visible, [tabindex]:focus-visible { outline: 3px solid #a25f12; outline-offset: 4px; }
+.note, .experiment { margin: 1.5em 0; padding: .6em 1em; border-left: 4px solid #609aa0; background: #eef3f7; }
+.note p:last-child { margin-bottom: 0; }
+.note[open] summary { margin-bottom: 1em; }
+.source { margin: 1.4em 0 0; overflow-wrap: anywhere; }
+.table-scroll { overflow-x: auto; margin: 1.4em 0; }
+caption { text-align: left; font-weight: bold; padding: .5em 0; }
+th { background: #e3e8f1; }
+.highlight td, .highlight th { background: #fff0ad; }
+.matrix td, .matrix th { text-align: center; }
+.matrix td { font-family: Consolas, monospace; }
+.matrix .selected { background: #cde9e2; font-weight: bold; }
+.formula { margin: 1.5em 0; padding: .5em; background: #f3f1e8; text-align: center; overflow-x: auto; }
+.formula small { display: block; font-size: .85em; }
+mjx-container[display="true"] { max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: .2em 0; }
+select { box-sizing: border-box; display: block; width: 100%; max-width: 100%; margin: .5em 0 1em; padding: .65em; font: inherit; color: inherit; background: #fff; border: 1px solid #666; }
+.result { font-weight: bold; }
+.bit { display: inline-block; margin: .15em .2em; padding: .05em .4em; border: 1px solid #90a6ad; font-family: Consolas, monospace; background: #fff; }
+.ending { text-align: center; }
+footer { border-top: 2px dashed #609aa0; margin-top: 2em; padding-top: 1em; }
+[hidden] { display: none !important; }
+
+/* 文字サイズとコンテナも2026sib.htmのモバイル設定に合わせる。 */
+@media screen and (max-width: 600px) {
+    body { font-size: 0.7rem; }
+    h1, h2 { font-size: 1rem; }
+    .wrapper, .inner_wrapper { width: 95%; padding: 10px; word-wrap: break-word; box-sizing: border-box; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+@media print {
+    body, .wrapper { background: white; }
+    .wrapper { width: auto; margin: 0; max-width: none; padding: 0; }
+    .inner_wrapper { width: auto; max-width: none; border: 0; padding: 12px 0; }
+    .experiment, .reading-guide, nav { display: none; }
+    h2, dt { break-after: avoid; }
+    figure, tr { break-inside: avoid; }
+}

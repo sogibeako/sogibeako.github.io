@@ -4,7 +4,7 @@ const vm=require('node:vm');
 const S=require('./connection-space.js');
 const elements=new Map(),listeners={};
 const element=id=>{if(!elements.has(id))elements.set(id,{value:'',checked:false,textContent:'',focus(){},getContext(){return {};},addEventListener(){},setAttribute(){}});return elements.get(id);};
-const context=vm.createContext({ConnectionSpace:S,document:{getElementById:element,querySelectorAll:()=>[],addEventListener:(name,fn)=>listeners[name]=fn},window:{addEventListener(){}},Math,Map,Set,Uint8Array});
+const context=vm.createContext({CrossingAutowalk:require('./crossing-autowalk.js'),ConnectionSpace:S,document:{getElementById:element,querySelectorAll:()=>[],addEventListener:(name,fn,capture)=>{if(!capture)listeners[name]=fn;}},window:{addEventListener(){}},Math,Map,Set,Uint8Array});
 // Drawing is excluded; exercise the actual UI handlers and reset/generation path.
 vm.runInContext(fs.readFileSync(__dirname+'/connections-lab.js','utf8').replace('window.addEventListener(\'resize\',draw);draw();','window.addEventListener(\'resize\',draw);'),context);
 vm.runInContext('draw=()=>{}',context);
@@ -36,7 +36,7 @@ for(const size of ['small','medium']){
  element('tripleHoleSize').value='99';element('tripleUnderpasses').value='0';element('tripleRimWalls').checked=false;element('underpassShape').value='corners';
  run('truth=true;atlasShown=true;atlasMemory.add(1);walkingBook.charts.push({});journeyMap.cells.set("old",{});regionBook.records.set(1,{})');
  listeners.keydown(event);const next=run('state.world');assert.notEqual(next.seed,original.seed);
- for(const key of ['holePlacement','growth','wallStyle','holeSize','holeRimWalls','floorUnderpasses','underpassShape','loopStyle'])assert.equal(next[key],original[key],key);
+ for(const key of ['holeApproach','holePlacement','growth','wallStyle','holeSize','holeRimWalls','floorUnderpasses','underpassShape','loopStyle'])assert.equal(next[key],original[key],key);
  assert.deepEqual(next.layouts,original.layouts);assert.equal(run('journey.number'),2);assert.equal(run('journey.steps'),walked);
  assert.equal(run('state.steps'),0);assert.equal(run('state.id'),next.start);assert.equal(run('truth||atlasShown'),false);
  assert.equal(run('atlasMemory.size+walkingBook.charts.length+journeyMap.cells.size+regionBook.records.size'),0);
@@ -48,6 +48,7 @@ for(const size of ['small','medium']){
 console.log('Triple continuation: two real exit walks per size, applied conditions, keyboard/button guards, fresh maps, totals and manual restart passed.');
 
 // Different sizes per sheet survive continuation and invalid input does not replace play.
+element('tripleHoleApproach').value='screened';
 element('tripleMazeSize').value='custom';
 for(const [n,w,h] of [['A',10,14],['B',22,12],['C',18,16]]){element('triple'+n+'Width').value=String(w);element('triple'+n+'Height').value=String(h);}
 run('reset()');assert.deepEqual(JSON.parse(run('JSON.stringify(state.world.layouts.slice(0,3).map(l=>[l.width,l.height]))')),[[10,14],[22,12],[18,16]]);
@@ -60,9 +61,9 @@ element('tripleRandomNext').checked=true;
 for(const name of ['Generation','Size','Hole','Loop','Underpasses'])element('randomTriple'+name).checked=true;
 const randomSource=run('state.world');walkToExit();run('advanceGeneratedMaze()');const randomWorld=run('state.world');
 const expected=S.randomTripleOptions(randomWorld.seed,randomSource,{generation:true,size:true,hole:true,loop:true,underpasses:true});
-for(const key of ['holePlacement','growth','wallStyle','holeSize','holeRimWalls','loopStyle','floorUnderpasses','underpassShape'])assert.equal(randomWorld[key],expected[key]);
+for(const key of ['holeApproach','holePlacement','growth','wallStyle','holeSize','holeRimWalls','loopStyle','floorUnderpasses','underpassShape'])assert.equal(key==='floorUnderpasses'?(randomWorld[key]??0):randomWorld[key],expected[key]);
 assert.equal(JSON.stringify(randomWorld.layouts.slice(0,3).map(l=>[l.width,l.height])),JSON.stringify(expected.dimensions));
-run('nextTripleMaze()');for(const key of ['holePlacement','growth','wallStyle','holeSize','holeRimWalls','loopStyle','floorUnderpasses','underpassShape'])assert.equal(run('state.world')[key],randomWorld[key]);
+run('nextTripleMaze()');for(const key of ['holeApproach','holePlacement','growth','wallStyle','holeSize','holeRimWalls','loopStyle','floorUnderpasses','underpassShape'])assert.equal(run('state.world')[key],randomWorld[key]);
 console.log('Triple random UI: exit-only randomization and manual seed keeps conditions passed.');
 
 // Separate browser slots and file restoration must keep all three sheets and continue the journey.
@@ -70,9 +71,9 @@ run('window.localStorage={data:new Map(),setItem(k,v){this.data.set(k,v)},getIte
 run('window.localStorage.setItem(doubleSaveKey,"existing-double-save")');
 walkToExit();run('journey={number:4,steps:123};saveDoubleExploration()');
 const saved=run('doubleSnapshot()'),text=run('window.localStorage.getItem(explorationSaveKey())');
-assert(text.includes('connection-triple-save'));assert.equal(run('window.localStorage.getItem(doubleSaveKey)'),'existing-double-save');
+assert.equal(saved.controls.tripleHoleApproach.value,'screened');assert(text.includes('connection-triple-save'));assert.equal(run('window.localStorage.getItem(doubleSaveKey)'),'existing-double-save');
 run('nextTripleMaze();loadDoubleExploration()');assert.equal(run('state.id'),saved.state.id);assert.equal(run('journey.number'),4);assert.equal(run('state.world.sheets'),3);
-assert.equal(element('spaceMode').value,'tripleMaze');assert.equal(element('tripleRandomNext').checked,true);assert.equal(element('tripleMazeSize').value,saved.controls.tripleMazeSize.value);
+assert.equal(element('tripleHoleApproach').value,'screened');assert.equal(element('spaceMode').value,'tripleMaze');assert.equal(element('tripleRandomNext').checked,true);assert.equal(element('tripleMazeSize').value,saved.controls.tripleMazeSize.value);
 run('advanceGeneratedMaze()');assert.equal(run('journey.number'),5);assert.equal(run('journey.steps'),123+saved.state.steps);
 (async()=>{
  await run('importDoubleExploration')({size:text.length,text:async()=>text});

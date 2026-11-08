@@ -2,8 +2,8 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const source=fs.readFileSync(path.join(__dirname,'../../jssproject/0015_topowalk.htm'),'utf8');
 const section=(a,b)=>source.slice(source.indexOf(a),source.indexOf(b,source.indexOf(a)));
 const context=vm.createContext({});
-vm.runInContext(`const DIRS=['N','E','S','W']; const DIR_DELTAS={N:{dx:0,dy:-1},E:{dx:1,dy:0},S:{dx:0,dy:1},W:{dx:-1,dy:0}}; ${section('function rotateDir(', 'function makeNodeId(')} ${section('class QuarterTurnTopology {','class WorldNode {')} ${section('class TwistedLoopTopology {','class PlaneTopology {')} globalThis.original={cw:new QuarterTurnTopology({turn:'clockwise',twist:true}),ccw:new QuarterTurnTopology({turn:'counterclockwise',twist:true}),double:new TwistedLoopTopology({twistX:true,twistY:true})};`,context);
-for(const [mode,name] of [['cwTwist','cw'],['ccwTwist','ccw'],['doubleTwist','double']]){
+vm.runInContext(`const DIRS=['N','E','S','W']; const DIR_DELTAS={N:{dx:0,dy:-1},E:{dx:1,dy:0},S:{dx:0,dy:1},W:{dx:-1,dy:0}}; ${section('function rotateDir(', 'function makeNodeId(')} ${section('class QuarterTurnTopology {','class WorldNode {')} ${section('class TwistedLoopTopology {','class PlaneTopology {')} globalThis.original={plainCW:new QuarterTurnTopology({turn:'clockwise',twist:false}),plainCCW:new QuarterTurnTopology({turn:'counterclockwise',twist:false}),cw:new QuarterTurnTopology({turn:'clockwise',twist:true}),ccw:new QuarterTurnTopology({turn:'counterclockwise',twist:true}),double:new TwistedLoopTopology({twistX:true,twistY:true})};`,context);
+for(const [mode,name] of [['quarterCW','plainCW'],['quarterCCW','plainCCW'],['cwTwist','cw'],['ccwTwist','ccw'],['doubleTwist','double']]){
  const w=S.generate(mode),original=context.original[name];
  for(let id=0;id<64;id++)if(w.cells[id])for(let d=0;d<4;d++){
   const expected=original.resolveStep(id%8,Math.floor(id/8),['N','E','S','W'][d],original.initialState(),8,8),actual=w.candidates.get(`${id}:${d}`);

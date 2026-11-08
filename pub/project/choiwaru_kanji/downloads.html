@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ダウンロード・設置方法 — Choiwaru Kanji</title>
+  <meta name="description" content="創作漢字を自分のホームページで使うためのJavaScript・CSS・サンプル辞書と、エディタ一式のダウンロード。">
+  <link rel="stylesheet" href="kanji-renderer.css"><link rel="stylesheet" href="editor.css">
+  <style>
+    .download-page{max-width:960px}.download-page .panel{margin:20px 0}.download-page h2{font-size:19px;margin-bottom:14px}.download-page li{margin:10px 0}.download-page code{overflow-wrap:anywhere}.download-page .download-all{display:inline-block;padding:12px 20px;background:var(--green);color:white;border-radius:8px;text-decoration:none}.download-page .files{padding-left:22px}.download-page pre{font-size:12px}.download-page .date{color:var(--muted);font-size:12px}
+  </style>
+</head>
+<body>
+  <header class="masthead"><a class="brand" href="editor.html">Choiwaru Kanji</a><nav><a href="editor.html">エディタへ</a><a href="demo.html">表示サンプル ↗</a></nav></header>
+  <main class="download-page">
+    <p class="eyebrow">TAKE YOUR CHARACTERS WITH YOU</p>
+    <h1>つくった一字を、自分のサイトへ。</h1>
+    <p>創作漢字を文章の中に表示するためのファイルを配布しています。静的なHTMLサイトやGitHub Pagesで利用できます。</p>
+    <section class="panel">
+      <h2>一式をダウンロード</h2>
+      <p><a class="download-all" href="choiwaru-kanji.zip" download="choiwaru-kanji.zip">Choiwaru Kanji 一式（ZIP）↓</a></p>
+      <p>エディタ、表示用JS・CSS、サンプル辞書、表示サンプル、説明書をまとめています。解凍したフォルダーをサイトに配置してください。</p>
+      <p class="date">配布版：2026-10-26 · TTF生成対応</p>
+      <p class="hint">ZIPの辞書は配布用サンプルです。ブラウザ内で作った字は含まれません。エディタの「辞書JSON」で自分の辞書を書き出してください。TTF生成用のNoto Sans JP・Noto Serif JPとライセンスを同梱するため、以前の配布版より容量が大きくなっています。通常の文章表示だけなら下の4ファイルで利用できます。</p>
+    </section>
+    <section class="panel">
+      <h2>表示に必要なファイルを個別に保存</h2>
+      <ul class="files">
+        <li><a href="kanji-core.js" download>kanji-core.js ↓</a> — 字形の生成・変形・消去マスク</li>
+        <li><a href="kanji-renderer.js" download>kanji-renderer.js ↓</a> — 文章内の表示・ルビ・注釈・コピー</li>
+        <li><a href="kanji-renderer.css" download>kanji-renderer.css ↓</a> — 表示スタイル・フォントの読み込み</li>
+        <li><a href="dictionary.json" download>dictionary.json ↓</a> — サンプル辞書（自作の辞書に置き換え可能）</li>
+      </ul>
+      <p>この4ファイルを同じフォルダーに置きます。以下では、そのフォルダーを <code>kanji/</code> として説明します。</p>
+      <p class="hint">リンクがブラウザ内で開く場合は、リンクを右クリックして「名前を付けてリンク先を保存」を選んでください。</p>
+    </section>
+    <section class="panel">
+      <h2>自分のページに組み込む</h2>
+      <ol>
+        <li>表示用の4ファイルを、自分のサイトの <code>kanji/</code> に配置します。</li>
+        <li>エディタの「辞書JSON」で書き出したファイルを <code>kanji/dictionary.json</code> に置きます。</li>
+        <li>HTMLに以下を追加します。パスはそのHTMLから見た位置に合わせて調整してください。</li>
+      </ol>
+      <pre>&lt;!-- head内 --&gt;
+&lt;link rel="stylesheet" href="kanji/kanji-renderer.css"&gt;
+&lt;script src="kanji/kanji-core.js" defer&gt;&lt;/script&gt;
+&lt;script src="kanji/kanji-renderer.js" defer&gt;&lt;/script&gt;
+&lt;script src="kanji-init.js" defer&gt;&lt;/script&gt;
+
+&lt;!-- 本文内：gate-catを自分の漢字IDに変更 --&gt;
+&lt;p&gt;今日も&lt;span data-kanji="gate-cat"&gt;⿴門猫&lt;/span&gt;していた。&lt;/p&gt;</pre>
+      <p>HTMLと同じフォルダーに <code>kanji-init.js</code> を作り、次を保存します。</p>
+      <pre>ChoiwaruKanji.init({
+  dictionary: "kanji/dictionary.json",
+  color: "currentColor", // 周囲の文字色に合わせる
+  ruby: true,
+  baseline: "-0.1em"
+}).catch(console.error);</pre>
+      <p>部品ごとの保存色を使う場合は <code>color</code> の行を省略します。字ごとに色を指定したい場合は次のように書けます。</p>
+      <pre>&lt;span data-kanji="gate-cat" data-color="rgb(210, 65, 90)"&gt;⿴門猫&lt;/span&gt;
+&lt;span class="accent" data-kanji="gate-cat" data-color="currentColor"&gt;⿴門猫&lt;/span&gt;</pre>
+      <p class="hint">辞書の読み込みはHTTP/HTTPS経由で確認してください。ファイルを直接開くとブラウザの制限で読み込めない場合があります。サイトにアップロードするか、解凍したフォルダーで <code>python -m http.server 8765</code> を実行して <code>http://localhost:8765/</code> を開けます。</p>
+    </section>
+    <section class="panel">
+      <h2>エディタ・サンプル・詳しい説明</h2>
+      <ul class="files">
+        <li><a href="editor.html" download>editor.html ↓</a> / <a href="editor.js" download>editor.js ↓</a> / <a href="editor.css" download>editor.css ↓</a></li>
+        <li><a href="demo.html" download>demo.html ↓</a> / <a href="demo.js" download>demo.js ↓</a></li>
+        <li><a href="README.md" download>説明書（README.md）↓</a></li>
+      </ul>
+      <p>エディタには表示用の4ファイルと、下記のフォント生成ファイルも必要です。一式ZIPの利用をおすすめします。</p>
+      <ul class="files">
+        <li><a href="ttf-writer.js" download>ttf-writer.js ↓</a> / <a href="kanji-font.js" download>kanji-font.js ↓</a> / <a href="font-export.js" download>font-export.js ↓</a></li>
+        <li><a href="font-assets/sans.js" download>Noto Sans JP字形データ ↓</a> / <a href="font-assets/serif.js" download>Noto Serif JP字形データ ↓</a>（font-assetsフォルダーに配置）</li>
+        <li><a href="font-assets/NotoSansJP-OFL.txt" download>Sansライセンス ↓</a> / <a href="font-assets/NotoSerifJP-OFL.txt" download>Serifライセンス ↓</a> / <a href="font-assets/SOURCES.json" download>字形データの出典・ハッシュ ↓</a></li>
+      </ul>
+      <p>05で字ごとのUnicode割り当てを指定し、TTFを生成できます。未指定・重複は赤く表示し、生成を停止します。私用領域への連番割り当ても選べます。初期版は描画を単色化した輪郭近似方式です。元フォントの曲線を直接合成するものではありません。</p>
+      <p><a href="editor.html">創作漢字をつくる →</a>　<a href="demo.html">文章内の表示を試す →</a></p>
+    </section>
+  </main>
+  <footer><span>Choiwaru Kanji</span> 既存の文字から、ちょっと自由に。</footer>
+</body>
+</html>

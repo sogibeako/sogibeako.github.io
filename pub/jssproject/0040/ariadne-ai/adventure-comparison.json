@@ -1,0 +1,242 @@
+{
+  "model": {
+    "format": "ariadne-training",
+    "version": 1,
+    "weights": [
+      2.391522706951946,
+      7.315945351962,
+      -2.803907655645162,
+      2.9315920998342335,
+      0.8589868224225938,
+      1.4025525213219225,
+      -2.5886503127403557,
+      -2.692369486670941,
+      -2.037374848220497,
+      -1.645363641437143,
+      -1.2369434301741422
+    ],
+    "generations": 8
+  },
+  "depth": 2,
+  "turnLimit": 300,
+  "summaries": {
+    "classic": {
+      "runs": 10,
+      "averageScore": 4368,
+      "averageFloor": 3.6,
+      "maxFloor": 8,
+      "escapes": 0,
+      "turnLimits": 0
+    },
+    "trained": {
+      "runs": 10,
+      "averageScore": 3593,
+      "averageFloor": 3,
+      "maxFloor": 7,
+      "escapes": 0,
+      "turnLimits": 1
+    }
+  },
+  "results": [
+    {
+      "seed": 42,
+      "mode": "classic",
+      "floor": 4,
+      "score": 4567,
+      "kills": 1,
+      "level": 1,
+      "turn": 52,
+      "result": "dead"
+    },
+    {
+      "seed": 42,
+      "mode": "trained",
+      "floor": 1,
+      "score": 692,
+      "kills": 0,
+      "level": 1,
+      "turn": 19,
+      "result": "dead"
+    },
+    {
+      "seed": 43,
+      "mode": "classic",
+      "floor": 4,
+      "score": 4727,
+      "kills": 1,
+      "level": 1,
+      "turn": 88,
+      "result": "dead"
+    },
+    {
+      "seed": 43,
+      "mode": "trained",
+      "floor": 7,
+      "score": 11279,
+      "kills": 6,
+      "level": 3,
+      "turn": 300,
+      "result": "turn-limit"
+    },
+    {
+      "seed": 44,
+      "mode": "classic",
+      "floor": 1,
+      "score": 387,
+      "kills": 0,
+      "level": 1,
+      "turn": 14,
+      "result": "dead"
+    },
+    {
+      "seed": 44,
+      "mode": "trained",
+      "floor": 6,
+      "score": 8295,
+      "kills": 2,
+      "level": 1,
+      "turn": 180,
+      "result": "dead"
+    },
+    {
+      "seed": 45,
+      "mode": "classic",
+      "floor": 8,
+      "score": 10873,
+      "kills": 4,
+      "level": 2,
+      "turn": 152,
+      "result": "dead"
+    },
+    {
+      "seed": 45,
+      "mode": "trained",
+      "floor": 3,
+      "score": 3413,
+      "kills": 1,
+      "level": 1,
+      "turn": 40,
+      "result": "dead"
+    },
+    {
+      "seed": 46,
+      "mode": "classic",
+      "floor": 4,
+      "score": 4259,
+      "kills": 0,
+      "level": 1,
+      "turn": 45,
+      "result": "dead"
+    },
+    {
+      "seed": 46,
+      "mode": "trained",
+      "floor": 4,
+      "score": 4076,
+      "kills": 0,
+      "level": 1,
+      "turn": 45,
+      "result": "dead"
+    },
+    {
+      "seed": 47,
+      "mode": "classic",
+      "floor": 2,
+      "score": 2457,
+      "kills": 2,
+      "level": 1,
+      "turn": 207,
+      "result": "dead"
+    },
+    {
+      "seed": 47,
+      "mode": "trained",
+      "floor": 2,
+      "score": 2202,
+      "kills": 2,
+      "level": 1,
+      "turn": 36,
+      "result": "dead"
+    },
+    {
+      "seed": 48,
+      "mode": "classic",
+      "floor": 2,
+      "score": 1814,
+      "kills": 1,
+      "level": 1,
+      "turn": 21,
+      "result": "dead"
+    },
+    {
+      "seed": 48,
+      "mode": "trained",
+      "floor": 1,
+      "score": 187,
+      "kills": 0,
+      "level": 1,
+      "turn": 17,
+      "result": "dead"
+    },
+    {
+      "seed": 49,
+      "mode": "classic",
+      "floor": 2,
+      "score": 1316,
+      "kills": 0,
+      "level": 1,
+      "turn": 23,
+      "result": "dead"
+    },
+    {
+      "seed": 49,
+      "mode": "trained",
+      "floor": 2,
+      "score": 1502,
+      "kills": 0,
+      "level": 1,
+      "turn": 30,
+      "result": "dead"
+    },
+    {
+      "seed": 50,
+      "mode": "classic",
+      "floor": 7,
+      "score": 11162,
+      "kills": 6,
+      "level": 4,
+      "turn": 144,
+      "result": "dead"
+    },
+    {
+      "seed": 50,
+      "mode": "trained",
+      "floor": 2,
+      "score": 2377,
+      "kills": 1,
+      "level": 1,
+      "turn": 36,
+      "result": "dead"
+    },
+    {
+      "seed": 51,
+      "mode": "classic",
+      "floor": 2,
+      "score": 2119,
+      "kills": 2,
+      "level": 1,
+      "turn": 38,
+      "result": "dead"
+    },
+    {
+      "seed": 51,
+      "mode": "trained",
+      "floor": 2,
+      "score": 1904,
+      "kills": 1,
+      "level": 1,
+      "turn": 28,
+      "result": "dead"
+    }
+  ]
+}

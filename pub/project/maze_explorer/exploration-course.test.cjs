@@ -23,3 +23,9 @@ for(const [i,name]of c.pool.entries()){const n=C.advance({...c,order:'random'},'
 assert.deepEqual(C.validate(JSON.parse(JSON.stringify(c))),{...c,randomGeneration:false});
 console.log('Four structures: sequence, random intervals, one-choice repeats and settings round trip passed.');
 }
+
+const kleinCourse={...base,order:'sequence',pool:['plane','klein']};
+assert.equal(C.advance(kleinCourse,'main',{exit:true,steps:4,topology:'plane'}).mode,'klein');
+assert.equal(C.advance(kleinCourse,'klein',{exit:true,steps:5}).topology,'plane');
+assert.equal(C.advance({...kleinCourse,order:'random',pool:['klein']},'klein',{exit:false,steps:5},()=>0,true).course.completed,base.completed);
+assert.equal(C.advance({...kleinCourse,order:'cycle'},'klein',{exit:true,steps:5}).mode,'main');

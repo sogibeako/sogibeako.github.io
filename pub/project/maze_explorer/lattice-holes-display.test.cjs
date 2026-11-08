@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),H=require('./lattice-holes.js'),S=req
 // Reference the previous UI's tile emission order and glyph selection.
 function previous(state,book,view,truth){
  const w=state.world,tiles=[],portals=[];
- function tile(x,y,id,bright,glyph){tiles.push({x,y,id,bright,sheet:S.groundSheet(w,id),wall:!w.cells[id],glyph:glyph??(!w.cells[id]?'#':id===w.exit?'>':S.underpassSymbol(w,id)||'.')});}
+ function tile(x,y,id,bright,glyph){tiles.push({x,y,id,bright,sheet:S.groundSheet(w,id),wall:!w.cells[id],glyph:(glyph==='@'?glyph:require('./sheet-features.js').glyph(state,id,bright)||glyph)??(!w.cells[id]?'#':id===w.exit?'>':S.underpassSymbol(w,id)||'.')});}
  if(truth){const l=w.layouts[0];for(const id of w.domain){if(w.holes.has(id))continue;const p=S.position(w,id);tile(p.sheet*(l.width+2)+p.x,p.y,id,true,(id===state.id||(w.passages||[]).some(c=>c.horizontal===id&&c.vertical===state.id))?'@':undefined);}for(const h of w.portals)portals.push({x:h.sheet*(l.width+2)+h.x,y:h.y,width:2,height:2});}
  else{for(const p of F.memory(state,book.charts[book.active]))tile(p.x,p.y,p.id,false,S.underpassSymbol(w,p.id,p.frame)||undefined);for(const p of view)tile(p.x,p.y,p.id,true,p.id===state.id?'@':S.underpassSymbol(w,p.id,p.frame)||undefined);}
  return {tiles,portals};
@@ -11,6 +11,7 @@ let frames=0,passageViews=0;
 for(const growth of ['walls','dfs','prim','growing']){
  const state=H.create({maze:true,growth,periodSize:20,wallStyle:growth==='prim'?'grid':'dense',shiftX:-2,shiftY:4,underpasses:4,underpassShape:'mixed',holeRimWalls:true,seed:'display-'+growth}),book={charts:[],active:-1};
  function check(view){
+  require('./sheet-features.js').glyph(state,state.id,true);
   const before=structuredClone({state,book,view});
   for(const truth of [false,true]){
    const display=D.compose(state,book,view,truth),ref=previous(state,book,view,truth);assert.deepEqual(display.tiles,ref.tiles);assert.deepEqual(display.portals,ref.portals);assert.equal(display.truth,truth);

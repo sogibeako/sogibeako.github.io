@@ -1,0 +1,1324 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="一彌・一埜・こにゃんが、順序数とゲームの計算から超現実Veblen行へ進む、全28話と補講9話の数学物語。二進分数と1/3の入力、二分木の経路、Φ・符号列・左右集合の対応を解説。">
+<title>同じ誕生日の、違う無限 — こにゃん先生の超現実数学教室 * 湫埜と雨滴 *</title>
+<link rel="stylesheet" href="quiz.css">
+<link rel="stylesheet" href="story.css">
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="quiz.js" defer></script>
+</head>
+<body>
+<main class="wrapper" id="top">
+<nav aria-label="現在位置"><a href="../../../../novels/sibling/2026sib.htm">2026年兄妹小話</a> ＞ 同じ誕生日の、違う無限</nav>
+<header>
+<p class="date"><time datetime="2026-10-30">2026/10/30</time> · 兄妹小話 · 全5部28話＋補講9話</p>
+<h1>同じ誕生日の、<br>違う無限</h1>
+<p class="subtitle">こにゃん先生の超現実数学教室<br>一彌と一埜、＋と−の向こうへ。</p>
+<p>「出来た」「何が？」「わからん」。<br>五つの研究ノートを前に、兄は固まった。妹はまだ、ヴェブレン階層も超現実数も知らない。猫は静かに、NyankoPadを開いた。</p>
+<p>順番を数えるところから、関数の入力と出力を一つずつ確かめる数学物語。会話の途中に計算例を、各話の末尾に答えを開ける小問を添えています。</p>
+<p><a href="#ch01">第1話から読む ↓</a>　<a href="#glossary">記号を調べる</a></p>
+<p class="note"><time datetime="2026-11-04">2026/11/04 追加</time>：第一・第二変数が二進分数の場合の、左右集合と固定点を通る道順。<a href="#extra01">補講A〜Dへ進む</a>（第15話の後）。</p>
+<p class="note">続く<a href="#extra05">補講E〜G：二分木の途中駅へ</a>では、Φ(1,−1)、Φ(1,1/2)、Φ(1/2,0)への経路を、算術式・Φの式・Zの尾部長・左右集合の対応表と枝の図でたどります。</p>
+<p class="note">最後の<a href="#extra08">補講H・I：Φ(1/3,0)とΦ(1/3,1)</a>では、無限に続くsourceから根を作り、その右へ進みます。有限のΦの式、途中駅の尾部長、正準左右集合と小さなcutを照合します（第28話の後）。</p>
+</header>
+<details class="reading-guide" id="contents">
+<summary>全28話＋補講9話の目次を開く</summary>
+<h3>第I部　無限にも順番がある</h3><ol start="1"><li value="1"><a href="#ch01">無限個より、ひとつ多い？</a></li><li value="2"><a href="#ch02">無限を並べる、無限を掛ける</a></li><li value="3"><a href="#ch03">自分自身に戻る数</a></li><li value="4"><a href="#ch04">イプシロン・ゼロを捕まえろ！</a></li><li value="5"><a href="#ch05">固定点の、そのまた固定点</a></li></ol>
+<h3>第II部　数はゲームから生まれる</h3><ol start="6"><li value="6"><a href="#ch06">空っぽのゲームがゼロになる</a></li><li value="7"><a href="#ch07">半分の数はどうやって生まれる？</a></li><li value="8"><a href="#ch08">＋と−で数を書こう！</a></li><li value="9"><a href="#ch09">超現実数の誕生日</a></li><li value="10"><a href="#ch10">超現実数の無限階段</a></li></ol>
+<h3>第III部　関数たちに名前を取り戻す</h3><ol start="11"><li value="11"><a href="#ch11">ωの肩に、半分を載せる</a></li><li value="12"><a href="#ch12">固定点の世界にも、住所をつけよう</a></li><li value="13"><a href="#ch13">PとMは、何を数えている？</a></li><li value="14"><a href="#ch14">YとZ、二本の尻尾</a></li><li value="15"><a href="#ch15">尻尾を通すと、何文字になる？</a></li><li class="supplement-toc">追加の7話（2026/11/04）<br><a href="#extra01">補講A：第二変数の半分――固定点の世界で席を選ぶ</a> ／ <a href="#extra02">補講B：第二変数の半分――出力の符号と本当の左右集合</a> ／ <a href="#extra03">補講C：第一変数の半分――鏡を通って、別の行へ</a> ／ <a href="#extra04">補講D：第一変数の半分――出力の左右まで開けてみよう</a> ／ <a href="#extra05">補講E：負一番目のイプシロンへ――同じ枝の途中駅</a> ／ <a href="#extra06">補講F：半番目のイプシロンへ――引き算にも駅がある</a> ／ <a href="#extra07">補講G：半段目の行へ――固定点の駅を、さらに通り抜ける</a></li><li value="16"><a href="#ch16">無限に計算するの？ 条件を全部満たすの？</a></li></ol>
+<h3>第IV部　無限符号列の秘密</h3><ol start="17"><li value="17"><a href="#ch17">全員、同じ誕生日！？</a></li><li value="18"><a href="#ch18">無限の暗号を解読せよ！</a></li><li value="19"><a href="#ch19">右と左に伸びる、二本の尻尾</a></li><li value="20"><a href="#ch20">最後のマイナスはどこにいた？</a></li><li value="21"><a href="#ch21">スペクトルという名の地図</a></li><li value="22"><a href="#ch22">ファイバーの中には何人いる？</a></li><li value="23"><a href="#ch23">隣り合う二つの無限</a></li></ol>
+<h3>第V部　その先に、何がある？</h3><ol start="24"><li value="24"><a href="#ch24">どこまで同じなら、近いの？</a></li><li value="25"><a href="#ch25">未来は決まらない。それでも連続？</a></li><li value="26"><a href="#ch26">Leanは、何を証明したの？</a></li><li value="27"><a href="#ch27">Φ(1, 1/3)は、どこへ行った？</a></li><li value="28"><a href="#ch28">まだ見ぬ階層へ</a></li><li class="supplement-toc">追加の2話（2026/11/04）<br><a href="#extra08">補講H：三分の一の根――無限の道順にも、左右集合を</a> ／ <a href="#extra09">補講I：三分の一の行の右へ――Φ(1/3,1)を書いてみよう</a></li></ol>
+<p>第I・II部は基礎の計算。第III部は関数と構成。第IV・V部で資料の主定理A〜Fを読み解きます。途中で一息入れて、各話の番号から戻れます。</p>
+</details>
+<article id="novel-content" aria-label="数学物語の本文">
+<p class="part-label">第I部　無限にも順番がある</p><section class="inner_wrapper" id="ch01" aria-labelledby="title01">
+<h2 id="title01">第1話　無限個より、ひとつ多い？</h2>
+<p class="stage">＊十月三十日、夕方。一彌の机には、五つの数学ノートと、冷めかけたココア。＊</p>
+<dl class="talk">
+<dt>一彌</dt><dd>「……出来た。」</dd>
+<dt>一埜</dt><dd>「何が？」</dd>
+<dt>一彌</dt><dd>「わからん。」</dd>
+<dt>一埜</dt><dd>「出来たのに！？ｗ💦」</dd>
+<dt>一彌</dt><dd>「超現実数のヴェブレン階層を考えて、Codex氏にLeanでの証明をお願いしたら、スペクトルやファイバーまで出てきたのだ！ ぼくが聞きたかったのは、\(\Phi(1,1/3)\)だったのだが！」</dd>
+<dt>一埜</dt><dd>「その名前、どれもまだわからないよ。お兄ちゃんは？」</dd>
+<dt>一彌</dt><dd>「……Φ以外は、かなり怪しい。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（では、ノートに名前を取り戻しましょう。一度に全部読まなくていいわ。まず、並ぶことから。）」</dd>
+</dl>
+<p class="stage">＊こにゃんがNyankoPadを開く。画面に、猫用の受付番号が並んだ。＊</p>
+<pre class="terminal"><code>NYANKOPAD
+0 → 1 → 2 → 3 → …
+番号は、どの有限の番号の先にも続く。</code></pre>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（自然数をこの順番で並べた<strong>並び方の型</strong>を、\(\omega\)、オメガと呼ぶの。順序数は、こうした整列した並び方を表す数よ。）」</dd>
+<dt>一彌</dt><dd>「その前に特別受付を一つ置いても、最初から番号を振り直せる。だから順序数では\(1+\omega=\omega\)！」</dd>
+<dt>一埜</dt><dd>「じゃあ後ろに一つ置いたら？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（今度は、自然数の列にはなかった「最後の席」ができる。\(\omega+1\)よ。人が最後の席まで歩き終わる実験ではなく、順序を指定しているの。）」</dd>
+</dl>
+<div class="formula">\[1+\omega=\omega,\qquad \omega+1&gt;\omega\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「個数を数えるだけじゃなくて、最後の席があるかも見ているんだね！」</dd>
+<dt>一彌</dt><dd>「ぼくの理解にも最後の席がほしい。」</dd>
+<dt>一埜</dt><dd>「今日は最初の席に座ろう！」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：ω＋2には最後の席がある？</summary><div><p>あります。自然数の列の後ろに二つの席を置き、その二つ目が最後です。ωそのものには最後の席がありません。</p></div></details>
+<p class="source">照合先：基礎の解説・作中の計算例</p>
+<nav class="chapter-nav" aria-label="第1話の移動"><a href="#top">↑ はじめに</a><a href="#contents">目次</a><a href="#ch02">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch02" aria-labelledby="title02">
+<h2 id="title02">第2話　無限を並べる、無限を掛ける</h2>
+<dl class="talk">
+<dt>一埜</dt><dd>「猫の受付が二列になったよ！」</dd>
+<dt>一彌</dt><dd>「一列目の全員より後ろに、二列目の全員を置く。これが\(\omega+\omega=\omega\cdot2\)だ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（順序数の\(\alpha\cdot\beta\)は、型がαの列をβ個、この順番につなぐの。右側が「何列分か」を決めるわ。）」</dd>
+</dl>
+<div class="formula">\[2\cdot\omega=\sup_{n&lt;\omega}2n=\omega,\qquad \omega\cdot2&gt;\omega\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「二人組をずっと並べると、普通に一人ずつ番号を振れる。でも無限の列を二つなら、二列目の先頭には無限個の前の席がある！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。そしてωの列をω列つなぐと\(\omega\cdot\omega=\omega^2\)。そのまとまりをまたω個並べると\(\omega^3\)ね。）」</dd>
+<dt>一彌</dt><dd>「さらに\(1,\omega,\omega^2,\omega^3,\ldots\)の上限が\(\omega^\omega\)！」</dd>
+<dt>一埜</dt><dd>「上限って、最後の一個？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（全部以上である順序数のうち、最小のもの。この列では各項より大きいけれど、列の中の最後の項ではないわ。supという記号で書くの。）」</dd>
+</dl>
+<div class="formula">\[\omega^\omega=\sup_{n&lt;\omega}\omega^n\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「最後がなくても、全部を受け止める最小の順序数は考えられるんだね。」</dd>
+<dt>一彌</dt><dd>「猫用受付、ついに宇宙規模に！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（本日の受付は三匹よ。）」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：ω・3は、何を何列つないだ型？</summary><div><p>ωの型の列を三列つなぎます。3・ωとは掛ける順番が違います。</p></div></details>
+<p class="source">照合先：基礎の解説・作中の計算例</p>
+<nav class="chapter-nav" aria-label="第2話の移動"><a href="#ch01">← 前の話</a><a href="#contents">目次</a><a href="#ch03">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch03" aria-labelledby="title03">
+<h2 id="title03">第3話　自分自身に戻る数</h2>
+<p class="stage">＊一埜がココアのおかわりを作る。こにゃんは画面に小さな箱を描いた。＊</p>
+<dl class="talk">
+<dt>一埜</dt><dd>「関数って、箱に入れると何か出てくるもの？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（入力ごとに出力が決まる規則、と考えればいいわ。\(f(x)=x^2\)なら、入れた数を二乗するの。ここでは普通の実数ね。）」</dd>
+</dl>
+<div class="formula">\[f(2)=4,\qquad f(4)=16,\qquad f(1)=1,\qquad f(0)=0\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「出力をもう一度入力に戻すと、2、4、16、256……！ 反復だ！」</dd>
+<dt>一埜</dt><dd>「でも1だと、ずっと1。0も動かないね？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。\(f(a)=a\)となる入力aが、fの<strong>固定点</strong>。どんな関数の固定点なのかも、一緒に言うのよ。）」</dd>
+<dt>一彌</dt><dd>「では\(g(x)=x+1\)には？」</dd>
+<dt>一埜</dt><dd>「普通の実数なら、何を入れても1増えるから、ない！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（正解。反復したら必ず固定点に着く、というわけでもないわ。次に使う順序数の関数には、上限と相性のよい性質があるの。）」</dd>
+<dt>一彌</dt><dd>「固定点は「すごく大きい数」の別名ではないのだな。1だって固定点だ！」</dd>
+<dt>一埜</dt><dd>「関数との約束が守られる場所、なんだね。」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：f(x)＝x²の固定点は1だけ？</summary><div><p>いいえ、0も固定点です。実数ではx²＝xを解くとx(x−1)＝0なので、0と1です。</p></div></details>
+<p class="source">照合先：基礎の解説・作中の計算例</p>
+<nav class="chapter-nav" aria-label="第3話の移動"><a href="#ch02">← 前の話</a><a href="#contents">目次</a><a href="#ch04">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch04" aria-labelledby="title04">
+<h2 id="title04">第4話　イプシロン・ゼロを捕まえろ！</h2>
+<dl class="talk">
+<dt>一彌</dt><dd>「いよいよヴェブレン階層の入口！ \(\varphi_0(\alpha)=\omega^\alpha\)！」</dd>
+<dt>一埜</dt><dd>「左下の0と、括弧の中のαは、何が違うの？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（0は関数の階層番号。αはその関数に入れる順序数よ。φはファイと読むの。）」</dd>
+</dl>
+<div class="formula">\[\varphi_0(0)=1,\quad \varphi_0(1)=\omega,\quad \varphi_0(2)=\omega^2\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「ここで1から反復する。\(a_0=1\)、\(a_{n+1}=\omega^{a_n}\)だ。」</dd>
+</dl>
+<div class="formula">\[1,\quad\omega,\quad\omega^\omega,\quad\omega^{\omega^\omega},\quad\ldots\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「今度は、指数の塔が高くなる！ でも途中の数は、まだ動いてるよ？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そこで、この<strong>自然数回の反復列</strong>全体の上限を取るの。それが\(\varepsilon_0\)、イプシロン・ゼロ。）」</dd>
+</dl>
+<div class="formula">\[\varepsilon_0=\sup_{n&lt;\omega}a_n,\qquad \omega^{\varepsilon_0}=\sup_{n&lt;\omega}\omega^{a_n}=\sup_{n&lt;\omega}a_{n+1}=\varepsilon_0\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「一つずらしても、列全体の上限は変わらない！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（その説明を支えるのが、順序数のω冪が増加列の極限で上限を保つ性質よ。また、固定点があればこの塔の全段以上になる。だからこれは最初の固定点なの。）」</dd>
+<dt>一彌</dt><dd>「塔の最上階へ着いたのではなく、全段の上限を使ったのか！」</dd>
+<dt>一埜</dt><dd>「エレベーターの「最終階」ボタンがない塔だったんだね。」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：ω^ωは、すでにφ₀の固定点？</summary><div><p>違います。φ₀(ω^ω)＝ω^(ω^ω)となり、さらに大きい塔へ移ります。ε₀は有限の高さの塔を全部集めた上限です。</p></div></details>
+<p class="source">照合先：基礎の解説・作中の計算例</p>
+<nav class="chapter-nav" aria-label="第4話の移動"><a href="#ch03">← 前の話</a><a href="#contents">目次</a><a href="#ch05">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch05" aria-labelledby="title05">
+<h2 id="title05">第5話　固定点の、そのまた固定点</h2>
+<dl class="talk">
+<dt>一彌</dt><dd>「固定点はε₀だけではない。その次、その次もある！ それを順に並べるのが\(\varphi_1\)だ！」</dd>
+</dl>
+<div class="formula">\[\varphi_1(0)=\varepsilon_0,\quad\varphi_1(1)=\varepsilon_1,\quad\varphi_1(2)=\varepsilon_2\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「今度の0、1、2は、固定点の名簿の何番目かを指定しているんだね。0番が最初！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（有限の添字だけでなく、順序数の添字まで続く名簿よ。\(\varphi_2\)は\(\varphi_1\)の固定点を列挙するの。）」</dd>
+<dt>一彌</dt><dd>「最初の値\(\zeta_0=\varphi_2(0)\)は、\(\varphi_1(\zeta_0)=\zeta_0\)。つまり\(\varepsilon_{\zeta_0}=\zeta_0\)！」</dd>
+<dt>一埜</dt><dd>「自分の番号の欄を引いたら、自分自身が書いてある！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（しかも、φ₁の値はφ₀の固定点。だからζ₀は下の両方で動かない。同じ仕組みでφ₃、φ₄と進めるわ。）」</dd>
+</dl>
+<div class="formula">\[\Theta_n=\varphi_n(0),\quad\Theta_0=1,\quad\Theta_1=\varepsilon_0,\quad\Theta_2=\zeta_0\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（Θはシータ。これから何度も使う「各階層の最初の値」の略名よ。すべての有限階層に共通する固定点を列挙するのが\(\varphi_\omega\)。その最初をq、次をΛ、ラムダと名づけましょう。）」</dd>
+</dl>
+<div class="formula">\[q=\varphi_\omega(0)=\sup_{n&lt;\omega}\Theta_n,\qquad\Lambda=\varphi_\omega(1)\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「どの有限のjでも、φⱼにqを入れるとq。Λを入れるとΛなんだ！」</dd>
+<dt>一彌</dt><dd>「これはΓ₀か！？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（この記法のqはΓ₀と同一視しないわ。階層番号ωを固定した今回の値を、その定義で覚えましょう。）」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：φ₀(ε₀)とφ₁(0)は？</summary><div><p>どちらもε₀です。前者は固定点という性質、後者は固定点の名簿の最初という定義によります。</p></div></details>
+<p class="source">照合先：MAIN.md §2.4、§1.2。ε₀の塔とζ₀の説明は基礎解説。</p>
+<nav class="chapter-nav" aria-label="第5話の移動"><a href="#ch04">← 前の話</a><a href="#contents">目次</a><a href="#ch06">次の話 →</a></nav>
+</section>
+<p class="part-label">第II部　数はゲームから生まれる</p><section class="inner_wrapper" id="ch06" aria-labelledby="title06">
+<h2 id="title06">第6話　空っぽのゲームがゼロになる</h2>
+<p class="stage">＊こにゃんが空の箱を二つ並べる。一埜は片方に猫のおやつを入れようとした。＊</p>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（それはまだ入れないでね。\(\{L\mid R\}\)という数の作り方を説明したいの。）」</dd>
+<dt>一彌</dt><dd>「Lは左側の候補たち、Rは右側の候補たち。どちらも、すでに作った数を使う！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（左のどの数も右のどの数より小さい、という条件で数を作るわ。その間にある<strong>最も単純な超現実数</strong>を選ぶの。片側が空なら、その側の制約はない。）」</dd>
+</dl>
+<div class="formula">\[0=\{\mid\},\qquad1=\{0\mid\},\qquad-1=\{\mid0\}\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「何も条件がないから0。0より大きく、いちばん早く作れるのが1なんだ！」</dd>
+<dt>一彌</dt><dd>「ゲームとしては、Lが左プレイヤーの行ける先、Rが右プレイヤーの行ける先だ。手番で動けなければ負け！ 0はどちらも動けない。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ただし、すべてのゲームが数になるわけではないの。\(\{0\mid0\}\)は左が右より小さいという条件を満たさず、数ではないゲームよ。）」</dd>
+<dt>一埜</dt><dd>「箱の形で書けても、数になる条件を確かめるんだね。」</dd>
+<dt>一彌</dt><dd>「おやつも、箱に入れただけでは数にはならんのか……。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そのおやつは一個、私に渡せるわ。）」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：{1｜}で、いちばん単純に作られる数は？</summary><div><p>2です。左の1より大きいという条件を満たす、最も単純な超現実数を選びます。</p></div></details>
+<p class="source">照合先：基礎の解説・作中の計算例</p>
+<nav class="chapter-nav" aria-label="第6話の移動"><a href="#ch05">← 前の話</a><a href="#contents">目次</a><a href="#ch07">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch07" aria-labelledby="title07">
+<h2 id="title07">第7話　半分の数はどうやって生まれる？</h2>
+<dl class="talk">
+<dt>一埜</dt><dd>「0より大きくて1より小さい数も、箱で作れる？」</dd>
+</dl>
+<div class="formula">\[\frac12=\{0\mid1\},\qquad 2=\{1\mid\}\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「できる！ 中点だから、と言いたいが、正確には最も単純な数を選んでいるのだな。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。たとえば\(\{0\mid2\}=1\)だけれど、\(\{0\mid3\}\)も1。いつも左右の平均を取る規則ではないわ。）」</dd>
+<dt>一埜</dt><dd>「じゃあ半分を二つ足して、本当に1になるところを見たい！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（和のゲームでは、一手でどちらか片方の成分だけを動かすの。h＝1/2としましょう。左は片方のhを0へ動かせるから、行き先は0＋h＝h。右は片方を1へ動かすから、1＋hよ。）」</dd>
+</dl>
+<div class="formula">\[1+h=\{h,1\mid2\}=\frac32,\qquad h+h=\{h\mid1+h\}=\left\{\frac12\middle|\frac32\right\}=1\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「最初の式では、左は1を0へ動かすか、hを0へ動かすか。だからhと1が候補なんだね！」</dd>
+<dt>一彌</dt><dd>「そして半分二つの間には1が、最も単純な数として入る！ 本で読んだゲームの足し算が働いたぞ！✨」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（この小さい計算は入門の例よ。後で見る研究の定理を証明したこととは区別してね。）」</dd>
+<dt>一埜</dt><dd>「自分で一手ずつ動かすと、記号がちょっと怖くなくなるね。」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：{0｜1/2}は？</summary><div><p>1/4です。0と1/2の間の最も単純な超現実数です。こうして有限の日には、整数と二進分数が次々に生まれます。</p></div></details>
+<p class="source">照合先：基礎の解説・作中の計算例</p>
+<nav class="chapter-nav" aria-label="第7話の移動"><a href="#ch06">← 前の話</a><a href="#contents">目次</a><a href="#ch08">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch08" aria-labelledby="title08">
+<h2 id="title08">第8話　＋と−で数を書こう！</h2>
+<p class="stage">＊NyankoPadの画面に、今度は小さな分かれ道が伸びる。＊</p>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（超現実数は、＋と−の符号列でも表せるの。空列から、右へ進む符号を＋、左へ進む符号を−として書きましょう。）」</dd>
+</dl>
+<div class="table-scroll" tabindex="0"><table><caption>最初の数と符号列</caption><thead><tr><th scope="col">数</th><th scope="col">符号列</th><th scope="col">長さ</th></tr></thead><tbody><tr><td>0</td><td>空列</td><td>0</td></tr><tr><td>1 ／ −1</td><td>＋ ／ −</td><td>1</td></tr><tr><td>2 ／ −2</td><td>＋＋ ／ −−</td><td>2</td></tr><tr><td>1/2 ／ −1/2</td><td>＋− ／ −＋</td><td>2</td></tr><tr><td>3/4 ／ 1/4</td><td>＋−＋ ／ ＋−−</td><td>3</td></tr></tbody></table></div>
+<dl class="talk">
+<dt>一埜</dt><dd>「＋−は「1を足して1を引く」じゃないんだ！」</dd>
+<dt>一彌</dt><dd>「それなら0になってしまうものな。これは足し算の式ではなく、数の住所だ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（大きさを比べるには、初めて違う場所を見るの。その場所で<strong>− ＜ 終わり ＜ ＋</strong>として比べる。終わった先には符号がない、と扱うのよ。）」</dd>
+<dt>一埜</dt><dd>「＋−と＋＋は、二文字目で−と＋。だから1/2＜2！ ＋と＋−なら、二文字目で終わりと−だから、1/2＜1！」</dd>
+<dt>一彌</dt><dd>「短い列のほうが常に小さい、ではないのだな。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（符号は順序数の長さまで続けられる。ω個の＋を並べた数は、超現実数としてのωよ。）」</dd>
+<dt>一埜</dt><dd>「住所にも無限の長さがあるんだね。」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：＋−−と＋−＋はどちらが小さい？</summary><div><p>三文字目で−と＋が違うので、＋−−のほうが小さい。数では1/4＜3/4です。</p></div></details>
+<p class="source">照合先：基礎の解説・作中の計算例</p>
+<nav class="chapter-nav" aria-label="第8話の移動"><a href="#ch07">← 前の話</a><a href="#contents">目次</a><a href="#ch09">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch09" aria-labelledby="title09">
+<h2 id="title09">第9話　超現実数の誕生日</h2>
+<dl class="talk">
+<dt>一埜</dt><dd>「2と1/2って、同じ二文字なんだね！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（符号列の長さを\(b(x)\)と書き、birthday、誕生日と呼ぶわ。入力は超現実数x、出力は長さを表す順序数よ。）」</dd>
+</dl>
+<div class="formula">\[b(2)=2=b(1/2),\qquad b(\omega)=\omega\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「同じページ数の本でも、中のお話は違う！ そして分厚い本の主人公が、必ず強いわけでもない！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（もう一つ、simplicityの順序を覚えましょう。\(x\preceq_s y\)は、xの符号列がyの<strong>先頭部分</strong>、prefixになっているという意味。真に短い場合は\(x\prec_s y\)よ。）」</dd>
+<dt>一埜</dt><dd>「＋は＋−の先頭部分。だから1は1/2より単純。でも数としては1のほうが大きい！」</dd>
+</dl>
+<div class="formula">\[1\prec_s\frac12,\qquad \frac12&lt;1\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「では、同じ長さの＋＋と＋−は？」</dd>
+<dt>一埜</dt><dd>「どっちも相手の先頭部分にはならない。大きさは比べられても、simplicityでは比べられないんだ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。長さが短いだけでも不十分よ。たとえば−は＋＋のprefixではない。<strong>中身も一致</strong>しなくてはいけないの。）」</dd>
+<dt>一埜</dt><dd>「誕生日は長さ。simplicityは先頭からのつながり。大きさは最初の違い。三つの見方があるんだね！」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：0の空列は、どの数の符号列のprefix？</summary><div><p>すべての数です。空列はどんな列の先頭部分でもあります。</p></div></details>
+<p class="source">照合先：MAIN.md §2.1–2.2。有限例は説明用。</p>
+<nav class="chapter-nav" aria-label="第9話の移動"><a href="#ch08">← 前の話</a><a href="#contents">目次</a><a href="#ch10">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch10" aria-labelledby="title10">
+<h2 id="title10">第10話　超現実数の無限階段</h2>
+<dl class="talk">
+<dt>一埜</dt><dd>「ここにもωがいるなら、\(1+\omega=\omega\)なんだよね？」</dd>
+<dt>一彌</dt><dd>「……あっ！ ここは罠だ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（超現実数の<strong>体の足し算</strong>では交換法則が成り立つから、\(1+\omega=\omega+1&gt;\omega\)。前半の順序数の足し算とは、演算が違うの。）」</dd>
+</dl>
+<div class="formula">\[\underbrace{1+\omega=\omega}_{\text{順序数の加法}},\qquad\underbrace{1+\omega=\omega+1}_{\text{超現実数の体の加法}}\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「同じ並び方から来た数を使っていても、計算の規則は区別するんだ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（順序数αを、α個の＋だけの超現実数に入れる写像を\(\iota(\alpha)\)と書くわ。イオタは、その世界を移る印。文脈が明らかなら省くけれど、普通の順序数加法をそのまま体の加法へ移すものではないの。）」</dd>
+<dt>一彌</dt><dd>「体だからωを2で割った\(\omega/2\)もある！ どの自然数nよりも大きくて、ωより小さい！」</dd>
+<dt>一埜</dt><dd>「もしω/2がn以下なら、ωが2n以下になって変だものね。これも順序数？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（いいえ。すべての自然数より大きい最初の順序数がωだから、その間に順序数はないわ。超現実数の世界には、そこにも数があるの。）」</dd>
+<dt>一彌</dt><dd>「そして\(1/\omega\)は、どの正の実数よりも小さい正の無限小！」</dd>
+<dt>一埜</dt><dd>「無限大だけじゃなく、隙間も広がるんだね。」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：2(ω/2)は？</summary><div><p>超現実数の体の乗法ならωです。順序数の「二人組を並べる」乗法の問題とは区別します。</p></div></details>
+<p class="source">照合先：MAIN.md §2.2の演算の区別。ω/2は基礎の順序体の例。</p>
+<nav class="chapter-nav" aria-label="第10話の移動"><a href="#ch09">← 前の話</a><a href="#contents">目次</a><a href="#ch11">次の話 →</a></nav>
+</section>
+<p class="part-label">第III部　関数たちに名前を取り戻す</p><section class="inner_wrapper" id="ch11" aria-labelledby="title11">
+<h2 id="title11">第11話　ωの肩に、半分を載せる</h2>
+<p class="stage">＊翌日のおやつの時間。昨日のノートの端に、一埜が小さく「ω/2」と書いている。＊</p>
+<dl class="talk">
+<dt>一彌</dt><dd>「次は\(V_0(x)=\omega^x\)。Vは、今回の超現実数版の関数の名前だ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（これはConwayの<strong>omega写像</strong>。入力xも出力も超現実数よ。順序数を入力したときには、さっきの順序数のω冪と一致するわ。）」</dd>
+</dl>
+<div class="formula">\[V_0(0)=1,\quad V_0(1)=\omega,\quad V_0(2)=\omega^2,\quad V_0(-1)=\omega^{-1}=\frac1\omega\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「負の数も入る！ じゃあ1/2を入れたら、ωの半分？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そこは違うの。omega写像は\(\omega^{x+y}=\omega^x\omega^y\)を満たすので、\(u=\omega^{1/2}\)なら\(u^2=\omega\)。ω/2は二倍するとωになる数ね。）」</dd>
+</dl>
+<div class="formula">\[\omega^{1/2}\cdot\omega^{1/2}=\omega,\qquad 2\cdot(\omega/2)=\omega\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「肩に半分と、足元で半分。えらい違いだ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（記号が似ていても、一般の実指数関数や、任意の底の超現実指数関数と同一視しないでね。ここで使うのは、この特定の写像よ。）」</dd>
+<dt>一埜</dt><dd>「V₀の入力は超現実数。φ₀の入力は順序数。順序数を渡したところで、二つの世界がつながるんだ！」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：V₀(−1)は負の数？</summary><div><p>いいえ、正の無限小1/ωです。入力が負でもomega写像の値は正です。</p></div></details>
+<p class="source">照合先：MAIN.md §2.4。omega写像の積公式と半分の例は基礎解説。</p>
+<nav class="chapter-nav" aria-label="第11話の移動"><a href="#ch10">← 前の話</a><a href="#contents">目次</a><a href="#ch12">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch12" aria-labelledby="title12">
+<h2 id="title12">第12話　固定点の世界にも、住所をつけよう</h2>
+<dl class="talk">
+<dt>一彌</dt><dd>「\(V_1\)は\(V_0\)の固定点の……名簿！ なのだが、入力が1/2の名簿って何だ！？」</dd>
+<dt>一埜</dt><dd>「順序数の番号だけでは、席が足りないね？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そこで<strong>canonical parametrization</strong>、標準的な座標づけを使うの。固定点たちの中に、超現実数全体と同じ、大きさとsimplicityの構造がある。それを入力xで住所づけするわ。）」</dd>
+</dl>
+<div class="formula">\[\operatorname{Fix}(V_j)=\{y:V_j(y)=y\},\qquad V_{j+1}:\mathbf{No}\longrightarrow\operatorname{Fix}(V_j)\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「Fixは、入れても動かない数の集合。Noは超現実数全体。矢印は、左から入力して右に出力、だね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。こういう通常順序とsimplicityの両方を保ち、逆にも読み取れるNoのコピーを、この資料ではsubstructureと呼ぶの。）」</dd>
+<dt>一彌</dt><dd>「V₁(0)は、その固定点世界のいちばん単純な数。順序数の場合とも合うからε₀！」</dd>
+</dl>
+<div class="formula">\[V_j(\iota(\alpha))=\iota(\varphi_j(\alpha)),\qquad V_0(V_1(x))=V_1(x)\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「V₁(1/2)もV₀で動かない。でも「εの1/2番目」と書けば自動で計算できるわけではないんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。非順序数の入力は超現実数側の定義で扱うの。V₂ならV₁の固定点を、同じように座標づけするわ。）」</dd>
+<dt>一彌</dt><dd>「何でも好きな番号札を振ればいい、ということでもないのだな。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（二つの順序と整合する標準的な構成、その存在と一意性を、資料の基礎定理として使っているのよ。）」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：V₁(0)をもう一度V₀へ入れると？</summary><div><p>V₁(0)＝ε₀のままです。V₁の出力はV₀の固定点だからです。</p></div></details>
+<p class="source">照合先：MAIN.md §2.4、付録A。substructure等の存在は基礎定理として使用。</p>
+<nav class="chapter-nav" aria-label="第12話の移動"><a href="#ch11">← 前の話</a><a href="#contents">目次</a><a href="#ch13">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch13" aria-labelledby="title13">
+<h2 id="title13">第13話　PとMは、何を数えている？</h2>
+<dl class="talk">
+<dt>一彌</dt><dd>「来たぞP！ 読んでいて、何度も正体を見失った文字だ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（数xの符号列から、＋がある場所だけを、元の順番を保って抜き出すの。その並びの<strong>順序型</strong>がP(x)。−の場所ならM(x)よ。）」</dd>
+</dl>
+<div class="formula">\[P(x)=\operatorname{otp}\{\gamma&lt;b(x):\sigma_x(\gamma)=+\},\qquad M(x)=P(-x)\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「σはシグマ？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（\(\sigma_x(\gamma)\)は、xのγ番目の符号を読む記号。otpはorder type、順序型の略。負号−xは符号を全部反転するので、P(−x)で元の−を数えられるわ。）」</dd>
+</dl>
+<pre class="terminal"><code>x の符号 : ＋ ＋ − ＋ −
+位置      : 0  1  2  3  4
+＋の位置 : 0, 1, 3
+−の位置 : 2, 4</code></pre>
+<dl class="talk">
+<dt>一埜</dt><dd>「有限だから、b(x)＝5、P(x)＝3、M(x)＝2！ でも場所そのものは0、1、3なんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（その三つを順番に並べた型が3。位置の数値を足しているのではないわ。無限でも「並び方」を数えるのが大事よ。）」</dd>
+<dt>一彌</dt><dd>「＋−＋−……をω個続けた列なら、＋だけ抜いてもω、−だけ抜いてもωだ！」</dd>
+</dl>
+<div class="formula">\[b(x)=\omega,\quad P(x)=\omega,\quad M(x)=\omega,\quad P(x)+M(x)=\omega\cdot2\ne b(x)\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「あっ、PとMを別々の列にしてからつなぐと、元の混ざり方がなくなる！ だから長さの足し算に戻せないんだ！」</dd>
+<dt>一彌</dt><dd>「Pはただの文字数ではなく、順序数を返す装置。ここを読み飛ばしていたァァ！💦」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：＋をω個、その後−を一個なら？</summary><div><p>b＝ω＋1、P＝ω、M＝1です。この例ではP＋M＝bになりますが、いつもそうなるわけではありません。</p></div></details>
+<p class="source">照合先：MAIN.md §2.1–2.2。交互列は順序型の説明用。</p>
+<nav class="chapter-nav" aria-label="第13話の移動"><a href="#ch12">← 前の話</a><a href="#contents">目次</a><a href="#ch14">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch14" aria-labelledby="title14">
+<h2 id="title14">第14話　YとZ、二本の尻尾</h2>
+<p class="stage">＊こにゃんが椅子の上で向きを変える。尻尾が、一彌のノートのYを隠した。＊</p>
+<dl class="talk">
+<dt>一埜</dt><dd>「先生、答えが隠れてます！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ちょうど尻尾の話よ。\(Y_a(t)\)は、数aの符号列の後ろにt個の＋をつなぐ数。\(Z_a(t)\)ならt個の−をつなぐの。aは超現実数、tは順序数よ。）」</dd>
+</dl>
+<pre class="terminal"><code>a       : ＋＋−＋−
+Y_a(3) : ＋＋−＋−＋＋＋
+Z_a(2) : ＋＋−＋−−−</code></pre>
+<dl class="talk">
+<dt>一埜</dt><dd>「Yₐ(3)は長さ8、＋は6個、−は2個！」</dd>
+</dl>
+<div class="formula">\[b(Y_a(t))=b(Z_a(t))=b(a)+t\]</div>
+<div class="formula">\[P(Y_a(t))=P(a)+t,\quad M(Y_a(t))=M(a)\]</div>
+<div class="formula">\[P(Z_a(t))=P(a),\quad M(Z_a(t))=M(a)+t\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「Yₐ(1)はa＋1だな！」</dd>
+<dt>一埜</dt><dd>「待って。a＝1/2なら、＋−に＋をつけて＋−＋。3/4だよ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（その通り。符号の一文字childを\(a^+=Y_a(1)\)、\(a^-=Z_a(1)\)と書くけれど、体のa±1とは違うの。）」</dd>
+<dt>一彌</dt><dd>「すでに妹に救助された！」</dd>
+<dt>一埜</dt><dd>「尻尾をつけると、＋なら大きく、−なら小さくなる。でもどっちも符号列は長くなるんだね。」</dd>
+</dl>
+<details class="note"><summary>順序数の連結をもう一度</summary><div><p>\(Y_a(\xi+\eta)=Y_{Y_a(\xi)}(\eta)\)。まずξ個、次にη個をつなぐので、この＋は順序数の加法です。空列から＋を1個、次にω個つなぐと長さω。ω個の後に1個なら長さω＋1です。</p></div></details>
+<details class="note"><summary>一埜の小問：Z₁(1)とZ₁(0)は？</summary><div><p>Z₁(1)は＋に−をつけた1/2。Z₁(0)は何もつけないので1です。</p></div></details>
+<p class="source">照合先：MAIN.md §2.3。</p>
+<nav class="chapter-nav" aria-label="第14話の移動"><a href="#ch13">← 前の話</a><a href="#contents">目次</a><a href="#ch15">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch15" aria-labelledby="title15">
+<h2 id="title15">第15話　尻尾を通すと、何文字になる？</h2>
+<dl class="talk">
+<dt>一彌</dt><dd>「次の敵は\(C_j(p)\)だ。かっこいいが、何の係数なのか説明せよと言われると、ぼくは急にお茶を淹れたくなる。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（では一文字から。a＝0に−をつけると−1。それをV₀へ通すと1/ωよ。出力の基点V₀(0)＝1から見ると、その−の尻尾はω文字になるの。）」</dd>
+</dl>
+<div class="formula">\[C_0(p)=\omega^{p+1},\quad P(0)=0,\quad C_0(0)=\omega\]</div>
+<div class="formula">\[V_0(Z_0(1))=V_0(-1)=Z_1(\omega)=1/\omega\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「一文字の−が、ω文字に伸びた！ Cはその伸び方を教えるんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（入力pは<strong>基点の＋位置型</strong>、jは通す関数の階層。Cⱼ(p)が出力側での一文字分の−の長さよ。t文字なら順序数の積Cⱼ(p)tになる。）」</dd>
+</dl>
+<div class="formula">\[V_j(Z_a(t))=Z_{V_j(a)}\bigl(C_j(P(a))t\bigr)\]</div>
+<div class="formula">\[C_{j+1}(p)=C_j(\varphi_{j+1}(p))^\omega\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「j＝0、p＝0で次を作ると、\(C_1(0)=C_0(\varepsilon_0)^\omega=(\omega^{\varepsilon_0+1})^\omega=\varepsilon_0^\omega\)！ 使う前のP(a)が必要なのだな。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（＋側には、別の伸長則があるわ。こちらの式は<strong>t＞0</strong>が条件よ。）」</dd>
+</dl>
+<div class="formula">\[P(V_j(a))=\varphi_j(P(a)),\qquad V_j(Y_a(t))=Y_{V_j(a)}\bigl(\varphi_j(P(a)+t)\bigr)\quad(t&gt;0)\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「a＝0、j＝0、t＝1なら、長さはφ₀(1)＝ω。だからV₀(1)＝Y₁(ω)＝ω！ 1＋ω＝ωの吸収が、長さに使われてる！」</dd>
+<dt>一彌</dt><dd>「Pを定義した理由が、ようやく見えた！ 数全体を計算しなくても、尻尾がどう伸びるかに必要な情報を取り出せるのか！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。この二つの伸長則は資料の定理。今の例は公式を使う練習で、全入力で成り立つ証明の代わりではないわ。）」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：C₀(0)を使い、−二文字の出力尾部長を求めよう。</summary><div><p>ω・2です。2・ωではありません。公式は\(C_0(0)t\)の順です。したがって\(V_0(-2)=Z_1(\omega\cdot2)\)。</p></div></details>
+<p class="source">照合先：MAIN.md 定理4.1、式(4.1)–(4.3)。係数の例はその代入計算。</p>
+<nav class="chapter-nav" aria-label="第15話の移動"><a href="#ch14">← 前の話</a><a href="#contents">目次</a><a href="#extra01">二進分数の補講へ →</a></nav>
+</section>
+<section class="inner_wrapper" id="extra01" aria-labelledby="extra-title01">
+<p class="date">2026/11/04 追加 · 第15話のあとに読む補講A</p>
+<h2 id="extra-title01">補講A　第二変数の半分――固定点の世界で席を選ぶ</h2>
+<p class="stage">＊補講。一埜が赤い眼鏡を直し、紙の「Φ」の右に、二つの空欄を描いた。＊</p>
+<dl class="talk">
+<dt>一埜</dt><dd>「お兄ちゃん、半分を入れるのって、こっち？ それともこっち？」</dd>
+</dl>
+<div class="formula">\[\Phi\left(1,\boxed{\frac12}\right)\qquad\text{と}\qquad\Phi\left(\boxed{\frac12},0\right)\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「…………どちらも、すごそう！」</dd>
+<dt>一埜</dt><dd>「二つの空欄に、同じ感想を入れないで！ｗ💦」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（まず第二変数からね。追加で参照する研究ノートの第1章では、\(\Phi(1,x)=V_1(x)\)と定めているわ。今回はこれをE(x)と略しましょう。後で出る尾部の順序数Eⱼとは別の記号よ。）」</dd>
+</dl>
+<div class="formula">\[E(x):=\Phi(1,x)=V_1(x),\qquad\mathscr F_0=\{y:V_0(y)=y\}\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「第一変数1はそのまま。入力xの席を変えて、出力はいつもω写像の固定点の世界にいるんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。二進分数は、整数を2の冪で割った数。まず1/2、1/4、3/4を、符号列と左右の選択肢で並べましょう。）」</dd>
+</dl>
+<div class="table-scroll" tabindex="0"><table><caption>入力xの正準な左右集合（真の符号prefixから作る）</caption><thead><tr><th scope="col">x</th><th scope="col">符号</th><th scope="col">左集合Lₓ</th><th scope="col">右集合Rₓ</th><th scope="col">同じ数を表す短いcut</th></tr></thead><tbody><tr><td>1/2</td><td>＋−</td><td>{0}</td><td>{1}</td><td>{0｜1}</td></tr><tr><td>1/4</td><td>＋−−</td><td>{0}</td><td>{1/2, 1}</td><td>{0｜1/2}</td></tr><tr><td>3/4</td><td>＋−＋</td><td>{0, 1/2}</td><td>{1}</td><td>{1/2｜1}</td></tr></tbody></table></div>
+<dl class="talk">
+<dt>一彌</dt><dd>「正準な集合はprefixを全部拾う。短い表示では、例えば1/4の右側の1を省ける。1/2より小さければ、1よりも小さいからだな！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（次に、その選択肢をEで写すの。\(e_h=E(1/2)\)、\(e_q=E(1/4)\)、\(e_t=E(3/4)\)と名づけましょう。下付きのh、q、tはこの補講だけの目印よ。）」</dd>
+</dl>
+<div class="formula">\[E(0)=\varepsilon_0,\qquad E(1)=\varepsilon_1\]</div>
+<div class="table-scroll" tabindex="0"><table><caption>出力を選ぶための内部cut。探索する世界はℱ₀＝Fix(V₀)</caption><thead><tr><th scope="col">選ぶ値</th><th scope="col">写した左集合</th><th scope="col">写した右集合</th></tr></thead><tbody><tr><td>eₕ＝Φ(1, 1/2)</td><td>{ε₀}</td><td>{ε₁}</td></tr><tr><td>e_q＝Φ(1, 1/4)</td><td>{ε₀}</td><td>{eₕ, ε₁}</td></tr><tr><td>e_t＝Φ(1, 3/4)</td><td>{ε₀, eₕ}</td><td>{ε₁}</td></tr></tbody></table></div>
+<dl class="talk">
+<dt>一埜</dt><dd>「最初にε₀とε₁。その間の、いちばん単純な固定点がeₕ。次にε₀とeₕの間でe_q、eₕとε₁の間でe_tを選ぶ！」</dd>
+</dl>
+<div class="formula">\[\varepsilon_0&lt;e_q&lt;e_h&lt;e_t&lt;\varepsilon_1,\qquad V_0(e_q)=e_q,\ V_0(e_h)=e_h,\ V_0(e_t)=e_t\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「では\(e_h=\{\varepsilon_0\mid\varepsilon_1\}\)と書けば……。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（その括弧を普通の超現実数全体のcutとして読むと、違う値になるわ。\(\{\varepsilon_0\mid\varepsilon_1\}=\varepsilon_0+1\)。これはω写像の固定点ではないの。）」</dd>
+<dt>一埜</dt><dd>「「固定点の世界の中で、最も単純」という条件を、外しちゃだめなんだ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。この補講で\(\{L\mid R\}_{\mathscr F_0}\)と書くときは、その条件つきの内部cutを表すことにしましょう。）」</dd>
+</dl>
+<div class="formula">\[e_h=\{\varepsilon_0\mid\varepsilon_1\}_{\mathscr F_0},\quad e_q=\{\varepsilon_0\mid e_h\}_{\mathscr F_0},\quad e_t=\{e_h\mid\varepsilon_1\}_{\mathscr F_0}\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「席を半分に増やしているのであって、固定点の値を算術平均しているんじゃないんだね。」</dd>
+</dl>
+<details class="note"><summary>補講Aの小問：eₕへV₀を繰り返し適用すると、e_qへ近づく？</summary><div><p>近づきません。eₕはすでに固定点なので、ずっとeₕのままです。ここでの「経由」は、既知の固定点を左右の境界にして新しい固定点を標準的に選ぶこと。固定点に同じ関数をかけ続けて別の固定点へ移ることではありません。</p></div></details>
+<p class="source">照合先：追加参照：01-EPSILON-ROW.md §1.2・§1.5–1.7、EPSILON-THEOREMS.md。有限入力の正準cutは符号prefixからの計算。</p>
+<nav class="chapter-nav" aria-label="補講Aの移動"><a href="#ch15">← 前へ</a><a href="#contents">目次</a><a href="#extra02">次へ →</a></nav>
+</section>
+<section class="inner_wrapper" id="extra02" aria-labelledby="extra-title02">
+<p class="date">2026/11/04 追加 · 第15話のあとに読む補講B</p>
+<h2 id="extra-title02">補講B　第二変数の半分――出力の符号と本当の左右集合</h2>
+<dl class="talk">
+<dt>一彌</dt><dd>「固定点の世界の中では、左右がわかった！ でも、超現実数全体の普通のcutとしては、どんな左右集合になるのだ？」</dd>
+<dt>一埜</dt><dd>「入力の選択肢を写しただけでは足りない、ってさっき習ったね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そこで第15話の伸長則を使うの。入力の符号列から、\(1/2=Z_1(1)\)、\(1/4=Z_1(2)\)、\(3/4=Y_{1/2}(1)\)だったわ。）」</dd>
+</dl>
+<div class="formula">\[P(1)=1,\qquad P(1/2)=1,\qquad \rho:=C_1(1)=\varepsilon_1^\omega\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「ρ、ローは−の一文字を通したときの長さ！ 基点1をV₁へ通すとε₁になるから……！」</dd>
+</dl>
+<div class="formula">\[e_h=V_1(Z_1(1))=Z_{\varepsilon_1}(\rho),\qquad e_q=V_1(Z_1(2))=Z_{\varepsilon_1}(\rho\cdot2)\]</div>
+<div class="formula">\[e_t=V_1(Y_{1/2}(1))=Y_{e_h}(\varphi_1(1+1))=Y_{e_h}(\varepsilon_2)\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（ここでε₁やε₂を基点に書くときは、超現実数への埋め込みιを省略しているわ。ρやρ・2は順序数の長さよ。）」</dd>
+</dl>
+<div class="table-scroll" tabindex="0"><table><caption>出力の正確な符号ブロック（反復する符号とその長さ）</caption><thead><tr><th scope="col">値</th><th scope="col">符号列</th></tr></thead><tbody><tr><td>eₕ</td><td>＋をε₁個、その後−をρ個</td></tr><tr><td>e_q</td><td>＋をε₁個、その後−をρ・2個</td></tr><tr><td>e_t</td><td>eₕの符号列の後ろに＋をε₂個</td></tr></tbody></table></div>
+<dl class="talk">
+<dt>一埜</dt><dd>「出力の＋の長さがε₁なら、入力の左境界だったε₀以外にも、途中で切れる場所がたくさんあるね！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（その通り。<strong>＋の直前で切ったprefixが左option、−の直前で切ったprefixが右option</strong>。これで出力の正準cutを全部書けるの。）」</dd>
+</dl>
+<div class="formula">\[\mathcal L(e_h)=\{\iota(\alpha):\alpha&lt;\varepsilon_1\},\qquad \mathcal R(e_h)=\{Z_{\varepsilon_1}(\beta):\beta&lt;\rho\}\]</div>
+<div class="formula">\[e_h=\left\{\,\iota(\alpha)\ (\alpha&lt;\varepsilon_1)\ \middle|\ Z_{\varepsilon_1}(\beta)\ (\beta&lt;\rho)\,\right\}\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「こちらの括弧には固定点世界の添字がない。普通の超現実数全体のcutだ！」</dd>
+<dt>一埜</dt><dd>「右側はβ＝0ならε₁、β＝1ならその後ろに−を一つつけた数……。ρまで届く前の切れ目を、全部入れるんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。βは自然数だけでなく、ρ未満の<strong>すべての順序数</strong>よ。最終値eₕそのものを右集合には含めないわ。）」</dd>
+</dl>
+<details class="note"><summary>1/4と3/4の出力も、左右集合を全部見る</summary><div><p>\(\mathcal L(e_q)=\{\iota(\alpha):\alpha&lt;\varepsilon_1\}\)、\(\mathcal R(e_q)=\{Z_{\varepsilon_1}(\beta):\beta&lt;\rho\cdot2\}\)。したがってβ＝ρでeₕが右optionとして入ります。</p><p>\(\mathcal L(e_t)=\mathcal L(e_h)\cup\{Y_{e_h}(\beta):\beta&lt;\varepsilon_2\}\)、\(\mathcal R(e_t)=\mathcal R(e_h)\)。β＝0でeₕが左optionとして入ります。それぞれ、これらの左右集合による通常のConway cutがe_q、e_tです。</p></div></details>
+<dl class="talk">
+<dt>一埜</dt><dd>「e_qはeₕからさらに左へ符号を延ばし、e_tはeₕから右へ延ばす。入力の1/4と3/4の関係も、出力に写っている！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（こうして、内部cutでの存在と選び方に加えて、伸長定理から正確な符号表示が得られるわ。ここで追加した具体式とcutは、既存定理を代入し、prefixを読み取った数学的帰結。今回その式専用のLean証明を新しく実行した、という意味ではないの。）」</dd>
+<dt>一彌</dt><dd>「内側の世界で二つの目印を見る方法と、全体の世界で全切れ目を集める方法。同じ数への、二枚の地図だな！」</dd>
+</dl>
+<details class="note"><summary>補講Bの小問：eₕの正準左集合は{ε₀}だけ？</summary><div><p>いいえ。\(\iota(\alpha)\)（α＜ε₁）がすべて入ります。{ε₀}は、固定点世界の内部でE(1/2)を指定するときの左集合です。両者は用途が違います。</p></div></details>
+<p class="source">照合先：MAIN.md 定理4.1・§2.3・§5.5の正準option規則、FiniteVeblenAllMinusStretchCoefficient.lean、FiniteVeblenPlusStretchAllRowsExact.lean。個別式はこれらからの数学的帰結。</p>
+<nav class="chapter-nav" aria-label="補講Bの移動"><a href="#extra01">← 前へ</a><a href="#contents">目次</a><a href="#extra03">次へ →</a></nav>
+</section>
+<section class="inner_wrapper" id="extra03" aria-labelledby="extra-title03">
+<p class="date">2026/11/04 追加 · 第15話のあとに読む補講C</p>
+<h2 id="extra-title03">補講C　第一変数の半分――鏡を通って、別の行へ</h2>
+<p class="stage">＊一埜が二つ目の空欄を消し、今度はΦの最初の空欄に「1/2」と書いた。＊</p>
+<dl class="talk">
+<dt>一埜</dt><dd>「じゃあ今度は、第一変数の半分！ 第二変数は、まず0にしておこう。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（第一変数の左右集合は、補講Aの表と同じ。1/2なら左{0}・右{1}、1/4なら左{0}・右{1/2,1}、3/4なら左{0,1/2}・右{1}よ。ただ、そこから新しい行を作るときには、この研究の<strong>有限mirror規則</strong>を使うの。）」</dd>
+<dt>一彌</dt><dd>「例えば「Φ(0,0)とΦ(1,0)の間の最も単純な数」を取るだけではないのだな。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。有限の符号列wで選んだ行をG_w(x)と書きましょう。研究ノートではF_wという名前だけれど、本編のスペクトルFと区別して、ここではGを使うわ。＋だけn個ならG＝Vₙ。空列ならV₀よ。）」</dd>
+</dl>
+<div class="formula">\[G_{+^n}(x)=V_n(x),\qquad G_\varnothing(x)=V_0(x)\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（正の非整数のwordで、最初の−の前に＋がk個あるとする。その−を＋に変え、後ろの符号を全部反転したwordを\(w^\uparrow\)と呼ぶの。）」</dd>
+</dl>
+<div class="formula">\[G_w(x)=V_k\bigl(-G_{w^\uparrow}(-x)\bigr)\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「入力xも反転、内側の出力も反転。sourceの文字を変えることとは、別に二回の負号があるんだね。」</dd>
+</dl>
+<pre class="terminal"><code>NyankoPad
+第一変数 1/2 : ＋−  → 鏡 → ＋＋   : 2
+第一変数 1/4 : ＋−− → 鏡 → ＋＋＋ : 3
+第一変数 3/4 : ＋−＋ → 鏡 → ＋＋− : 3/2
+             ＋＋− → 鏡 → ＋＋＋ : 3</code></pre>
+<div class="formula">\[\Phi(1/2,x)=V_1(-V_2(-x)),\qquad\Phi(1/4,x)=V_1(-V_3(-x))\]</div>
+<div class="formula">\[\Phi(3/2,x)=V_2(-V_3(-x)),\qquad\Phi(3/4,x)=V_1(-V_2(-V_3(x)))\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「3/4は二回折り返すのか！ \(V_1(-\Phi(3/2,-x))\)の中へ代入すると、最後のV₃の入力はxになる！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ではx＝0で、通る値と固定点の階層を追いましょう。\(\Theta_2=V_2(0)=\zeta_0\)、\(\Theta_3=V_3(0)\)よ。）」</dd>
+</dl>
+<div class="formula">\[0\ \xrightarrow{V_2}\ \Theta_2\ \xrightarrow{-}\ -\Theta_2\ \xrightarrow{V_1}\ A:=\Phi(1/2,0)\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「Θ₂はV₁の固定点で、V₀の固定点でもある。その負数−Θ₂をV₁へ入れ、最後はまたV₀の固定点を得る！」</dd>
+</dl>
+<div class="formula">\[0\ \xrightarrow{V_3}\ \Theta_3\ \xrightarrow{-}\ -\Theta_3\ \xrightarrow{V_1}\ B:=\Phi(1/4,0)\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（こちらのΘ₃はV₂、V₁、V₀すべてで固定される。ただし<strong>負号で反転した中間値まで固定点とは限らない</strong>わ。−Θ₃は負で、V₀の値は正だから、少なくともV₀の固定点ではないの。）」</dd>
+</dl>
+<div class="formula">\[0\xrightarrow{V_3}\Theta_3\xrightarrow{-}-\Theta_3\xrightarrow{V_2}U\xrightarrow{-}-U\xrightarrow{V_1}D:=\Phi(3/4,0)\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「3/4の途中の\(U=V_2(-\Theta_3)\)は、V₁の固定点！ そこをまた反転して、最外側V₁に渡す。高い固定点から負の座標へ折り返すから、「半回だけ反復」では説明できないな。」</dd>
+<dt>一埜</dt><dd>「そして最終値A、B、Dは全部V₀の固定点。第一変数を半分にしても、固定点の値を半分にしているわけじゃない！」</dd>
+</dl>
+<details class="note"><summary>補講Cの小問：Φ(1/8,x)の合成式は？</summary><div><p>1/8の符号は＋−−−。mirrorすると＋＋＋＋なので、\(\Phi(1/8,x)=V_1(-V_4(-x))\)。x＝0なら、まずΘ₄＝V₄(0)という高位固定点を取り、反転してV₁へ渡します。</p></div></details>
+<p class="source">照合先：追加参照：02-FINITE-MIRROR.md §2.4–2.6・§2.10、FINITE-MIRROR-THEOREMS.md F03–F06・F12。3/4・3/2・1/8の式は同規則の展開。</p>
+<nav class="chapter-nav" aria-label="補講Cの移動"><a href="#extra02">← 前へ</a><a href="#contents">目次</a><a href="#extra04">次へ →</a></nav>
+</section>
+<section class="inner_wrapper" id="extra04" aria-labelledby="extra-title04">
+<p class="date">2026/11/04 追加 · 第15話のあとに読む補講D</p>
+<h2 id="extra-title04">補講D　第一変数の半分――出力の左右まで開けてみよう</h2>
+<dl class="talk">
+<dt>一埜</dt><dd>「合成の道順はわかった！ AやBやD自身を、普通のcutとしても見たいな。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（第一変数のwordに一文字付けると、第二変数0での出力には、符号のブロックが一つつくの。長さℓのwordに付けた文字のブロック長は\(\Theta_{\ell+1}\)。これは有限rootのブロック定理を使うわ。）」</dd>
+</dl>
+<div class="formula">\[G_{w+}(0)=Y_{G_w(0)}(\Theta_{\ell+1}),\qquad G_{w-}(0)=Z_{G_w(0)}(\Theta_{\ell+1})\quad(\ell=|w|)\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「G₊(0)＝ε₀から始めよう。＋−なら、−のブロックをΘ₂個！」</dd>
+</dl>
+<div class="formula">\[A=Z_{\varepsilon_0}(\Theta_2),\qquad B=Z_A(\Theta_3)=Z_{\varepsilon_0}(\Theta_3),\qquad D=Y_A(\Theta_3)\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（Bの簡約では、連結長が\(\Theta_2+\Theta_3=\Theta_3\)と吸収されるの。ここは順序数の足し算。AからBへはさらに−が延びるから、値は小さくなるわ。）」</dd>
+</dl>
+<div class="formula">\[0&lt;B&lt;A&lt;D&lt;\varepsilon_0\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「第二変数が半分のeₕはε₀より大きかったのに、第一変数が半分のAはε₀より小さい！ 全然違う数だ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（では普通の正準cutを読みましょう。＋位置の直前で切ったものを左、−位置の直前で切ったものを右へ集める規則は、補講Bと同じよ。）」</dd>
+</dl>
+<div class="formula">\[\mathcal L(A)=\{\iota(\alpha):\alpha&lt;\varepsilon_0\},\qquad\mathcal R(A)=\{Z_{\varepsilon_0}(\beta):\beta&lt;\Theta_2\}\]</div>
+<div class="formula">\[A=\left\{\,\iota(\alpha)\ (\alpha&lt;\varepsilon_0)\ \middle|\ Z_{\varepsilon_0}(\beta)\ (\beta&lt;\Theta_2)\,\right\}\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「この左集合には0、1、2、ω……と、ε₀未満の順序数が全部入る。右集合の最初はε₀！」</dd>
+<dt>一埜</dt><dd>「sourceの1/2のcutは{0｜1}だけだったのに、出力のcutはこんなに広がるんだね。」</dd>
+</dl>
+<div class="formula">\[\mathcal L(B)=\mathcal L(A),\qquad\mathcal R(B)=\{Z_{\varepsilon_0}(\beta):\beta&lt;\Theta_3\}\]</div>
+<div class="formula">\[\mathcal L(D)=\mathcal L(A)\cup\{Y_A(\beta):\beta&lt;\Theta_3\},\qquad\mathcal R(D)=\mathcal R(A)\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（Bの右集合には、β＝Θ₂でAが入る。Dの左集合には、β＝0でAが入る。それぞれこの左右集合の通常のcutが、B、Dそのものなの。）」</dd>
+<dt>一彌</dt><dd>「Aが二つの枝の分かれ目になる！ でも、第一変数の値を左右から挟んで、Φをそのままかけた集合で十分とは言えないのだな。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（試しに\(\{\Phi(0,0)\mid\Phi(1,0)\}=\{1\mid\varepsilon_0\}\)を普通のcutとして取ると2になるわ。Aとは違う。sourceのcut、固定点世界の内部cut、出力の正準cutを区別する理由ね。）」</dd>
+</dl>
+<div class="table-scroll" tabindex="0"><table><caption>同じ1/2・1/4・3/4でも、入れる欄で変わる</caption><thead><tr><th scope="col">分数a</th><th scope="col">第二変数：Φ(1,a)</th><th scope="col">第一変数：Φ(a,0)</th></tr></thead><tbody><tr><td>1/2</td><td>eₕ＝Z<sub>ε₁</sub>(ε₁<sup>ω</sup>)</td><td>A＝Z<sub>ε₀</sub>(Θ₂)</td></tr><tr><td>1/4</td><td>e_q＝Z<sub>ε₁</sub>(ε₁<sup>ω</sup>・2)</td><td>B＝Z<sub>ε₀</sub>(Θ₃)</td></tr><tr><td>3/4</td><td>e_t＝Y<sub>eₕ</sub>(ε₂)</td><td>D＝Y<sub>A</sub>(Θ₃)</td></tr></tbody></table></div>
+<dl class="talk">
+<dt>一埜</dt><dd>「左の列はε₀とε₁の間、右の列は0とε₀の間。それぞれに、左右の集合と固定点を通る道順があるんだね。」</dd>
+</dl>
+<details class="note"><summary>第一変数を増やすと、いつも値が大きくなる？</summary><div><p>上で並べたのは第二変数0の例です。任意のxへ一般化できません。例えばa＝V₄(0)、x＝−aなら、下位固定性V₂(a)＝a＝V₃(a)から、\(\Phi(1/4,x)=V_1(-a)=\Phi(1/2,x)\)。別々の第一変数で値が一致します。一方、各行の内部では第二変数について厳密単調です。</p></div></details>
+<dl class="talk">
+<dt>一彌</dt><dd>「よし！ 二つの空欄を、同じものだと思わなくなったぞ。第一変数で行を選び、第二変数でその中の住所を選ぶ！」</dd>
+<dt>一埜</dt><dd>「次に無限のsourceを読むときも、どの欄を作っているのか確かめようね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（その準備ができたわ。続く補講E〜Gでは、いまのZの式に隠れている途中駅を、二分木の枝に沿って見てみましょう。）」</dd>
+</dl>
+<details class="note"><summary>補講Dの小問：Φ(1/4,0)の右集合にΦ(1/2,0)が入るのは、どのβ？</summary><div><p>β＝Θ₂です。Θ₂＜Θ₃なので、\(Z_{\varepsilon_0}(\Theta_2)=A\)はBの正準右optionになります。これは出力の符号列から読んだ事実です。</p></div></details>
+<p class="source">照合先：MAIN.md 補題3.1・§2.3・§5.5、OmegaSourceZeroBirthdayExact.leanの有限rootブロック、02-FINITE-MIRROR.md §2.8–2.10。個別の正準cutは既存定理からの数学的帰結。</p>
+<nav class="chapter-nav" aria-label="補講Dの移動"><a href="#extra03">← 前へ</a><a href="#contents">目次</a><a href="#extra05">次へ →</a></nav>
+</section>
+<section class="inner_wrapper" id="extra05" aria-labelledby="extra-title05">
+<p class="date">2026/11/04 追加 · 第15話のあとに読む補講E</p>
+<h2 id="extra-title05">補講E　負一番目のイプシロンへ――同じ枝の途中駅</h2>
+<p class="stage">＊補講の続き。一彌が、ノートに大きな木を描いた。葉っぱの代わりに、イプシロンがいくつもぶら下がっている。＊</p>
+<dl class="talk">
+<dt>一彌</dt><dd>「Φ(1,−1)に至るまでに、ε₀、ε₀−1、ε₀/2、ωの肩にε₀−1を載せた数……と通る気がするのだ！ この途中駅にも、名前と左右集合をつけたい！」</dd>
+<dt>一埜</dt><dd>「前の補講では、Zの括弧の中に巨大な長さが入っていたよね。その中に、途中駅が隠れてるの？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。今回は<strong>算術式・Φの式・符号の長さ・左右集合</strong>を、一枚の地図に重ねましょう。まずは負一番目のイプシロン数から。）」</dd>
+</dl>
+<div class="formula">\[\varepsilon_{-1}:=\Phi(1,-1)=V_1(-1),\qquad \eta:=\varepsilon_0=\Phi(1,0)\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（この話のηはε₀。次の話ではε₁に取り替えるわ。ηを数として使うときは、順序数の埋め込みιを省いているの。引き算と割り算は超現実数の体の演算。Zの引数に入れる長さの計算は順序数の演算よ。）」</dd>
+<dt>一埜</dt><dd>「ε₀−1って、ε₀の直前の順序数ではないんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（その通り。ε₀は極限順序数だから、直前の順序数はない。一方、超現実数のε₀−1はちゃんとあるわ。）」</dd>
+</dl>
+<div class="formula">\[\eta-1=Z_\eta(1),\qquad \frac\eta2=Z_\eta(\eta)\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「前者は−を一文字、後者は−をη文字！ 同じ符号の枝の、ずっと先なのか！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（後者はmonomialの半減定理を使うの。\(\omega^x/2=Z_{\omega^x}(\omega^{P(x)})\)。x＝ηならP(η)＝η、ω^η＝ηだから、この長さになるわ。）」</dd>
+<dt>一埜</dt><dd>「1/2を「どこへ入れたか」と同じで、ηを半分にすることと、−の文字数を半分にすることも違うんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（次の駅のために、κ、カッパとρ、ローを用意するわ。どちらも<strong>尾部の長さに使う順序数</strong>よ。）」</dd>
+</dl>
+<div class="formula">\[\kappa:=C_0(\eta)=\omega^{\eta+1}=\eta\cdot\omega,\qquad \rho_0:=C_1(0)=\varepsilon_0^\omega\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（ω写像V₀へ通すと、−の尾部長tはκ・tへ伸びる。基点η自身は固定点なので動かないの。）」</dd>
+</dl>
+<div class="formula">\[\Phi(0,Z_\eta(t))=V_0(Z_\eta(t))=Z_\eta(\kappa\cdot t)\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「ではη−1＝Zη(1)を入れると、長さκ！ もう一度ならκ²！」</dd>
+</dl>
+<div class="formula">\[a_0(\eta):=\Phi(0,\eta-1)=\omega^{\eta-1}=\frac\eta\omega,\qquad a_{n+1}(\eta):=\Phi(0,a_n(\eta))\]</div>
+<div class="formula">\[a_n(\eta)=Z_\eta(\kappa^{n+1})\quad(n=0,1,2,\ldots)\]</div>
+<div class="table-scroll" tabindex="0"><table><caption>ε₀から降りる途中駅。各行の値はZη(t)、η＝ε₀</caption><thead><tr><th scope="col">算術・固定点の表記</th><th scope="col">Φを使った表記</th><th scope="col">−の尾部長t</th></tr></thead><tbody><tr><td>ε₀</td><td>\(\Phi(1,0)\)</td><td>0</td></tr><tr><td>ε₀−1</td><td>\(\Phi(1,0)-1\)</td><td>1</td></tr><tr><td>ε₀/2</td><td>\(\Phi(1,0)/2\)</td><td>ε₀</td></tr><tr><td>ω^(ε₀−1)</td><td>\(\Phi(0,\Phi(1,0)-1)\)</td><td>κ</td></tr><tr><td>ω^(ω^(ε₀−1))</td><td>\(\Phi(0,\Phi(0,\Phi(1,0)-1))\)</td><td>κ²</td></tr><tr><td>aₙ(ε₀)</td><td>ε₀−1にΦ(0,−)をn＋1回</td><td>κⁿ⁺¹</td></tr><tr class="highlight"><td>ε₋₁</td><td>\(\Phi(1,-1)\)</td><td>ρ₀＝ε₀^ω</td></tr></tbody></table></div>
+<dl class="talk">
+<dt>一埜</dt><dd>「表のΦ(0,−)の−は、「ここに入力を入れてね」という空欄だね。入力を負にする記号ではない！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。冪の塔は\(\omega^{(\omega^{(\eta-1)})}\)のように、右側を先に計算してね。また、途中駅を全部Φ(1,u)と書くわけではない。η−1やη/2、各aₙはω写像の固定点ではないから、イプシロンrowの値にはならないの。）」</dd>
+</dl>
+<figure class="branch-map"><figcaption>超限二分木の一本の枝を抜粋。下へ行くほど符号列は長くなり、値は小さくなる。破線区間では多数の節点を省略。</figcaption><ol class="branch-spine"><li><strong>ε₀＝＋をε₀個</strong><span class="branch-off">＋の枝 → ε₀＋1</span><span class="branch-step">−を一文字</span></li><li>ε₀−1<span class="branch-off">＋の枝 → 今回は進まない</span><span class="branch-step">−を延ばす（途中省略）</span></li><li>ε₀/2<span class="branch-step">−を延ばす（途中省略）</span></li><li>a₀(ε₀) → a₁(ε₀) → …<span class="branch-step">符号列の合併：尾部長の上限ρ₀へ</span></li><li><strong>ε₋₁＝Φ(1,−1)＝Z<sub>ε₀</sub>(ρ₀)</strong></li></ol></figure>
+<dl class="talk">
+<dt>一埜</dt><dd>「数として小さい、だけじゃなくて、本当に全部が次の駅のprefixになっている！ でも図の二駅が、いつも一本の辺で隣り合うわけではないんだ。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そこが大事ね。極限長の節点には、直前の一文字の親がない場合もある。「通る」は符号列のprefixとして途中に現れる、という意味よ。有限時間で無限個の駅を通過する手順ではないわ。）」</dd>
+<dt>一彌</dt><dd>「最後のρ₀に着く理由は？」</dd>
+</dl>
+<div class="formula">\[\sup_{n&lt;\omega}\kappa^{n+1}=\kappa^\omega=(\omega^{\eta+1})^\omega=\eta^\omega=\rho_0\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（そして−1＝Z₀(1)に、V₁の伸長則を使うと……。）」</dd>
+</dl>
+<div class="formula">\[\Phi(1,-1)=V_1(Z_0(1))=Z_{\varepsilon_0}(C_1(0))=Z_{\varepsilon_0}(\rho_0)\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「同じ長さ、同じ＋と−！ aₙの符号列を全部つなぎ合わせた先が、本当にΦ(1,−1)だとわかった！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（「つなぎ合わせる」は、重なっているprefixの<strong>合併</strong>という意味ね。各aₙの符号列を端から端へ連結するのではないわ。ここで得たのはsimplicityの上限。通常の大小順序の下限とは区別しましょう。）」</dd>
+<dt>一彌</dt><dd>「では、お待ちかねの左右集合を！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ηは＋だけの順序数だから、Zη(t)の左集合は、ηより短い＋だけの列。右集合は、その後ろの−の途中で切った列よ。これが表の<strong>全行に共通する正準cut</strong>なの。）」</dd>
+</dl>
+<div class="formula">\[\mathcal L_\eta:=\{\iota(\alpha):\alpha&lt;\eta\},\qquad \mathcal R_\eta(t):=\{Z_\eta(\beta):\beta&lt;t\}\]</div>
+<div class="formula">\[Z_\eta(t)=\{\mathcal L_\eta\mid\mathcal R_\eta(t)\}\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「ℒηは左の集合。ℛηは、長さtを入れると右の集合を返すんだね。t＝1なら右はη一個、t＝ηならβ＜ηを全部！」</dd>
+</dl>
+<div class="formula">\[\eta-1=\{\iota(\alpha)\ (\alpha&lt;\eta)\mid\eta\},\qquad \frac\eta2=\{\iota(\alpha)\ (\alpha&lt;\eta)\mid Z_\eta(\beta)\ (\beta&lt;\eta)\}\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（目的地にも二種類の書き方があるわ。全prefixを使う正準cutと、右側を十分先まで届くaₙだけに絞った、同じ数を表すcutよ。）」</dd>
+</dl>
+<div class="formula">\[\varepsilon_{-1}=\{\mathcal L_{\varepsilon_0}\mid\mathcal R_{\varepsilon_0}(\rho_0)\}=\{\iota(\alpha)\ (\alpha&lt;\varepsilon_0)\mid a_n(\varepsilon_0)\ (n&lt;\omega)\}\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「右側の長さκⁿ⁺¹は、ρ₀未満のどの長さよりも、いずれ先に行く。だから、途中の右optionを全部書かなくても同じ制約になるのか！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。固定点世界の内部cutなら、もっと短く\(\varepsilon_{-1}=\{\varnothing\mid\varepsilon_0\}_{\mathscr F_0}\)。けれど普通のcutで左側を空にしたら0になる。この二つの括弧の意味を忘れないでね。）」</dd>
+</dl>
+<details class="note"><summary>今回、原資料の「上側の目印」から一歩進めた根拠</summary><div><p>01-EPSILON-ROW.md §1.2とEpsilonDescendingExamples.leanは、下降性と目的の固定点より上であることを示しています。それだけではprefixや目的地のcutは決まりません。本補講ではさらに、monomialの半減・減算定理とMAIN.md定理4.1の全順序数長の伸長則を適用し、各点をZη(t)と同定しました。尾部長の共終性から、符号列の合併と上記の通常cutが目的地に一致すると導いています。これは既存定理からの数学的導出で、今回新たにLeanでコンパイルした個別定理ではありません。</p></div></details>
+<details class="note"><summary>補講Eの小問：aₙの下降列だけを見て{0｜aₙ : n＜ω}と書けば、ε₋₁になる？</summary><div><p>なりません。その普通のcutは1です。すべてのaₙはε₋₁より大きく、ε₋₁はε₀未満の全順序数より大きいので、特に1より大きいからです。ε₋₁を選ぶには、上記の左集合も必要です。</p></div></details>
+<p class="source">照合先：01-EPSILON-ROW.md §1.2・§1.7、MAIN.md 定理4.1、MonomialAllRanksHalfExact.lean（monomial_half_exact_allRanks）、PositiveMonomialChildArithmetic.lean。prefix・共終部分cutの個別式は既存定理からの導出。</p>
+<nav class="chapter-nav" aria-label="補講Eの移動"><a href="#extra04">← 前へ</a><a href="#contents">目次</a><a href="#extra06">次へ →</a></nav>
+</section>
+<section class="inner_wrapper" id="extra06" aria-labelledby="extra-title06">
+<p class="date">2026/11/04 追加 · 第15話のあとに読む補講F</p>
+<h2 id="extra-title06">補講F　半番目のイプシロンへ――引き算にも駅がある</h2>
+<p class="stage">＊一埜が木の根元の「ε₀」を消して「ε₁」に書き換える。一彌は、その横に「ε₁−ε₀」という駅を描き足した。＊</p>
+<dl class="talk">
+<dt>一埜</dt><dd>「今度はΦ(1,1/2)！ さっきの木を、大きくするだけでいいの？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（骨組みは同じよ。この話では\(\eta:=\varepsilon_1=\Phi(1,1)\)、\(\kappa:=\omega^{\eta+1}\)、\(\rho_1:=\eta^\omega\)とするわ。目的地は補講A・Bのeₕね。）」</dd>
+</dl>
+<div class="formula">\[e_h=\varepsilon_{1/2}:=\Phi(1,1/2)=Z_{\varepsilon_1}(\rho_1),\qquad \rho_1=\varepsilon_1^\omega\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「ε₁−1は−を1個。ε₁/2は−をε₁個。では、ε₁−ε₀はどこだ！？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そこは<strong>−をε₀個</strong>つけた駅になるわ。monomialの減算定理に、指数x＝ε₁、より単純な指数a＝ε₀を入れるの。）」</dd>
+</dl>
+<div class="formula">\[Z_{\omega^x}(\omega^{P(a)})=\omega^x-\omega^a\qquad(a\prec_s x,\ a&lt;x)\]</div>
+<div class="formula">\[Z_{\varepsilon_1}(\varepsilon_0)=\varepsilon_1-\varepsilon_0\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「ε₀はε₁より短い＋だけの列。だから指数の条件も満たす！ ω^ε₀＝ε₀なので、引く数と尾部の長さが同じ名前になるんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。ただし、これを「いつでもZₓ(t)＝x−t」と覚えてはいけないわ。実際、t＝ε₁まで来ると、Zε₁(ε₁)は0ではなくε₁/2だったでしょう。）」</dd>
+</dl>
+<div class="table-scroll" tabindex="0"><table><caption>Φ(1,1/2)への対応表。左集合は全行でℒη、右集合はℛη(t)。η＝ε₁</caption><thead><tr><th scope="col">途中駅</th><th scope="col">Φを使った表記</th><th scope="col">Zη(t)のt</th></tr></thead><tbody><tr><td>ε₁</td><td>\(\Phi(1,1)\)</td><td>0</td></tr><tr><td>ε₁−1</td><td>\(\Phi(1,1)-1\)</td><td>1</td></tr><tr><td>ε₁−ε₀</td><td>\(\Phi(1,1)-\Phi(1,0)\)</td><td>ε₀</td></tr><tr><td>ε₁/2</td><td>\(\Phi(1,1)/2\)</td><td>ε₁</td></tr><tr><td>ω^(ε₁−1)＝ε₁/ω</td><td>\(\Phi(0,\Phi(1,1)-1)\)</td><td>κ＝ε₁・ω</td></tr><tr><td>ω^(ω^(ε₁−1))</td><td>\(\Phi(0,\Phi(0,\Phi(1,1)-1))\)</td><td>κ²</td></tr><tr><td>aₙ(ε₁)</td><td>ε₁−1にΦ(0,−)をn＋1回</td><td>κⁿ⁺¹</td></tr><tr class="highlight"><td>\(\varepsilon_{1/2}\)（添字が1/2）</td><td>\(\Phi(1,1/2)\)</td><td>ρ₁＝ε₁^ω</td></tr></tbody></table></div>
+<dl class="talk">
+<dt>一埜</dt><dd>「tが0、1、ε₀、ε₁、κ、κ²……と増える。だから値は逆に下がり、符号列は伸びるんだね。」</dd>
+</dl>
+<div class="formula">\[\varepsilon_1&gt;\varepsilon_1-1&gt;\varepsilon_1-\varepsilon_0&gt;\frac{\varepsilon_1}{2}&gt;a_0(\varepsilon_1)&gt;a_1(\varepsilon_1)&gt;\cdots&gt;\varepsilon_{1/2}&gt;\varepsilon_0\]</div>
+<figure class="branch-map"><figcaption>ε₁から−へ伸ばす枝。途中駅を省略して表示。分岐の＋側は今回の経路に含めない。</figcaption><ol class="branch-spine"><li><strong>ε₁＝＋をε₁個</strong><span class="branch-off">＋の枝 → ε₁＋1</span><span class="branch-step">−を一文字</span></li><li>ε₁−1<span class="branch-step">尾部長ε₀まで（途中省略）</span></li><li>ε₁−ε₀<span class="branch-step">尾部長ε₁まで（途中省略）</span></li><li>ε₁/2<span class="branch-step">尾部長κ、κ²、…へ</span></li><li>a₀(ε₁) → a₁(ε₁) → …<span class="branch-step">prefixの合併：尾部長ρ₁へ</span></li><li><strong>\(\varepsilon_{1/2}\)＝Φ(1,1/2)＝Z<sub>ε₁</sub>(ρ₁)</strong></li></ol></figure>
+<dl class="talk">
+<dt>一彌</dt><dd>「Φ(1,1/2)の図なのに、ε₀が二度出てくるな。途中で引くε₀と、最後より小さいε₀！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（役割が違うのね。引き算のε₀は途中駅を指定する量。内部cutのε₀は、目的地より下にある固定点の境界よ。出力の普通の正準cutでは、さらにε₁未満のすべての順序数を左に置くわ。）」</dd>
+</dl>
+<div class="formula">\[\varepsilon_1-\varepsilon_0=\{\iota(\alpha)\ (\alpha&lt;\varepsilon_1)\mid Z_{\varepsilon_1}(\beta)\ (\beta&lt;\varepsilon_0)\}\]</div>
+<div class="formula">\[\varepsilon_{1/2}=\{\mathcal L_{\varepsilon_1}\mid\mathcal R_{\varepsilon_1}(\rho_1)\}=\{\iota(\alpha)\ (\alpha&lt;\varepsilon_1)\mid a_n(\varepsilon_1)\ (n&lt;\omega)\}\]</div>
+<div class="formula">\[\varepsilon_{1/2}=\{\varepsilon_0\mid\varepsilon_1\}_{\mathscr F_0}\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「上の二つは普通のcut。最後は固定点の世界の中で選ぶcut。表のどの途中駅も、tをℛη(t)へ入れれば左右集合が書けるんだ！」</dd>
+<dt>一彌</dt><dd>「ε₁−ε₀は、Φだけで一つの固定点のように書けないのか？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（少なくともΦ(1,u)とは書けないわ。二つの異なる固定点の差は、ω写像の固定点ではない。ここでは\(\Phi(1,1)-\Phi(1,0)\)という、Φと体の演算を組み合わせた正確な式にするの。）」</dd>
+</dl>
+<div class="formula">\[\Phi(0,\Phi(1,1)-\Phi(1,0))=\frac{\varepsilon_1}{\varepsilon_0}\ne\varepsilon_1-\varepsilon_0\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「外側にΦ(0,−)を付けると、引き算が割り算の式に変わる！ Φを付け足すだけで同じ数を表せるわけじゃないんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。そしてこの経路のaₙは、先ほどと同じ\(a_n(\eta)=Z_\eta(\kappa^{n+1})\)。長さの上限はρ₁。1/2＝Z₁(1)へV₁の伸長則を使って得るρ₁とも一致するので、補講Bの式へ正確につながるのよ。）」</dd>
+</dl>
+<details class="note"><summary>補講Fの小問：ε₁−ε₀とε₁/2は、どちらが先に枝に現れる？</summary><div><p>ε₁−ε₀です。尾部長はそれぞれε₀とε₁で、ε₀＜ε₁。したがって前者の符号列が後者の真のprefixです。値の大小は逆で、ε₁−ε₀＞ε₁/2です。</p></div></details>
+<p class="source">照合先：MonomialAllRanksHalfExact.lean（monomial_ordinalRank_minus_ladder・monomial_half_exact_allRanks）、EpsilonMonomialQuotientObstruction.lean、MAIN.md 定理4.1。減算の個別代入・共終部分cutは数学的導出。</p>
+<nav class="chapter-nav" aria-label="補講Fの移動"><a href="#extra05">← 前へ</a><a href="#contents">目次</a><a href="#extra07">次へ →</a></nav>
+</section>
+<section class="inner_wrapper" id="extra07" aria-labelledby="extra-title07">
+<p class="date">2026/11/04 追加 · 第15話のあとに読む補講G</p>
+<h2 id="extra-title07">補講G　半段目の行へ――固定点の駅を、さらに通り抜ける</h2>
+<p class="stage">＊一彌が二枚の地図を並べる。片方の目的地にはΦ(1,−1)、もう片方にはΦ(1/2,0)と書かれている。＊</p>
+<dl class="talk">
+<dt>一彌</dt><dd>「最後はこれだ！ ε₀−1、ε₀/2、その先にε₋₁、ε₋ω、ε₋ε₀、ε₋εε₀……と進んで、第一変数が半分の行へ着くのだろう？」</dd>
+<dt>一埜</dt><dd>「さっきの目的地が、今度は途中駅になるの！？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そうよ。添字を読み違えないよう、一般に\(\varepsilon_x:=\Phi(1,x)\)と書くわ。たとえば\(\varepsilon_{-\varepsilon_0}\)は「添字が−ε₀の正の固定点」。\(-\varepsilon_{\varepsilon_0}\)という負の数とは違うの。）」</dd>
+</dl>
+<div class="formula">\[A:=\Phi(1/2,0)=\Phi(1,-\Phi(2,0)),\qquad \zeta:=\Phi(2,0)=\Theta_2=\varphi_2(0)\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（補講C・Dで計算した目的地ね。ζは、順序数のイプシロン列挙関数φ₁の最初の固定点。補講Eの\(\rho_0=\varepsilon_0^\omega\)も、引き続き使いましょう。）」</dd>
+<dt>一彌</dt><dd>「第二変数を−1から−ω、−ε₀……へ変えるのだな。どうやって符号の長さへ戻す？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（任意の順序数αについて、−ι(α)は−だけをα個並べた数、つまりZ₀(α)。そこへV₁の伸長則を適用するの。）」</dd>
+</dl>
+<div class="formula">\[\boxed{\quad\varepsilon_{-\iota(\alpha)}=\Phi(1,-\iota(\alpha))=Z_{\varepsilon_0}(\rho_0\cdot\alpha)\quad}\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「前はα＝1の一回分だった。今度はα文字分だから、尾部長がρ₀・α！ ここでの掛け算は順序数だね。」</dd>
+</dl>
+<div class="table-scroll" tabindex="0"><table><caption>Φ(1/2,0)へ向かう駅。同じε₀からの−の尾部長を比較する</caption><thead><tr><th scope="col">駅の名前</th><th scope="col">Φを使った式</th><th scope="col">Zε₀(t)のt</th></tr></thead><tbody><tr><td>ε₀−1</td><td>\(\Phi(1,0)-1\)</td><td>1</td></tr><tr><td>ε₀/2</td><td>\(\Phi(1,0)/2\)</td><td>ε₀</td></tr><tr><td>ε₋₁</td><td>\(\Phi(1,-1)\)</td><td>ρ₀</td></tr><tr><td>\(\varepsilon_{-\omega}\)</td><td>\(\Phi(1,-\Phi(0,1))\)</td><td>ρ₀・ω</td></tr><tr><td>\(\varepsilon_{-\varepsilon_0}\)</td><td>\(\Phi(1,-\Phi(1,0))\)</td><td>ρ₀・ε₀</td></tr><tr><td>\(\varepsilon_{-\varepsilon_{\varepsilon_0}}\)</td><td>\(\Phi(1,-\Phi(1,\Phi(1,0)))\)</td><td>ρ₀・ε<sub>ε₀</sub>＝ε<sub>ε₀</sub></td></tr><tr><td>\(\varepsilon_{-\varepsilon_{\varepsilon_{\varepsilon_0}}}\)</td><td>\(\Phi(1,-\Phi(1,\Phi(1,\Phi(1,0))))\)</td><td>ρ₀・ε<sub>ε<sub>ε₀</sub></sub>＝ε<sub>ε<sub>ε₀</sub></sub></td></tr><tr class="highlight"><td>\(A=\varepsilon_{-\zeta}\)</td><td>\(\Phi(1,-\Phi(2,0))=\Phi(1/2,0)\)</td><td>ρ₀・ζ＝ζ＝Θ₂</td></tr></tbody></table></div>
+<dl class="talk">
+<dt>一彌</dt><dd>「後半で掛け算が消えた！？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（順序数の吸収よ。εε₀はρ₀より大きいイプシロン順序数で、ρ₀・εε₀＝εε₀。ζにも同じ性質があるわ。ただしρ₀・ε₀はε₀にはならない。表の前半まで一緒に消してはいけないの。）」</dd>
+<dt>一埜</dt><dd>「普通の数の掛け算なら、そんな吸収は起こらないもんね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（この「……」を曖昧にしないため、正の添字を作る列uₙを定めましょう。uₙは順序数。Φの入力としては埋め込みιを省いて書くわ。）」</dd>
+</dl>
+<div class="formula">\[u_0=1,\quad u_1=\omega,\quad u_2=\varepsilon_0,\quad u_{n+1}=\varphi_1(u_n)\quad(n\ge2),\qquad \sup_{n&lt;\omega}u_n=\zeta\]</div>
+<div class="formula">\[p_n:=\Phi(1,-\iota(u_n))=\varepsilon_{-u_n}=Z_{\varepsilon_0}(\rho_0\cdot u_n)\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「φ₁を繰り返して正の添字を増やし、その負数を外側のΦ(1,−)へ入れる。だからp₀、p₁、p₂……は逆に小さくなる！」</dd>
+<dt>一埜</dt><dd>「pₙは全部、ω写像の固定点。でもpₙへω写像をかけて、次のpₙ₊₁へ進むわけじゃないんだね。それでは同じ場所に止まるもの。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（その通り。変えているのは<strong>固定点を指定する第二座標</strong>。Φ(1,−1)で終わる先ほどの反復と、今回の固定点の列とでは、進み方が違うの。）」</dd>
+</dl>
+<figure class="branch-map"><figcaption>同じ二分木の枝を、もっと先まで見る。各段の間には省略した節点がある。pₙから下はすべてω写像の固定点。</figcaption><ol class="branch-spine"><li><strong>ε₀</strong><span class="branch-off">＋の枝 → 今回は進まない</span><span class="branch-step">−を延ばす</span></li><li>ε₀−1 → ε₀/2<span class="branch-step">補講Eのaₙの枝を経て、尾部長ρ₀へ</span></li><li>p₀＝ε₋₁<span class="branch-step">尾部長ρ₀・ωへ</span></li><li>\(p_1=\varepsilon_{-\omega}\)<span class="branch-step">尾部長ρ₀・ε₀へ</span></li><li>\(p_2=\varepsilon_{-\varepsilon_0}\)<span class="branch-step">正の添字をφ₁で繰り返し増やす</span></li><li>\(p_3=\varepsilon_{-\varepsilon_{\varepsilon_0}}\) → p₄ → …<span class="branch-step">prefixの合併：尾部長ζへ</span></li><li><strong>A＝Φ(1,−ζ)＝Φ(1/2,0)</strong></li></ol></figure>
+<div class="formula">\[\sup_{n&lt;\omega}(\rho_0\cdot u_n)=\rho_0\cdot\zeta=\zeta,\qquad A=Z_{\varepsilon_0}(\zeta)\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「これで補講Dの\(A=Z_{\varepsilon_0}(\Theta_2)\)へ帰ってきた！ 合成式を計算した道と、符号列の枝を伸ばした道が同じ目的地に着く！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。左集合はずっと\(\mathcal L_{\varepsilon_0}\)。途中駅も目的地も、表のtを\(\mathcal R_{\varepsilon_0}(t)\)へ代入すれば、全prefixによる正準cutが得られるわ。）」</dd>
+</dl>
+<div class="formula">\[\varepsilon_{-\iota(\alpha)}=\{\iota(\beta)\ (\beta&lt;\varepsilon_0)\mid Z_{\varepsilon_0}(\delta)\ (\delta&lt;\rho_0\cdot\alpha)\}\]</div>
+<div class="formula">\[A=\{\mathcal L_{\varepsilon_0}\mid\mathcal R_{\varepsilon_0}(\zeta)\}=\{\iota(\beta)\ (\beta&lt;\varepsilon_0)\mid p_n\ (n&lt;\omega)\}\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「最後の右集合には、今の表の固定点の駅だけを残せる！ uₙがζのどこよりも先まで届くので、尾部長も十分先まで届くからだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（一方、固定点世界の内部cutなら、入力−αの右prefixをEで写して、次の形になるの。）」</dd>
+</dl>
+<div class="formula">\[\varepsilon_{-\iota(\alpha)}=\{\varnothing\mid\varepsilon_{-\iota(\gamma)}\ (\gamma&lt;\alpha)\}_{\mathscr F_0}\]</div>
+<div class="formula">\[\varepsilon_{-\omega}=\{\varnothing\mid\varepsilon_0,\varepsilon_{-1},\varepsilon_{-2},\ldots\}_{\mathscr F_0},\qquad A=\{\varnothing\mid p_n\ (n&lt;\omega)\}_{\mathscr F_0}\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「ε₋ωの内部cutで、右にε₋₁一個だけを置くのでは足りないのか！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（それなら内部で選ばれるのはε₋₂よ。図はε₋₂、ε₋₃などを省略しているけれど、その段のcutまで勝手に省けるわけではない。目的地Aでは、pₙが右境界を下へ十分に追いかけるので、短い一覧にできるの。）」</dd>
+<dt>一埜</dt><dd>「二分木の地図を読むにも、いまどの節点の左右集合を書いているか確かめるんだね。」</dd>
+</dl>
+<details class="note"><summary>「Φ(2,0)へ登る」と「Φ(1/2,0)へ降りる」の対応</summary><div><p>u₂＝ε₀以降、\(u_{n+1}=\varphi_1(u_n)\)は、順序数の正規関数φ₁の最初の固定点ζへ共終する増加列です。符号列では−ι(uₙ)が−ι(ζ)へ向かうprefix列。V₁の全minus伸長則により、その像の尾部長はρ₀・uₙとなります。順序数の左乗法の右引数に関する連続性とρ₀・ζ＝ζを使うと、像のprefixの合併はZε₀(ζ)。有限mirror式と同じ値に一致します。通常順序に関する解析的な収束を仮定した議論ではありません。</p></div></details>
+<dl class="talk">
+<dt>一彌</dt><dd>「算術式で見えていた途中駅に、符号列の番地がついたぞ！ Φは関数の構造、Zは符号の長さ、cutは左右の条件。同じ数を違う道具で見ていたのだな！」</dd>
+<dt>一埜</dt><dd>「「……」の先も、今度はどんな規則で続くか説明できる！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（では、この三枚の地図を持って、第16話の無限sourceへ戻りましょう。どの符号を、どの長さまで伸ばすのか。その見方がまた役に立つわ。）」</dd>
+</dl>
+<details class="note"><summary>補講Gの小問：ε₋₁へV₀を繰り返し適用すると、Aへ着く？</summary><div><p>着きません。ε₋₁はV₀の固定点なので動きません。Aへのこの経路では、第二座標を−1、−ω、−ε₀、−εε₀、…と変えて、別々の固定点pₙを選びます。その符号列の合併がAです。</p></div></details>
+<p class="source">照合先：02-FINITE-MIRROR.md §2.6、MAIN.md 定理4.1・式(4.3)、FiniteVeblenAllMinusStretchCoefficient.lean。φ₁の順序数固定点反復、伸長則、正準prefix規則を組み合わせた数学的導出。新規Leanコンパイルなし。</p>
+<nav class="chapter-nav" aria-label="補講Gの移動"><a href="#extra06">← 前へ</a><a href="#contents">目次</a><a href="#ch16">次へ →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch16" aria-labelledby="title16">
+<h2 id="title16">第16話　無限に計算するの？ 条件を全部満たすの？</h2>
+<p class="stage">＊一彌がノートのいちばん難しそうなページを開く。一埜は新しい紙に「入力→出力」と書いた。＊</p>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（ここから一彌の研究の構成よ。source、ソースは\(s:\mathbb N\to\{+,-\}\)。自然数の位置ごとに、＋か−を一つ指定する無限列なの。）」</dd>
+<dt>一埜</dt><dd>「そのsは超現実数そのもの？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（まずは、行を選ぶための符号データとして扱うわ。位置kで使う関数をTₛ,ₖと呼ぶの。入力も出力も超現実数よ。）」</dd>
+</dl>
+<div class="formula">\[T_{s,k}(x)=\begin{cases}V_{k+1}(x)&amp;s(k)=+,\\-V_{k+1}(-x)&amp;s(k)=-.\end{cases}\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「−なら、まず入力の符号を反転、Vを通して、出力をまた反転する！ これが負号共役か。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。次は最初のn文字に対応する合成写像\(\mathcal E_{s,n}\)。右端から先に計算するの。）」</dd>
+</dl>
+<div class="formula">\[\mathcal E_{s,0}=V_0,\qquad\mathcal E_{s,n}=V_0\circ T_{s,0}\circ\cdots\circ T_{s,n-1}\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「最初が＋−なら、二文字分は\(\mathcal E_{s,2}(x)=V_0(V_1(-V_2(-x)))\)！ 関数の箱を、内側から開けるんだね。」</dd>
+<dt>一彌</dt><dd>「それを無限回繰り返して、極限がRₛ(x)だ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そこを一度止めましょう。rangeは、その写像から出てくる値を全部集めたもの。今回交差するのは<strong>値域</strong>なの。）」</dd>
+</dl>
+<div class="formula">\[\mathcal C_s=\bigcap_{n&lt;\omega}\operatorname{range}(\mathcal E_{s,n}),\qquad R_s:\mathbf{No}\longrightarrow\mathcal C_s\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（どの深さの写像からも出てこられる値を集め、その世界を標準的に座標づけしたものがRₛ。入力xは、その中での住所よ。値域は入れ子になり、資料の閉substructureの交差定理が、この構成を支えるわ。）」</dd>
+<dt>一埜</dt><dd>「全部の条件を満たす場所を探してから、そこの住所をつけるんだ！ 同じxを各段に入れて、数の極限を取る話とは違うね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そして\(c_{s,k}(x)\)は「深さkの箱の内側で、Rₛ(x)に届く入力」。一意に決まる残余座標よ。）」</dd>
+</dl>
+<div class="formula">\[R_s(x)=\mathcal E_{s,k}(c_{s,k}(x)),\qquad c_{s,k}=T_{s,k}\circ c_{s,k+1}\]</div>
+<div class="formula">\[d_{s,k}=c_{s,k}(0),\qquad X_s=R_s(0)=V_0(d_{s,0})\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「dは住所0の残余基点、Xは実際の行の基点。Xとdを同じものだと思っていた……！」</dd>
+<dt>一埜</dt><dd>「箱の中の入力と、箱から出てきた数を分ければいいんだね。難しい文字、仕事ごとに名札がついた！」</dd>
+</dl>
+<details class="note"><summary>「閉」と「上限」の意味を確認する</summary><div><p>この資料のNo-closedは、適切な小さいsimplicity chainの上限で閉じていることです。互いに先頭部分になっている符号列を合併する上限を使います。通常の大小の上限や、後で出てくる位相的閉集合とは別です。単に「入れ子の非空集合だから交差がある」と推論してはいません。</p></div></details>
+<details class="note"><summary>一埜の小問：深さ0では、Xₛはdₛ,₀と同じ？</summary><div><p>一般には違います。\(X_s=V_0(d_{s,0})\)。たとえばsourceが−から始まる場合には、dₛ,₀は負、Xₛは正です。</p></div></details>
+<p class="source">照合先：MAIN.md §2.4–2.5、式(2.1)–(2.3)。</p>
+<nav class="chapter-nav" aria-label="第16話の移動"><a href="#extra07">← 補講G</a><a href="#contents">目次</a><a href="#ch17">次の話 →</a></nav>
+</section>
+<p class="part-label">第IV部　無限符号列の秘密</p><section class="inner_wrapper" id="ch17" aria-labelledby="title17">
+<h2 id="title17">第17話　全員、同じ誕生日！？</h2>
+<p class="stage">＊三日目。机の上の紙が増えた。一埜は、それぞれの紙に日付を書いている。＊</p>
+<dl class="talk">
+<dt>一彌</dt><dd>「さあ、ついに主定理A！ どんなsourceでも、その基点の誕生日は同じなのだ！」</dd>
+</dl>
+<div class="formula">\[b(X_s)=q=\varphi_\omega(0)\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「全部＋でも、全部−でも、でたらめな並びでも！？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。仕組みを見るために、有限のsourceから作る基点候補\(x_n=\mathcal E_{s,n}(0)\)を見ましょう。x₀＝1。その先は新しい符号ブロックを後ろに足していくの。）」</dd>
+</dl>
+<div class="formula">\[b(x_0)=1=\Theta_0,\qquad b(x_n)=\Theta_n\ (n&gt;0),\qquad\sup_{n&lt;\omega}\Theta_n=q\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「候補の符号列が先頭からつながっていて、それを全部合わせるとXₛ。だから長さはΘたちの上限になるんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。ここで得た<strong>基点の候補列</strong>のsimplicity上限はXₛになる。ただし前の話で否定した、任意の入力xで通常の極限を取る定義とは別よ。）」</dd>
+<dt>一彌</dt><dd>「同じ誕生日なら、同じ数にならないか？」</dd>
+<dt>一埜</dt><dd>「2と1/2！ あの二人も同じ誕生日だったよ！」</dd>
+<dt>一彌</dt><dd>「見事な伏線回収！✨」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（長さが同じでも、符号の中身は違う。その中に、sourceの全文が保存されているの。）」</dd>
+<dt>一埜</dt><dd>「同じページ数の本が並ぶ図書館だ！ でもqページって、すごい図書館……。」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：XₛとXₜのbirthdayが等しければ、s＝t？</summary><div><p>結論できません。全sourceの基点のbirthdayが同じqです。sourceを見分けるには符号の中身を読みます。</p></div></details>
+<p class="source">照合先：MAIN.md 補題3.1、定理3.2（主定理A）。</p>
+<nav class="chapter-nav" aria-label="第17話の移動"><a href="#ch16">← 前の話</a><a href="#contents">目次</a><a href="#ch18">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch18" aria-labelledby="title18">
+<h2 id="title18">第18話　無限の暗号を解読せよ！</h2>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（基点の符号を読む規則が、これよ。位置は0から数えるわ。）」</dd>
+</dl>
+<div class="formula">\[\sigma_{X_s}(\gamma)=\begin{cases}+&amp;\gamma=0,\\s(n)&amp;\Theta_n\le\gamma&lt;\Theta_{n+1},\\0&amp;\gamma\ge q.\end{cases}\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「最後の0は、三種類目の文字？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（符号が終わった印。source自体は＋と−の二種類だけよ。）」</dd>
+</dl>
+<figure><div class="sign-map"><div>位置0<br><strong>＋</strong></div><div>[Θ₀, Θ₁)<br><strong>s(0)</strong></div><div>[Θ₁, Θ₂)<br><strong>s(1)</strong></div><div>[Θ₂, Θ₃)<br><strong>s(2)</strong></div><div>…</div></div><figcaption>ブロックの配置図。各枠は同じ幅で描いていますが、実際の順序数の長さの比率は表していません。</figcaption></figure>
+<dl class="talk">
+<dt>一彌</dt><dd>「sourceの一文字を、巨大な区間いっぱいに引き伸ばして記録するのか！」</dd>
+<dt>一埜</dt><dd>「だったら各区間の最初だけ読めば、元のsourceに戻せるよね？」</dd>
+</dl>
+<div class="formula">\[s(n)=\sigma_{X_s}(\Theta_n)\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（その通り、復号よ。第0文字を読むのは<strong>Θ₀＝1の位置</strong>。位置0の＋は、全員共通の表紙なの。）」</dd>
+<dt>一彌</dt><dd>「sが＋−＋……、tが＋＋−……なら、最初に違うのは位置1。その基点ではΘ₁＝ε₀の位置で初めて違う！」</dd>
+<dt>一埜</dt><dd>「そこが−と＋だから、Xₛ＜Xₜ！ そして全部の文字を取り出せるから、違うsourceが同じ基点にはならないね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（逆に、birthdayがq、位置0が＋、各指定ブロックで一定、という三条件を満たす数は、ちょうど一つのsourceの基点よ。）」</dd>
+<dt>一彌</dt><dd>「誕生日qの全住民が、うちの図書館の本というわけではないのだな。ブロックの規則も必要だ！」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：s(2)を読む位置は2？</summary><div><p>いいえ、基点ではΘ₂＝φ₂(0)の位置です。自然数位置nの情報が、順序数位置Θₙに記録されます。</p></div></details>
+<p class="source">照合先：MAIN.md 定理3.2–3.4（主定理A：符号コード・復号・内在的値域・順序）。</p>
+<nav class="chapter-nav" aria-label="第18話の移動"><a href="#ch17">← 前の話</a><a href="#contents">目次</a><a href="#ch19">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch19" aria-labelledby="title19">
+<h2 id="title19">第19話　右と左に伸びる、二本の尻尾</h2>
+<dl class="talk">
+<dt>一彌</dt><dd>「基点がわかった！ 次はRₛ(1)とRₛ(−1)だ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（行の中で0の右・左のchildに当たる数ね。基点Xₛから、それぞれ＋だけ、−だけを連結して届くの。その長さを\(\lambda_s^+,\lambda_s^-\)と名づけるわ。）」</dd>
+</dl>
+<div class="formula">\[R_s(1)=Y_{X_s}(\lambda_s^+),\qquad R_s(-1)=Z_{X_s}(\lambda_s^-)\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「行の中で一歩でも、全体の符号では一文字とは限らないんだね！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。長さを求めるために、残余基点dₛ,ₙの後ろへ一文字つけ、有限の箱を通す。＋の尾部長を返す関数がQₛ,ₙ(t)、−ならMₛ,ₙ(t)よ。入力tも出力も順序数。）」</dd>
+<dt>一彌</dt><dd>「またM！？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（M(x)は一つの数の−位置型。添字つきのMₛ,ₙ(t)は、n段の箱で<strong>尾部長を変換する関数</strong>。それぞれ違う仕事ね。）」</dd>
+</dl>
+<div class="formula">\[\mathcal E_{s,n}(Y_{d_{s,n}}(t))=Y_{X_s}(Q_{s,n}(t))\quad(t&gt;0)\]</div>
+<div class="formula">\[\mathcal E_{s,n}(Z_{d_{s,n}}(t))=Z_{X_s}(M_{s,n}(t))\quad(t&gt;0)\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（たとえばp＝P(dₛ,₀)と略せば、深さ0はV₀だけだから\(Q_{s,0}(t)=\omega^{p+t}\)、\(M_{s,0}(t)=\omega^{p+1}t\)。第15話の公式そのものよ。）」</dd>
+<dt>一埜</dt><dd>「いきなり知らない関数が生まれたんじゃなくて、前に習った伸長則を、箱の数だけ組み合わせているんだ！」</dd>
+</dl>
+<details class="note"><summary>QとMの再帰を、定義から読む</summary><div><p>\(p_k^+=P(d_{s,k})\)、\(p_k^-=M(d_{s,k})\)とします。一段の尾部変換をHと書くと、s(k)＝＋では\(H_{s,k}^+(t)=\varphi_{k+1}(p_{k+1}^++t)\)、\(H_{s,k}^-(t)=C_{k+1}(p_{k+1}^+)t\)。s(k)＝−では\(H_{s,k}^+(t)=C_{k+1}(p_{k+1}^-)t\)、\(H_{s,k}^-(t)=\varphi_{k+1}(p_{k+1}^-+t)\)です。ここではt＞0。</p><div class="formula">\[Q_{s,n+1}(t)=Q_{s,n}(H_{s,n}^+(t)),\quad M_{s,n+1}(t)=M_{s,n}(H_{s,n}^-(t))\]</div><p>内側の一段で伸ばし、外側のn段に渡します。p⁺とp⁻は実際の残余基点から読みます。どちらも無条件にqと置いてはいけません。</p></div></details>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（一文字、つまりt＝1を通した候補を全部集め、その符号列の合併を取る。長さとしては、次の上限になるの。）」</dd>
+</dl>
+<div class="formula">\[\lambda_s^+=\sup_{n&lt;\omega}Q_{s,n}(1),\qquad\lambda_s^-=\sup_{n&lt;\omega}M_{s,n}(1)\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「左へ行く候補も、符号列としては長くなる。大小の上限じゃなく、simplicityの上限だったね！」</dd>
+<dt>一彌</dt><dd>「尾部長がわかれば、birthdayはq＋その長さ。さらに今回の長さではqが吸収されるから……！」</dd>
+</dl>
+<div class="formula">\[\bigl(b(R_s(-1)),b(R_s(0)),b(R_s(1))\bigr)=(\lambda_s^-,q,\lambda_s^+)\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（それが主定理C。吸収\(q+\lambda_s^\pm=\lambda_s^\pm\)には、これから見る分類で得る長さの性質を使うのよ。）」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：Rₛ(1)のbirthdayがλ⁺なら、数そのものもλ⁺？</summary><div><p>そうは言えません。birthdayは符号の長さです。数の値を指定するには、基点の符号と、その後ろの＋の尾部を合わせて見ます。</p></div></details>
+<p class="source">照合先：MAIN.md §4.2–4.4、式(4.5)–(4.8)、定理5.5（主定理C）。</p>
+<nav class="chapter-nav" aria-label="第19話の移動"><a href="#ch18">← 前の話</a><a href="#contents">目次</a><a href="#ch20">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch20" aria-labelledby="title20">
+<h2 id="title20">第20話　最後のマイナスはどこにいた？</h2>
+<p class="stage">＊NyankoPadに、猫回線の短い通知が出る。「迷子の三毛、帰宅」。こにゃんは一度画面を確かめ、ノートに戻った。＊</p>
+<dl class="talk">
+<dt>一彌</dt><dd>「こちらの迷子のMも、帰宅できそうだ。さて、無限の上限を本当に計算できるのか？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（できるわ。まず二つの略名を追加しましょう。これはどちらも順序数よ。）」</dd>
+</dl>
+<div class="formula">\[L=q^{\omega^\omega},\qquad E_j=\varphi_{j+1}(L)\quad(j=0,1,2,\ldots)\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「Eⱼは、階層j＋1にLを入れた値。合成写像の\(\mathcal E_{s,n}\)とは別だね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。Lは純粋なsourceの計算から出るわ。qは全有限階層の固定点だから、\(C_0(q)=q\omega\)、n≧1で\(C_n(q)=q^{\omega^n}\)。これらの上限がLなの。）」</dd>
+<dt>一彌</dt><dd>「係数Cがここで集まってLになるのか！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（分類は三通り。各符号について、無限回現れるか、最後に現れた位置jがあるか、一度も現れないか。）」</dd>
+</dl>
+<div class="formula">\[\lambda_s^+=\begin{cases}\Lambda&amp;+\text{が無限回},\\E_j&amp;+\text{の最後が}j,\\\omega^L&amp;+\text{がない},\end{cases}\qquad\lambda_s^-=\begin{cases}\Lambda&amp;-\text{が無限回},\\E_j&amp;-\text{の最後が}j,\\L&amp;-\text{がない}.\end{cases}\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「−＋＋＋……なら、−の最後は0。だから右がΛ、左がE₀！ ＋−＋＋＋……なら左はE₁！」</dd>
+<dt>一彌</dt><dd>「なぜ最後の位置だけで決まるのだ？ その前にも色々あったのに！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（最後の−がjなら、その奥は全部＋。そこには長さLの左尾部がある。その残余基点はqで、−位置型M(q)＝0。位置jの負号共役を通すと、長さは\(\varphi_{j+1}(0+L)=E_j\)に伸びるの。）」</dd>
+<dt>一埜</dt><dd>「その外側には、まだ箱が残ってるよ？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（それらはもっと低い階層。この高い尾部長Eⱼを保存する、という吸収の補題があるの。だから前の符号は基点には残るけれど、この尾部長は変えないわ。）」</dd>
+<dt>一彌</dt><dd>「全部−の場合だけ、右側がLではなくωᴸなのが気になるぞ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（奥の残余基点は−q、＋位置型は0。残余の右尾部Lを、最外側V₀が\(t\mapsto\omega^{0+t}\)で伸ばすからよ。行Rと残余cの区別が、ここで効くの。）」</dd>
+<dt>一埜</dt><dd>「左右を単純に交換していいわけじゃないんだね。いちばん外側の箱を忘れない！」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：＋−−＋＋＋……の左右の尾部は？</summary><div><p>位置は0から数えます。＋は無限回なので右はΛ。最後の−は位置2なので左はE₂＝φ₃(L)です。</p></div></details>
+<p class="source">照合先：MAIN.md §5.1–5.4（主定理B）、補題4.3。</p>
+<nav class="chapter-nav" aria-label="第20話の移動"><a href="#ch19">← 前の話</a><a href="#contents">目次</a><a href="#ch21">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch21" aria-labelledby="title21">
+<h2 id="title21">第21話　スペクトルという名の地図</h2>
+<dl class="talk">
+<dt>一彌</dt><dd>「スペクトル！ ついに来た！ 名前だけで白衣を着たくなる！」</dd>
+<dt>一埜</dt><dd>「着る前に、何を入れて何が出るか言って！ｗ」</dd>
+<dt>一彌</dt><dd>「sourceを入れて、右と左の尾部長の組を出す！」</dd>
+</dl>
+<div class="formula">\[F(s)=(\lambda_s^+,\lambda_s^-)\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（正解。今回の尾部スペクトルは、この組がどんな値を取るかを調べるものよ。「スペクトル」という語には、数学の分野ごとに別の用法もあるわ。）」</dd>
+</dl>
+<div class="table-scroll" tabindex="0"><table><caption>分類公式を使って計算する（右、左の順）</caption><thead><tr><th scope="col">source</th><th scope="col">右 λ⁺</th><th scope="col">左 λ⁻</th></tr></thead><tbody><tr><td>＋＋＋＋…</td><td>Λ</td><td>L</td></tr><tr><td>−−−−…</td><td>ωᴸ</td><td>Λ</td></tr><tr><td>−＋＋＋…</td><td>Λ</td><td>E₀</td></tr><tr><td>＋−＋＋＋…</td><td>Λ</td><td>E₁</td></tr><tr><td>＋−−−…</td><td>E₀</td><td>Λ</td></tr><tr><td>＋−＋−…</td><td>Λ</td><td>Λ</td></tr><tr><td>＋＋−−＋＋−−…</td><td>Λ</td><td>Λ</td></tr></tbody></table></div>
+<dl class="talk">
+<dt>一埜</dt><dd>「少なくとも片方は必ずΛなんだね。二つとも短い組はないの？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（＋も−も有限回しかなかったら、列全体が有限になってしまうでしょう。無限列では、少なくとも一方が無限回現れるの。）」</dd>
+</dl>
+<div class="formula">\[\operatorname{range}(F)=\{(\Lambda,\Lambda),(\Lambda,L),(\omega^L,\Lambda)\}\ \cup\ \{(\Lambda,E_j),(E_j,\Lambda):j&lt;\omega\}\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「これが出力できる値の全部！ 片側ずつの可能性を、勝手に何でも組み合わせてはいけないのか。」</dd>
+</dl>
+<div class="formula">\[q&lt;L&lt;\omega^L&lt;E_0&lt;E_1&lt;E_2&lt;\cdots&lt;\Lambda,\qquad\sup_jE_j=\Lambda\]</div>
+<figure><div class="spectrum-map" role="img" aria-label="スペクトルの模式図。上の辺には横座標ωのL乗、E0、E1などで縦座標Λとなる点。右の辺には横座標Λ、縦座標L、E0、E1などとなる点。共通の頂点はΛ、Λ。"><div class="map-top">(ωᴸ, Λ) → (E₀, Λ) → … → <strong>(Λ, Λ)</strong></div><div class="map-side">↑<br>…<br>(Λ, E₁)<br>↑<br>(Λ, E₀)<br>↑<br>(Λ, L)</div><p>横：右尾部 λ⁺<br>縦：左尾部 λ⁻</p></div><figcaption>二系列と共通の頂点を示す模式図。矢印は系列の順番で、間のすべての点が値域に入る意味ではありません。実数の縮尺でもありません。</figcaption></figure>
+<dl class="talk">
+<dt>一埜</dt><dd>「先頭を変えても、後ろをずっと交互にすれば、全部同じ頂点へ行くんだ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（下の実験では、先頭に加えて「その後ずっと続く規則」まで指定するわ。有限部分を見ただけで、未知の無限列の未来を判定する装置ではないのよ。）」</dd>
+</dl>
+<div class="experiment" id="spectrum-experiment" hidden><h3>NyankoPad：尾部スペクトルを計算する</h3><label for="source-prefix">先頭の符号（＋と−、空欄も可・最大24文字）</label><input id="source-prefix" type="text" maxlength="24" value="+--" spellcheck="false" autocomplete="off" aria-describedby="prefix-help"><p id="prefix-help">半角 + -、全角 ＋、数学記号 − に対応。空白は無視します。位置は0から数えます。</p><label for="source-tail">その後、無限に続ける規則</label><select id="source-tail"><option value="plus">ずっと＋</option><option value="minus">ずっと−</option><option value="alternating">＋−をずっと繰り返す</option></select><div id="spectrum-result" aria-live="polite" aria-atomic="true"></div></div><noscript><p class="note">計算実験にはJavaScriptを使います。上の表と本文は、そのまま読めます。</p></noscript>
+<details class="note"><summary>一埜の小問：F(s)＝(L, L)となるsourceはある？</summary><div><p>ありません。少なくとも一方の符号が無限回現れ、対応する尾部がΛになるためです。</p></div></details>
+<p class="source">照合先：MAIN.md 補題6.1、定理6.2（主定理D）、§9.1。実験は分類式の有限記述例への適用。</p>
+<nav class="chapter-nav" aria-label="第21話の移動"><a href="#ch20">← 前の話</a><a href="#contents">目次</a><a href="#ch22">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch22" aria-labelledby="title22">
+<h2 id="title22">第22話　ファイバーの中には何人いる？</h2>
+<dl class="talk">
+<dt>一彌</dt><dd>「そしてファイバー！ ファイバー束！ 微分幾何学！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（まずは写像の<strong>逆像</strong>からね。出力の組を一つ決めて、その組になるsourceを全部集めた集合が、今回のファイバーよ。）」</dd>
+</dl>
+<div class="formula">\[F^{-1}(a,b)=\{s:F(s)=(a,b)\}\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「同じ点数の答案を集めるみたいだね。点数が同じでも、書いたことまで同じとは限らない！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。この記号は「Fの逆関数がある」という意味ではないし、ファイバー束の構造を主張しているわけでもないわ。）」</dd>
+<dt>一彌</dt><dd>「では\((\Lambda,E_3)\)のファイバーを集めるぞ。最後の−が位置3、あとは全部＋！」</dd>
+</dl>
+<pre class="terminal"><code>位置 : 0 1 2 3 4 5 6 …
+符号 : ? ? ? − ＋ ＋ ＋ …
+自由 : 2 × 2 × 2 = 8 通り</code></pre>
+<dl class="talk">
+<dt>一埜</dt><dd>「位置3は四文字目だから、その前は三文字。2³＝8通り！」</dd>
+</dl>
+<div class="formula">\[F^{-1}(\Lambda,E_j)\cong\{+,-\}^{\{0,\ldots,j-1\}},\qquad\left|F^{-1}(\Lambda,E_j)\right|=2^j\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（≅は、ここでは互いに対応を戻せること。最初のj文字を取り出し、逆にその後ろへ−＋＋＋……をつければ、sourceが復元できるわ。反対側も＋と−を交換して同じ個数よ。）」</dd>
+<dt>一彌</dt><dd>「無限のsourceを分類したら、突然2の冪が帰ってきた！」</dd>
+<dt>一埜</dt><dd>「j＝0なら自由な文字はゼロ個。でも「何も選ばない」選び方が一つあるから、2⁰＝1だね！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（全部＋、全部−の特別な点のファイバーも、それぞれ一個。頂点(Λ, Λ)には、両符号が無限回現れるsourceが全部集まるわ。）」</dd>
+</dl>
+<div class="experiment" id="fiber-experiment" hidden><h3>NyankoPad：同じファイバーの住人</h3><label for="fiber-j">最後の−の位置jを選ぶ</label><select id="fiber-j"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option></select><div id="fiber-result" aria-live="polite" aria-atomic="true"></div></div>
+<dl class="talk">
+<dt>一埜</dt><dd>「同じファイバーの本でも、Xₛからはsourceの全文を復号できる。Fは特徴をまとめ、Xは全部を残す。違う仕事だったんだ！」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：最後の−が位置2なら、自由な先頭を全部挙げよう。</summary><div><p>＋＋、＋−、−＋、−−の四通り。それぞれに−＋＋＋……をつなぎます。どれもF(s)＝(Λ, E₂)です。</p></div></details>
+<p class="source">照合先：MAIN.md 定理6.3（主定理D：明示的fiberと濃度）。</p>
+<nav class="chapter-nav" aria-label="第22話の移動"><a href="#ch21">← 前の話</a><a href="#contents">目次</a><a href="#ch23">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch23" aria-labelledby="title23">
+<h2 id="title23">第23話　隣り合う二つの無限</h2>
+<p class="stage">＊一埜が、同じファイバーのリストを見比べる。こにゃんは二本の列を抜き出した。＊</p>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（長さjの共通の先頭uに、二種類の続きをつけてみましょう。）」</dd>
+</dl>
+<div class="formula">\[s=u-+^\omega,\qquad t=u+-^\omega\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「＋の右上のωは、ここでは＋をω回、つまりずっと繰り返す記号だね。」</dd>
+<dt>一彌</dt><dd>「二つは位置jで初めて違う。−＜＋だからs＜t！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（では、その間にもう一本sourceを入れられるかしら？）」</dd>
+<dt>一埜</dt><dd>「同じuの後で−を選んだら、続きが全部＋のsより大きくできない。＋を選んだら、続きが全部−のtより小さくできない……！」</dd>
+<dt>一彌</dt><dd>「隣同士だ！ 基点Xₛ、Xₜの間にも、別のsourceの基点はない！」</dd>
+</dl>
+<div class="formula">\[F(s)=(\Lambda,E_j),\qquad F(t)=(E_j,\Lambda)\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（左右の尾部が交換され、childのbirthdayも交換されるわ。中央のbirthdayはどちらもq。）」</dd>
+</dl>
+<div class="formula">\[\begin{array}{c|ccc}&amp;b(R(-1))&amp;b(R(0))&amp;b(R(1))\\s&amp;E_j&amp;q&amp;\Lambda\\t&amp;\Lambda&amp;q&amp;E_j\end{array}\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「では超現実数にも隣の数があるのか！？」</dd>
+<dt>一埜</dt><dd>「でも\((X_s+X_t)/2\)を取れば、真ん中が作れちゃうよ？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（その通り。隣接するのは<strong>今回の基点の値域の中</strong>だけ。超現実数全体には中間の数があるわ。その中点は、この基点の仲間ではないの。）」</dd>
+<dt>一彌</dt><dd>「図書館の隣の棚と、世界に存在する本の隙間は別なのだな！」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：uが空列なら、sとtは？</summary><div><p>s＝−＋＋＋……、t＝＋−−−……。スペクトルはそれぞれ(Λ, E₀)、(E₀, Λ)です。</p></div></details>
+<p class="source">照合先：MAIN.md 定理7.1（主定理E）。中点の存在は順序体からの数学的帰結。</p>
+<nav class="chapter-nav" aria-label="第23話の移動"><a href="#ch22">← 前の話</a><a href="#contents">目次</a><a href="#ch24">次の話 →</a></nav>
+</section>
+<p class="part-label">第V部　その先に、何がある？</p><section class="inner_wrapper" id="ch24" aria-labelledby="title24">
+<h2 id="title24">第24話　どこまで同じなら、近いの？</h2>
+<p class="stage">＊窓の外で、秋の雨が降りはじめた。NyankoPadには長い符号列の先頭だけが映っている。＊</p>
+<dl class="talk">
+<dt>一埜</dt><dd>「この先も見たいけど、画面に終わりがあるね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（有限の範囲しか見えないことを、今度は「近い」の定義に使いましょう。先頭N文字が一致するsourceをまとめて、sの近傍とするの。）」</dd>
+</dl>
+<div class="formula">\[U_N(s)=\{t:\text{すべての }i&lt;N\text{ で }t(i)=s(i)\}\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「Nが大きいほど、細かく見分ける。こういう近傍で決まるのが、sourceの積位相か！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。＋と−は別々の点として扱う離散位相、その自然数個の積よ。次に、出力の順序数には<strong>順序位相</strong>を入れる。数の並びの区間を使って近さを表すの。）」</dd>
+<dt>一埜</dt><dd>「Λに近いって、Λとの差を小数で測るの？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ここではそうしないわ。尾部長はΛ以下だから、Λの近くを「あるβ＜Λより上で、Λ以下」と指定すればよいの。二つの座標で、こういう条件を組み合わせるわ。）」</dd>
+</dl>
+<div class="formula">\[\beta&lt;\lambda\le\Lambda\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「連続とは、出力にこのくらい近くいてほしいと指定されたら、入力の先頭を十分長く固定して保証できること！」</dd>
+<dt>一埜</dt><dd>「出力が完全に同じになる必要は、ないんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。ここで位相を指定したのは、sourceと尾部長の空間。基点Xₛの超現実数全体に、勝手に位相を決めたわけではないのよ。）」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：U₄(s)に入る列の五文字目は決まる？</summary><div><p>決まりません。固定するのは位置0、1、2、3だけです。五文字目は位置4なので、自由です。</p></div></details>
+<p class="source">照合先：MAIN.md §8.1。連続性の定義を近傍で説明。</p>
+<nav class="chapter-nav" aria-label="第24話の移動"><a href="#ch23">← 前の話</a><a href="#contents">目次</a><a href="#ch25">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch25" aria-labelledby="title25">
+<h2 id="title25">第25話　未来は決まらない。それでも連続？</h2>
+<dl class="talk">
+<dt>一彌</dt><dd>「では本日の最終定理！ Fがsで連続なのは、＋も−も無限回現れるとき、ちょうどそのときだ！」</dd>
+</dl>
+<div class="formula">\[\operatorname{ContinuousAt}(F,s)\iff\operatorname{Cof}_+(s)\land\operatorname{Cof}_-(s)\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「Cofは何の略？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ここでは「どれだけ先のNを指定されても、その先にその符号がある」という共終性の条件よ。自然数の位置では、無限回現れることと同じ。）」</dd>
+</dl>
+<div class="formula">\[\operatorname{Cof}_c(s):\quad\forall N\ \exists n\ge N,\ s(n)=c\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「でも先頭をどれだけ長く見ても、続きが全部＋になるかもしれない。それで連続なの？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（よい質問ね。両符号が無限回現れるsで、左尾部をβ＜Λより大きくしたいとする。まずEⱼ＞βとなるjを選べる。そしてj以降にある−、位置nまでを確認するの。）」</dd>
+<dt>一彌</dt><dd>「その先をどう変えても、−は少なくとも位置nまで現れた。−が無限なら左はΛ、最後がkならk≧nで左はEₖ≧Eₙ＞β！」</dd>
+<dt>一埜</dt><dd>「あっ、未来を確定しなくても、十分高いところより上だとは保証できる！ 右側も同じように＋を一つ確認すればいいんだ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（二つの確認に必要な長さの、大きいほうまで先頭を固定すれば、左右同時に保証できる。これが連続の側の証明よ。）」</dd>
+<dt>一彌</dt><dd>「では全部＋のsでは？」</dd>
+<dt>一埜</dt><dd>「F(s)は(Λ, L)。でも先頭N文字を＋にして、その後を交互にした列なら、Fは全部(Λ, Λ)！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（Nを増やすと、どの固定位置もやがてsと一致する。だからその列はsに近づくのに、出力は左のLに近づかない。LとΛは順序位相で分けられるから、不連続ね。）」</dd>
+<dt>一彌</dt><dd>「最後の−がある場合も、同じ続きの変更でEⱼからΛへ移せる。全部−の場合も同じ理屈だ！」</dd>
+<dt>一埜</dt><dd>「「まだ先があるから、何もわからない」じゃなかったんだ。もう見た符号が、保証してくれることもあるんだね。」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：両符号が無限回続くsourceの近くでは、Fはいつも完全に同じ？</summary><div><p>いいえ。任意の有限prefixの後を一定符号にした列も近傍に入ります。ただし十分長いprefixを共有すれば、その有限階層の尾部も、指定したβより高くできます。連続性は局所定値性ではありません。</p></div></details>
+<p class="source">照合先：MAIN.md 補題8.1–8.2、定理8.3（主定理F）。</p>
+<nav class="chapter-nav" aria-label="第25話の移動"><a href="#ch24">← 前の話</a><a href="#contents">目次</a><a href="#ch26">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch26" aria-labelledby="title26">
+<h2 id="title26">第26話　Leanは、何を証明したの？</h2>
+<p class="stage">＊一彌が五つのノートを並べ直す。今度は見出しの多くが、読める名前になっていた。＊</p>
+<dl class="talk">
+<dt>一彌</dt><dd>「Leanが通った。だから、ぼくの最初の疑問も全部解決だ！」</dd>
+</dl>
+<p class="stage">＊こにゃんが、無言で宣言名を画面に出す。＊</p>
+<pre class="terminal"><code>NYANKOPAD
+監査の読み方・コマンド例（この物語で実行した出力ではありません）
+#check @MirrorIndex.CGT.PR394.omegaTailSpectrum_continuousAt_iff
+#print axioms MirrorIndex.CGT.PR394.omegaTailSpectrum_continuousAt_iff</code></pre>
+<dl class="talk">
+<dt>一彌</dt><dd>「うっ……まず型を見る猫……！💦」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（#checkで、何を前提として、何を結論しているか読む。#print axiomsで、証明がどの公理に依存しているか調べるの。）」</dd>
+<dt>一埜</dt><dd>「算数でも、問題文と違う式を正しく計算したら、元の問題の答えにはならないもんね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。今回の原稿は、保存されたLeanの公開定理と成功記録に照合して主定理A〜Fをまとめている。成功記録の公理依存はpropext、Classical.choice、Quot.soundの範囲内と報告されているわ。これは「公理を何も使っていない」という意味ではないの。）」</dd>
+<dt>一彌</dt><dd>「それに、sourceの無限出現を仮定する定理と、全sourceを三分類する定理は、条件が違う！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。資料の主定理には、未証明の数値上界をこっそり仮定する箇所は残っていない、と整理されている。一方、2026年10月29日の原稿執筆では保存証拠を照合し、新たなLeanコンパイルや全体の再ビルドは行っていないわ。）」</dd>
+<dt>一埜</dt><dd>「保存した成功記録を見ることと、今もう一度コンパイルすることも別なんだね。」</dd>
+<dt>一彌</dt><dd>「今日の数学小話づくりも、新しい証明を走らせた報告ではない、と。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。そして「このプロジェクトで形式化された」と「数学史上初めて発見された」も別の主張よ。後者には先行研究の調査が必要。）」</dd>
+<dt>一埜</dt><dd>「どこまでわかったのか、線を引けるのも、わかることの一部なんだね。」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：birthdayの定理を確認すれば、数の値も全部計算済み？</summary><div><p>いいえ。定理が述べる対象は何か、仮定と結論を読む必要があります。符号の長さ、数の値、写像の連続性は、それぞれ異なる命題です。</p></div></details>
+<p class="source">照合先：THEOREM-MAP.md、VERIFICATION.md §1–2・§7、OPEN-PROBLEMS.md §1・§7。保存状態の紹介であり再監査の報告ではない。</p>
+<nav class="chapter-nav" aria-label="第26話の移動"><a href="#ch25">← 前の話</a><a href="#contents">目次</a><a href="#ch27">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch27" aria-labelledby="title27">
+<h2 id="title27">第27話　Φ(1, 1/3)は、どこへ行った？</h2>
+<p class="stage">＊一彌が、一枚目の紙を引っ張り出す。大きな字で「Φ(1, 1/3)？」と書いてある。＊</p>
+<dl class="talk">
+<dt>一彌</dt><dd>「これだ。ぼくはこの宝箱を開けたかった。いつのまに、こんな図書館まで来たのだ！？」</dd>
+<dt>一埜</dt><dd>「1/3が途中で迷子になってない？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（資料にはoneThirdというsourceが登場するわ。具体的には、＋−−＋−＋−……。最初の＋の後に−が二つ、その後は＋−の繰り返しね。）」</dd>
+<dt>一彌</dt><dd>「符号列の有限部分を数にすると、1、1/2、1/4、3/8、5/16、11/32……。1/3のまわりを行ったり来たりしている！」</dd>
+<dt>一埜</dt><dd>「でも今、その列は「入力の数」なの？ それとも「行を選ぶsource」？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（このスペクトルの定理では<strong>行を選ぶsource</strong>。実数1/3との算術的な同定を、証明の前提には使っていないわ。その名前と、関数のどちらの入力へ入れるかを分けましょう。）」</dd>
+</dl>
+<div class="formula">\[s=\text{oneThird}\quad\Longrightarrow\quad b(R_s(0))=q,\qquad F(s)=(\Lambda,\Lambda)\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「両方の符号が無限回出るから、左右はΛ。基点の符号には最初の＋−−も残るんだね！」</dd>
+<dt>一彌</dt><dd>「では、このRₛ(0)をΦ(1, 1/3)と呼んでしまえば……。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（補講で採用したこの研究の記法では、\(\Phi(1,1/3)=V_1(1/3)\)。これは存在し、V₀の固定点になるわ。一方、Rₛのsは行を選ぶsourceで、括弧の中はその行の座標。oneThirdをsourceに選んだRₛ(0)を、そのままV₁(1/3)の値としてはいけないの。）」</dd>
+<dt>一彌</dt><dd>「φは順序数の階層、Vは超現実数上の有限行、Rはsourceから組み立てた行。Φ(1,1/3)の存在や固定点であることと、その正確な符号・cutを計算し終えることも別なのだな。全部「ファイっぽい」から同じではない！」</dd>
+<dt>一埜</dt><dd>「宝箱の名前だけじゃなく、中身が同じだって確かめるんだ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（その通り。ただ、今回開いた箱の中身はもう言えるわ。全sourceの基点の符号と、第二入力−1、0、1の尾部・birthday、そのスペクトルの分類。）」</dd>
+<dt>一彌</dt><dd>「最初の箱も大事だ。でも途中で見つかった宝物を、やっと自分の言葉で説明できるぞ！」</dd>
+</dl>
+<details class="note"><summary>一埜の小問：oneThirdと＋−＋−……は、FもXも同じ？</summary><div><p>Fはどちらも(Λ, Λ)。でもsourceが違うのでXは違います。最初の相違は位置2で、基点の最初の相違はΘ₂です。</p></div></details>
+<p class="source">照合先：01-EPSILON-ROW.md §1.1、MAIN.md §9.1・§9.3、§10。Φ(1,1/3)とoneThirdの行の基点は区別する。有限分数の列は説明用の計算。</p>
+<nav class="chapter-nav" aria-label="第27話の移動"><a href="#ch26">← 前の話</a><a href="#contents">目次</a><a href="#ch28">次の話 →</a></nav>
+</section>
+<section class="inner_wrapper" id="ch28" aria-labelledby="title28">
+<h2 id="title28">第28話　まだ見ぬ階層へ</h2>
+<p class="stage">＊雨が上がった。机の上には、すっかり冷めたココアと、温かい猫がいる。＊</p>
+<dl class="talk">
+<dt>一埜</dt><dd>「最初はω＋1も知らなかったのに、今は「最後の−が位置3なら、ファイバーは8通り」って言えるよ！」</dd>
+<dt>一彌</dt><dd>「ぼくも、PとMが何を返すか説明できる。YとZは数を足すのではなく符号をつなぐ。Cは−の伸長係数。Qと添字つきMは、箱を通した尾部長だ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（では次に知りたいことは？）」</dd>
+<dt>一埜</dt><dd>「Rₛ(2)とRₛ(−2)のbirthday！ もう一歩進めばいいんだよね？」</dd>
+<dt>一彌</dt><dd>「その通り！ 公式をもう一回、そのまま……。」</dd>
+<dt>一埜</dt><dd>「あっ、でも基点が変わる。cₛ,ₖ(0)で数えたPとMは、そのまま使えないんじゃない？」</dd>
+</dl>
+<p class="stage">＊一彌が口を開けたまま、こにゃんを見る。こにゃんは、ゆっくりと一度まばたきをした。＊</p>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（今の問いが、資料の次の研究単位に対応しているわ。まず新しい残余基点cₛ,ₖ(1)やcₛ,ₖ(−1)の符号と位置型を調べ、その上で伸長則とsimplicity上限を組み直すの。）」</dd>
+<dt>一彌</dt><dd>「全sourceの±2の正確な分類は、今回の原稿の結論にはない。だから次はΛを勝手にφω(2)へ置き換えるのではなく、入力を調べ直す！」</dd>
+<dt>一埜</dt><dd>「関数の箱に入れる前に、何を持っているか確かめるんだね。」</dd>
+<dt>一彌</dt><dd>「そしていつか、n変数ヴェブレンや、順序数崩壊関数へ……！ ぼくはまだ、そっちへ行ける気がするのだ！✨」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（それは次の目標ね。定義と必要な性質を一つずつ用意して、どこまで延びるか確かめましょう。今回の定理から自動でついてくる結論ではないわ。）」</dd>
+<dt>一埜</dt><dd>「じゃあ、次のノートの最初には何を書く？」</dd>
+<dt>一彌</dt><dd>「「……出来た」！」</dd>
+<dt>一埜</dt><dd>「まだ出来てないよ！！ｗｗ💦」</dd>
+<dt>一彌</dt><dd>「では、「何がわからないか、わかった」！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（それなら、よい書き出しね。）」</dd>
+</dl>
+<p class="stage">＊NyankoPadが、小さな音を立てた。画面には猫回線からの返事。「帰宅、確認」。一埜はノートの表紙に、＋と−を一つずつ描いた。＊</p>
+<dl class="talk">
+<dt>一埜</dt><dd>「同じ長さでも、お話は違う。でも、どこかで同じ地図の点に集まるんだね。」</dd>
+<dt>一彌</dt><dd>「うむ。今日のぼくらも、同じ机に帰ってきた！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そして、おやつの残りは？）」</dd>
+<dt>一埜</dt><dd>「……ゼロ！」</dd>
+<dt>一彌</dt><dd>「\(\{\mid\}\)！！」</dd>
+</dl>
+<p class="stage">＊こにゃんの尻尾が、一文字ぶん、左へ動いた。＊</p>
+<details class="note"><summary>最後の小問：次の研究で、最初に調べ直すものは？</summary><div><p>新しい残余基点cₛ,ₖ(±1)の値と符号構造、birthday、PとMです。その情報で次の尾部輸送を組み立てます。全sourceのRₛ(±2)を、今回の結果だけで計算済みとはしません。</p></div></details>
+<p class="source">照合先：OPEN-PROBLEMS.md §3–4・§9、MAIN.md §10。n変数・崩壊関数は登場人物の目標。</p>
+<nav class="chapter-nav" aria-label="第28話の移動"><a href="#ch27">← 前の話</a><a href="#contents">目次</a><a href="#extra08">1/3の補講へ →</a></nav>
+</section>
+<section class="inner_wrapper" id="extra08" aria-labelledby="extra-title08">
+<p class="date">2026/11/04 追加 · 第28話のあとに読む補講H</p>
+<h2 id="extra-title08">補講H　三分の一の根――無限の道順にも、左右集合を</h2>
+<p class="stage">＊「おしまい」と書こうとした一彌の手が止まった。机の上には、補講で描いた二分木が三枚。隅に、小さく「では、1/3は？」と書いてある。＊</p>
+<dl class="talk">
+<dt>一彌</dt><dd>「第一変数が1/2なら、Φ(1,−Φ(2,0))と書けた。では、Φ(1/3,0)も、同じように途中駅と左右集合まで書けるのだろうか！？」</dd>
+<dt>一埜</dt><dd>「1/3の符号は、途中で終わらないんだよね。有限のΦの括弧に、全部入るの？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（有限個の括弧だけに収める式を、ここで得たわけではないの。でも、<strong>無限に続く規則を指定した符号列とcut</strong>なら、値を正確に書けるわ。今日は、その二つを照らし合わせましょう。）」</dd>
+</dl>
+<div class="formula">\[s=+--+-+-\cdots,\qquad X:=\Phi(1/3,0)=R_s(0),\qquad W:=\Phi(1/3,1)=R_s(1)\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（Xはこの行の根、Wは次の補講で調べる右childよ。第27話では、スペクトルの証明にsourceの算術的同定は必要ないと話したわね。ここでは、それとは別の<strong>このsourceの値は1/3である</strong>という原資料の定理を合わせて、Φ(1/3,x)と呼ぶの。）」</dd>
+<dt>一彌</dt><dd>「ぼくが最初に聞いたΦ(1,1/3)とは、1/3の席が違う！ 今回は、第一変数に1/3を入れた行だな！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。まず、有限prefixから出発するわ。wₙをsの先頭n文字、Gを補講C・Dの有限mirrorの写像として、nが1以上のときにrₙを定義しましょう。）」</dd>
+</dl>
+<div class="formula">\[w_n:=s\mathbin{\upharpoonright}n,\qquad r_n:=G_{w_n}(0)=\Phi(\operatorname{source}(w_n),0)\quad(n\ge1)\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（rₙは「先頭n文字だけを第一変数にした行の、第二座標0」。今回のrにはn＝0を使わないわ。そして、長さの目印はおなじみのΘとqよ。）」</dd>
+</dl>
+<div class="formula">\[\Theta_n:=\varphi_n(0),\qquad q:=\varphi_\omega(0)=\sup_{n&lt;\omega}\Theta_n\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「sourceの文字数nと、出来上がった数の符号の長さΘₙは別なんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。有限rootの定理では、b(rₙ)＝Θₙ。次の文字s(n)が＋なら＋のブロック、−なら−のブロックを後ろにつけるの。）」</dd>
+</dl>
+<div class="formula">\[r_{n+1}=\begin{cases}Y_{r_n}(\Theta_{n+1})&amp;s(n)=+,\\ Z_{r_n}(\Theta_{n+1})&amp;s(n)=-.\end{cases}\qquad(n\ge1)\]</div>
+<div class="table-scroll" tabindex="0"><table><caption>1/3の先頭部分を伸ばしたときの根。Y・Zの引数は順序数の長さ</caption><thead><tr><th scope="col">n／sourceの符号</th><th scope="col">Φを使った値rₙ</th><th scope="col">前の駅からの符号延長</th></tr></thead><tbody><tr><td>1 ／ ＋</td><td>\(r_1=\Phi(1,0)=\varepsilon_0\)</td><td>＋をΘ₁＝ε₀個</td></tr><tr><td>2 ／ ＋−</td><td>\(r_2=\Phi(1/2,0)=\Phi(1,-\Phi(2,0))\)</td><td>\(Z_{r_1}(\Theta_2)\)</td></tr><tr><td>3 ／ ＋−−</td><td>\(r_3=\Phi(1/4,0)=\Phi(1,-\Phi(3,0))\)</td><td>\(Z_{r_2}(\Theta_3)=Z_{\varepsilon_0}(\Theta_3)\)</td></tr><tr><td>4 ／ ＋−−＋</td><td>\(r_4=\Phi(3/8,0)=\Phi(1,-\Phi(3,-\Phi(4,0)))\)</td><td>\(Y_{r_3}(\Theta_4)\)</td></tr><tr><td>5 ／ ＋−−＋−</td><td>\(r_5=\Phi(5/16,0)\)</td><td>\(Z_{r_4}(\Theta_5)\)</td></tr><tr><td>6 ／ ＋−−＋−＋</td><td>\(r_6=\Phi(11/32,0)\)</td><td>\(Y_{r_5}(\Theta_6)\)</td></tr></tbody></table></div>
+<dl class="talk">
+<dt>一彌</dt><dd>「補講Gの目的地r₂が、今度は途中駅になった！ さらに−を伸ばすとr₃、そこから＋へ折り返すとr₄！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（r₂とr₃の間の詳しい駅も、同じ方法で書けるわ。たとえば、拡張イプシロンの添字を使うと……。）」</dd>
+</dl>
+<div class="formula">\[\varepsilon_{-\iota(\alpha)}:=\Phi(1,-\iota(\alpha))=Z_{\varepsilon_0}(\rho_0\cdot\alpha),\qquad \rho_0=\varepsilon_0^\omega\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（Θ₂≦α≦Θ₃を動かすと、これはr₂からr₃へ至る−の枝の途中のprefixになる。両端ではρ₀・Θ₂＝Θ₂、ρ₀・Θ₃＝Θ₃なので、表の式に戻るの。ここでのαや掛け算は順序数、−ι(α)は超現実数の負数よ。）」</dd>
+<dt>一埜</dt><dd>「じゃあεの負の添字も、いきなり別の数を当てずっぽうに選んだ名前じゃない。Zの長さと対応しているんだ！」</dd>
+</dl>
+<figure class="branch-map"><figcaption>Xへ至る一本の超限二分木の枝の抜粋。各rₙはXの真のprefix。矢印の間には多くの節点があり、値の動く向きは＋と−で変わる。</figcaption><ol class="branch-spine"><li>r₁＝ε₀<span class="branch-step">−を延ばす：補講Gの道順</span></li><li>r₂＝Φ(1/2,0)<span class="branch-off">Xより大きい側の目印</span><span class="branch-step">さらに−：ε<sub>−ι(α)</sub>の駅を通る</span></li><li>r₃＝Φ(1/4,0)<span class="branch-off">Xより小さい側の目印</span><span class="branch-step">＋をΘ₄個</span></li><li>r₄＝Φ(3/8,0)<span class="branch-step">−をΘ₅個</span></li><li>r₅＝Φ(5/16,0)<span class="branch-step">＋、−、＋、−……。符号列のprefixを合併</span></li><li><strong>X＝Φ(1/3,0)、birthdayはq</strong></li></ol></figure>
+<dl class="talk">
+<dt>一彌</dt><dd>「全部のrₙが、Φ(1,何か)の姿をしている。ということは、途中の目印もω写像の固定点か！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。nが1以上の根rₙも、最後のXもV₀の固定点よ。ただし、<strong>二つの目印の間にある全節点まで固定点とは限らない</strong>。補講Eで、ε₀−1は固定点ではなかったのと同じね。）」</dd>
+</dl>
+<div class="formula">\[X=\operatorname{simpSup}_{n\ge1}r_n,\qquad b(X)=q,\qquad V_0(X)=X\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「「上限」は符号列の合併。r₂からr₃では値が下がって、その先は交互に上がったり下がったりするから、普通の増加列の話ではないね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（よく覚えていたわ。結果の符号列は、次のブロックになる。最初の二つの−のブロックは、順序数の吸収Θ₂＋Θ₃＝Θ₃でまとめられるの。）」</dd>
+</dl>
+<div class="formula">\[\sigma_X=(+)^{\Theta_1}\frown(-)^{\Theta_3}\frown(+)^{\Theta_4}\frown(-)^{\Theta_5}\frown(+)^{\Theta_6}\frown\cdots\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（ここで(＋)^αは「＋をα個」、⌢は符号の連結。数の冪や足し算ではないわ。各ブロックの長さを足す計算では、たとえばΘ₃＋Θ₄＝Θ₄になるので、絶対位置の境界もΘで書けるの。）」</dd>
+<dt>一彌</dt><dd>「では、左右集合を全部書くには！？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（Xの＋がある位置の集合をI₊、−がある位置の集合をI₋としましょう。[α,β)は、α以上β未満の<strong>順序数の位置</strong>の集まりよ。）」</dd>
+</dl>
+<div class="formula">\[I_+=[0,\Theta_1)\ \cup\!\bigcup_{k&lt;\omega}[\Theta_{2k+3},\Theta_{2k+4}),\qquad I_-=[\Theta_1,\Theta_3)\ \cup\!\bigcup_{k&lt;\omega}[\Theta_{2k+4},\Theta_{2k+5})\]</div>
+<div class="formula">\[\mathcal L(X)=\{X\mathbin{\upharpoonright}\gamma:\gamma\in I_+\},\qquad \mathcal R(X)=\{X\mathbin{\upharpoonright}\gamma:\gamma\in I_-\},\qquad X=\{\mathcal L(X)\mid\mathcal R(X)\}\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「X↾γは、γ番目の符号を読む直前で切った長さγのprefix。その次が＋なら左option、−なら右option！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（これが省略のない正準左右集合よ。Xという名前を使っていても、値を先に知らなければ使えない循環ではないの。上で符号を全部指定したので、γより先まで届く有限root rₙを選んで切れば、同じprefixが得られるわ。）」</dd>
+<dt>一彌</dt><dd>「もっと、Φが並ぶ形のcutにもできないか！？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（できるわ。左をr₃、r₅、r₇……、右をr₂、r₄、r₆……に絞る。左側は上へ、右側は下へ十分近づくので、同じ数を選べるの。）」</dd>
+</dl>
+<div class="formula">\[\boxed{\Phi(1/3,0)=\{r_{2m+3}:m&lt;\omega\mid r_{2m+2}:m&lt;\omega\}}\]</div>
+<div class="formula">\[X=\{\Phi(1/4,0),\Phi(5/16,0),\ldots\mid\Phi(1/2,0),\Phi(3/8,0),\ldots\}\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（二つ目の「……」の規則は一つ目の式とrₙの定義で指定済み。これは正準optionの一部を使った普通のcutで、正準集合全部との集合等式ではないわ。）」</dd>
+<dt>一埜</dt><dd>「途中駅を間引いた地図と、全駅の地図！ どちらも同じXを指定できるんだね。」</dd>
+</dl>
+<details class="note"><summary>sourceの1/3と、今回使った原資料の範囲</summary><div><p>03-OMEGA-ROW.md §3.1・§3.6では、oneThirdSignsのsource値が1/3であることと、oneThirdRow(0)が既存のbasepointと一致することを別々に扱っています。sourceの算術的同定 oneThird_sourceIndex_eq はnative_decide由来の計算に依存し、rowの構造定理とは監査範囲が異なります。ここでは両者を区別してΦ(1/3,x)という原資料の記法を採用しました。I₊・I₋はOneThirdRowOneCompleteCanonicalSets.leanの符号位置集合に対応します。今回、Leanの再コンパイルはしていません。</p></div></details>
+<details class="note"><summary>補講Hの小問：r₄＝Φ(3/8,0)は、Xの左option？ 右option？</summary><div><p>右optionです。長さΘ₄で切ったr₄の次の符号は−なので、r₄はXより大きい真のprefix。対してr₅の次は＋なので、r₅は左optionです。どちらも「Xより単純」ですが、大小の向きは違います。</p></div></details>
+<p class="source">照合先：03-OMEGA-ROW.md §3.1・§3.6、MAIN.md 主定理A・有限rootの符号定理、ONE-THIRD-ROW-ONE-TWO-CANONICAL-CUTS.md §2–3・§5、OneThirdRowOneCompleteCanonicalSets.lean。中間のε添字表示は補講Gの伸長則の適用。</p>
+<nav class="chapter-nav" aria-label="補講Hの移動"><a href="#ch28">← 前へ</a><a href="#contents">目次</a><a href="#extra09">次へ →</a></nav>
+</section>
+<section class="inner_wrapper" id="extra09" aria-labelledby="extra-title09">
+<p class="date">2026/11/04 追加 · 第28話のあとに読む補講I</p>
+<h2 id="extra-title09">補講I　三分の一の行の右へ――Φ(1/3,1)を書いてみよう</h2>
+<p class="stage">＊一埜が、前の地図のいちばん下に大きな＋を書いた。一彌は隣に「あと一歩！」と書く。こにゃんの耳が、ぴくりと動いた。＊</p>
+<dl class="talk">
+<dt>一埜</dt><dd>「X＝Φ(1/3,0)までは来たよ。次はW＝Φ(1/3,1)！ ＋を一文字つければいい？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（行の<strong>入力</strong>では、0に＋一文字をつけた1ね。でも<strong>出力</strong>で伸びるのは、ずっと長い尾部よ。sには＋も−も無限回現れるので、第20話の分類から右尾部長はΛになるわ。）」</dd>
+</dl>
+<div class="formula">\[\Lambda:=\varphi_\omega(1),\qquad\boxed{W=\Phi(1/3,1)=Y_X(\Lambda),\quad X=\Phi(1/3,0)}\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「おお！ 今までの表記で書けた！ Xの符号を全部残して、その後ろへ＋をΛ個！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。Yは符号連結だから、体の和X＋ι(Λ)という意味ではないわ。birthdayを計算する足し算は順序数の足し算よ。）」</dd>
+</dl>
+<div class="formula">\[b(X)=q,\qquad b(W)=q+\Lambda=\Lambda\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「Xの長さqが消えたように見えても、Xの−の符号は消えないんだね。Wは＋だけの順序数Λとは違う！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（その通り。位置γがq未満ならXと同じ符号。q以上Λ未満なら＋。全体の長さはΛなの。）」</dd>
+</dl>
+<div class="formula">\[\sigma_W(\gamma)=\begin{cases}\sigma_X(\gamma)&amp;\gamma&lt;q,\\+&amp;q\le\gamma&lt;\Lambda.\end{cases}\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「補講E・Fみたいに、この長い＋の枝にも、算術や固定点で書ける途中駅があるのか！？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（あるわ。原資料では右componentと呼ぶ列ね。ここではzₙと書き、Xからそこまでの＋の長さをμₙ、ミューと呼びましょう。）」</dd>
+</dl>
+<div class="formula">\[z_n:=Y_X(\mu_n)\quad(n&lt;\omega)\]</div>
+<div class="table-scroll" tabindex="0"><table><caption>Wへの途中駅。φで書くμₙは順序数の尾部長、zₙは超現実数そのもの</caption><thead><tr><th scope="col">駅</th><th scope="col">＋の尾部長μₙ</th><th scope="col">値・式の読み方</th></tr></thead><tbody><tr><td>z₀</td><td>\(q\cdot\omega\)</td><td>\(z_0=X\cdot\iota(\omega)=Y_X(q\cdot\omega)\)</td></tr><tr><td>z₁</td><td>\(\varphi_1(q+1)=\varepsilon_{q+1}\)</td><td>\(z_1=\operatorname{simpSup}_{k&lt;\omega}V_0^{[k]}(X+1)\)</td></tr><tr><td>z₂</td><td>\(\varphi_1(q^{\omega^2})\)</td><td>\(Y_X(\varepsilon_{q^{\omega^2}})\)</td></tr><tr><td>z₃</td><td>\(\varphi_1(q^{\omega^3})\)</td><td>\(Y_X(\varepsilon_{q^{\omega^3}})\)</td></tr><tr><td>z₄</td><td>\(\varphi_4(q+1)\)</td><td>\(Y_X(\varphi_4(q+1))\)</td></tr><tr><td>z₅</td><td>\(\varphi_4(q^{\omega^5})\)</td><td>\(Y_X(\varphi_4(q^{\omega^5}))\)</td></tr><tr><td>z₆</td><td>\(\varphi_6(q+1)\)</td><td>\(Y_X(\varphi_6(q+1))\)</td></tr><tr class="highlight"><td>目的地W</td><td>\(\Lambda=\varphi_\omega(1)\)</td><td>\(\Phi(1/3,1)=Y_X(\Lambda)\)</td></tr></tbody></table></div>
+<dl class="talk">
+<dt>一埜</dt><dd>「φ₄が出てきたからといって、z₄そのものがφ₄(q＋1)なのではないんだ。表の真ん中は、尻尾の長さ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。順序数版φと超現実数版Φの対応も、型をそろえて書けるわ。有限のjについてはこうだったわね。）」</dd>
+</dl>
+<div class="formula">\[\iota(\varphi_j(\alpha))=\Phi(j,\iota(\alpha))\qquad(j&lt;\omega)\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（たとえばμ₂を超現実数として埋め込めばΦ(1,ι(q^(ω²)))。けれどz₂は、その<strong>長さ</strong>をXの後ろへつけた数なの。Yの引数には、表の順序数μ₂を使ってね。）」</dd>
+<dt>一彌</dt><dd>「z₁には、ωの冪を積み上げる道順もあるのだな！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（V₀^[k]は、V₀をk回繰り返す記号よ。0回なら何もしない。Xは正のmonomialなのでX＋1＝Y_X(1)。そこからΦ(0,−)を繰り返すと、次の道順になるわ。）」</dd>
+</dl>
+<div class="formula">\[X+1,\quad\Phi(0,X+1)=X\cdot\iota(\omega)=z_0,\quad\Phi(0,z_0),\quad\Phi(0,\Phi(0,z_0)),\quad\ldots\]</div>
+<div class="formula">\[z_1=\operatorname{simpSup}_{k&lt;\omega}V_0^{[k]}(X+1),\qquad V_0(z_1)=z_1\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「補講Eでは固定点から下へ降りて次の固定点に着いたけど、今回は上へ伸びて固定点に着くんだ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そうね。z₀はまだV₀の固定点ではなく、z₁で固定点に着く。さらにz₂、z₃……もV₀の固定点になるわ。ただし、有限回の反復だけでz₁へ到着するわけではない。ここでもprefixの合併が必要なの。）」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（表を無限に続ける規則も書いておきましょう。最初のμ₀からμ₃は表のとおり。それ以降は、kを0、1、2……と動かす次の二式よ。）」</dd>
+</dl>
+<div class="formula">\[\mu_{2k+4}=\varphi_{2k+4}(q+1),\qquad\mu_{2k+5}=\varphi_{2k+4}\!\left(q^{\omega^{2k+5}}\right)\quad(k&lt;\omega)\]</div>
+<div class="formula">\[\sup_{n&lt;\omega}\mu_n=\Lambda,\qquad\boxed{W=\operatorname{simpSup}_{n&lt;\omega}z_n}\]</div>
+<figure class="branch-map"><figcaption>XからWへ至る＋だけの枝の抜粋。各駅は次の駅の真のprefixで、値も増える。枝の長さを図の距離で表してはいない。</figcaption><ol class="branch-spine"><li><strong>X＝Φ(1/3,0)</strong><span class="branch-step">＋を一文字</span></li><li>X＋1＝Y<sub>X</sub>(1)<span class="branch-step">Φ(0,−)を適用</span></li><li>z₀＝X・ω<span class="branch-step">さらにωの冪を反復し、prefixを合併</span></li><li>z₁＝Y<sub>X</sub>(ε<sub>q＋1</sub>)<span class="branch-off">V₀の固定点</span><span class="branch-step">＋をさらに延ばす（途中省略）</span></li><li>z₂ → z₃ → z₄ → …<span class="branch-step">尾部長μₙの上限Λへ</span></li><li><strong>W＝Φ(1/3,1)＝Y<sub>X</sub>(Λ)</strong></li></ol></figure>
+<dl class="talk">
+<dt>一彌</dt><dd>「Φの世界では、各zₙをどう選んだのだ？ μの表を見つける前の定義も知りたいぞ。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（第16話の残余座標の出番ね。先頭n文字の写像の内側で、Xに対応する座標dₙを取り、その右childを写すの。）」</dd>
+</dl>
+<div class="formula">\[d_n:=c_{s,n}(0),\qquad X=G_{w_n}(d_n),\qquad z_n=G_{w_n}\bigl(Y_{d_n}(1)\bigr)\quad(n&lt;\omega)\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（この式ではn＝0も使い、空wordの写像はG∅＝V₀。Hのrₙの定義はnが1以上だったので、混ぜないでね。各Gは有限のΦの合成で書ける。だからこれは、有限mirrorの中の右childを少しずつ厳しく選ぶ構成でもあるのよ。）」</dd>
+<dt>一埜</dt><dd>「dₙを勝手に0にして、Φ(1,1)、Φ(1/2,1)、Φ(1/4,1)……を並べたものではないんだ！」</dd>
+<dt>一彌</dt><dd>「「残余座標」が必要だった理由、ようやく見えた！ それでは最後に、Wの左右集合を！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（Xの符号を残して＋だけ追加したので、右optionはXと同じ。左optionには、追加した＋の各位置で切ったものが増えるわ。）」</dd>
+</dl>
+<div class="formula">\[\mathcal L(W)=\mathcal L(X)\cup\{Y_X(t):t&lt;\Lambda\},\qquad\mathcal R(W)=\mathcal R(X)\]</div>
+<div class="formula">\[\boxed{W=\{\mathcal L(X)\cup\{Y_X(t):t&lt;\Lambda\}\mid\mathcal R(X)\}}\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「t＝0のところがXだね。X自身も、新しい左optionに入る！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（これは正準集合の完全な表示。さらに左をzₙだけ、右を前の話のr₂、r₄、r₆……だけに絞った普通のcutも、既存の定理で得られているわ。）」</dd>
+</dl>
+<div class="formula">\[\boxed{\Phi(1/3,1)=\{z_n:n&lt;\omega\mid r_{2m+2}:m&lt;\omega\}}\]</div>
+<div class="formula">\[W=\{X\cdot\iota(\omega),\ Y_X(\varepsilon_{q+1}),\ Y_X(\varepsilon_{q^{\omega^2}}),\ldots\mid\Phi(1,-\Phi(2,0)),\ \Phi(1,-\Phi(3,-\Phi(4,0))),\ldots\}\]</div>
+<dl class="talk">
+<dt>一彌</dt><dd>「Xのcutと同じ右側の目印を残して、左側が先へ進んだ！ 「……」もμₙとrₙの規則で全部決まっている！」</dd>
+<dt>一埜</dt><dd>「でも右側の条件を全部忘れて、普通の{X｜}にしてはいけないんだよね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。「Xの右child」は、<strong>どの世界の内部で選ぶか</strong>が大切。行の値域ℂₛの中なら短く書けるけれど、普通の超現実数全体のcutなら、上の左右集合を使うの。）」</dd>
+</dl>
+<div class="formula">\[X=\{\varnothing\mid\varnothing\}_{\mathcal C_s},\qquad W=\{X\mid\varnothing\}_{\mathcal C_s},\qquad\mathcal C_s=\operatorname{range}(R_s)\]</div>
+<dl class="talk">
+<dt>こにゃん</dt><dd>「ハァーン🐈（もう一つ。zₙは増加するけれど、Wはその列の通常順序の最小上界ではないわ。Wに−を一文字つけた数も、全部のzₙより上にいるから。）」</dd>
+</dl>
+<div class="formula">\[z_n&lt;Z_W(1)&lt;W\qquad(n&lt;\omega)\]</div>
+<dl class="talk">
+<dt>一埜</dt><dd>「符号の木ではWまで伸ばす必要がある。でも大小だけなら、その少し下にも上界がある。二種類の「上限」、ここでも違うんだ！」</dd>
+<dt>一彌</dt><dd>「最初はΦしか読めなかったが……今なら言えるぞ！ Xは無限のsourceが指定した根。Wは、その符号列にΛの＋の尾部をつけた数！」</dd>
+<dt>一埜</dt><dd>「そして、左右集合まで書けば、どの数を選ぶのかがわかる！ お兄ちゃん、やっと「何が出来たの？」に答えられたね！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ハァーン。では、NyankoPadに保存しましょう。今度の「……」は、道順をちゃんと持っているわ。）」</dd>
+</dl>
+<details class="note"><summary>原資料の記号と今回の記号を照合する</summary><div><p>ONE-THIRD-ROW-ONE-TWO-CANONICAL-CUTS.mdのD・B・uₙは、本補講のX・W・zₙです。同資料§4–5にWの完全正準集合、部分族によるcut、最初のcomponentの値があります。一般のμₙはONE-THIRD-COMPONENT-CLOSED-FORMS-TAIL-SYMMETRY.md「全右componentの閉形式とepsilon添字」の右component閉形式に対応。構成の意味と通常順序の最小上界でないことは04-COMPONENT-SEQUENCE.mdを参照しました。表のφは尾部長の順序数関数であり、zₙそのものと同一視しません。本文の会話・図・表はこれらを組み合わせた解説で、新規Lean検証を実施したという意味ではありません。</p></div></details>
+<details class="note"><summary>補講Iの小問：XからWへ進むと、正準右optionは何個増える？</summary><div><p>増えません。追加した符号がすべて＋なので、新たに生まれるのは左optionだけです。正準右集合はℛ(W)＝ℛ(X)のまま。一方、Xから新しく伸ばした部分が生む左optionは、Y_X(t)（t＜Λ）で全部書けます。</p></div></details>
+<p class="source">照合先：03-OMEGA-ROW.md §3.6・§3.11、04-COMPONENT-SEQUENCE.md §4.3–4.6、MAIN.md 尾部分類、ONE-THIRD-ROW-ONE-TWO-CANONICAL-CUTS.md §4–5、ONE-THIRD-COMPONENT-CLOSED-FORMS-TAIL-SYMMETRY.md「全右componentの閉形式とepsilon添字」、OneThirdRowOneCanonicalCutExplicit.lean。</p>
+<nav class="chapter-nav" aria-label="補講Iの移動"><a href="#extra08">← 前へ</a><a href="#contents">目次</a><a href="#glossary">次へ →</a></nav>
+</section>
+<p class="ending">＊ おしまい。次の問いは、次のページに。 ＊</p>
+</article>
+<section class="inner_wrapper" id="glossary" aria-labelledby="glossary-title">
+<h2 id="glossary-title">こにゃんの記号辞典</h2>
+<p>記号を押すと、定義を説明する話へ戻ります。順序数の長さと、超現実数そのものを区別して読んでください。</p>
+<div class="table-scroll" tabindex="0"><table><caption>何を入れて、何が出る？</caption><thead><tr><th scope="col">記号</th><th scope="col">入力・出力／種類</th><th scope="col">仕事</th></tr></thead><tbody><tr><th scope="row"><a href="#ch04">φⱼ(α)</a></th><td>順序数α → 順序数</td><td>jは階層番号。φ₀(α)＝ω^α。上位は固定点を列挙。</td></tr><tr><th scope="row"><a href="#ch09">b(x)</a></th><td>超現実数 → 順序数</td><td>符号列の長さ＝birthday。</td></tr><tr><th scope="row"><a href="#ch10">ι(α)</a></th><td>順序数 → 超現実数</td><td>α個の＋だけの数へ埋め込む。</td></tr><tr><th scope="row"><a href="#ch11">Vⱼ(x)</a></th><td>超現実数 → 超現実数</td><td>今回の有限Veblen写像。V₀はomega写像。</td></tr><tr><th scope="row"><a href="#ch13">σₓ(γ)</a></th><td>符号位置 → 符号</td><td>xのγ番目の符号。長さの外の0は「符号なし」。</td></tr><tr><th scope="row"><a href="#ch13">P(x) ／ M(x)</a></th><td>超現実数 → 順序数</td><td>＋／−の位置を元の順に並べた順序型。</td></tr><tr><th scope="row"><a href="#ch14">Yₐ(t) ／ Zₐ(t)</a></th><td>基点aと順序数t → 超現実数</td><td>aの後ろへ＋／−をt個連結。</td></tr><tr><th scope="row"><a href="#ch15">Cⱼ(p)</a></th><td>順序数p → 順序数</td><td>Vⱼを通る−の一文字分の伸長係数。p＝P(a)。</td></tr><tr><th scope="row"><a href="#ch16">s ／ Tₛ,ₖ</a></th><td>source ／ 超現実数の写像</td><td>sは自然数上の二符号列。Tは第k文字が選ぶ写像。</td></tr><tr><th scope="row"><a href="#ch16">ℰₛ,ₙ</a></th><td>超現実数 → 超現実数</td><td>有限prefixの合成。V₀が最外側。</td></tr><tr><th scope="row"><a href="#ch16">ℂₛ ／ Rₛ</a></th><td>値域の交差 ／ その座標づけ</td><td>Rₛはℂₛを標準的に座標づけする行。</td></tr><tr><th scope="row"><a href="#ch16">cₛ,ₖ(x) ／ dₛ,ₖ</a></th><td>残余座標 ／ 残余基点</td><td>Rₛ(x)＝ℰₛ,ₖ(cₛ,ₖ(x))。dₛ,ₖ＝cₛ,ₖ(0)。</td></tr><tr><th scope="row"><a href="#ch17">Xₛ</a></th><td>source → 超現実数</td><td>行の基点Rₛ(0)＝V₀(dₛ,₀)。</td></tr><tr><th scope="row"><a href="#ch05">Θₙ ／ q ／ Λ</a></th><td>順序数の略名</td><td>φₙ(0) ／ φω(0) ／ φω(1)。</td></tr><tr><th scope="row"><a href="#ch19">Qₛ,ₙ(t) ／ Mₛ,ₙ(t)</a></th><td>尾部長 → 尾部長</td><td>有限prefixを通る＋／−の長さ変換。M(x)と区別。</td></tr><tr><th scope="row"><a href="#ch19">λₛ⁺ ／ λₛ⁻</a></th><td>source → 順序数</td><td>XₛからRₛ(1)／Rₛ(−1)へつなぐ純粋尾部長。</td></tr><tr><th scope="row"><a href="#ch20">L ／ Eⱼ</a></th><td>順序数の略名</td><td>L＝q^(ω^ω)、Eⱼ＝φⱼ₊₁(L)。ℰₛ,ₙと区別。</td></tr><tr><th scope="row"><a href="#ch21">F(s) ／ F⁻¹(a,b)</a></th><td>スペクトル ／ ファイバー</td><td>右・左の長さの組 ／ 同じ組を返すsourceの集合。</td></tr><tr><th scope="row"><a href="#ch25">Cof±(s)</a></th><td>sourceについての条件</td><td>どこより先にも、その符号が現れる。</td></tr><tr><th scope="row"><a href="#ch27">Φ(1, 1/3)</a></th><td>出発点となった問い</td><td>この研究ではV₁(1/3)。oneThirdをsourceに選ぶRₛ(0)と区別。</td></tr><tr><th scope="row"><a href="#extra01">E(x) ／ ℱ₀ ／ 内部cut</a></th><td>固定点の座標づけ／固定点世界</td><td>補講ではE(x)＝V₁(x)。ℱ₀の中で最も単純な値を選ぶ。尾部のEⱼとは区別。</td></tr><tr><th scope="row"><a href="#extra03">G_w(x) ／ mirror規則</a></th><td>有限wordが選ぶ超現実数の行</td><td>第一変数の有限符号列で行を指定。スペクトルFと区別してGと表記。</td></tr><tr><th scope="row"><a href="#extra02">ℒ(y) ／ ℛ(y)</a></th><td>出力の正準左・右option集合</td><td>＋／−の各位置の直前で切ったprefixの集合。内部cutの境界集合とは異なる。</td></tr><tr><th scope="row"><a href="#extra05">ℒη ／ ℛη(t)</a></th><td>順序数ηから−をt個伸ばした数の左右集合</td><td>左はη未満の全順序数、右はZη(β)（β＜t）。</td></tr><tr><th scope="row"><a href="#extra07">εₓ ／ ρ₀ ／ ρ₁</a></th><td>拡張イプシロンrow／尾部長の順序数</td><td>εₓ＝Φ(1,x)。ρ₀＝ε₀^ω、ρ₁＝ε₁^ω。添字と体の割り算を区別。</td></tr><tr><th scope="row"><a href="#extra08">X ／ rₙ ／ I₊・I₋</a></th><td>1/3の行の根／有限prefixの根／符号位置集合</td><td>X＝Φ(1/3,0)。rₙ（n≧1）のprefixを合併してXを得る。</td></tr><tr><th scope="row"><a href="#extra09">W ／ zₙ ／ μₙ</a></th><td>1/3の行の右child／途中のcomponent／＋の尾部長</td><td>W＝Φ(1/3,1)＝Y_X(Λ)。zₙ＝Y_X(μₙ)の符号列の合併。</td></tr></tbody></table></div>
+<a href="#top">↑ ページのはじめへ</a>
+</section>
+<footer>
+<p><strong>原資料と、この物語の範囲</strong></p>
+<p>2026年10月29日付の数学ノート「無限符号列に対応する超現実Veblen行の符号構造と尾部スペクトル」と、THEOREM-MAP.md、PROOF-DEPENDENCIES.md、VERIFICATION.md、OPEN-PROBLEMS.mdをもとに構成。各話末尾のMAIN.mdはこの原稿です。追加補講では01-EPSILON-ROW.md、02-FINITE-MIRROR.mdと対応する定理台帳・有限伸長定理も参照。補講H・Iでは03-OMEGA-ROW.md、04-COMPONENT-SEQUENCE.md、oneThirdの正準左右集合とcomponentの閉形式に関する資料も照合しました。</p>
+<p>基礎の例題、登場人物の会話、模式図、ブラウザ実験は説明のためのものです。研究部分の証明状態は原資料の保存記録に基づく紹介で、この物語の制作に伴うLeanの再コンパイル・全再ビルドは行っていません。補講の個別の符号表示・正準cutは既存定理から導いた数学的帰結です。任意の二変数Veblen拡張との一致、全sourceの第二入力±2、n変数や崩壊関数への一般化は、この物語で証明済みとはしていません。</p>
+<p><a href="制作ノート.txt">原資料・章対応・制作範囲のメモ</a> ／ <a href="../20261025/_quiz.htm">前の数学小話：仲間はずれのDと、四角い数の箱</a></p>
+<p>数式の整形にはMathJaxの配信先への接続が必要です。未接続の場合は数式記法のまま表示されます。会話・小問の開閉はJavaScriptなしでも読めます。</p>
+</footer>
+</main>
+</body>
+</html>

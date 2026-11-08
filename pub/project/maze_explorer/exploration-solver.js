@@ -9,12 +9,12 @@ function search(start,isExit,neighbors,optional=false,collect){
 }
 // Explore the region from which the present location remains reachable first.
 // Keys may increase on a return journey; matching the physical location is sufficient.
-function exploreSearch(start,visited,neighbors,exit){
+function exploreSearch(start,visited,neighbors,exit,warpMissing){
  const key=s=>s.id+':'+(s.mask||0)+':'+(s.via??''),nodes=[start],parents=[null],edges=[[]],reverse=[[]],ids=new Map([[key(start),0]]);
  for(let i=0;i<nodes.length;i++)for(const [direction,next] of neighbors(nodes[i])){
   const k=key(next);let j=ids.get(k);if(j===undefined){j=nodes.length;ids.set(k,j);nodes.push(next);parents.push([i,direction]);edges.push([]);reverse.push([]);}edges[i].push(j);reverse[j].push(i);
  }
- const goal=s=>!visited.has(s.id)||(s.via!==undefined&&!visited.has(s.via));
+ const goal=s=>!visited.has(s.id)||(s.via!==undefined&&(!visited.has(s.via)||warpMissing?.has(s.via)));
  if(!nodes.some(goal))return null;
  const safe=new Set(),q=[];nodes.forEach((s,i)=>{if(s.id===start.id){safe.add(i);q.push(i);}});
  for(const i of q)for(const j of reverse[i])if(!safe.has(j)){safe.add(j);q.push(j);}
@@ -33,16 +33,16 @@ function exploreSearch(start,visited,neighbors,exit){
  if(target<0)return null;
  const path=[];for(let p=parents[target];p;p=parents[p[0]])path.push(p[1]);return path.reverse();
 }
-function route(start,visited,collect,exit,neighbors){return visited&&!collect?exploreSearch(start,visited,neighbors,exit):search(start,s=>s.id===exit,neighbors,!!collect,collect);}
-function connected(state,visited,collect){const w=state.world,f=state.features;if(!Number.isInteger(w.exit))throw Error('出口のある生成迷路で使えます。');return route({id:state.id,mask:f?.hasKey?1:0},visited,collect,w.exit,s=>{const list=[];for(let d=0;d<4;d++){const e=w.edges.get(s.id+':'+d);if(e&&w.cells[e.to]&&(!f||e.to!==f.door||s.mask)){const to=f?.warps.get(e.to)??e.to;list.push([d,{id:to,mask:s.mask||(e.to===f?.key?1:0),...(visited||collect?{via:e.to}:{})}]);}}return list;});}
+function route(start,visited,collect,exit,neighbors,warpMissing){return visited&&!collect?exploreSearch(start,visited,neighbors,exit,warpMissing):search(start,s=>s.id===exit,neighbors,!!collect,collect);}
+function connected(state,visited,collect,warpMissing){const w=state.world,f=state.features;if(!Number.isInteger(w.exit))throw Error('出口のある生成迷路で使えます。');return route({id:state.id,mask:f?.hasKey?1:0},visited,collect,w.exit,s=>{const list=[];for(let d=0;d<4;d++){const e=w.edges.get(s.id+':'+d);if(e&&w.cells[e.to]&&(!f||e.to!==f.door||s.mask)){const to=f?.warps.get(e.to)??e.to;list.push([d,{id:to,mask:s.mask||(e.to===f?.key?1:0),...(visited||collect?{via:e.to}:{})}]);}}return list;},warpMissing);}
 
-function main(game,core,visited,collect,avoidBirds=true){const w=game.world;if(!Number.isInteger(w.exit))throw Error('出口のある生成迷路で使えます。');
+function main(game,core,visited,collect,avoidBirds=true,warpMissing){const w=game.world;if(!Number.isInteger(w.exit))throw Error('出口のある生成迷路で使えます。');
  const locks=w.puzzle?.locks||[],mask=locks.reduce((m,l,i)=>game.player.keys.includes(l.keyId)?m|1<<i:m,0);
  const danger=new Set();if(avoidBirds&&!collect)for(const b of game.birds||[]){danger.add(b.position);if(b.cooldown<=0&&(game.turns+1)%2===0)for(const d of Object.keys(core.DIRS)){const e=core.transition(w,{world_position:b.position},d);if(e)danger.add(e.to);}}
- const calculate=()=>route({id:game.player.world_position,mask},visited,collect,w.exit,s=>{const list=[],keys=locks.filter((l,i)=>s.mask&(1<<i)).map(l=>l.keyId);for(const d of Object.keys(core.DIRS)){const e=core.ruleTransition(w,{...game.player,world_position:s.id,keys},d);if(!e)continue;if(s.id===game.player.world_position&&s.mask===mask&&danger.has(e.to))continue;const i=locks.findIndex(l=>l.key===e.to);list.push([d,{id:w.warps?.get(e.to)??e.to,...(visited||collect?{via:e.to}:{}),mask:i<0?s.mask:s.mask|1<<i}]);}return list;});
+ const calculate=()=>route({id:game.player.world_position,mask},visited,collect,w.exit,s=>{const list=[],keys=locks.filter((l,i)=>s.mask&(1<<i)).map(l=>l.keyId);for(const d of Object.keys(core.DIRS)){const e=core.ruleTransition(w,{...game.player,world_position:s.id,keys},d);if(!e)continue;if(s.id===game.player.world_position&&s.mask===mask&&danger.has(e.to))continue;const i=locks.findIndex(l=>l.key===e.to);list.push([d,{id:w.warps?.get(e.to)??e.to,...(visited||collect?{via:e.to}:{}),mask:i<0?s.mask:s.mask|1<<i}]);}return list;},warpMissing);
  if(!danger.size)return calculate();
  try{const path=calculate();if(path?.length||(!visited&&path))return path;}catch(error){/* The bird may block the only route: allow contact and replan after transfer. */}
- return main(game,core,visited,collect,false);
+ return main(game,core,visited,collect,false,warpMissing);
 }
 // Short-cycle escape keeps a distant waypoint instead of chasing a new shortest
 // route every turn. This controller never mutates the game or its random stream.
@@ -72,6 +72,33 @@ function birdDetour(game,core){
  if(r.target!==null){graph??=paths();if(graph.parents.has(r.target))r.result=route(graph.parents,r.target);else{r.target=null;r.cooldown=game.turns+4;}}
  return r.result;
 }
+function connectedBirdDetour(state){
+ const f=state.features,w=state.world;
+ if(f?.bird==null)return null;
+ let r=birdEscapes.get(state);if(!r){r={history:[],last:-1,target:null,until:0,cooldown:0,relocation:null};birdEscapes.set(state,r);}
+ if(r.last===state.steps)return r.result??null;r.last=state.steps;
+ if(f.last&&r.relocation!==f.last){r.history=[];r.target=null;r.relocation=f.last;}
+ const position=state.id;
+ const signature=[position,state.steps%2,f.hasKey,f.bird,f.cooldown].join('|');
+ r.history.push({signature,id:position});if(r.history.length>32)r.history.shift();
+ const birdStep=e=>e&&w.cells[e.to]&&(f.options.birdAcross||e.kind!=='throat')&&(e.to!==f.door||f.hasKey)&&!f.warps.has(e.to)&&e.to!==w.exit;
+ const danger=new Set([f.bird]);if(f.cooldown<=0&&(state.steps+1)%2===0)for(let d=0;d<4;d++){const e=w.edges.get(f.bird+':'+d);if(birdStep(e))danger.add(e.to);}
+ const neighbors=id=>{const result=[];for(let d=0;d<4;d++){const e=w.edges.get(id+':'+d);if(!e||!w.cells[e.to]||(e.to===f.door&&!f.hasKey))continue;const to=f.warps.get(e.to)??e.to;if(to===f.bird||e.to===f.bird||(id===position&&(danger.has(to)||danger.has(e.to))))continue;result.push([d,to]);}return result;};
+ function paths(){const q=[position],parents=new Map([[position,null]]),depth=new Map([[position,0]]);for(const id of q){if(depth.get(id)>=16)continue;for(const [d,to]of neighbors(id))if(!parents.has(to)){parents.set(to,[id,d]);depth.set(to,depth.get(id)+1);q.push(to);}}return {q,parents,depth};}
+ const route=(parents,target)=>{const result=[];for(let p=parents.get(target);p;p=parents.get(p[0]))result.push(p[1]);return result.reverse();};
+ if(r.target!==null&&(position===r.target||state.steps>=r.until)){r.target=null;r.history=[];r.cooldown=state.steps+8;}
+ let graph=null;
+ if(r.target===null&&state.steps>=r.cooldown&&r.history.filter(h=>h.signature===signature).length>=3){
+  graph=paths();const recent=new Set(r.history.map(h=>h.id));let best=-Infinity;
+  for(const id of graph.q){const distance=graph.depth.get(id);if(distance<6||recent.has(id))continue;
+   const score=Math.min(distance,12)+(neighbors(id).length>=2?4:0);if(score>best){best=score;r.target=id;}
+  }
+  if(r.target!==null){r.until=state.steps+24;r.history=[];}else r.cooldown=state.steps+8;
+ }
+ r.result=null;
+ if(r.target!==null){graph??=paths();if(graph.parents.has(r.target))r.result=route(graph.parents,r.target);else{r.target=null;r.cooldown=state.steps+4;}}
+ return r.result;
+}
 // Lift a local walk into the plane: closing at one period proves a genuine lap.
 function liftedLoop(start,vector,neighbors){
  const key=(id,x,y)=>id+':'+x+':'+y,q=[{id:start,x:0,y:0}],parents=new Map([[key(start,0,0),null]]),bound=3*(Math.abs(vector[0])+Math.abs(vector[1])+8);let finish=null;
@@ -98,10 +125,16 @@ function connectedLoop(state,space,loops){
   const k=sheet+axis;let route=cache.get(k);
   if(!route){const seen=new Set();for(let id=0;id<w.cells.length;id++)if(w.cells[id]&&!state.features?.warps.has(id)&&space.groundSheet(w,id)===sheet&&!seen.has(id)){
    const q=[id];seen.add(id);for(const n of q)for(const [,to]of neighbors(n))if(!seen.has(to)){seen.add(to);q.push(to);}
-   const path=liftedLoop(id,w.lattice[axis],neighbors);if(path){route={start:id,path};cache.set(k,route);break;}
+   const path=liftedLoop(id,w.lattice[axis],neighbors);if(path){
+    // Remove the out-and-back stem: it is not part of the period cycle.
+    const positions=[{id,x:0,y:0}];for(const d of path){const prev=positions.at(-1),edge=w.edges.get(prev.id+':'+d);positions.push({id:edge.to,x:prev.x+directions[d][0],y:prev.y+directions[d][1]});}
+    let first=0,last=path.length;const [vx,vy]=w.lattice[axis];for(let i=0;i<positions.length;i++)for(let j=i+1;j<positions.length;j++)if(j-i<last-first&&positions[i].id===positions[j].id&&positions[j].x-positions[i].x===vx&&positions[j].y-positions[i].y===vy){first=i;last=j;}
+    route={start:positions[first].id,path:path.slice(first,last)};cache.set(k,route);break;}
+
   }}
   if(!route)throw Error('シート'+(sheet+1)+'の'+(axis==='a'?'横':'縦')+'周回路が見つかりません。次へ進まず停止しました。');
-  const approach=search({id:state.id},s=>s.id===route.start,s=>directions.flatMap((_,d)=>{const e=w.edges.get(s.id+':'+d);return e&&(!state.features||e.to!==state.features.door||state.features.hasKey)?[[d,{id:state.features?.warps.get(e.to)??e.to}]]:[];}));return [...approach,...route.path];
+  const entries=new Map();let at=route.start;for(let i=0;i<route.path.length;i++){if(!entries.has(at))entries.set(at,i);at=w.edges.get(at+':'+route.path[i]).to;}
+  let entry=0;const approach=search({id:state.id},s=>{if(!entries.has(s.id))return false;entry=entries.get(s.id);return true;},s=>directions.flatMap((_,d)=>{const e=w.edges.get(s.id+':'+d);return e&&(!state.features||e.to!==state.features.door||state.features.hasKey)?[[d,{id:state.features?.warps.get(e.to)??e.to}]]:[];}));return [...approach,...route.path.slice(entry),...route.path.slice(0,entry)];
  }
  return null;
 }
@@ -140,5 +173,14 @@ function birdNotes(game,core,act){
 function screenDirection(game,direction,truth,bridge,core){const result=Object.keys(core.DIRS).find(d=>bridge.input(game,d,truth)===direction);if(!result)throw Error('移動方向を変換できません。');return result;}
 function connectedTargets(state){const targets=new Set();connected(state,undefined,targets);return targets;}
 function mainTargets(game,core){const targets=new Set();main(game,core,undefined,targets);return targets;}
-const api={birdDetour,mainMapPlan,warpNotes,mainLoop,connectedLoop,liftedLoop,birdNotes,connected,main,screenDirection,connectedTargets,mainTargets};if(typeof module==='object')module.exports=api;else root.ExplorationSolver=api;
+// A landing visit is not evidence for the outgoing warp. Require each directed
+// transfer to be witnessed, including reverse edges of pairs and closing cycles.
+function missingWarps(warps,arrows,sheet=false){return new Set([...(warps||new Map())].filter(([from,to])=>!(arrows||[]).some(a=>a.from===from&&a.to===to&&(sheet?a.confirmed:a.status==='confirmed'))).map(([from])=>from));}
+function mainWarpPending(game){return missingWarps(game.world.warps,game.warpArrows);}
+function connectedWarpPending(state){return missingWarps(state.features?.warps,state.annotations?.arrows,true);}
+function mainExplore(game,core,seen){return main(game,core,seen,undefined,true,mainWarpPending(game));}
+function connectedExplore(state,seen){return connected(state,seen,undefined,connectedWarpPending(state));}
+function mainLoopPending(game){return game.world.topology==='torus'?['x','y'].filter(axis=>!game.cognition.known_loops.has(axis)).length:0;}
+function connectedLoopPending(state,loops){if(!state.world.lattice)return 0;const known=loops.knowledge(state);let count=0;for(let sheet=0;sheet<(state.world.sheets||2);sheet++)for(const [a,b]of [[1,0],[0,1]])if(!known.some(p=>p.sheet===sheet&&p.learned&&p.a===a&&p.b===b))count++;return count;}
+const api={connectedBirdDetour,mainLoopPending,connectedLoopPending,mainExplore,connectedExplore,mainWarpPending,connectedWarpPending,birdDetour,mainMapPlan,warpNotes,mainLoop,connectedLoop,liftedLoop,birdNotes,connected,main,screenDirection,connectedTargets,mainTargets};if(typeof module==='object')module.exports=api;else root.ExplorationSolver=api;
 })(globalThis);

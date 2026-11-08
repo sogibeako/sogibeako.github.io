@@ -518,6 +518,8 @@ $is_logged_in = isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true
 
     <!-- JSファイルのインポート -->
     <script src="js/parser.js?v=<?php echo filemtime(__DIR__ . '/js/parser.js'); ?>"></script>
+    <script src="js/matrix-cli.js?v=<?php echo filemtime(__DIR__ . '/js/matrix-cli.js'); ?>"></script>
+    <script src="js/hypercomplex-cli.js?v=<?php echo filemtime(__DIR__ . '/js/hypercomplex-cli.js'); ?>"></script>
     <script src="js/app.js?v=<?php echo filemtime(__DIR__ . '/js/app.js'); ?>"></script>
 <?php endif; ?>
 

@@ -1,0 +1,2129 @@
+{
+  "note": "Not used for candidate selection; 64 additional seeds",
+  "seeds": [
+    2000123,
+    2000124,
+    2000125,
+    2000126,
+    2000127,
+    2000128,
+    2000129,
+    2000130,
+    2000131,
+    2000132,
+    2000133,
+    2000134,
+    2000135,
+    2000136,
+    2000137,
+    2000138,
+    2000139,
+    2000140,
+    2000141,
+    2000142,
+    2000143,
+    2000144,
+    2000145,
+    2000146,
+    2000147,
+    2000148,
+    2000149,
+    2000150,
+    2000151,
+    2000152,
+    2000153,
+    2000154,
+    2000155,
+    2000156,
+    2000157,
+    2000158,
+    2000159,
+    2000160,
+    2000161,
+    2000162,
+    2000163,
+    2000164,
+    2000165,
+    2000166,
+    2000167,
+    2000168,
+    2000169,
+    2000170,
+    2000171,
+    2000172,
+    2000173,
+    2000174,
+    2000175,
+    2000176,
+    2000177,
+    2000178,
+    2000179,
+    2000180,
+    2000181,
+    2000182,
+    2000183,
+    2000184,
+    2000185,
+    2000186
+  ],
+  "before": {
+    "reward": 596.3718749999998,
+    "clearRate": 0.71875,
+    "episodes": [
+      {
+        "seed": 2000123,
+        "reward": -102,
+        "cleared": false,
+        "dead": true,
+        "kills": 1,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 4,
+        "charges": [
+          1,
+          1,
+          2,
+          1
+        ]
+      },
+      {
+        "seed": 2000124,
+        "reward": 633.2,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 67,
+        "turns": 8,
+        "charges": [
+          0,
+          3,
+          3,
+          1
+        ]
+      },
+      {
+        "seed": 2000125,
+        "reward": 992.6,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 26,
+        "turns": 40,
+        "charges": [
+          0,
+          8,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000126,
+        "reward": 120,
+        "cleared": false,
+        "dead": false,
+        "kills": 0,
+        "enemies": 1,
+        "hp": 120,
+        "turns": 80,
+        "charges": [
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000127,
+        "reward": 803.7,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 17,
+        "turns": 7,
+        "charges": [
+          3,
+          3,
+          1,
+          1
+        ]
+      },
+      {
+        "seed": 2000128,
+        "reward": 123,
+        "cleared": false,
+        "dead": false,
+        "kills": 0,
+        "enemies": 1,
+        "hp": 120,
+        "turns": 80,
+        "charges": [
+          2,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "seed": 2000129,
+        "reward": 1016.3,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 83,
+        "turns": 43,
+        "charges": [
+          0,
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000130,
+        "reward": 108,
+        "cleared": false,
+        "dead": false,
+        "kills": 0,
+        "enemies": 1,
+        "hp": 100,
+        "turns": 80,
+        "charges": [
+          2,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "seed": 2000131,
+        "reward": 814.8,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 78,
+        "turns": 46,
+        "charges": [
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "seed": 2000132,
+        "reward": 816,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 40,
+        "turns": 10,
+        "charges": [
+          0,
+          0,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 2000133,
+        "reward": 824.1,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 121,
+        "turns": 61,
+        "charges": [
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000134,
+        "reward": 845.5,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 110,
+        "turns": 41,
+        "charges": [
+          3,
+          1,
+          2,
+          0
+        ]
+      },
+      {
+        "seed": 2000135,
+        "reward": 1016.3,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 38,
+        "turns": 7,
+        "charges": [
+          0,
+          3,
+          2,
+          0
+        ]
+      },
+      {
+        "seed": 2000136,
+        "reward": 848.2,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 3,
+        "hp": 107,
+        "turns": 8,
+        "charges": [
+          1,
+          1,
+          4,
+          0
+        ]
+      },
+      {
+        "seed": 2000137,
+        "reward": 656.3,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 2,
+        "hp": 113,
+        "turns": 11,
+        "charges": [
+          0,
+          0,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 2000138,
+        "reward": 626.8,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 63,
+        "turns": 16,
+        "charges": [
+          3,
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000139,
+        "reward": -318,
+        "cleared": false,
+        "dead": true,
+        "kills": 0,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 12,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000140,
+        "reward": 138,
+        "cleared": false,
+        "dead": false,
+        "kills": 0,
+        "enemies": 1,
+        "hp": 140,
+        "turns": 80,
+        "charges": [
+          0,
+          4,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000141,
+        "reward": 860.5,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 110,
+        "turns": 5,
+        "charges": [
+          4,
+          4,
+          2,
+          0
+        ]
+      },
+      {
+        "seed": 2000142,
+        "reward": 114,
+        "cleared": false,
+        "dead": false,
+        "kills": 0,
+        "enemies": 1,
+        "hp": 100,
+        "turns": 80,
+        "charges": [
+          3,
+          0,
+          0,
+          2
+        ]
+      },
+      {
+        "seed": 2000143,
+        "reward": 314,
+        "cleared": false,
+        "dead": false,
+        "kills": 1,
+        "enemies": 2,
+        "hp": 120,
+        "turns": 80,
+        "charges": [
+          1,
+          3,
+          0,
+          1
+        ]
+      },
+      {
+        "seed": 2000144,
+        "reward": 628.5,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 60,
+        "turns": 9,
+        "charges": [
+          0,
+          1,
+          4,
+          1
+        ]
+      },
+      {
+        "seed": 2000145,
+        "reward": 813.4,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 69,
+        "turns": 44,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000146,
+        "reward": 800.5,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 5,
+        "turns": 5,
+        "charges": [
+          1,
+          0,
+          0,
+          2
+        ]
+      },
+      {
+        "seed": 2000147,
+        "reward": 648.5,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 110,
+        "turns": 11,
+        "charges": [
+          0,
+          0,
+          2,
+          1
+        ]
+      },
+      {
+        "seed": 2000148,
+        "reward": 619.2,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 37,
+        "turns": 6,
+        "charges": [
+          3,
+          1,
+          4,
+          1
+        ]
+      },
+      {
+        "seed": 2000149,
+        "reward": 623.7,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 42,
+        "turns": 3,
+        "charges": [
+          3,
+          4,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000150,
+        "reward": 817.9,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 54,
+        "turns": 11,
+        "charges": [
+          1,
+          2,
+          0,
+          1
+        ]
+      },
+      {
+        "seed": 2000151,
+        "reward": 991.2,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 22,
+        "turns": 14,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000152,
+        "reward": 511,
+        "cleared": false,
+        "dead": false,
+        "kills": 2,
+        "enemies": 3,
+        "hp": 110,
+        "turns": 80,
+        "charges": [
+          1,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "seed": 2000153,
+        "reward": 1000.7,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 42,
+        "turns": 25,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000154,
+        "reward": 329,
+        "cleared": false,
+        "dead": false,
+        "kills": 1,
+        "enemies": 2,
+        "hp": 130,
+        "turns": 80,
+        "charges": [
+          1,
+          2,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000155,
+        "reward": 1032.9,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 69,
+        "turns": 11,
+        "charges": [
+          2,
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000156,
+        "reward": 837.2,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 72,
+        "turns": 6,
+        "charges": [
+          3,
+          3,
+          1,
+          1
+        ]
+      },
+      {
+        "seed": 2000157,
+        "reward": 643.8,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 83,
+        "turns": 6,
+        "charges": [
+          1,
+          2,
+          0,
+          2
+        ]
+      },
+      {
+        "seed": 2000158,
+        "reward": 645,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 130,
+        "turns": 48,
+        "charges": [
+          0,
+          0,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 2000159,
+        "reward": 610.1,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 2,
+        "hp": 36,
+        "turns": 11,
+        "charges": [
+          2,
+          2,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 2000160,
+        "reward": 768.8,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 3,
+        "hp": 13,
+        "turns": 24,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000161,
+        "reward": 1007.0999999999999,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 46,
+        "turns": 11,
+        "charges": [
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000162,
+        "reward": 800.8,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 3,
+        "hp": 53,
+        "turns": 44,
+        "charges": [
+          1,
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000163,
+        "reward": 614.3,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 38,
+        "turns": 11,
+        "charges": [
+          2,
+          2,
+          0,
+          1
+        ]
+      },
+      {
+        "seed": 2000164,
+        "reward": 1040.8,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 78,
+        "turns": 12,
+        "charges": [
+          0,
+          3,
+          5,
+          0
+        ]
+      },
+      {
+        "seed": 2000165,
+        "reward": 1027.9,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 69,
+        "turns": 15,
+        "charges": [
+          1,
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000166,
+        "reward": 630.2,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 57,
+        "turns": 8,
+        "charges": [
+          4,
+          3,
+          0,
+          1
+        ]
+      },
+      {
+        "seed": 2000167,
+        "reward": 646,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 130,
+        "turns": 22,
+        "charges": [
+          0,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "seed": 2000168,
+        "reward": 464.20000000000005,
+        "cleared": false,
+        "dead": false,
+        "kills": 2,
+        "enemies": 3,
+        "hp": 32,
+        "turns": 80,
+        "charges": [
+          0,
+          4,
+          2,
+          0
+        ]
+      },
+      {
+        "seed": 2000169,
+        "reward": -301,
+        "cleared": false,
+        "dead": true,
+        "kills": 0,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 2,
+        "charges": [
+          2,
+          4,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000170,
+        "reward": 818.7,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 47,
+        "turns": 7,
+        "charges": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "seed": 2000171,
+        "reward": 120,
+        "cleared": false,
+        "dead": false,
+        "kills": 0,
+        "enemies": 1,
+        "hp": 120,
+        "turns": 80,
+        "charges": [
+          1,
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000172,
+        "reward": 629.3,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 63,
+        "turns": 11,
+        "charges": [
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000173,
+        "reward": -301,
+        "cleared": false,
+        "dead": true,
+        "kills": 0,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 2,
+        "charges": [
+          1,
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000174,
+        "reward": 813.2,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 32,
+        "turns": 6,
+        "charges": [
+          3,
+          3,
+          2,
+          0
+        ]
+      },
+      {
+        "seed": 2000175,
+        "reward": 314,
+        "cleared": false,
+        "dead": false,
+        "kills": 1,
+        "enemies": 3,
+        "hp": 110,
+        "turns": 80,
+        "charges": [
+          0,
+          0,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 2000176,
+        "reward": 108,
+        "cleared": false,
+        "dead": false,
+        "kills": 0,
+        "enemies": 2,
+        "hp": 100,
+        "turns": 80,
+        "charges": [
+          0,
+          3,
+          0,
+          1
+        ]
+      },
+      {
+        "seed": 2000177,
+        "reward": 622.8,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 88,
+        "turns": 42,
+        "charges": [
+          0,
+          1,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000178,
+        "reward": 776.4,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 3,
+        "hp": 34,
+        "turns": 46,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000179,
+        "reward": 831.1,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 66,
+        "turns": 23,
+        "charges": [
+          0,
+          2,
+          1,
+          3
+        ]
+      },
+      {
+        "seed": 2000180,
+        "reward": 105.5,
+        "cleared": false,
+        "dead": true,
+        "kills": 2,
+        "enemies": 3,
+        "hp": 0,
+        "turns": 7,
+        "charges": [
+          0,
+          4,
+          3,
+          1
+        ]
+      },
+      {
+        "seed": 2000181,
+        "reward": 630.7,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 92,
+        "turns": 13,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000182,
+        "reward": 648.9,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 94,
+        "turns": 9,
+        "charges": [
+          0,
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000183,
+        "reward": 1012.0999999999999,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 46,
+        "turns": 13,
+        "charges": [
+          0,
+          3,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 2000184,
+        "reward": 651.7,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 107,
+        "turns": 13,
+        "charges": [
+          0,
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000185,
+        "reward": 300.2,
+        "cleared": false,
+        "dead": false,
+        "kills": 1,
+        "enemies": 2,
+        "hp": 77,
+        "turns": 80,
+        "charges": [
+          2,
+          3,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 2000186,
+        "reward": 583.2,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 27,
+        "turns": 48,
+        "charges": [
+          2,
+          3,
+          0,
+          1
+        ]
+      }
+    ]
+  },
+  "after": {
+    "reward": 595.4296875000002,
+    "clearRate": 0.78125,
+    "episodes": [
+      {
+        "seed": 2000123,
+        "reward": 817.9,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 34,
+        "turns": 5,
+        "charges": [
+          1,
+          1,
+          2,
+          1
+        ]
+      },
+      {
+        "seed": 2000124,
+        "reward": 633.2,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 67,
+        "turns": 8,
+        "charges": [
+          0,
+          3,
+          3,
+          1
+        ]
+      },
+      {
+        "seed": 2000125,
+        "reward": 993.4,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 29,
+        "turns": 48,
+        "charges": [
+          1,
+          8,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000126,
+        "reward": 617.7,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 32,
+        "turns": 3,
+        "charges": [
+          0,
+          4,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000127,
+        "reward": 833.6,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 81,
+        "turns": 12,
+        "charges": [
+          2,
+          3,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000128,
+        "reward": 657,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 120,
+        "turns": 12,
+        "charges": [
+          2,
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000129,
+        "reward": -117,
+        "cleared": false,
+        "dead": true,
+        "kills": 1,
+        "enemies": 3,
+        "hp": 0,
+        "turns": 10,
+        "charges": [
+          0,
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000130,
+        "reward": 626,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 100,
+        "turns": 44,
+        "charges": [
+          1,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "seed": 2000131,
+        "reward": 811.8,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 43,
+        "turns": 10,
+        "charges": [
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "seed": 2000132,
+        "reward": -107.5,
+        "cleared": false,
+        "dead": true,
+        "kills": 1,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 9,
+        "charges": [
+          0,
+          0,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 2000133,
+        "reward": 813.8,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 33,
+        "turns": 6,
+        "charges": [
+          2,
+          1,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 2000134,
+        "reward": 631,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 2,
+        "hp": 75,
+        "turns": 10,
+        "charges": [
+          0,
+          2,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000135,
+        "reward": 1055.7,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 102,
+        "turns": 5,
+        "charges": [
+          0,
+          3,
+          2,
+          0
+        ]
+      },
+      {
+        "seed": 2000136,
+        "reward": -301,
+        "cleared": false,
+        "dead": true,
+        "kills": 0,
+        "enemies": 3,
+        "hp": 0,
+        "turns": 2,
+        "charges": [
+          2,
+          3,
+          4,
+          1
+        ]
+      },
+      {
+        "seed": 2000137,
+        "reward": 843.9,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 94,
+        "turns": 7,
+        "charges": [
+          0,
+          0,
+          2,
+          0
+        ]
+      },
+      {
+        "seed": 2000138,
+        "reward": 626.8,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 63,
+        "turns": 16,
+        "charges": [
+          3,
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000139,
+        "reward": -305.5,
+        "cleared": false,
+        "dead": true,
+        "kills": 0,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 5,
+        "charges": [
+          0,
+          1,
+          2,
+          0
+        ]
+      },
+      {
+        "seed": 2000140,
+        "reward": 653.9,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 94,
+        "turns": 5,
+        "charges": [
+          1,
+          4,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000141,
+        "reward": 818.7,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 47,
+        "turns": 7,
+        "charges": [
+          4,
+          4,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000142,
+        "reward": 627.5,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 100,
+        "turns": 41,
+        "charges": [
+          2,
+          0,
+          0,
+          1
+        ]
+      },
+      {
+        "seed": 2000143,
+        "reward": 839.3,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 88,
+        "turns": 9,
+        "charges": [
+          1,
+          3,
+          4,
+          0
+        ]
+      },
+      {
+        "seed": 2000144,
+        "reward": 641,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 90,
+        "turns": 14,
+        "charges": [
+          0,
+          0,
+          4,
+          1
+        ]
+      },
+      {
+        "seed": 2000145,
+        "reward": 805.2,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 32,
+        "turns": 16,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000146,
+        "reward": 800.5,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 5,
+        "turns": 5,
+        "charges": [
+          1,
+          0,
+          0,
+          2
+        ]
+      },
+      {
+        "seed": 2000147,
+        "reward": 645.5,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 110,
+        "turns": 23,
+        "charges": [
+          0,
+          1,
+          2,
+          1
+        ]
+      },
+      {
+        "seed": 2000148,
+        "reward": 618.4,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 34,
+        "turns": 4,
+        "charges": [
+          3,
+          1,
+          4,
+          1
+        ]
+      },
+      {
+        "seed": 2000149,
+        "reward": 623.7,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 42,
+        "turns": 3,
+        "charges": [
+          3,
+          4,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000150,
+        "reward": 848.7,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 97,
+        "turns": 7,
+        "charges": [
+          3,
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000151,
+        "reward": 77.5,
+        "cleared": false,
+        "dead": true,
+        "kills": 2,
+        "enemies": 3,
+        "hp": 0,
+        "turns": 15,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000152,
+        "reward": 508,
+        "cleared": false,
+        "dead": false,
+        "kills": 2,
+        "enemies": 3,
+        "hp": 110,
+        "turns": 80,
+        "charges": [
+          1,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000153,
+        "reward": 998.4,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 19,
+        "turns": 14,
+        "charges": [
+          0,
+          1,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000154,
+        "reward": -114,
+        "cleared": false,
+        "dead": true,
+        "kills": 1,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 10,
+        "charges": [
+          1,
+          2,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000155,
+        "reward": 73.5,
+        "cleared": false,
+        "dead": true,
+        "kills": 2,
+        "enemies": 3,
+        "hp": 0,
+        "turns": 35,
+        "charges": [
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000156,
+        "reward": 827.2,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 57,
+        "turns": 8,
+        "charges": [
+          3,
+          3,
+          1,
+          1
+        ]
+      },
+      {
+        "seed": 2000157,
+        "reward": 646.5,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 95,
+        "turns": 9,
+        "charges": [
+          1,
+          2,
+          0,
+          1
+        ]
+      },
+      {
+        "seed": 2000158,
+        "reward": 643.1,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 91,
+        "turns": 5,
+        "charges": [
+          0,
+          0,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 2000159,
+        "reward": 832.2,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 72,
+        "turns": 10,
+        "charges": [
+          2,
+          2,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 2000160,
+        "reward": 85,
+        "cleared": false,
+        "dead": true,
+        "kills": 2,
+        "enemies": 3,
+        "hp": 0,
+        "turns": 18,
+        "charges": [
+          0,
+          4,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 2000161,
+        "reward": 1041.9,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 89,
+        "turns": 11,
+        "charges": [
+          0,
+          2,
+          2,
+          0
+        ]
+      },
+      {
+        "seed": 2000162,
+        "reward": 1023.9000000000001,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 94,
+        "turns": 41,
+        "charges": [
+          0,
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000163,
+        "reward": 635.2,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 82,
+        "turns": 16,
+        "charges": [
+          2,
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000164,
+        "reward": 833,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 3,
+        "hp": 80,
+        "turns": 12,
+        "charges": [
+          1,
+          2,
+          2,
+          0
+        ]
+      },
+      {
+        "seed": 2000165,
+        "reward": 1023.7,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 67,
+        "turns": 15,
+        "charges": [
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000166,
+        "reward": 630.7,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 57,
+        "turns": 7,
+        "charges": [
+          4,
+          3,
+          0,
+          1
+        ]
+      },
+      {
+        "seed": 2000167,
+        "reward": 668.5,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 130,
+        "turns": 7,
+        "charges": [
+          0,
+          3,
+          2,
+          1
+        ]
+      },
+      {
+        "seed": 2000168,
+        "reward": 268.4,
+        "cleared": false,
+        "dead": false,
+        "kills": 1,
+        "enemies": 3,
+        "hp": 49,
+        "turns": 80,
+        "charges": [
+          0,
+          4,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000169,
+        "reward": -301,
+        "cleared": false,
+        "dead": true,
+        "kills": 0,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 2,
+        "charges": [
+          2,
+          4,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000170,
+        "reward": 837.6,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 86,
+        "turns": 10,
+        "charges": [
+          2,
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000171,
+        "reward": 628.7,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 67,
+        "turns": 11,
+        "charges": [
+          1,
+          1,
+          2,
+          0
+        ]
+      },
+      {
+        "seed": 2000172,
+        "reward": 630.6,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 56,
+        "turns": 6,
+        "charges": [
+          0,
+          1,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000173,
+        "reward": -301,
+        "cleared": false,
+        "dead": true,
+        "kills": 0,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 2,
+        "charges": [
+          1,
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000174,
+        "reward": 826.3,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 73,
+        "turns": 23,
+        "charges": [
+          3,
+          3,
+          1,
+          0
+        ]
+      },
+      {
+        "seed": 2000175,
+        "reward": 990.4,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 14,
+        "turns": 24,
+        "charges": [
+          0,
+          1,
+          4,
+          0
+        ]
+      },
+      {
+        "seed": 2000176,
+        "reward": 317,
+        "cleared": false,
+        "dead": false,
+        "kills": 1,
+        "enemies": 2,
+        "hp": 100,
+        "turns": 80,
+        "charges": [
+          0,
+          3,
+          4,
+          0
+        ]
+      },
+      {
+        "seed": 2000177,
+        "reward": 627.3,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 63,
+        "turns": 15,
+        "charges": [
+          0,
+          1,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 2000178,
+        "reward": 793.1,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 3,
+        "hp": 6,
+        "turns": 9,
+        "charges": [
+          2,
+          1,
+          2,
+          0
+        ]
+      },
+      {
+        "seed": 2000179,
+        "reward": -112.5,
+        "cleared": false,
+        "dead": true,
+        "kills": 1,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 7,
+        "charges": [
+          0,
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000180,
+        "reward": 1032.9,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 64,
+        "turns": 5,
+        "charges": [
+          0,
+          1,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 2000181,
+        "reward": 627.8,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 53,
+        "turns": 8,
+        "charges": [
+          0,
+          4,
+          2,
+          0
+        ]
+      },
+      {
+        "seed": 2000182,
+        "reward": 645.6,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 96,
+        "turns": 12,
+        "charges": [
+          0,
+          2,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000183,
+        "reward": 1015.8,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 48,
+        "turns": 14,
+        "charges": [
+          0,
+          4,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 2000184,
+        "reward": 651.6,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 101,
+        "turns": 6,
+        "charges": [
+          0,
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000185,
+        "reward": 800.1,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 61,
+        "turns": 43,
+        "charges": [
+          2,
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 2000186,
+        "reward": 641.3,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 83,
+        "turns": 11,
+        "charges": [
+          3,
+          3,
+          2,
+          0
+        ]
+      }
+    ]
+  }
+}

@@ -4,7 +4,7 @@
 const M=typeof module==='object'?require('./core.js'):root.MazeCore;
 const catalog={algorithms:['dfs','prim','division','rooms','wilson','kruskal','hunt','growing','eller'],topologies:['plane','torus'],rules:['plain','warp','keys','birds','bird-keys'],warpStyles:['pair','oneway','cycle3','cycle4'],warpRotations:['none','right','left','half','mirror','mixed'],warpVisibility:['visible','invisible']};
 const defaults={minWidth:15,maxWidth:31,minHeight:11,maxHeight:23,...catalog,warpVisibility:['visible']};
-function candidates(c){return c.topologies.flatMap(topology=>c.algorithms.flatMap(algorithm=>c.rules.filter(rule=>topology!=='torus'||(!['division','eller'].includes(algorithm)&&!['keys','bird-keys'].includes(rule))).map(rule=>({topology,algorithm,rule})))).filter(x=>dimensions(c.minWidth,c.maxWidth,x.topology==='torus').length&&dimensions(c.minHeight,c.maxHeight,x.topology==='torus').length);}
+function candidates(c){return c.topologies.flatMap(topology=>c.algorithms.flatMap(algorithm=>c.rules.filter(rule=>topology!=='torus'||!['division','eller'].includes(algorithm)).map(rule=>({topology,algorithm,rule})))).filter(x=>dimensions(c.minWidth,c.maxWidth,x.topology==='torus').length&&dimensions(c.minHeight,c.maxHeight,x.topology==='torus').length);}
 function dimensions(min,max,torus){const result=[];for(let n=min;n<=max;n++)if(n>=(torus?8:9)&&n<=(torus?100:101)&&n%2===(torus?0:1))result.push(n);return result;}
 function validate(value,allowNoCombination=false){
  if(!value||typeof value!=='object'||Array.isArray(value)||![7,8,9,10].includes(Object.keys(value).length)||Object.keys(value).some(k=>!Object.hasOwn(defaults,k)))throw Error('ランダム設定の形式が不正です。');
@@ -26,7 +26,6 @@ function inspect(value){
   const reasons=[];
   if(!widths.length||!heights.length)reasons.push(torus?'指定範囲に横幅・高さの両方が偶数となるサイズがありません。':'指定範囲に横幅・高さの両方が奇数となるサイズがありません。');
   if(torus&&c.algorithms.some(a=>['division','eller'].includes(a)))reasons.push('領域分割・Ellerはトーラスの抽選対象外です。');
-  if(torus&&c.rules.some(r=>['keys','bird-keys'].includes(r)))reasons.push('鍵と扉・鍵と扉＋鳥人間はトーラスの抽選対象外です。');
   return {topology,count,widths,heights,reasons};
  });
  return {count:choices.length,spaces};
@@ -35,7 +34,7 @@ function choose(seed,value){
  const c=validate(value),rng=M.random(seed+'|random-journey-v1'),pick=a=>a[Math.floor(rng()*a.length)];
  const {topology,algorithm,rule}=pick(candidates(c)),torus=topology==='torus';
  const shifts=torus?pick([[0,0],[2,0],[0,2]]):[0,0];
- const options={seed,width:pick(dimensions(c.minWidth,c.maxWidth,torus)),height:pick(dimensions(c.minHeight,c.maxHeight,torus)),algorithm,topology:torus?'torus':'plane',shiftX:shifts[0],shiftY:shifts[1],
+ const options={distantKey:true,seed,width:pick(dimensions(c.minWidth,c.maxWidth,torus)),height:pick(dimensions(c.minHeight,c.maxHeight,torus)),algorithm,topology:torus?'torus':'plane',shiftX:shifts[0],shiftY:shifts[1],
  loops:['birds','bird-keys'].includes(rule)?8:0,newestBias:pick([30,70,100]),roomCount:6,roomPlacement:pick(['bsp','scatter','grid']),connectionStyle:pick(['tree','chain','ring','hub']),
  warpMode:rule==='warp',warpStyle:pick(c.warpStyles?.length?c.warpStyles:catalog.warpStyles),warpCount:pick([1,2,3,4]),warpInvisible:false,
  keyDoor:['keys','bird-keys'].includes(rule),keyCount:pick([1,2,3]),birdMode:['birds','bird-keys'].includes(rule),birdCount:1,teleportPolicy:pick(['far','known','unseen']),separateMaps:true,

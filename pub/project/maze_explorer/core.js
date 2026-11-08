@@ -1,6 +1,8 @@
 /* Browser and Node share this dependency-free simulation core. */
 (function (root) {
   'use strict';
+  const Wildlife=typeof module==='object'?require('./maze-wildlife.js'):root.MazeWildlife;
+  const Wands=typeof module==='object'?require('./main-wands.js'):root.MainWands;
   const DIRS = { up: [0, -1], right: [1, 0], down: [0, 1], left: [-1, 0] };
   function random(seed) {
     let s = 2166136261;
@@ -41,7 +43,7 @@
   function validateShift(width, height, shiftX, shiftY) {
     if (![shiftX, shiftY].every(n => Number.isInteger(n) && n % 2 === 0) || Math.abs(shiftX) >= width || Math.abs(shiftY) >= height) throw new Error('ずれは対応する辺の長さ未満の偶数セルで指定してください。');
   }
-  function generateGeometry({ width = 31, height = 23, algorithm = 'dfs', seed = 'first-walk', loops = 0, roomCount = 8, roomPlacement = 'bsp', connectionStyle = 'tree', keyDoor = false, birdMode = false, birdCount = 1, teleportPolicy = 'far', separateMaps = false, keyCount = 1, topology = 'plane', loopLearning = false, learningLaps = 5, selfVision = false, shiftX = 0, shiftY = 0, newestBias = 70 } = {}) {
+  function generateGeometry({ width = 31, height = 23, algorithm = 'dfs', seed = 'first-walk', loops = 0, roomCount = 8, roomPlacement = 'bsp', connectionStyle = 'tree', keyDoor = false, distantKey = false, birdMode = false, birdCount = 1, teleportPolicy = 'far', separateMaps = false, keyCount = 1, topology = 'plane', loopLearning = false, learningLaps = 5, selfVision = false, shiftX = 0, shiftY = 0, newestBias = 70 } = {}) {
     if (!['plane', 'torus'].includes(topology)) throw new Error('未対応の空間です。');
     const torus = topology === 'torus';
     if (!['far','unseen','known'].includes(teleportPolicy)) throw new Error('転移先の選び方が不正です。');
@@ -55,14 +57,13 @@
       if (algorithm === 'eller') throw new Error('Eller法は現在平面専用です。空間を平面に変更してください。');
       if (algorithm === 'division') throw new Error('壁で区切る方式は現在平面専用です。空間を平面に変更してください。');
       validateShift(width, height, shiftX, shiftY);
-      if (keyDoor) throw new Error('トーラスの鍵と扉は未対応です。通常探索または鳥人間を選んでください。');
-      if (algorithm !== 'rooms') return finishWorld({ ...generateTorus({ width, height, algorithm, seed, loops, shiftX, shiftY, newestBias }), loopLearning, learningLaps, selfVision, birdMode, birdCount, teleportPolicy, separateMaps });
+      if (algorithm !== 'rooms') return finishWorld({ ...generateTorus({ width, height, algorithm, seed, loops, shiftX, shiftY, newestBias }), loopLearning, learningLaps, selfVision, birdMode, birdCount, teleportPolicy, separateMaps }, keyDoor, keyCount, distantKey);
     }
     if (algorithm === 'rooms') {
       if (!Number.isInteger(roomCount) || roomCount < 2 || roomCount > 24) throw new Error('部屋数は2〜24の整数にしてください。');
       if (!['bsp', 'scatter', 'grid'].includes(roomPlacement)) throw new Error('未対応の部屋の配置方式です。');
       if (!['tree', 'chain', 'ring', 'hub'].includes(connectionStyle)) throw new Error('未対応の部屋のつなぎ方です。');
-      return finishWorld({ ...generateRooms({ width, height, seed, loops, roomCount, roomPlacement, connectionStyle, topology, shiftX: torus ? shiftX : 0, shiftY: torus ? shiftY : 0 }), loopLearning, learningLaps, selfVision, birdMode, birdCount, teleportPolicy, separateMaps }, keyDoor, keyCount);
+      return finishWorld({ ...generateRooms({ width, height, seed, loops, roomCount, roomPlacement, connectionStyle, topology, shiftX: torus ? shiftX : 0, shiftY: torus ? shiftY : 0 }), loopLearning, learningLaps, selfVision, birdMode, birdCount, teleportPolicy, separateMaps }, keyDoor, keyCount, distantKey);
     }
     const rng = random(seed), cells = new Uint8Array(width * height), id = (x, y) => y * width + x;
     const neighbors = (x, y) => Object.values(DIRS).map(([dx, dy]) => [x + 2 * dx, y + 2 * dy, x + dx, y + dy]).filter(([a, b]) => a > 0 && a < width - 1 && b > 0 && b < height - 1 && !cells[id(a, b)]);
@@ -150,7 +151,7 @@
     for (let y = 1; y < height - 1; y++) for (let x = 1; x < width - 1; x++) {
       if ((x + y) % 2 === 1 && !cells[id(x, y)] && rng() < loops / 100) cells[id(x, y)] = 1;
     }
-    return finishWorld({ width, height, cells, start: id(1, 1), exit: 0, seed: String(seed), algorithm, birdMode, birdCount, teleportPolicy, separateMaps, ...(algorithm === 'growing' ? { newestBias } : {}) }, keyDoor, keyCount);
+    return finishWorld({ width, height, cells, start: id(1, 1), exit: 0, seed: String(seed), algorithm, birdMode, birdCount, teleportPolicy, separateMaps, ...(algorithm === 'growing' ? { newestBias } : {}) }, keyDoor, keyCount, distantKey);
   }
   function inspectWarpConnectivity(world) {
     const seen=new Set([world.start]),touched=new Set([world.start]),queue=[world.start];
@@ -174,6 +175,7 @@
     if(options.warpMode && (options.keyDoor||options.birdMode))
       throw new Error('ワープ床は現在、鳥人間なし・鍵と扉なしで使用できます。');
     const world=generateGeometry(options);
+    if(options.birdLeap)world.birdLeap=true;
     if(!options.warpMode)return world;
     const style=options.warpStyle||'pair',requested=options.warpCount??1;
     if(!['pair','oneway','cycle3','cycle4'].includes(style)||!Number.isInteger(requested)||requested<1||requested>4)
@@ -289,7 +291,7 @@
     if (chosen.length !== count - 1) throw new Error('生成用グラフが分断されています。');
     return chosen;
   }
-  function finishWorld(world, keyDoor, keyCount) {
+  function finishWorld(world, keyDoor, keyCount, distantKey = false) {
     if (world.learningLaps !== undefined && ![3, 5].includes(world.learningLaps)) throw new Error('理解までの周回数は3または5です。');
     const distances = reachable(world, world.start);
     world.exit = distances.farthest;
@@ -300,7 +302,7 @@
       if (world.validation.topology.index !== 1) throw new Error('トーラスの独立した周回路を検証できませんでした。');
     }
     if (world.demo) { world.exit = -1; world.validation.distance = -1; }
-    if (keyDoor) addKeyDoor(world, distances.distances, keyCount);
+    if (keyDoor) addKeyDoor(world, distances.distances, keyCount, distantKey);
     return world;
   }
   function latticeInfo(vectors) {
@@ -471,7 +473,7 @@
     }
     return result;
   }
-  function addKeyDoor(world, distances, requestedCount) {
+  function addKeyDoor(world, distances, requestedCount, distantKey = false) {
     const endDistance = distances[world.exit];
     const candidates = exitSeparators(world).filter(id => distances[id] >= 2 && endDistance - distances[id] >= 2)
       .sort((a, b) => distances[a] - distances[b]);
@@ -500,9 +502,14 @@
     let previousRegion = null;
     for (const door of doors) {
       const region = reachable(world, world.start, door).distances;
+      const doorDistances = distantKey ? reachable(world, door).distances : null;
+      const candidates = Array.from(world.cells.keys()).filter(id => id !== world.start && id !== world.exit && !doorSet.has(id) && region[id] >= 0 && !(previousRegion && previousRegion[id] >= 0));
+      const farthest = doorDistances ? Math.max(0, ...candidates.map(id => doorDistances[id])) : 0;
+      const minimum = Math.min(farthest, Math.max(8, Math.ceil(farthest / 2)));
       let key = -1;
       for (let id = 0; id < world.cells.length; id++) {
         if (id === world.start || id === world.exit || doorSet.has(id) || region[id] < 0 || (previousRegion && previousRegion[id] >= 0)) continue;
+        if (doorDistances && doorDistances[id] < minimum) continue;
         if (key < 0 || region[id] > region[key]) key = id;
       }
       if (key < 0) throw new Error('順序を保証できる鍵の配置場所がありません。');
@@ -748,6 +755,15 @@
     }
     return true;
   }
+  function wildlifeAdapter(game) {
+    const w=game.world,names=Object.keys(DIRS),locked=closedDoors(game);
+    return {seed:w.seed,player:game.player.world_position,floors:Wildlife.floors(w),
+      special:id=>id===w.start||id===w.exit||w.warps?.has(id)||(w.puzzle?.locks||[]).some(l=>l.key===id||l.door===id),
+      edges:id=>names.flatMap((name,dir)=>{const e=transition(w,{world_position:id,orientation:1,sheet:0},name);return e&&!locked.has(e.to)?[{to:e.to,dir,kind:e.kind}]:[];}),
+      warp:id=>w.warps?.get(id)??id,birds:()=> (game.birds||[]).filter(b=>!b.oob).map(b=>({id:b.position,ref:b})),
+      moveBird:(b,id)=>{b.ref.position=id;b.ref.state='SEARCH';b.ref.lastSeen=null;}};
+  }
+  function wildlifeGlyph(game,id,visible=true){return Wildlife?.glyph(game,wildlifeAdapter(game),id,visible);}
   function createGame(world) {
     const game = { world, archiveNotes: new Map(), markers: new Map(), markerNames: new Map(), player: { world_position: world.start, perceived_position: 'C' + world.start, direction: 'down', orientation: 1, sheet: 0, keys: [] }, cognition: { archives: [], matchedArchives: new Set(), memory_nodes: new Map(), visible_cells: new Set(), known_loops: new Set() }, steps: 0, turns: 0, won: false, lastTransition: null, openedDoors: new Set(), lastEvent: null, eventKeyId: null };
     game.player.perceived_x = world.start % world.width; game.player.perceived_y = Math.floor(world.start / world.width);
@@ -787,6 +803,7 @@
       for(let i=0;i<8;i++)move(past,'right');
       game.cognition.archives.push({nodes:past.cognition.memory_nodes,step:8,turn:8});
     }
+    Wildlife?.ensure(game,wildlifeAdapter(game));
     observe(game); return game;
   }
   // Display-only observation history. Replay reconstructs it without changing save fingerprints.
@@ -971,7 +988,7 @@
     }
     return segments;
   }
-  function observe(game, radius = game.world.selfVision && game.world.topology === 'torus' ? 12 : 7) {
+  function observeTerrain(game, radius = game.world.selfVision && game.world.topology === 'torus' ? 12 : 7) {
     observeSelf(game, Math.min(radius, 12));
     const { world, player, cognition } = game, px = player.world_position % world.width, py = Math.floor(player.world_position / world.width);
     cognition.visible_cells.clear();
@@ -1002,6 +1019,35 @@
       cognition.memory_nodes.set(cognitive_id, { world_id, x, y, terrain: world.cells[world_id], feature: featureAt(game, world_id) });
     }
   }
+  function absorbContainedArchives(game) {
+    const c=game.cognition;if(!c.archives.length)return;
+    const same=(a,b)=>a.world_id===b.world_id&&a.terrain===b.terrain&&a.x===b.x&&a.y===b.y&&a.feature===b.feature;
+    const contains=(large,small)=>small.size>0&&large.size>=small.size&&[...small].every(([key,p])=>{const q=large.get(key);return q&&same(q,p);});
+    const uniquePlacement=(large,small)=>{
+      const anchor=[...small.values()].find(n=>n.terrain);if(!anchor)return false;
+      const grid=new Map([...large.values()].map(n=>[`${n.x},${n.y}`,n]));let matches=0;
+      for(const candidate of large.values()){
+        if(candidate.world_id!==anchor.world_id||candidate.terrain!==anchor.terrain)continue;
+        const dx=candidate.x-anchor.x,dy=candidate.y-anchor.y;
+        if([...small.values()].every(n=>{const q=grid.get(`${n.x+dx},${n.y+dy}`);return q&&q.world_id===n.world_id&&q.terrain===n.terrain&&q.feature===n.feature;})&&++matches>1)return false;
+      }return matches===1;
+    };
+    for(let i=0;i<c.archives.length;i++){
+      const a=c.archives[i];if(c.matchedArchives.has(i))continue;
+      if(game.viewFrame&&(!a.viewFrame||game.viewFrame.some((d,j)=>d!==a.viewFrame[j])))continue;
+      if(contains(c.memory_nodes,a.nodes)&&uniquePlacement(c.memory_nodes,a.nodes)){c.matchedArchives.add(i);continue;}
+      if(!contains(a.nodes,c.memory_nodes)||!uniquePlacement(a.nodes,c.memory_nodes))continue;
+      // Keep current observations and their timestamps; add the surrounding memory.
+      c.memory_nodes=new Map([...a.nodes,...c.memory_nodes]);c.matchedArchives.add(i);
+    }
+  }
+  function observe(game,radius){
+    observeTerrain(game,radius);
+    absorbContainedArchives(game);
+    if(!game.seenFloors)game.seenFloors=new Set();
+    for(const id of game.cognition.visible_cells){const node=game.cognition.memory_nodes.get(id);if(node?.terrain)game.seenFloors.add(node.world_id);}
+    game.atlasComplete=game.seenFloors.size===game.world.validation.floors;
+  }
   function createWarpDemo() {
     const width=17,height=9,cells=new Uint8Array(width*height);
     for(let y=1;y<8;y++)for(let x=1;x<16;x++)if(x<=5||x>=11||y===4)cells[y*width+x]=1;
@@ -1011,7 +1057,7 @@
   }
   function exportTrueMap(game) {
     const {world,player}=game, birds=new Map();
-    for(const bird of game.birds||[])if(!birds.has(bird.position))birds.set(bird.position,bird.symbol);
+    for(const bird of game.birds||[])if(!bird.oob&&!birds.has(bird.position))birds.set(bird.position,bird.symbol);
     const rows=[];
     for(let y=0;y<world.height;y++){
       let row='';
@@ -1173,7 +1219,8 @@
     if (door && !game.openedDoors.has(door.keyId)) return puzzle.locks.length === 1 ? '+' : door.keyId;
     if (key && !game.player.keys.includes(key.keyId)) return key.keyId.toLowerCase();
     if (id === game.world.exit) return '>';
-    if (door && game.openedDoors.has(door.keyId)) return '/';
+    if (door && game.openedDoors.has(door.keyId)) return "'";
+    if(game.wands?.items.some(item=>item.id===id))return game.markers.get(id)||(game.zeroMarks?.has(id)?'0':'/');
     if (id === game.world.start) return '<';
     if(game.world.warps?.has(id)&&!game.world.warpInvisible)return 'O';
     return game.markers.get(id) || (game.zeroMarks?.has(id)?'0':null);
@@ -1219,7 +1266,7 @@
     return {visibleCells,canSeePlayer:visibleCells.includes(game.player.world_position),target,path,state:bird.state,searchLeft:bird.searchLeft,cooldown:bird.cooldown,nextActionIn:2-game.turns%2};
   }
   function birdObstacles(game,bird) {
-    return new Set([...closedDoors(game),...game.birds.filter(other=>other!==bird).map(other=>other.position)]);
+    return new Set([...closedDoors(game),...game.birds.filter(other=>other!==bird&&!other.oob).map(other=>other.position)]);
   }
   function restBirds(game) {
     for(const bird of game.birds)Object.assign(bird,{state:'WANDER',lastSeen:null,searchLeft:0,previous:null,cooldown:4});
@@ -1423,16 +1470,27 @@
     for(const index of connected(game))reasons[index]='matched';
     return {matches,reasons};
   }
-  function relocatePlayer(game,to,kind) {
+  function relocatePlayer(game,to,kind,preserveMap=false) {
     const world=game.world,from=game.player.world_position;
-    if(world.separateMaps) {
+    if(world.separateMaps&&!preserveMap) {
       game.cognition.archives.push({nodes:game.cognition.memory_nodes,step:game.steps,turn:game.turns,sources:[...game.cognition.matchedArchives],transferKind:kind==='warp' ? (world.warpInvisible ? 'unknown' : 'warp') : 'bird'});
       if(game.viewFrame)game.cognition.archives[game.cognition.archives.length-1].viewFrame=[...game.viewFrame];
       game.cognition.memory_nodes=new Map();
       unfoldedMemories.delete(game.cognition);
       game.cognition.matchedArchives=new Set();
     }
-    Object.assign(game.player,{world_position:to,perceived_x:to%world.width,perceived_y:Math.floor(to/world.width),perceived_position:'C'+to});
+    let px=to%world.width,py=Math.floor(to/world.width);
+    if(preserveMap){
+      const queue=[{id:from,x:game.player.perceived_x,y:game.player.perceived_y}],seen=new Set([from]),blocked=closedDoors(game);
+      for(const p of queue){if(p.id===to){px=p.x;py=p.y;break;}
+        for(const [direction,[dx,dy]]of Object.entries(DIRS)){
+          const edge=transition(world,{world_position:p.id,orientation:1,sheet:0},direction);
+          if(!edge||!world.cells[edge.to]||blocked.has(edge.to)||seen.has(edge.to))continue;
+          seen.add(edge.to);queue.push({id:edge.to,x:p.x+dx,y:p.y+dy});
+        }
+      }
+    }
+    Object.assign(game.player,{world_position:to,perceived_x:px,perceived_y:py,perceived_position:'C'+to});
     const cognitive=cognitivePosition(game);
     game.player.perceived_position=cognitiveId(world,cognitive.x,cognitive.y);
     // A teleport is not a traversed path. Keep learned knowledge, but start a
@@ -1447,12 +1505,13 @@
     game.lastEvent=kind;
   }
   function birdContact(game,bird) {
+    if(bird.oob||Oob.active(game))return false;
     const world=game.world,from=game.player.world_position;
     if(bird.position!==from) return false;
     // Never transfer across an unopened door, even if its key is held.
     const distances=reachable(world,from,closedDoors(game)).distances;
     const features=new Set((world.puzzle?.locks || []).flatMap(lock=>[lock.key,lock.door]));
-    const floors=[...world.cells.keys()].filter(id=>world.cells[id]&&id!==from&&id!==world.exit&&!features.has(id)&&!game.birds.some(b=>b.position===id)&&distances[id]>0);
+    const floors=[...world.cells.keys()].filter(id=>world.cells[id]&&id!==from&&id!==world.exit&&!features.has(id)&&!game.birds.some(b=>!b.oob&&b.position===id)&&distances[id]>0);
     // Classify by real cells, so another periodic image is not a new place.
     const known=new Set([game.cognition.memory_nodes,...game.cognition.archives.map(a=>a.nodes)].flatMap(nodes=>[...nodes.values()].map(node=>node.world_id)));
     const policy=world.teleportPolicy || 'far';
@@ -1466,15 +1525,32 @@
     const to=pool[Math.floor(game.birdRandom()*pool.length)];
     game.lastTeleport={policy,fallback:policy!=='far'&&!preferred.length,wasKnown:known.has(to),distance:distances[to]};
     relocatePlayer(game,to,'teleport');game.teleports++;
+    if(world.birdLeap&&game.birdRandom()<.25){const landing=floors.filter(id=>id!==to);if(landing.length)bird.position=landing[Math.floor(game.birdRandom()*landing.length)];}
     restBirds(game);
     return true;
+  }
+  const Oob=typeof module==='object'?require('./main-oob.js'):globalThis.MainOob;
+  function wandNavigation(game){const blocked=closedDoors(game);return {random,escape:(id,d)=>{if(game.world.topology!=='torus'||Oob.active(game))return null;const e=transition(game.world,{world_position:id,orientation:1,sheet:0},Object.keys(DIRS)[d]);return e?.kind==='wrap'&&!blocked.has(e.to)?d:null;},wall:(id,d)=>{const [dx,dy]=Object.values(DIRS)[d],x=id%game.world.width+dx,y=Math.floor(id/game.world.width)+dy;return game.world.topology==='torus'?periodicId(game.world,x,y):x>=0&&y>=0&&x<game.world.width&&y<game.world.height?y*game.world.width+x:null;},step:(id,d)=>{const e=transition(game.world,{world_position:id,orientation:1,sheet:0},Object.keys(DIRS)[d]);return e&&!blocked.has(e.to)?e.to:null;},relocate:id=>relocatePlayer(game,id,'wand',true)};}
+  function enableWands(game){const ok=Wands?.init(game,wandNavigation(game));if(ok)observe(game);return !!ok;}
+  function previewWand(game,spell,d){if(Oob.active(game)||!game.wands||game.won||game.wands.frozen||!game.wands.held.includes(spell))return {path:[]};return Wands.preview(game,wandNavigation(game),spell,d);}
+  function castWand(game,spell,d){Wands.flush(game);
+    if(Oob.active(game)||!game.wands||game.won||!game.wands.held.includes(spell)||!Number.isInteger(d)||d<0||d>3)return false;
+    if(game.wands.frozen)return waitTurn(game);
+    game.turns++;game.lastLoopEvent=null;game.lastEvent='wand';game.eventKeyId=null;
+    game.selfRecognized=[];game.inferredRecognized=[];
+    const from=game.player.world_position;
+    game.lastTransition={from,to:from,kind:'wand',direction:game.player.direction,orientation:game.player.orientation,sheet:game.player.sheet};
+    Wands.fire(game,wandNavigation(game),'@',spell,d);advanceBird(game);Wands.after(game,()=>{if(!Oob.active(game))Wildlife?.tick(game,wildlifeAdapter(game));observe(game);game.won=game.player.world_position===game.world.exit&&!game.exploringAfterExit;});return true;
   }
   function advanceBird(game) {
     if(!game.bird || game.won) return;
     for(const bird of game.birds)if(birdContact(game,bird))return;
-    for(const bird of game.birds)if(advanceOneBird(game,bird))return;
+    let i=0;function next(){if(i>=game.birds.length)return;if(advanceOneBird(game,game.birds[i++]))return;Wands.after(game,next);}next();
   }
   function advanceOneBird(game,bird) {
+    if(bird.oob||Oob.active(game))return;
+    if(Wands?.bird(game,wandNavigation(game),bird))return;
+    if(Wildlife?.birdThreat(game,wildlifeAdapter(game),bird.position))return;
     if(bird.cooldown>0){bird.cooldown--;return;}
     // Half the player's speed leaves room to disengage and explore.
     if(game.turns%2) return;
@@ -1499,15 +1575,17 @@
     if(next){bird.previous=bird.position;bird.position=next.to;}
     return birdContact(game,bird);
   }
-  function waitTurn(game) {
+  function waitTurn(game) {Wands.flush(game);if(Oob.active(game)){game.turns++;return true;}
     if(game.won) return false;
+    if(game.wands?.frozen&&game.wands.frozenAt!==game.turns+1)game.wands.frozen--;
     game.lastEvent='wait';game.eventKeyId=null;game.lastLoopEvent=null;
     game.selfRecognized=[];game.inferredRecognized=[];
     const from=game.player.world_position;
     game.lastTransition={from,to:from,kind:'wait',direction:game.player.direction,orientation:game.player.orientation,sheet:game.player.sheet};
     game.turns++;
+    if(game.wands)Wands.pickup(game,game.player.world_position,game.wands,'@');
     advanceBird(game);
-    observe(game);
+    Wands.after(game,()=>{if(!Oob.active(game))Wildlife?.tick(game,wildlifeAdapter(game));observe(game);});
     return true;
   }
   function continueExploring(game) {
@@ -1515,8 +1593,9 @@
     game.firstClearSteps=game.steps;game.exploringAfterExit=true;game.won=false;
     return true;
   }
-  function move(game, direction) {
+  function move(game, direction) {Wands.flush(game);if(Oob.active(game))return Oob.move(game,Object.keys(DIRS).indexOf(direction));
     if (game.won) return false;
+    if(game.wands?.frozen)return waitTurn(game);
     const edge = ruleTransition(game.world, game.player, direction);
     game.lastEvent = null;
     game.eventKeyId = null;
@@ -1524,11 +1603,13 @@
     game.selfRecognized = [];
     game.inferredRecognized = [];
     if (!edge) {
+      const R=typeof module==='object'?require('./reflecting-walls.js'):globalThis.ReflectingWalls;R?.bump(game,game.player.world_position,Object.keys(DIRS).indexOf(direction));
       const geometric = transition(game.world, game.player, direction);
       game.lastEvent = geometric ? 'locked' : 'wall';
       if (geometric) game.eventKeyId = game.world.puzzle?.locks.find(lock => lock.door === geometric.to)?.keyId || null;
       return false;
     }
+    Wildlife?.enter(game,wildlifeAdapter(game),game.player.world_position,edge.to);
     game.player.perceived_x += DIRS[direction][0]; game.player.perceived_y += DIRS[direction][1];
     Object.assign(game.player, { world_position: edge.to, perceived_position: cognitiveId(game.world, game.player.perceived_x, game.player.perceived_y), direction: edge.direction, orientation: edge.orientation, sheet: edge.sheet });
     const locks = game.world.puzzle?.locks || [];
@@ -1542,12 +1623,14 @@
     if(game.world.warps?.has(edge.to)){
       relocatePlayer(game,game.world.warps.get(edge.to),'warp');observe(game);
     }
+    if(game.wands)Wands.pickup(game,game.player.world_position,game.wands,'@');
     advanceBird(game);
+    Wands.after(game,()=>{if(!Oob.active(game))Wildlife?.tick(game,wildlifeAdapter(game));
     if(game.lastEvent==='teleport') {
       const recognized=[...game.selfRecognized];observe(game);
       game.selfRecognized=[...new Set([...recognized,...game.selfRecognized])];
     }
-    return true;
+    });return true;
   }
   // Search only observed marker records; names and world positions alone are not evidence.
   function markerArchives(game, label) {
@@ -1556,7 +1639,7 @@
     return game.cognition.archives.flatMap((archive, index) =>
       [...archive.nodes.values()].some(node => node.world_id === entry[0] && node.feature === label) ? [index] : []);
   }
-  const api = { recordObservedWarp, unfoldedFloorCount, unfoldedCells, warpArrowRecords, exportWarpArrowNotes, resetWarpArrowCurve, curveWarpArrow, eraseWarpArrow, rememberWarpArrow, knownWarpAnchor, eraseZeroMark, placeRemoteZeroMark, placeZeroMark, continueExploring, archiveDisplayCells, inspectRecordedMatching, matchRecordedMaps, archiveTransfers, archiveGroups, inspectWarpConnectivity, createWarpDemo, exportTrueMap, exportArchiveNotes, setArchiveNote, markerArchives, markerTitle, nameMarker, currentLandmark, inspectLandmarkMemory, matchLandmarkMaps, placeMarker, createArchiveDemo, archiveCells, inspectEntranceMemory, matchEntranceMaps, knowledgeSummary, selfRaySegments, periodicPosition, periodicId, windingOf, deckVector, DIRS, random, generate, createTorusDemo, inspectTorus, cognitivePosition, subjectiveCells, transition, ruleTransition, solvePuzzle, featureAt, reachable, lineOfSight, createGame, observe, move, waitTurn, inspectBird };
+  const api = { returnOob:g=>{const ok=Oob.home(g,wandNavigation(g));if(ok)observe(g);return ok;},wandShotMoved:game=>Wands?.shotMoved(game),enableWands,previewWand,castWand, wildlifeAdapter, wildlifeGlyph, recordObservedWarp, unfoldedFloorCount, unfoldedCells, warpArrowRecords, exportWarpArrowNotes, resetWarpArrowCurve, curveWarpArrow, eraseWarpArrow, rememberWarpArrow, knownWarpAnchor, eraseZeroMark, placeRemoteZeroMark, placeZeroMark, continueExploring, archiveDisplayCells, inspectRecordedMatching, matchRecordedMaps, archiveTransfers, archiveGroups, inspectWarpConnectivity, createWarpDemo, exportTrueMap, exportArchiveNotes, setArchiveNote, markerArchives, markerTitle, nameMarker, currentLandmark, inspectLandmarkMemory, matchLandmarkMaps, placeMarker, createArchiveDemo, archiveCells, inspectEntranceMemory, matchEntranceMaps, knowledgeSummary, selfRaySegments, periodicPosition, periodicId, windingOf, deckVector, DIRS, random, generate, createTorusDemo, inspectTorus, cognitivePosition, subjectiveCells, transition, ruleTransition, solvePuzzle, featureAt, reachable, lineOfSight, createGame, observe, move, waitTurn, inspectBird };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MazeCore = api;
 })(globalThis);

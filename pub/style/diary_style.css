@@ -13,6 +13,12 @@
     font-display: swap;
 }
 
+@font-face {
+    font-family: "Choiwaru_custom";
+    src: url("ChoiwaruCustom.ttf") format("truetype");
+    font-display: swap;
+}
+
 /* Source */
 @font-face {
     font-family: "Source Code Pro";
@@ -158,6 +164,11 @@ dt {
 .seoremium {
     font-family: "Seoremium_clg";
     font-size: 1.0rem;
+    font-weight: normal;
+}
+
+.ck-diary-glyph {
+    font-family: "Choiwaru_custom";
     font-weight: normal;
 }
 

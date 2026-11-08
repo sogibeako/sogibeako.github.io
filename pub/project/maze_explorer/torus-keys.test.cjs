@@ -1,0 +1,12 @@
+const a=require('node:assert/strict'),M=require('./core.js'),J=require('./main-journey.js'),Save=require('./main-session.js'),P=require('./exploration-solver.js'),R=require('./random-journey.js');
+let cases=0;for(const algorithm of ['dfs','prim','rooms','wilson','kruskal','hunt','growing'])for(const [shiftX,shiftY]of [[0,0],[2,0],[0,-2],[2,-2]])for(const keyCount of [1,2,3]){
+ const options={topology:'torus',width:16,height:16,algorithm,shiftX,shiftY,keyDoor:true,keyCount,distantKey:true,seed:'torus-key-'+keyCount,loopLearning:true,learningLaps:3};
+ let g=Save.attach(J.start(options));const w=g.world;a(w.puzzle.locks.length>=1);a(w.validation.puzzle.solvable&&w.validation.puzzle.keyRequired&&w.validation.puzzle.ordered);
+ a(!M.solvePuzzle(w,false).solvable);let prior=null;const doors=new Set(w.puzzle.locks.map(l=>l.door));for(const l of w.puzzle.locks){const region=M.reachable(w,w.start,l.door).distances,dist=M.reachable(w,l.door).distances,possible=[...w.cells.keys()].filter(id=>id!==w.start&&id!==w.exit&&!doors.has(id)&&region[id]>=0&&!(prior&&prior[id]>=0)),max=Math.max(...possible.map(id=>dist[id]));a(dist[l.key]>=Math.min(max,Math.max(8,Math.ceil(max/2))));prior=region;}
+ for(const d of P.main(g,M)){const n=g.player.keys.length;a(Save.act(g,'move',d));if(g.player.keys.length!==n){const text=Save.encode(g,'same');g=Save.decode(text).game;a.equal(Save.encode(g,'same'),text);}}
+ a(g.won);a.equal(g.player.keys.length,w.puzzle.locks.length);
+ if(keyCount===1){M.continueExploring(g);const seen=new Set([g.player.world_position]);let steps=0;while(true){const path=P.main(g,M,seen);if(path===null)break;for(const d of path){if(g.won)M.continueExploring(g);a(M.move(g,d));seen.add(g.player.world_position);a(++steps<10000);}}a.equal(seen.size,w.validation.floors);for(let i=0;i<12&&P.mainLoopPending(g);i++)for(const d of P.mainLoop(g,M)){if(g.won)M.continueExploring(g);a(M.move(g,d));}a.equal(P.mainLoopPending(g),0);}
+ cases++;
+}
+for(const rule of ['keys','bird-keys']){const config={...R.defaults,topologies:['torus'],rules:[rule],algorithms:['dfs']};R.validate(config);const choice=R.choose('torus-key-course',config);a(choice.options.keyDoor);const g=J.start(choice.options);a(g.world.validation.puzzle.solvable);a.equal(g.world.birdMode,rule==='bird-keys');}
+console.log(cases+' torus key worlds: all generators, 4 seam layouts, 1–3 requested keys, required order/distance, automatic exits, saves, 28 full-floor/3-lap explorations and random keys/birds.');

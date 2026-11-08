@@ -4,7 +4,7 @@ const vm=require('node:vm');
 const S=require('./connection-space.js');
 const elements=new Map(),listeners={};
 const element=id=>{if(!elements.has(id))elements.set(id,{value:'',checked:false,textContent:'',focus(){},getContext(){return {};},addEventListener(){},setAttribute(){}});return elements.get(id);};
-const context=vm.createContext({ConnectionSpace:S,document:{getElementById:element,querySelectorAll:()=>[],addEventListener:(name,fn)=>listeners[name]=fn},window:{addEventListener(){}},Math,Map,Set,Uint8Array});
+const context=vm.createContext({CrossingAutowalk:require('./crossing-autowalk.js'),ConnectionSpace:S,document:{getElementById:element,querySelectorAll:()=>[],addEventListener:(name,fn,capture)=>{if(!capture)listeners[name]=fn;}},window:{addEventListener(){}},Math,Map,Set,Uint8Array});
 // Drawing is excluded; exercise the actual UI handlers and reset/generation path.
 vm.runInContext(fs.readFileSync(__dirname+'/connections-lab.js','utf8').replace('window.addEventListener(\'resize\',draw);draw();','window.addEventListener(\'resize\',draw);'),context);
 vm.runInContext('draw=()=>{}',context);

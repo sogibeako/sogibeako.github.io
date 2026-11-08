@@ -1,0 +1,19 @@
+/* Long-distance roaming uses real directed routes; never changes maze geometry. */
+(function(root){'use strict';const records=new WeakMap(),limit=2000;
+function record(token){let r=records.get(token);if(!r){r={steps:0,target:null,recent:[],choices:new Map(),destinations:[],pending:[],previous:null};records.set(token,r);}return r;}
+function advance(token,position){const r=record(token);r.steps++;const step=r.pending.shift();if(!step)return true;if(position!==undefined&&position!==step.to){r.pending=[];r.previous=null;return false;}r.previous=step.from;r.recent.push(step.from+':'+step.to);if(r.recent.length>32)r.recent.shift();if(step.junction){const key=step.from+':'+step.e.dir;r.choices.set(key,(r.choices.get(key)||0)+1);}return true;}
+function route(token,nav,frame=null,exit=null,random=Math.random){const r=record(token);if(r.steps>=limit)return null;
+ const start=nav.player,q=[start],parents=new Map([[start,null]]),dist=new Map([[start,0]]),crossed=new Map([[start,false]]),reverse=new Map();
+ for(const id of q)for(const e of nav.edges(id)){const to=nav.warp(e.to);if(!reverse.has(to))reverse.set(to,[]);reverse.get(to).push(id);if(parents.has(to))continue;parents.set(to,{from:id,e});dist.set(to,dist.get(id)+1);crossed.set(to,crossed.get(id)||!!e.kind&&!['normal','ordinary'].includes(e.kind));q.push(to);}
+ let safe=new Set(q);if(exit!=null){safe=new Set(parents.has(exit)?[exit]:[]);const back=[...safe];for(const id of back)for(const from of reverse.get(id)||[])if(!safe.has(from)){safe.add(from);back.push(from);}}
+ if(r.target===start){r.destinations.push(start);if(r.destinations.length>4)r.destinations.shift();r.target=null;}if(!parents.has(r.target)||!safe.has(r.target))r.target=null;
+ if(r.target===null){const candidates=q.filter(id=>id!==start&&id!==exit&&safe.has(id));if(!candidates.length)return null;const far=Math.max(...candidates.map(id=>dist.get(id)));let pool=candidates.filter(id=>dist.get(id)>=Math.max(1,far*.6));const preferred=pool.filter(id=>{const n=nav.edges(id);return n.length<=1||n.length>=3&&n.filter(e=>nav.edges(nav.warp(e.to)).length>=3).length>=2;});if(preferred.length)pool=preferred;const fresh=pool.filter(id=>!r.destinations.includes(id));if(fresh.length)pool=fresh;const boundary=pool.filter(id=>crossed.get(id));if(boundary.length&&random()<.5)pool=boundary;r.target=pool[Math.floor(random()*pool.length)];}
+ // Positive costs retain reachability while favoring less-used junction exits.
+ const cost=new Map([[start,0]]),best=new Map([[start,null]]),heap=[];
+ function push(id,c){let i=heap.length;heap.push({id,c});while(i){const p=(i-1)>>1;if(heap[p].c<=c)break;heap[i]=heap[p];i=p;}heap[i]={id,c};}
+ function pop(){const first=heap[0],last=heap.pop();if(heap.length){let i=0;while(i*2+1<heap.length){let c=i*2+1;if(c+1<heap.length&&heap[c+1].c<heap[c].c)c++;if(heap[c].c>=last.c)break;heap[i]=heap[c];i=c;}heap[i]=last;}return first;}
+ push(start,0);while(heap.length){const at=pop();if(at.c!==cost.get(at.id))continue;if(at.id===r.target)break;const exits=nav.edges(at.id);for(const e of exits){const to=nav.warp(e.to);if(!safe.has(to))continue;const retrace=r.recent.filter(k=>k===at.id+':'+to||k===to+':'+at.id).length;const penalty=1+retrace*2+(exits.length>=3?Math.min(8,r.choices.get(at.id+':'+e.dir)||0)*2:0)+(at.id===start&&to===r.previous&&exits.length>1?12:0);const c=at.c+penalty;if(c<(cost.get(to)??Infinity)){cost.set(to,c);best.set(to,{from:at.id,e,to,junction:exits.length>=3});push(to,c);}}}
+ const edges=[];for(let at=r.target;best.get(at);){const p=best.get(at);edges.push(p);at=p.from;}edges.reverse();r.pending=edges.slice();let orientation=frame&&[...frame];return edges.map(({e})=>{const d=orientation?orientation.indexOf(e.dir):e.dir;if(orientation)orientation=orientation.map(n=>(e.transform||[0,1,2,3])[n]);return d;});
+}
+const api={limit,record,advance,route};if(typeof module==='object')module.exports=api;else root.MazeStroll=api;
+})(globalThis);

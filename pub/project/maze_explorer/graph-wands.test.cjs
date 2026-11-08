@@ -1,0 +1,15 @@
+const a=require('node:assert/strict'),G=require('./graph-wands.js'),S=require('./connection-space.js'),H=require('./lattice-holes.js'),Save=require('./lattice-holes-save.js'),F=require('./sheet-features.js');
+function fixture(){const edges=new Map(),identity=[0,1,2,3];for(const [from,d,to,t]of [[0,1,1,[1,2,3,0]],[1,0,0,[3,0,1,2]],[1,2,2,identity],[2,0,1,identity],[2,2,3,identity],[3,0,2,identity]])edges.set(from+':'+d,{to,transform:t,kind:'throat'});return {world:{mode:'tripleMaze',seed:'test',cells:new Uint8Array([1,1,1,1]),edges,start:0,exit:3},id:0,frame:identity,x:0,y:0,steps:0,history:[],features:{options:{birds:true},bird:2,door:null,key:null,hasKey:false,cooldown:100,warps:new Map(),marks:new Map([[0,'1']])}};}
+for(const spell of G.spells){const s=fixture();G.init(s);s.wands.items=[];s.wands.held=[spell];const marks=[...s.features.marks];a(G.cast(s,spell,1));a.deepEqual([...s.features.marks],marks);a.equal(s.steps,1);if(spell==='freeze')a.equal(s.wands.bird.frozen,5);if(spell==='push')a.equal(s.features.bird,3);if(spell==='pull')a.equal(s.features.bird,1);if(spell==='swap'){a.equal(s.id,2);a.equal(s.features.bird,0);a.deepEqual(s.frame,[1,2,3,0]);a.equal(s.x,2);a.equal(s.y,0);}}
+const previewState=fixture();G.init(previewState);previewState.wands.held=['swap'];const before=structuredClone(previewState);a.deepEqual(G.preview(previewState,'swap',1).map(p=>p.id),[1,2]);a.deepEqual(previewState,before);
+const r=fixture();G.init(r);r.features.bird=3;r.wildlife={pets:[{kind:'c',id:2}]};r.wands.held=['freeze'];r.wands.items=[];G.cast(r,'freeze',1);a.equal(r.wands.frozen,5);a.equal(r.features.bird,3);
+let rounds=0;for(const kind of ['double','triple'])for(const seed of ['wand-a','wand-b']){
+ const s=kind==='double'?H.create({maze:true,periodSize:16,underpasses:2,seed,features:{birds:true,birdAcross:true,birdWander:true}}):S.create('tripleMaze',{ruleMode:'birds',width:16,height:16,seed,floorUnderpasses:2});
+ a(s.features?.options.birds);G.init(s);a(s.wands.items.length);let saved;
+ for(let n=0;n<80;n++){if(n%9===0&&s.wands.held.length)G.cast(s,s.wands.held[0],n%4);else {const ds=[0,1,2,3].filter(d=>s.world.edges.has(s.id+':'+d));S.move(s,ds[n%ds.length],true);}F.glyph(s,s.id);}
+ if(kind==='double'){const snapshot={state:s,book:{charts:[],active:-1},journey:{number:1,steps:0},controls:{}};saved=Save.decode(Save.encode(snapshot)).snapshot.state;}
+ else {const snapshot={state:s,journey:{number:1,steps:0},journeyMap:{cells:new Map()},regionBook:{records:new Map(),owners:new Map(),nextNumber:1},atlasMemory:new Set(),walkingBook:{charts:[],active:-1},controls:{}};saved=S.decodeSave(S.encodeSave(snapshot)).snapshot.state;}
+ a.deepEqual(saved.wands,s.wands);a.deepEqual(saved.features,s.features);for(let i=0;i<5;i++){S.move(s,4);S.move(saved,4);a.deepEqual(saved.wands,s.wands);a.deepEqual(saved.features,s.features);}rounds++;
+ const bad=structuredClone(s);bad.wands.held=['invalid'];a.throws(()=>F.validate(bad));
+}
+console.log({spellsAcrossTurn:true,petReflection:true,snapshotRoundTrips:rounds});

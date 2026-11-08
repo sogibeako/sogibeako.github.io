@@ -7,11 +7,12 @@ function applied(world,seed){
 function randomize(base,settings,rng=Math.random){
  const options={...base};if(!settings.enabled)return options;
  const pick=values=>values[Math.floor(rng()*values.length)];
- if(settings.growth)options.growth=pick(['walls','dfs','prim','growing']);
- if(settings.wall)options.wallStyle=pick(['dense','grid']);
+ if(settings.wall)options.wallStyle=pick(settings.growth||!['wilson','kruskal'].includes(options.growth)?['dense','grid']:['grid']);
+ if(settings.growth)options.growth=pick(['walls','dfs','prim','growing','rooms','hunt',...(options.wallStyle==='grid'?['wilson','kruskal']:[])]);
  if(settings.size){const min=settings.min,max=settings.max,sizes=[12,16,20,24];if(!sizes.includes(min)||!sizes.includes(max)||min>max)throw Error('ランダムの周期サイズは最小≦最大にしてください。');options.periodSize=pick(sizes.filter(n=>n>=min&&n<=max));options.periodWidth=options.periodSize;options.periodHeight=options.periodSize;}
  if(settings.shift){options.shiftX=pick([-4,-2,0,2,4]);options.shiftY=pick([-4,-2,0,2,4]);}
  if(settings.passages){options.underpasses=pick([0,1,2,3,4,5,6]);options.underpassShape=pick(['straight','mixed','corners']);}
+ if(settings.rimWalls)options.holeRimWalls=pick([false,true]);
  return options;
 }
 const api={applied,randomize};if(typeof module==='object')module.exports=api;else root.SkewOptions=api;

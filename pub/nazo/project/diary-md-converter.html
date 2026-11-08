@@ -5,6 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>日記錬成釜 - Markdown to HTML Converter</title>
+  <link rel="stylesheet" href="diary-kanji-pad.css">
+  <script src="diary-kanji-pad.js" defer></script>
 
   <style>
     /* ========== Tool UI CSS ========== */
@@ -412,6 +414,7 @@
   <div id="tool-header">
     <h1>日記錬成釜</h1>
     <div class="settings">
+      <button id="ck-pad-open" type="button" aria-controls="ck-pad" aria-expanded="false">創作漢字パッド</button>
       <label><input type="checkbox" id="wrapPToggle" checked> 段落を &lt;p&gt; で囲む</label>
       <label>リストインデント:
         <select id="indentSize">
@@ -450,6 +453,28 @@
   </div>
 
   <div class="toast" id="toast">コピーしました！</div>
+
+  <section id="ck-pad" role="dialog" aria-label="創作漢字入力パッド" hidden>
+    <div id="ck-pad-header">
+      <div id="ck-pad-handle" tabindex="0" title="ドラッグで移動。フォーカス時は矢印キーでも移動できます。">⠿ 創作漢字パッド</div>
+      <button id="ck-pad-minimize" type="button" aria-label="最小化・展開" aria-expanded="true">−</button>
+      <button id="ck-pad-close" type="button" aria-label="閉じる">×</button>
+    </div>
+    <div id="ck-pad-body">
+      <p class="ck-hint">タイトルバーで移動、四辺・四隅のドラッグでサイズ変更できます。Choiwaru Kanjiの05で作ったTTFを選ぶか、このウィンドウへドロップしてください。</p>
+      <label>作成したフォント（TTF / OTF）<input id="ck-pad-file" type="file" accept=".ttf,.otf,font/ttf,font/otf"></label>
+      <p id="ck-pad-name"></p>
+      <details><summary>読み・ID・コピー情報を読み込む（任意）</summary><label>割り当て付き辞書JSON<input id="ck-pad-json" type="file" accept=".json,application/json"></label><p class="ck-hint">fontCodePointが登録された辞書を使います。本文・プレビュー・出力した日記をコピーするときはcopyText（未設定ならunicode、idsの順）を使います。HTMLソースのコピーはそのままです。辞書はページを開くたびに読み込んでください。</p></details>
+      <label>字形・コードポイント・読みを検索<input id="ck-pad-search" type="search" placeholder="例：U+E000、こもりねこ"></label>
+      <div id="ck-pad-grid" aria-label="挿入できる文字"></div>
+      <div id="ck-pad-pager"><button id="ck-pad-prev" type="button">← 前へ</button><span id="ck-pad-count"></span><button id="ck-pad-next" type="button">次へ →</button></div>
+      <p id="ck-pad-selected" aria-live="polite"></p>
+      <label><input id="ck-pad-embed" type="checkbox" checked> 出力HTMLにフォントを埋め込む</label>
+      <p class="ck-hint">字を押すと、本文のカーソル位置（選択中ならその範囲）に挿入します。現在読み込んだ1つのフォントを入力・表示に使います。私用領域の字を表示するにはフォントが必要です。</p>
+      <p class="ck-hint">埋め込みをオンにすると、本文断片・完全HTMLの両方にフォントを含めます。オフの場合は公開ページ側で .ck-diary-glyph のフォント設定が必要です。配布するフォントのライセンスもご確認ください。</p>
+      <p id="ck-pad-status" role="status" aria-live="polite">フォントは端末内で読み込み、このブラウザに保存します。外部には送信しません。</p>
+    </div>
+  </section>
 
   <script>
     // --- User's raw CSS for Full HTML output ---
@@ -558,9 +583,11 @@
     function parseInline(text) {
       // 1. Protect MathJax expressions from Markdown-style inline replacements.
       const mathSegments = [];
+      let mathMarker = '\uFDD0math';
+      while (text.includes(mathMarker)) mathMarker += 'x';
       const protectMath = math => {
         const index = mathSegments.push(math) - 1;
-        return `\uE000${index}\uE001`;
+        return `${mathMarker}${index}\uFDD1`;
       };
       text = text.replace(/\$\$[\s\S]*?\$\$/g, match => protectMath(match));
       text = text.replace(/(^|[^$])\$([^$]+?)\$(?!\$)/g, (match, prefix, math) => {
@@ -582,7 +609,7 @@
       // 7. Link
       text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
 
-      text = text.replace(/\uE000(\d+)\uE001/g, (match, index) => mathSegments[Number(index)]);
+      text = text.replace(new RegExp(mathMarker + '(\\d+)\uFDD1', 'g'), (match, index) => mathSegments[Number(index)]);
 
       return text;
     }
@@ -871,7 +898,7 @@
       return { meta, contentLines };
     }
 
-    function getFullHtml(bodyHtml, meta) {
+    function getFullHtml(bodyHtml, meta, fontStyle = '') {
       const titleStr = meta.title || 'Diary';
       const prevStr = meta.prev ? `<a href="${meta.prev}">←${meta.prevText || '前へ'}</a>` : '';
       const nextStr = meta.next ? `<a href="${meta.next}">${meta.nextText || '次へ'}→</a>` : '';
@@ -889,6 +916,7 @@
   <link rel="preload" as="font" href="../seoremium/seoremium41.ttf" type="ttf" crossorigin />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="../style/diary_style.css">
+  ${fontStyle}
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"><\/script>
 </head>
 <body>
@@ -945,19 +973,21 @@ ${navStr}
       const { meta, contentLines } = extractMetadataAndContent(text);
       const blocks = parseBlocks(contentLines, wrapP, indentSize);
       let bodyHtml = renderBlocks(blocks, wrapP, indentSize);
+      if (window.DiaryKanjiPad) bodyHtml = window.DiaryKanjiPad.decorate(bodyHtml);
+      const fontStyle = window.DiaryKanjiPad ? window.DiaryKanjiPad.outputStyle(bodyHtml) : '';
 
       // Update preview (always just body fragment, with MathJax processing)
       els.preview.innerHTML = bodyHtml;
 
-      if (window.MathJax) {
+      if (typeof window.MathJax?.typesetPromise === 'function') {
         window.MathJax.typesetPromise([els.preview]).catch(err => console.error(err));
       }
 
       // Update output text area
       if (outputMode === 'full') {
-        els.htmlOutput.value = getFullHtml(bodyHtml, meta);
+        els.htmlOutput.value = getFullHtml(bodyHtml, meta, fontStyle);
       } else {
-        els.htmlOutput.value = bodyHtml.trim();
+        els.htmlOutput.value = fontStyle + bodyHtml.trim();
       }
 
       els.statusMessage.textContent = '変換完了 ' + new Date().toLocaleTimeString();
@@ -986,7 +1016,7 @@ ${navStr}
     });
 
     els.btnRefreshMath.addEventListener('click', () => {
-      if (window.MathJax) {
+      if (typeof window.MathJax?.typesetPromise === 'function') {
         window.MathJax.typesetPromise([els.preview]);
       }
     });

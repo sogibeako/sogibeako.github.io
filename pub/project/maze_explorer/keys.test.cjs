@@ -54,6 +54,7 @@ assert.ok(fallback > 0, 'cyclic maps exercise locked-exit fallback');
 const fixture = { width: 9, height: 5, cells: new Uint8Array(45), start: 19, exit: 25, puzzle: { locks: [{ key: 10, door: 22, keyId: 'A', placement: 'passage-door' }], requestedCount: 1 } };
 for (let id = 19; id <= 25; id++) fixture.cells[id] = 1;
 fixture.cells[10] = 1;
+fixture.validation = { floors: fixture.cells.reduce((sum, cell) => sum + cell, 0) };
 const game = M.createGame(fixture), before = fixture.cells.slice();
 assert.ok(M.lineOfSight(fixture, 19, 22, new Set([22])), 'closed door is visible');
 assert.equal(M.lineOfSight(fixture, 19, 23, new Set([22])), false, 'closed door blocks light');
@@ -68,7 +69,7 @@ assert.equal(M.featureAt(game, 10), null); assert.equal(game.cognition.memory_no
 assert.equal(game.openedDoors.size, 0, 'owning key does not remotely open door');
 for (const dir of ['down', 'right', 'right', 'right']) assert.ok(M.move(game, dir));
 assert.equal(game.lastEvent, 'door'); assert.ok(game.openedDoors.has('A'));
-assert.equal(M.featureAt(game, 22), '/'); assert.equal(game.cognition.memory_nodes.get('C22').feature, '/');
+assert.equal(M.featureAt(game, 22), "'"); assert.equal(game.cognition.memory_nodes.get('C22').feature, "'");
 assert.ok(game.cognition.visible_cells.has('C23'), 'opening door reveals corridor');
 assert.deepEqual(fixture.cells, before, 'game rules do not mutate geometry');
 for (const dir of ['left', 'right', 'right', 'right', 'right']) assert.ok(M.move(game, dir));

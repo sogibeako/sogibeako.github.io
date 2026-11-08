@@ -1,0 +1,10 @@
+const a=require('node:assert/strict'),D=require('./wildlife-dialogue.js');
+const host={turn:1,rng:123,log:[],pets:[{kind:'d',id:2,mode:'wander'}]},world={player:1,edges:id=>[{to:id-1},{to:id+1}]};
+let before=new Map([['d',{id:1,mode:'wander'}]]);
+D.update(host,world,before,()=>true);a(host.log[0].text.includes('犬 d'));a.equal(host.rng,123);
+const n=host.log.length;host.turn++;D.update(host,world,before,()=>true);a.equal(host.log.length,n);
+host.turn=22;before=new Map([['d',{id:2,mode:'wander'}]]);D.update(host,world,before,()=>true);a.equal(host.log.length,n+1);
+const copy=JSON.parse(JSON.stringify(host));host.turn=copy.turn=44;D.update(host,world,before,()=>true);D.update(copy,world,before,()=>true);a.deepEqual(host,copy);
+D.lines.d.near=['追加セリフ'];host.turn=66;D.update(host,world,before,()=>true);a(host.log.at(-1).text.includes('追加セリフ'));
+D.lines.d.near=[];host.turn=88;const count=host.log.length;D.update(host,world,before,()=>true);a.equal(host.log.length,count);
+console.log('Dialogue: passing, proximity, cooldown, editable/empty lines, RNG independence and serialization passed');

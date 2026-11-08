@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),M=require('./core.js');
 function fixture(wall=false){
  const width=11,height=11,cells=new Uint8Array(121);
  for(let y=1;y<10;y++)for(let x=1;x<10;x++)if(!wall||x!==5||y===9)cells[y*width+x]=1;
- return {width,height,cells,start:24,exit:108,seed:'bird-fixture',birdMode:true};
+ return {width,height,cells,validation:{floors:cells.reduce((sum,v)=>sum+v,0)},start:24,exit:108,seed:'bird-fixture',birdMode:true};
 }
 function place(g,x,y){Object.assign(g.player,{world_position:y*11+x,perceived_x:x,perceived_y:y,perceived_position:'C'+(y*11+x)});M.observe(g);}
 const g=M.createGame(fixture());g.bird.position=25;

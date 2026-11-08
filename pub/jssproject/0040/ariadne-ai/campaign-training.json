@@ -1,0 +1,370 @@
+{
+  "model": {
+    "format": "ariadne-training",
+    "version": 1,
+    "weights": [
+      2.2085669711232185,
+      6.7209582333453,
+      -2.3343729050830007,
+      1.8608838836662471,
+      0.33645746670663357,
+      0.7084152610041201,
+      -2.842215641401708,
+      -2.2582577490247786,
+      -0.6328983448445795,
+      -1.4252331140451133,
+      -1.272641188837588
+    ],
+    "generations": 10
+  },
+  "cancelled": false,
+  "history": [
+    {
+      "generation": 9,
+      "reward": -49.087500000000006,
+      "clearRate": 0
+    },
+    {
+      "generation": 10,
+      "reward": -49.087500000000006,
+      "clearRate": 0
+    }
+  ],
+  "before": {
+    "reward": 15.5625,
+    "clearRate": 0,
+    "episodes": [
+      {
+        "seed": 1000321,
+        "course": "campaign",
+        "reward": 425.5,
+        "cleared": false,
+        "dead": true,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 29,
+        "floor": 3,
+        "level": 1,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000322,
+        "course": "campaign",
+        "reward": -285,
+        "cleared": false,
+        "dead": true,
+        "kills": 1,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 10,
+        "floor": 1,
+        "level": 1,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000323,
+        "course": "campaign",
+        "reward": -284,
+        "cleared": false,
+        "dead": true,
+        "kills": 1,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 8,
+        "floor": 1,
+        "level": 1,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000324,
+        "course": "campaign",
+        "reward": 280,
+        "cleared": false,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 100,
+        "turns": 240,
+        "floor": 1,
+        "level": 1,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000325,
+        "course": "campaign",
+        "reward": 40,
+        "cleared": false,
+        "dead": false,
+        "kills": 0,
+        "enemies": 2,
+        "hp": 100,
+        "turns": 240,
+        "floor": 1,
+        "level": 1,
+        "charges": [
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000326,
+        "course": "campaign",
+        "reward": 73.5,
+        "cleared": false,
+        "dead": true,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 133,
+        "floor": 2,
+        "level": 1,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000327,
+        "course": "campaign",
+        "reward": -405.5,
+        "cleared": false,
+        "dead": true,
+        "kills": 0,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 11,
+        "floor": 1,
+        "level": 1,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000328,
+        "course": "campaign",
+        "reward": 280,
+        "cleared": false,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 100,
+        "turns": 240,
+        "floor": 1,
+        "level": 1,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "after": {
+    "reward": 218.29999999999998,
+    "clearRate": 0,
+    "episodes": [
+      {
+        "seed": 1000321,
+        "course": "campaign",
+        "reward": 425.5,
+        "cleared": false,
+        "dead": true,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 29,
+        "floor": 3,
+        "level": 1,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000322,
+        "course": "campaign",
+        "reward": -285,
+        "cleared": false,
+        "dead": true,
+        "kills": 1,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 10,
+        "floor": 1,
+        "level": 1,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000323,
+        "course": "campaign",
+        "reward": -284,
+        "cleared": false,
+        "dead": true,
+        "kills": 1,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 8,
+        "floor": 1,
+        "level": 1,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000324,
+        "course": "campaign",
+        "reward": 845.8,
+        "cleared": false,
+        "dead": false,
+        "kills": 3,
+        "enemies": 2,
+        "hp": 93,
+        "turns": 240,
+        "floor": 2,
+        "level": 2,
+        "charges": [
+          1,
+          0,
+          4,
+          0
+        ]
+      },
+      {
+        "seed": 1000325,
+        "course": "campaign",
+        "reward": 40,
+        "cleared": false,
+        "dead": false,
+        "kills": 0,
+        "enemies": 2,
+        "hp": 100,
+        "turns": 240,
+        "floor": 1,
+        "level": 1,
+        "charges": [
+          2,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000326,
+        "course": "campaign",
+        "reward": 1129.6,
+        "cleared": false,
+        "dead": false,
+        "kills": 3,
+        "enemies": 2,
+        "hp": 66,
+        "turns": 240,
+        "floor": 3,
+        "level": 2,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000327,
+        "course": "campaign",
+        "reward": -405.5,
+        "cleared": false,
+        "dead": true,
+        "kills": 0,
+        "enemies": 2,
+        "hp": 0,
+        "turns": 11,
+        "floor": 1,
+        "level": 1,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000328,
+        "course": "campaign",
+        "reward": 280,
+        "cleared": false,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 100,
+        "turns": 240,
+        "floor": 1,
+        "level": 1,
+        "charges": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    ]
+  },
+  "trainSeeds": [
+    321,
+    322,
+    323,
+    324,
+    325,
+    326,
+    327,
+    328
+  ],
+  "testSeeds": [
+    1000321,
+    1000322,
+    1000323,
+    1000324,
+    1000325,
+    1000326,
+    1000327,
+    1000328
+  ],
+  "course": "campaign"
+}

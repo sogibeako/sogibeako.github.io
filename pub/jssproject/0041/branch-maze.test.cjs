@@ -1,0 +1,6 @@
+const a=require('node:assert/strict'),B=require('./branch-maze.js'),S=require('./connection-space.js'),P=require('./crossing-autowalk.js');let count=0;
+for(const sheets of [2,3])for(let seed=0;seed<24;seed++){
+ const s=B.create({sheets,seed:'branch-'+seed,density:seed%2?.6:.35}),again=B.create({sheets,seed:'branch-'+seed,density:seed%2?.6:.35});a.deepEqual(s.world.cells,again.world.cells);a(s.world.branchStats.removed>0);for(let i=0;i<sheets;i++)a.equal(s.world.cells[i*64+27],0);
+ for(const [k,e]of s.world.edges){const [id,d]=k.split(':').map(Number);a(s.world.cells[id]&&s.world.cells[e.to]);a.equal(s.world.edges.get(e.to+':'+((d+2)%4)).to,id);}
+ const start=s.id;for(let loop=1;loop<=sheets;loop++){for(const d of s.world.branchLoops[Math.floor(s.id/(s.world.size*s.world.size))])a(S.move(s,d));a.equal(s.id%64,start%64);a.equal(s.id===start,loop===sheets);}const seen=new Set([s.id]);for(let n=0;n<3000;n++){const path=P.explore(s,seen);if(!path)break;a(path.length);for(const d of path){a(S.move(s,d));seen.add(s.id);}}a.equal(seen.size,P.targets(s).size);for(const d of P.route(s,id=>id===s.world.exit))a(S.move(s,d));a.equal(s.id,s.world.exit);a(S.branchRayView(s).some(p=>p.id===s.id));count++;
+}console.log(count+' branch mazes: deterministic walls, solid pillar on every sheet, reversible seams, sheet-cycle ring, all floors and exit reached.');

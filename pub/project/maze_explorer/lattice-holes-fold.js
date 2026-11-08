@@ -19,6 +19,20 @@ function quotient(vectors){
 function memory(state,chart,radius=9){
  const cells=chart?.cells??new Map(),w=state.world,sheet=S.groundSheet(w,state.id),l=w.lattice;
  const direct=()=>{const visible=[];for(const p of cells.values()){const x=p.x-state.x,y=p.y-state.y;if(Math.abs(x)<=radius&&Math.abs(y)<=radius)visible.push({...p,x,y});}return visible;};
+ // Once every floor has been observed, the finished atlas retains the entire
+ // current sheet, including walls, independently of local visibility and laps.
+ if(state.atlasComplete){
+  const here=S.position(w,state.id),right=S.directions[state.frame[1]],down=S.directions[state.frame[2]],result=[];
+  // Use the actual fundamental domain. Single-shift enclosures use a rectangle,
+  // while skew holes and dual-shift enclosures use a parallelogram. Both share
+  // the same period equivalence, but not the same canonical rectangle formula.
+  const key=quotient([l.a,l.b]),records=new Map();
+  for(const id of w.domain){if(w.holes.has(id)||S.groundSheet(w,id)!==sheet)continue;const p=S.position(w,id);records.set(key([p.x-here.x,p.y-here.y]),id);}
+  for(let y=-radius;y<=radius;y++)for(let x=-radius;x<=radius;x++){
+   const id=records.get(key([x*right[0]+y*down[0],x*right[1]+y*down[1]]));if(id===undefined)continue;
+   result.push({id,x,y,wall:!w.cells[id],frame:[...state.frame]});
+  }return result;
+ }
  if(state.foldLoops===false)return direct();
  const learned=R.knowledge(state).filter(p=>p.learned&&p.sheet===sheet);
  if(!learned.length)return direct();
@@ -31,7 +45,9 @@ function memory(state,chart,radius=9){
   const k=key(world(x,y)),distance=x*x+y*y,old=records.get(k);
   if(!old||distance<old.distance)records.set(k,{p,distance});
  }
+ const anchored=new Map(direct().map(p=>[p.x+','+p.y,p]));
  const result=[];for(let y=-radius;y<=radius;y++)for(let x=-radius;x<=radius;x++){
+  const existing=anchored.get(x+','+y);if(existing){result.push(existing);continue;}
   const record=records.get(key(world(x,y)));if(record)result.push({...record.p,x,y});
  }
  return result.concat(fixed);

@@ -3,7 +3,9 @@
 const S=typeof module==='object'?require('./connection-space.js'):root.ConnectionSpace;
 const L=typeof module==='object'?require('./lattice.js'):root.TorusLattice;
 const D=[[0,-1],[1,0],[0,1],[-1,0]],I=[0,1,2,3];
-function create(seed='return-enclosure-1',{verticalLoops=3,shiftX=2,shiftY=0,underpasses=2,size=24,width=size,height=size,layout='original',horizontalLoops=false,features={}}={}){
+function create(seed='return-enclosure-1',{pocketSize='standard',pocketShape='rectangle',growth='dfs',verticalLoops=1,shiftX=2,shiftY=0,underpasses=2,size=24,width=size,height=size,layout='original',horizontalLoops=false,features={}}={}){
+ if(!['standard','compact','random'].includes(pocketSize)||!['rectangle','elbow','random'].includes(pocketShape))throw Error('囲いの大きさ・形が不正です。');
+ if(!['dfs','prim','growing','kruskal','wilson','hunt','rooms'].includes(growth))throw Error('作例3の生成方式が不正です。');
  if(typeof horizontalLoops!=='boolean')throw Error('横周回路の指定が不正です。');
  if([width,height].some(n=>!Number.isInteger(n)||n<24||n>40||n%2))throw Error('大きさは24〜40の偶数で指定してください。');
  if(!['original','mirrorX','mirrorY','half','random'].includes(layout))throw Error('配置の向きが不正です。');
@@ -13,22 +15,62 @@ function create(seed='return-enclosure-1',{verticalLoops=3,shiftX=2,shiftY=0,und
  const dual=Boolean(shiftX&&shiftY),lattice={width,height,shiftX,shiftY,determinant:width*height-shiftX*shiftY,a:[width,-shiftY],b:[-shiftX,height]};
  const points=dual?L.cells(lattice):null,minX=dual?Math.min(...points.map(p=>p.x)):0,minY=dual?Math.min(...points.map(p=>p.y)):0;
  const N=dual?Math.max(...points.map(p=>p.x))-minX+1:width,H=dual?Math.max(...points.map(p=>p.y))-minY+1:height,A=N*H;
- const hx=8-minX,hy=8-minY,left=hx+2,top=hy+2,right=dual?hx+8:N-4,bottom=dual?hy+8:H-4;
+ const hx=8-minX,hy=8-minY,left=hx+2,top=hy+2;let right=dual?hx+8:N-4,bottom=dual?hy+8:H-4;
  const domain=new Set(dual?points.map(p=>(p.y-minY)*N+p.x-minX):Array.from({length:A},(_,n)=>n));
  let r=2166136261;for(const c of String(seed))r=Math.imul(r^c.charCodeAt(0),16777619);const random=()=>{r=(Math.imul(r,1664525)+1013904223)>>>0;return r/4294967296;};
+ if(pocketSize!=='standard'){
+  const spans=[];for(let w=6;w<=N-4-left;w+=2)for(let h=6;h<=H-4-top;h+=2){let fits=true;for(let y=top;y<=top+h&&fits;y++)for(let x=left;x<=left+w;x++)if(!domain.has(y*N+x)){fits=false;break;}if(fits)spans.push([w,h]);}
+  const [w,h]=pocketSize==='compact'?[6,6]:spans[Math.floor(random()*spans.length)]||[6,6];right=left+w;bottom=top+h;
+ }
+ const shape=pocketShape==='random'?(random()<.5?'rectangle':'elbow'):pocketShape;
+ const cutX=left+Math.max(2,2*Math.floor((right-left)/4)),cutY=top+Math.max(2,2*Math.floor((bottom-top)/4));
  const mod=(n,m)=>((n%m)+m)%m,point=(x,y)=>{if(dual){const p=L.canonical(lattice,x+minX,y+minY);return {x:p.x-minX,y:p.y-minY};}return {x:mod(x+Math.floor(y/H)*shiftX,N),y:mod(y+Math.floor(x/N)*shiftY,H)};},id=(s,x,y)=>{const p=point(x,y);return s*A+p.y*N+p.x;};
  const cells=new Uint8Array(2*A),holes=new Set(),portals=[],edges=new Map(),candidates=new Map();
  for(let s=0;s<2;s++){portals.push({sheet:s,x:hx,y:hy,size:4,target:1-s});for(let y=hy;y<hy+4;y++)for(let x=hx;x<hx+4;x++)holes.add(id(s,x,y));}
- const inside=(x,y)=>x>left&&x<right&&y>top&&y<bottom;
- const wall=(x,y)=>(x===left||x===right)&&y>=top&&y<=bottom||(y===top||y===bottom)&&x>=left&&x<=right;
+ const inside=(x,y)=>x>left&&x<right&&y>top&&y<bottom&&(shape!=='elbow'||x<cutX||y>cutY);
+ const wall=(x,y)=>shape==='rectangle'?((x===left||x===right)&&y>=top&&y<=bottom||(y===top||y===bottom)&&x>=left&&x<=right):!inside(x,y)&&[-1,0,1].some(dx=>[-1,0,1].some(dy=>inside(x+dx,y+dy)));
  for(const [sheet,part]of [[0,0],[0,1],[1,0]]){
   const valid=(x,y)=>domain.has(y*N+x)&&!holes.has(id(sheet,x,y))&&(sheet===1||!wall(x,y)&&inside(x,y)===Boolean(part));
   const nodes=new Set();for(let y=mod(1-minY,2);y<H;y+=2)for(let x=mod(1-minX,2);x<N;x+=2)if(valid(x,y))nodes.add(id(sheet,x,y));
   const first=nodes.values().next().value,seen=new Set([first]),stack=[first];cells[first]=1;
-  while(stack.length){const at=stack.at(-1),x=at%N,y=Math.floor(at%A/N),choices=[];
+  if(growth==='hunt'){
+   const choices=at=>{const result=[],x=at%N,y=Math.floor(at%A/N);for(const [dx,dy]of D){const next=point(x+2*dx,y+2*dy),middle=point(x+dx,y+dy),to=id(sheet,next.x,next.y);if(nodes.has(to)&&!seen.has(to)&&valid(middle.x,middle.y))result.push([to,id(sheet,middle.x,middle.y)]);}return result;};
+   let current=first;
+   while(current!==undefined){const paths=choices(current);if(paths.length){const [to,mid]=paths[Math.floor(random()*paths.length)];cells[mid]=cells[to]=1;seen.add(to);current=to;}else{const starts=[...seen].filter(n=>choices(n).length);current=starts.length?starts[Math.floor(random()*starts.length)]:undefined;}}
+  }else if(growth==='wilson'){
+   // Loop-erased random walks are generated independently inside each region.
+   // The enclosure and hole cells are excluded by the same valid predicate.
+   const neighbors=at=>{const result=[],x=at%N,y=Math.floor(at%A/N);for(const [dx,dy]of D){const next=point(x+2*dx,y+2*dy),middle=point(x+dx,y+dy),to=id(sheet,next.x,next.y);if(nodes.has(to)&&valid(middle.x,middle.y))result.push([to,id(sheet,middle.x,middle.y)]);}return result;};
+   const starts=[...nodes];for(let i=starts.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[starts[i],starts[j]]=[starts[j],starts[i]];}
+   for(const origin of starts){if(seen.has(origin))continue;const walk=[origin],links=[],indices=new Map([[origin,0]]);let steps=0;
+    while(!seen.has(walk.at(-1))){if(++steps>1000000)throw Error('Wilson法の生成上限に達しました。別のシードをお試しください。');const choices=neighbors(walk.at(-1));if(!choices.length)throw Error('区画の接続先がありません。');const [to,mid]=choices[Math.floor(random()*choices.length)];
+     if(indices.has(to)){const index=indices.get(to);for(const n of walk.splice(index+1))indices.delete(n);links.length=index;}else{links.push(mid);indices.set(to,walk.length);walk.push(to);}
+    }
+    for(const n of walk){cells[n]=1;seen.add(n);}for(const mid of links)cells[mid]=1;
+   }
+  }else if(growth==='kruskal'){
+   const parent=new Map([...nodes].map(n=>[n,n]));
+   const root=n=>{let at=n;while(parent.get(at)!==at)at=parent.get(at);while(parent.get(n)!==n){const next=parent.get(n);parent.set(n,at);n=next;}return at;};
+   const links=[],known=new Set();for(const from of nodes){const x=from%N,y=Math.floor(from%A/N);for(const [dx,dy]of D){const next=point(x+2*dx,y+2*dy),middle=point(x+dx,y+dy),to=id(sheet,next.x,next.y),mid=id(sheet,middle.x,middle.y);if(!nodes.has(to)||!valid(middle.x,middle.y))continue;const key=[from,to,mid].sort((a,b)=>a-b).join(',');if(!known.has(key)){known.add(key);links.push({from,to,mid});}}}
+   for(let i=links.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[links[i],links[j]]=[links[j],links[i]];}
+   for(const {from,to,mid}of links){const a=root(from),b=root(to);if(a===b)continue;parent.set(a,b);cells[from]=cells[mid]=cells[to]=1;seen.add(from);seen.add(to);}
+   if([...nodes].some(n=>root(n)!==root(first)))throw Error('区画の接続に失敗しました。');
+  }else if(growth==='prim'){
+   const extend=at=>{const result=[],x=at%N,y=Math.floor(at%A/N);for(const [dx,dy]of D){const next=point(x+2*dx,y+2*dy),middle=point(x+dx,y+dy),to=id(sheet,next.x,next.y),mid=id(sheet,middle.x,middle.y);if(nodes.has(to)&&!seen.has(to)&&valid(middle.x,middle.y))result.push([to,mid]);}return result;};
+   const frontier=extend(first);while(frontier.length){const i=Math.floor(random()*frontier.length),[to,mid]=frontier[i];frontier[i]=frontier.at(-1);frontier.pop();if(seen.has(to))continue;cells[mid]=cells[to]=1;seen.add(to);frontier.push(...extend(to));}
+  }else while(stack.length){const index=growth==='growing'&&random()>=.7?Math.floor(random()*stack.length):stack.length-1,at=stack[index],x=at%N,y=Math.floor(at%A/N),choices=[];
    for(const [dx,dy]of D){const next=point(x+2*dx,y+2*dy),middle=point(x+dx,y+dy),nx=next.x,ny=next.y,mx=middle.x,my=middle.y,to=id(sheet,nx,ny),mid=id(sheet,mx,my);if(nodes.has(to)&&!seen.has(to)&&valid(mx,my))choices.push([to,mid]);}
-   if(!choices.length){stack.pop();continue;}const [to,mid]=choices[Math.floor(random()*choices.length)];cells[mid]=cells[to]=1;seen.add(to);stack.push(to);
+   if(!choices.length){stack.splice(index,1);continue;}const [to,mid]=choices[Math.floor(random()*choices.length)];cells[mid]=cells[to]=1;seen.add(to);stack.push(to);
   }if(seen.size!==nodes.size)throw Error('区画の生成に失敗しました。');
+  if(growth==='rooms'){
+   // Each room grows from a carved cell within this region. Never carve the
+   // enclosure wall, puncture, or a detached piece on the other side of either.
+   const anchors=[...nodes];
+   for(let room=0;room<Math.max(1,Math.floor(nodes.size/22));room++){
+    const anchor=anchors[Math.floor(random()*anchors.length)],ax=anchor%N,ay=Math.floor(anchor%A/N),rw=3+2*Math.floor(random()*2),rh=3+2*Math.floor(random()*2),x0=ax-Math.floor(random()*rw),y0=ay-Math.floor(random()*rh);
+    const q=[[ax,ay]],visited=new Set([ay*N+ax]);for(const [x,y]of q){cells[id(sheet,x,y)]=1;for(const [dx,dy]of D){const nx=x+dx,ny=y+dy,key=ny*N+nx;if(nx<0||nx>=N||ny<0||ny>=H||nx<x0||nx>=x0+rw||ny<y0||ny>=y0+rh||visited.has(key)||!valid(nx,ny))continue;visited.add(key);q.push([nx,ny]);}}
+   }
+  }
  }
  // Meandering lifted paths end at (-shiftX, H), one vertical deck period.
  const verticalRoutes=[];
@@ -91,7 +133,8 @@ function create(seed='return-enclosure-1',{verticalLoops=3,shiftX=2,shiftY=0,und
  const all=visit(start);if(all.size!==world.cells.reduce((a,b)=>a+b,0)||visit(start,true).has(exit))throw Error('最終配置の区画検証に失敗しました。');
  for(const route of periodRoutes){let at=route.start;for(const d of route.directions){const e=world.edges.get(`${at}:${d}`);if(!e)throw Error('アンダーパスで周回路が壊れました。');at=e.to;}if(at!==route.start)throw Error('周回路が閉じていません。');}
  world.stats={front:visit(start,true).size,back:visit(exit,true).size,b:visit(id(1,hx+1,hy-1),true).size,bSteps:visit(id(1,hx+1,hy-1),true).get(id(1,hx+3,hy+4)),exitSteps:all.get(exit)};
- world.generationOptions={verticalLoops,shiftX,shiftY,underpasses,size,width,height,layout,...(horizontalLoops?{horizontalLoops:true}:{}),...(Object.values(features).some(Boolean)?{features}:{})};
+ world.pocketDescription={shape,width:right-left,height:bottom-top};
+ world.generationOptions={...(pocketSize!=='standard'?{pocketSize}:{}),...(pocketShape!=='rectangle'?{pocketShape}:{}),...(growth!=='dfs'?{growth}:{}),verticalLoops,shiftX,shiftY,underpasses,size,width,height,layout,...(horizontalLoops?{horizontalLoops:true}:{}),...(Object.values(features).some(Boolean)?{features}:{})};
  const chosen=layout==='random'?['original','mirrorX','mirrorY','half'][Math.floor(random()*4)]:layout;
  world.layoutVariant=chosen;
  if(chosen!=='original'){

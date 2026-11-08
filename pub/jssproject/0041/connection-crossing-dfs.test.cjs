@@ -1,0 +1,8 @@
+const assert=require('node:assert/strict'),S=require('./connection-space.js');let differing=0;
+for(const wallStyle of ['dense','grid'])for(const [width,height] of [[15,15],[24,18],[40,40]])for(let seed=0;seed<10;seed++){
+ const opts={wallStyle,width,height,seed,growth:'dfs'},w=S.generate('crossingMaze',opts);assert.equal(w.growth,'dfs');assert.deepEqual(w.cells,S.generate('crossingMaze',opts).cells);if(!Buffer.from(w.cells).equals(Buffer.from(S.generate('crossingMaze',{...opts,growth:'frontier'}).cells)))differing++;
+ const q=[w.start],seen=new Set(q);let edgeCount=0;for(const id of q)for(let d=0;d<4;d++){const e=w.edges.get(`${id}:${d}`);if(!e)continue;edgeCount++;assert.equal(w.edges.get(`${e.to}:${(d+2)%4}`).to,id);if(S.position(w,id).sheet!==S.position(w,e.to).sheet)assert.equal(e.kind,'stairs');if(!seen.has(e.to)){seen.add(e.to);q.push(e.to);}}
+ assert.equal(seen.size,w.cells.reduce((a,b)=>a+b,0));assert(seen.has(w.exit));assert.equal(edgeCount/2-seen.size+1,1,'Only the protected crossing circuit is cyclic');
+ const st=S.create('crossingMaze',opts);for(const id of w.crossings){st.id=id;const p=S.position(w,id);for(const d of p.sheet===0?[0,2]:[1,3])assert(!w.edges.has(`${id}:${d}`));for(let d=0;d<4;d++){const [x,y]=S.directions[d],tile=S.nearestView(st).find(t=>t.x===x&&t.y===y);assert.equal(tile.wall,!w.edges.has(`${id}:${d}`));}}
+}
+assert(differing>50);assert.throws(()=>S.generate('crossingMaze',{growth:'invalid'}));assert.throws(()=>S.generate('crossingMaze',{wallStyle:'grid',growth:'invalid'}));console.log(`DFS growth: 60 worlds, ${differing} differ from frontier; deterministic, connected, reversible, one preserved cycle, exit and crossing checks passed`);

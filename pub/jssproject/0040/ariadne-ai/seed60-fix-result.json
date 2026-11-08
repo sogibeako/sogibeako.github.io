@@ -1,0 +1,167 @@
+{
+  "floor": 3,
+  "hp": 87,
+  "turn": 82,
+  "score": 3358,
+  "trace": [
+    {
+      "turn": 66,
+      "node": 4,
+      "action": {
+        "kind": "move",
+        "to": 4
+      },
+      "cycle": true,
+      "hp": 100
+    },
+    {
+      "turn": 67,
+      "node": 5,
+      "action": {
+        "kind": "move",
+        "to": 5
+      },
+      "cycle": true,
+      "hp": 100
+    },
+    {
+      "turn": 68,
+      "node": 6,
+      "action": {
+        "kind": "move",
+        "to": 14
+      },
+      "cycle": true,
+      "hp": 100
+    },
+    {
+      "turn": 69,
+      "node": 15,
+      "action": {
+        "kind": "move",
+        "to": 15
+      },
+      "cycle": false,
+      "hp": 100
+    },
+    {
+      "turn": 70,
+      "node": 15,
+      "action": {
+        "kind": "move",
+        "to": 15
+      },
+      "cycle": false,
+      "hp": 77
+    },
+    {
+      "turn": 71,
+      "node": 15,
+      "action": {
+        "kind": "move",
+        "to": 15
+      },
+      "cycle": false,
+      "hp": 77
+    },
+    {
+      "turn": 72,
+      "node": 16,
+      "action": {
+        "kind": "move",
+        "to": 24
+      },
+      "cycle": false,
+      "hp": 78
+    },
+    {
+      "turn": 73,
+      "node": 25,
+      "action": {
+        "kind": "move",
+        "to": 33
+      },
+      "cycle": false,
+      "hp": 79
+    },
+    {
+      "turn": 74,
+      "node": 34,
+      "action": {
+        "kind": "move",
+        "to": 32
+      },
+      "cycle": false,
+      "hp": 80
+    },
+    {
+      "turn": 75,
+      "node": 33,
+      "action": {
+        "kind": "move",
+        "to": 31
+      },
+      "cycle": false,
+      "hp": 81
+    },
+    {
+      "turn": 76,
+      "node": 32,
+      "action": {
+        "kind": "move",
+        "to": 30
+      },
+      "cycle": false,
+      "hp": 82
+    },
+    {
+      "turn": 77,
+      "node": 31,
+      "action": {
+        "kind": "move",
+        "to": 29
+      },
+      "cycle": false,
+      "hp": 83
+    },
+    {
+      "turn": 78,
+      "node": 30,
+      "action": {
+        "kind": "move",
+        "to": 28
+      },
+      "cycle": false,
+      "hp": 84
+    },
+    {
+      "turn": 79,
+      "node": 29,
+      "action": {
+        "kind": "move",
+        "to": 27
+      },
+      "cycle": false,
+      "hp": 85
+    },
+    {
+      "turn": 80,
+      "node": 28,
+      "action": {
+        "kind": "move",
+        "to": 36
+      },
+      "cycle": false,
+      "hp": 86
+    },
+    {
+      "turn": 81,
+      "node": 37,
+      "action": {
+        "kind": "descend"
+      },
+      "cycle": false,
+      "hp": 87
+    }
+  ]
+}

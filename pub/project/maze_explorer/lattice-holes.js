@@ -29,9 +29,10 @@ function placeReturnPocket(world){
 }
 function create({shiftX=2,shiftY=2,walls=true,maze=false,seed='skew-first',growth='walls',wallStyle='dense',periodSize=12,periodWidth=periodSize,periodHeight=periodSize,underpasses=0,underpassShape='straight',holeRimWalls=false,returnPocket=false,features={}}={}){
  if(returnPocket&&!maze)throw Error('出口ポケットは生成迷路で指定してください。');
- if(!['walls','dfs','prim','growing'].includes(growth))throw Error('未対応の生成方式です。');
+ if(!['walls','dfs','prim','growing','rooms','hunt','wilson','kruskal'].includes(growth))throw Error('未対応の生成方式です。');
  if(!['straight','mixed','corners'].includes(underpassShape))throw Error('未対応のアンダーパス形状です。');
  if(!['dense','grid'].includes(wallStyle))throw Error('未対応の壁配置です。');
+ if(['wilson','kruskal'].includes(growth)&&wallStyle!=='grid')throw Error('Wilson・Kruskal法はアトリエ形式（格子状の壁）を選んでください。');
  const lattice=L.create({width:periodWidth,height:periodHeight,shiftX,shiftY}),points=L.cells(lattice);
  const minX=Math.min(...points.map(p=>p.x)),minY=Math.min(...points.map(p=>p.y)),width=Math.max(...points.map(p=>p.x))-minX+1,height=Math.max(...points.map(p=>p.y))-minY+1,area=width*height;
  const layouts=[{width,height,offset:0},{width,height,offset:area}],cells=new Uint8Array(2*area),domain=new Set(),holes=new Set(),edges=new Map(),candidates=new Map(),portals=[];
@@ -97,15 +98,58 @@ function create({shiftX=2,shiftY=2,walls=true,maze=false,seed='skew-first',growt
      if(Math.abs(x%2)===1&&Math.abs(y%2)===1){if(!live.has(at))result.push(path);break;}
     }}return result;};
     const carve=path=>{for(const n of path)live.add(n);};
-    if(growth==='prim'){
+    if(growth==='kruskal'){
+     // Contract the connected mandatory skeleton, then join disjoint sets by
+     // shuffled grid edges. Corridors never cross the hole or a grid pillar.
+     const odd=n=>{const x=n%area%width+minX,y=Math.floor(n%area/width)+minY;return Math.abs(x%2)===1&&Math.abs(y%2)===1;};
+     const vertices=[...domain].filter(n=>cells[n]&&(odd(n)||protectedCells.has(n))),parent=new Map(vertices.map(n=>[n,n]));
+     const root=n=>{let r=n;while(parent.get(r)!==r)r=parent.get(r);while(parent.get(n)!==n){const next=parent.get(n);parent.set(n,r);n=next;}return r;};
+     const union=(a,b)=>{a=root(a);b=root(b);if(a===b)return false;parent.set(a,b);return true;};
+     for(const n of protectedCells)union(n,start);
+     const links=[],seen=new Set();
+     for(const from of vertices)for(let d=0;d<4;d++){let at=from;const path=[];for(let k=0;k<2;k++){const e=edges.get(at+':'+d);if(!e||e.kind!=='normal')break;at=e.to;path.push(at);if(parent.has(at)){const key=[from,...path].sort((a,b)=>a-b).join(',');if(!seen.has(key)){seen.add(key);links.push({from,to:at,path});}break;}}}
+     for(let i=links.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[links[i],links[j]]=[links[j],links[i]];}
+     for(const edge of links)if(union(edge.from,edge.to)){live.add(edge.from);carve(edge.path);}
+     if(vertices.some(n=>root(n)!==root(start)))throw Error('Kruskal法の通路を接続できませんでした。');
+    }else if(growth==='wilson'){
+     // Loop-erased random walks attach to the preserved hole rims and periods.
+     // Logical vertices are odd/odd cells; intermediate cells are corridors.
+     const odd=n=>{const x=n%area%width+minX,y=Math.floor(n%area/width)+minY;return Math.abs(x%2)===1&&Math.abs(y%2)===1;};
+     const starts=[...domain].filter(n=>cells[n]&&odd(n));
+     for(let i=starts.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[starts[i],starts[j]]=[starts[j],starts[i]];}
+     const choices=n=>{const list=[];for(let d=0;d<4;d++){let at=n;const path=[];for(let k=0;k<2;k++){const e=edges.get(at+':'+d);if(!e||e.kind!=='normal')break;at=e.to;path.push(at);if(live.has(at)||odd(at)){list.push(path);break;}}}return list;};
+     for(const start of starts){if(live.has(start))continue;const walk=[start],links=[],indices=new Map([[start,0]]);let steps=0;
+      while(!live.has(walk.at(-1))){if(++steps>1000000)throw Error('Wilson法の生成上限に達しました。別のシードをお試しください。');const paths=choices(walk.at(-1));if(!paths.length)throw Error('Wilson法の接続先がありません。');const path=paths[Math.floor(random()*paths.length)],to=path.at(-1);
+       if(indices.has(to)){const index=indices.get(to);for(const n of walk.splice(index+1))indices.delete(n);links.length=index;}else{links.push(path);indices.set(to,walk.length);walk.push(to);}
+      }
+      live.add(start);for(const path of links)carve(path);
+     }
+    }else if(growth==='hunt'){
+     let current=active.at(-1);
+     while(current!==undefined){const choices=extensions(current);if(choices.length){const path=choices[Math.floor(random()*choices.length)];carve(path);current=path.at(-1);}else{const starts=[...live].filter(n=>extensions(n).length);current=starts.length?starts[Math.floor(random()*starts.length)]:undefined;}}
+    }else if(growth==='prim'){
      const frontier=active.flatMap(extensions);while(frontier.length){const i=Math.floor(random()*frontier.length),path=frontier[i];frontier[i]=frontier.at(-1);frontier.pop();if(live.has(path.at(-1)))continue;carve(path);frontier.push(...extensions(path.at(-1)));}
     }else while(active.length){const i=growth==='dfs'||random()<.7?active.length-1:Math.floor(random()*active.length),choices=extensions(active[i]);if(!choices.length){active.splice(i,1);continue;}const path=choices[Math.floor(random()*choices.length)];carve(path);active.push(path.at(-1));}
+   }else if(growth==='hunt'){
+    let current=active.at(-1);
+    while(current!==undefined){const choices=neighbors(current).filter(eligible);if(choices.length){current=choices[Math.floor(random()*choices.length)];live.add(current);}else{const starts=[...live].filter(n=>neighbors(n).some(eligible));current=starts.length?starts[Math.floor(random()*starts.length)]:undefined;}}
    }else if(growth==='prim'){
     const frontier=active.flatMap(neighbors);
     while(frontier.length){const i=Math.floor(random()*frontier.length),n=frontier[i];frontier[i]=frontier.at(-1);frontier.pop();if(!eligible(n))continue;live.add(n);frontier.push(...neighbors(n));}
    }else while(active.length){
     const i=growth==='dfs'||random()<.7?active.length-1:Math.floor(random()*active.length),choices=neighbors(active[i]).filter(eligible);
     if(!choices.length){active.splice(i,1);continue;}const n=choices[Math.floor(random()*choices.length)];live.add(n);active.push(n);
+   }
+   if(growth==='rooms'){
+    // Grow each room from an existing corridor, without crossing holes or seams.
+    for(let sheet=0;sheet<2;sheet++)for(let r=0;r<Math.max(2,Math.floor(points.length/70));r++){
+     const anchors=points.filter(p=>live.has(id(sheet,p.x,p.y))),anchor=anchors[Math.floor(random()*anchors.length)];if(!anchor)continue;
+     const rw=3+Math.floor(random()*3),rh=3+Math.floor(random()*3),left=anchor.x-Math.floor(random()*rw),top=anchor.y-Math.floor(random()*rh);
+     const room=new Set(points.filter(p=>p.x>=left&&p.x<left+rw&&p.y>=top&&p.y<top+rh&&!holes.has(id(sheet,p.x,p.y))).map(p=>id(sheet,p.x,p.y)));
+     const q=[id(sheet,anchor.x,anchor.y)],seen=new Set(q);for(const n of q){live.add(n);for(const d of [0,1,2,3]){const to=n+[1,width,-1,-width][d];if(room.has(to)&&!seen.has(to)){seen.add(to);q.push(to);}}}
+    }
+    // Grid pillars previously removed their edges; rooms restore local adjacency.
+    for(const n of live)for(let d=0;d<4;d++){const x=n%area%width,y=Math.floor(n%area/width),nx=x+D[d][0],ny=y+D[d][1],to=n+D[d][0]+D[d][1]*width;if(nx>=0&&nx<width&&ny>=0&&ny<height&&live.has(to)&&!edges.has(n+':'+d))edges.set(n+':'+d,{to,transform:[...I],kind:'normal'});}
    }
    for(const n of domain)cells[n]=live.has(n)?1:0;
   }
@@ -137,5 +181,12 @@ function create({shiftX=2,shiftY=2,walls=true,maze=false,seed='skew-first',growt
  if(returnPocket&&!verifyReturnPocket(world))throw Error('アンダーパス追加後の出口ポケット検証に失敗しました。');
  return (typeof module==='object'?require('./sheet-features.js'):root.SheetFeatures).install({world,id:start,frame:[...I],x:0,y:0,steps:0,history:[],last:null},features);
 }
-const api={create,verifyReturnPocket};if(typeof module==='object')module.exports=api;else root.LatticeHoles=api;
+function courseCreate(options,mixPocket=false){
+ if(!mixPocket)return create(options);
+ let h=2166136261;for(const c of String(options.seed)+'|exit-pocket-v1')h=Math.imul(h^c.charCodeAt(0),16777619);h=Math.imul(h^(h>>>16),0x85ebca6b);h^=h>>>13;
+ if((h>>>0)/4294967296>=.5)return create({...options,returnPocket:false});
+ for(let attempt=0;attempt<8;attempt++){try{return create({...options,seed:attempt?options.seed+'-pocket-'+attempt:options.seed,returnPocket:true});}catch(error){if(!error.message.includes('出口ポケットを配置できません'))throw error;}}
+ const state=create({...options,returnPocket:false});state.world.pocketFallback=true;return state;
+}
+const api={create,courseCreate,verifyReturnPocket};if(typeof module==='object')module.exports=api;else root.LatticeHoles=api;
 })(globalThis);

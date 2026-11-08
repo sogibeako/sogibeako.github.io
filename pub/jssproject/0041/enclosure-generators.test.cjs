@@ -1,0 +1,7 @@
+const a=require('node:assert/strict'),H=require('./return-enclosure.js'),S=require('./connection-space.js'),P=require('./exploration-solver.js'),Save=require('./return-enclosure-save.js'),G=require('./exploration-generation.js');
+(async()=>{let count=0;for(const growth of ['dfs','prim','growing','kruskal','wilson','hunt','rooms'])for(const [width,height]of [[24,24],[28,34]])for(const [shiftX,shiftY]of [[0,0],[2,0],[0,-2],[2,-2]])for(const layout of ['original','half']){
+ const s=H.create('enclosure-variety',{growth,width,height,shiftX,shiftY,layout,underpasses:2,horizontalLoops:true}),w=s.world;s.replayMoves=[];
+ const reach=local=>{const q=[s.id],seen=new Set(q);for(const id of q)for(let d=0;d<4;d++){const e=w.edges.get(id+':'+d);if(e&&(!local||S.groundSheet(w,e.to)===0)&&!seen.has(e.to)){seen.add(e.to);q.push(e.to);}}return seen;};
+ a(!reach(true).has(w.exit));a.equal(reach(false).size,w.cells.reduce((n,v)=>n+v,0));
+ for(const d of P.connected(s)){a(S.move(s,d,true));s.replayMoves.push(d);}a.equal(s.id,w.exit);const restored=await Save.decode(Save.encode(s,0));a.equal(restored.state.id,s.id);a.equal(restored.state.world.generationOptions.growth||'dfs',growth);count++;
+}const found=new Set();for(let i=0;i<50;i++)found.add(G.chooseEnclosure({},'e'+i,undefined,undefined,true).growth);a.equal(found.size,7);a.equal(G.chooseEnclosure({growth:'prim'},'e',undefined,undefined,false).growth,'prim');console.log(count+' enclosure worlds: connected, A-B-A required, actual exit walks and replay saves passed');})().catch(e=>{console.error(e);process.exitCode=1});

@@ -263,6 +263,32 @@
     border-color: var(--accent);
     transform: scale(1.05);
   }
+  .chord-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--glass-border);
+  }
+  .chord-help {
+    color: #94a3b8;
+    font-size: 0.9rem;
+  }
+  .chord-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 1rem;
+  }
+  .chord-controls > div { flex: 1; min-width: 160px; max-width: 320px; }
+  .chord-notes { min-width: 200px; overflow-wrap: anywhere; }
+  .chord-play {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399;
+  }
+  .chord-play:disabled { cursor: wait; opacity: 0.65; }
 </style>
 </head>
 <body>
@@ -328,6 +354,25 @@
           </table>
         </div>
       </div>
+      <section class="chord-section" aria-labelledby="sing_chord_heading">
+        <h3 id="sing_chord_heading">和音一覧 (Chord Form)</h3>
+        <form class="chord-controls" onsubmit="event.preventDefault(); renderChords('sing');">
+          <div>
+            <label for="sing_chord_form">フォーム</label>
+            <input type="text" id="sing_chord_form" value="(2,2)" placeholder="例: (2,2) / (2,2,2)" aria-describedby="sing_chord_help">
+          </div>
+          <button type="submit">一覧を更新</button>
+        </form>
+        <p id="sing_chord_help" class="chord-help">上の計算結果を使います。(2,2) は、起点 → 2音先 → さらに2音先の3音です。正の整数をカンマ区切りで入力してください（最大32個、括弧は省略可）。周期をまたぐ音は次の周へ進みます。</p>
+        <p class="chord-help">起点は0から始まる音番号です。「代表番号」は、先頭音からの音程がすべて同じ和音のうち、最初に現れる起点番号です。▶ は各和音を同時に再生します（0c = 440Hz）。</p>
+        <div id="sing_chord_msg" class="msg" role="status" aria-live="polite"></div>
+        <div class="table-container">
+          <table id="sing_chord_table" aria-labelledby="sing_chord_heading">
+            <thead><tr><th scope="col">起点</th><th scope="col">構成音 (Cents)</th><th scope="col">再生</th><th scope="col">代表番号</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -423,6 +468,25 @@
           </table>
         </div>
       </div>
+      <section class="chord-section" aria-labelledby="add_chord_heading">
+        <h3 id="add_chord_heading">和音一覧 (Chord Form)</h3>
+        <form class="chord-controls" onsubmit="event.preventDefault(); renderChords('add');">
+          <div>
+            <label for="add_chord_form">フォーム</label>
+            <input type="text" id="add_chord_form" value="(2,2)" placeholder="例: (2,2) / (2,2,2)" aria-describedby="add_chord_help">
+          </div>
+          <button type="submit">一覧を更新</button>
+        </form>
+        <p id="add_chord_help" class="chord-help">上の計算結果を使います。(2,2) は、起点 → 2音先 → さらに2音先の3音です。正の整数をカンマ区切りで入力してください（最大32個、括弧は省略可）。周期をまたぐ音は次の周へ進みます。</p>
+        <p class="chord-help">起点は0から始まる音番号です。「代表番号」は、先頭音からの音程がすべて同じ和音のうち、最初に現れる起点番号です。▶ は各和音を同時に再生します（0c = 440Hz）。</p>
+        <div id="add_chord_msg" class="msg" role="status" aria-live="polite"></div>
+        <div class="table-container">
+          <table id="add_chord_table" aria-labelledby="add_chord_heading">
+            <thead><tr><th scope="col">起点</th><th scope="col">構成音 (Cents)</th><th scope="col">再生</th><th scope="col">代表番号</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -603,7 +667,93 @@
        };
     }
 
+    // フォームは絶対位置ではなく、直前の音から進む音数の列。
+    function parseChordForm(text) {
+       let value = text.normalize('NFKC').trim();
+       if(value.startsWith('(') && value.endsWith(')')) {
+          value = value.slice(1, -1).trim();
+       }
+       if(!/^\d+(?:\s*,\s*\d+)*$/.test(value)) {
+          throw new Error('フォームは (2,2) のように、正の整数をカンマ区切りで入力してください。');
+       }
+       const form = value.split(',').map(Number);
+       if(form.length > 32 || form.some(n => !Number.isSafeInteger(n) || n <= 0)) {
+          throw new Error('フォームには正の整数を最大32個まで指定してください。');
+       }
+       return form;
+    }
+
+    function buildChords(scale, form) {
+       // cumulative の末尾は次の周の起点なので、起点の一覧には含めない。
+       const degreeCount = scale.cumulative.length - 1;
+       const period = scale.cents[degreeCount];
+       if(degreeCount < 1 || !Number.isFinite(period) || period <= 0 ||
+          !scale.cumulative.every(Number.isSafeInteger) || !Number.isSafeInteger(scale.edo)) {
+          throw new Error('和音を計算するには、有効な音階と正の周期が必要です。');
+       }
+       const offsets = [0];
+       for(const move of form) {
+          const next = offsets[offsets.length - 1] + move;
+          if(!Number.isSafeInteger(next) || !Number.isSafeInteger(next + degreeCount)) {
+             throw new Error('フォームの移動量が大きすぎます。');
+          }
+          offsets.push(next);
+       }
+       const representatives = new Map();
+       return Array.from({ length: degreeCount }, (_, root) => {
+          const steps = offsets.map(offset => {
+             const degree = root + offset;
+             const step = Math.floor(degree / degreeCount) * scale.edo + scale.cumulative[degree % degreeCount];
+             if(!Number.isSafeInteger(step)) throw new Error('フォームの移動量が大きすぎます。');
+             return step;
+          });
+          // 同じ音階内では、整数ステップ差で比較するとセント値の丸め誤差がない。
+          const signature = steps.map(step => step - steps[0]).join(',');
+          if(!representatives.has(signature)) representatives.set(signature, root);
+          const cents = steps.map(step => (step / scale.edo) * period);
+          if(!cents.every(Number.isFinite)) throw new Error('和音のセント値が大きすぎます。');
+          return { root, cents, representative: representatives.get(signature) };
+       });
+    }
+
     // --- UI Logic ---
+    function renderChords(type) {
+       const tbody = document.querySelector('#' + type + '_chord_table tbody');
+       const input = document.getElementById(type + '_chord_form');
+       tbody.replaceChildren();
+       hideMessage(type + '_chord_msg');
+       input.removeAttribute('aria-invalid');
+       const scale = type === 'sing' ? latestSingResult : latestAddResult;
+       if(!scale) return;
+       try {
+          const chords = buildChords(scale, parseChordForm(input.value));
+          for(const chord of chords) {
+             const row = document.createElement('tr');
+             const root = document.createElement('th');
+             root.scope = 'row';
+             root.textContent = chord.root;
+             const notes = document.createElement('td');
+             notes.className = 'chord-notes';
+             notes.textContent = chord.cents.map(formatCents).join(' - ') + 'c';
+             const playback = document.createElement('td');
+             const button = document.createElement('button');
+             button.type = 'button';
+             button.className = 'chord-play';
+             button.textContent = '▶ 再生';
+             button.setAttribute('aria-label', '起点' + chord.root + 'の和音を再生');
+             button.addEventListener('click', () => playChord(chord.cents, button, type));
+             playback.appendChild(button);
+             const representative = document.createElement('td');
+             representative.textContent = chord.representative;
+             row.append(root, notes, playback, representative);
+             tbody.appendChild(row);
+          }
+       } catch(e) {
+          input.setAttribute('aria-invalid', 'true');
+          showMessage(type + '_chord_msg', e.message, 'error');
+       }
+    }
+
     function formatCents(val) {
        return Number.isInteger(val) ? val.toString() : val.toFixed(3);
     }
@@ -800,6 +950,63 @@
     // --- Audio Playback Logic ---
     let audioCtx = null;
     let isPlaying = false;
+    let activeChordPlayback = null;
+
+    async function playChord(cents, button, type) {
+       // 別の行を押したときは、先に鳴っていた和音を停止する。
+       if(activeChordPlayback) activeChordPlayback();
+       const voices = [];
+       let cancelled = false;
+       const finish = () => {
+          cancelled = true;
+          for(const { osc, gain } of voices) {
+             osc.onended = null;
+             osc.stop();
+             osc.disconnect();
+             gain.disconnect();
+          }
+          button.disabled = false;
+          button.textContent = '▶ 再生';
+          if(activeChordPlayback === finish) activeChordPlayback = null;
+       };
+       activeChordPlayback = finish;
+       button.disabled = true;
+       button.textContent = '■ 再生中';
+       hideMessage(type + '_chord_msg');
+       try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if(!AudioContextClass) throw new Error('このブラウザーは音声再生に対応していません。');
+          if(!audioCtx || audioCtx.state === 'closed') audioCtx = new AudioContextClass();
+          if(audioCtx.state === 'suspended') await audioCtx.resume();
+          if(cancelled) return;
+          const frequencies = cents.map(value => 440 * Math.pow(2, value / 1200));
+          if(frequencies.some(freq => !Number.isFinite(freq) || freq >= audioCtx.sampleRate / 2)) {
+             throw new Error('再生できる音域を超えています。フォームの移動量または周期を小さくしてください。');
+          }
+          const start = audioCtx.currentTime + 0.03;
+          frequencies.forEach(freq => {
+             const osc = audioCtx.createOscillator();
+             const gain = audioCtx.createGain();
+             osc.type = 'square';
+             osc.frequency.value = freq;
+             gain.gain.setValueAtTime(0, start);
+             gain.gain.linearRampToValueAtTime(0.06 / frequencies.length, start + 0.02);
+             gain.gain.setValueAtTime(0.06 / frequencies.length, start + 0.65);
+             gain.gain.linearRampToValueAtTime(0, start + 0.9);
+             osc.connect(gain);
+             gain.connect(audioCtx.destination);
+             osc.start(start);
+             osc.stop(start + 0.92);
+             voices.push({ osc, gain });
+          });
+          voices[voices.length - 1].osc.onended = finish;
+       } catch(e) {
+          finish();
+          const message = document.getElementById(type + '_chord_msg');
+          message.textContent = '再生エラー: ' + e.message;
+          message.className = 'msg error';
+       }
+    }
 
     function playScale(type) {
        const res = type === 'sing' ? latestSingResult : latestAddResult;
@@ -880,6 +1087,7 @@
        try {
           const res = analyzeScale("", word, ratio, "word-priority", period);
           latestSingResult = res;
+          renderChords('sing');
           document.getElementById('sing_edo').value = res.edo;
           document.getElementById('sing_res_edo').textContent = res.edo;
           renderTable('#sing_table tbody', res);
@@ -911,6 +1119,7 @@
           res.diffs = res.steps;
           
           latestAddResult = res;
+          renderChords('add');
           document.getElementById('add_res_edo').value = res.edo;
           renderTable('#add_table tbody', res, true);
           drawScale('add_canvas', res, '#a78bfa');
@@ -938,6 +1147,7 @@
           
           const resC = addScales(resA, resB, period);
           latestAddResult = resC;
+          renderChords('add');
           
           document.getElementById('add_edoA').value = resA.edo;
           document.getElementById('add_edoB').value = resB.edo;

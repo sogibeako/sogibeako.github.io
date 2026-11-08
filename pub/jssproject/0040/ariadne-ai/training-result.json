@@ -1,0 +1,351 @@
+{
+  "model": {
+    "format": "ariadne-training",
+    "version": 1,
+    "weights": [
+      2.391522706951946,
+      7.315945351962,
+      -2.803907655645162,
+      2.9315920998342335,
+      0.8589868224225938,
+      1.4025525213219225,
+      -2.5886503127403557,
+      -2.692369486670941,
+      -2.037374848220497,
+      -1.645363641437143,
+      -1.2369434301741422
+    ],
+    "generations": 8
+  },
+  "cancelled": false,
+  "history": [
+    {
+      "generation": 1,
+      "reward": 659.925,
+      "clearRate": 0.875
+    },
+    {
+      "generation": 2,
+      "reward": 659.925,
+      "clearRate": 0.875
+    },
+    {
+      "generation": 3,
+      "reward": 764.2375000000001,
+      "clearRate": 1
+    },
+    {
+      "generation": 4,
+      "reward": 764.2375000000001,
+      "clearRate": 1
+    },
+    {
+      "generation": 5,
+      "reward": 764.2375000000001,
+      "clearRate": 1
+    },
+    {
+      "generation": 6,
+      "reward": 764.2375000000001,
+      "clearRate": 1
+    },
+    {
+      "generation": 7,
+      "reward": 764.2375000000001,
+      "clearRate": 1
+    },
+    {
+      "generation": 8,
+      "reward": 764.2375000000001,
+      "clearRate": 1
+    }
+  ],
+  "before": {
+    "reward": 451.625,
+    "clearRate": 0.375,
+    "episodes": [
+      {
+        "seed": 1000123,
+        "reward": 320,
+        "cleared": false,
+        "dead": false,
+        "kills": 1,
+        "enemies": 3,
+        "hp": 130,
+        "turns": 80,
+        "charges": [
+          1,
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000124,
+        "reward": 111,
+        "cleared": false,
+        "dead": false,
+        "kills": 0,
+        "enemies": 2,
+        "hp": 110,
+        "turns": 80,
+        "charges": [
+          1,
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000125,
+        "reward": 632.5,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 140,
+        "turns": 73,
+        "charges": [
+          0,
+          4,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000126,
+        "reward": 819.1,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 3,
+        "hp": 96,
+        "turns": 47,
+        "charges": [
+          1,
+          1,
+          4,
+          0
+        ]
+      },
+      {
+        "seed": 1000127,
+        "reward": 520,
+        "cleared": false,
+        "dead": false,
+        "kills": 2,
+        "enemies": 3,
+        "hp": 120,
+        "turns": 80,
+        "charges": [
+          0,
+          3,
+          0,
+          1
+        ]
+      },
+      {
+        "seed": 1000128,
+        "reward": 308,
+        "cleared": false,
+        "dead": false,
+        "kills": 1,
+        "enemies": 3,
+        "hp": 100,
+        "turns": 80,
+        "charges": [
+          0,
+          3,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000129,
+        "reward": 805.9,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 49,
+        "turns": 35,
+        "charges": [
+          3,
+          4,
+          4,
+          0
+        ]
+      },
+      {
+        "seed": 1000130,
+        "reward": 96.5,
+        "cleared": false,
+        "dead": true,
+        "kills": 2,
+        "enemies": 3,
+        "hp": 0,
+        "turns": 7,
+        "charges": [
+          3,
+          3,
+          3,
+          2
+        ]
+      }
+    ]
+  },
+  "after": {
+    "reward": 799.5250000000001,
+    "clearRate": 0.875,
+    "episodes": [
+      {
+        "seed": 1000123,
+        "reward": 1014.2,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 52,
+        "turns": 10,
+        "charges": [
+          1,
+          3,
+          2,
+          0
+        ]
+      },
+      {
+        "seed": 1000124,
+        "reward": 773.1,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 16,
+        "turns": 43,
+        "charges": [
+          1,
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000125,
+        "reward": 651.9,
+        "cleared": true,
+        "dead": false,
+        "kills": 1,
+        "enemies": 1,
+        "hp": 99,
+        "turns": 9,
+        "charges": [
+          1,
+          4,
+          3,
+          0
+        ]
+      },
+      {
+        "seed": 1000126,
+        "reward": 1004.1,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 31,
+        "turns": 11,
+        "charges": [
+          3,
+          1,
+          4,
+          0
+        ]
+      },
+      {
+        "seed": 1000127,
+        "reward": 1032.3,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 93,
+        "turns": 11,
+        "charges": [
+          1,
+          1,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000128,
+        "reward": 1038.8,
+        "cleared": true,
+        "dead": false,
+        "kills": 3,
+        "enemies": 3,
+        "hp": 93,
+        "turns": 16,
+        "charges": [
+          0,
+          4,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000129,
+        "reward": 785.3,
+        "cleared": true,
+        "dead": false,
+        "kills": 2,
+        "enemies": 2,
+        "hp": 48,
+        "turns": 39,
+        "charges": [
+          1,
+          4,
+          0,
+          0
+        ]
+      },
+      {
+        "seed": 1000130,
+        "reward": 96.5,
+        "cleared": false,
+        "dead": true,
+        "kills": 2,
+        "enemies": 3,
+        "hp": 0,
+        "turns": 7,
+        "charges": [
+          3,
+          3,
+          3,
+          2
+        ]
+      }
+    ]
+  },
+  "trainSeeds": [
+    123,
+    124,
+    125,
+    126,
+    127,
+    128,
+    129,
+    130
+  ],
+  "testSeeds": [
+    1000123,
+    1000124,
+    1000125,
+    1000126,
+    1000127,
+    1000128,
+    1000129,
+    1000130
+  ]
+}

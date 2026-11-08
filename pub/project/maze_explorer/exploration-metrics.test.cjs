@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict');
+const {summarize}=require('./exploration-metrics.js');
+const cells=[1,0,1,1,0],seen=[0,0,1,2,99],moves=[0,4,1,'ghost',3];
+const result=summarize({actions:4,cells,seen,moves,complete:false});
+assert.equal(result.discovery,'66%（2 / 3床）');
+assert.equal(result.steps,'3 / 4');
+assert.equal(result.turn,4);
+assert.equal(summarize({actions:8,cells,seen:new Set([0,2,3]),complete:true}).discovery,'100%（3 / 3床）・地図完成');
+assert.equal(summarize({actions:8,cells,seen:[],complete:false}).stepLabel,'行動回数');
+assert.equal(summarize({actions:0,cells:[],seen:[]}).discovery,'0%（0 / 0床）');
+assert.deepEqual(seen,[0,0,1,2,99]);assert.deepEqual(moves,[0,4,1,'ghost',3]);
+console.log('Floor metrics: unique physical floors, wall exclusion, waits, missing walk history, empty map, read-only inputs passed.');
