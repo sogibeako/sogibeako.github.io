@@ -1,0 +1,8 @@
+const a=require('node:assert/strict'),G=require('./graph-wands.js'),Q=require('./quarter-turn-maze.js'),K=require('./klein-biaxial.js'),R=require('./biaxial-rules.js');
+for(const [mode,n]of [['doubleTwist',9],['quarterCW',1],['quarterCCW',4],['cwTwist',20],['ccwTwist',14]]){
+ const s=Q.create(mode,16,'mirror-check-'+n,{ruleMode:'birds',boundaryLinks:true,algorithm:'prim',seamRoutes:2,seamDetour:true});G.init(s);s.wands.held=['push'];s.wands.items=[];const before=JSON.stringify(s,(_,v)=>v instanceof Map?[...v]:v);a(G.planOob(s)?.path?.length,mode);a.equal(JSON.stringify(s,(_,v)=>v instanceof Map?[...v]:v),before);
+}
+const I=[0,1,2,3],edge=to=>({to,transform:I,kind:'normal'}),s={id:5,frame:I,x:0,y:0,steps:0,history:[],world:{mode:'kleinMaze',cells:new Uint8Array([0,0,0,1,1,1]),layouts:[{offset:0,width:3,height:2}],edges:new Map([['5:3',edge(4)],['4:1',edge(5)],['5:1',{...edge(3),kind:'seam'}]])},features:{bird:4,warps:new Map(),door:null,key:null,hasKey:false},wands:{held:['push'],items:[],reflectors:[{from:4,d:3,id:0}],events:[],bird:{held:[]}}};
+a.deepEqual(G.planOob(s),{wait:true,blocked:true},'do not fire through a bird');s.features.bird=null;a.equal(G.planOob(s).cast,3,'use mirror after obstruction clears');s.wands.reflectors=[];a.equal(G.planOob(s),null,'no mirror means no false candidate');
+const free=R.create(K.maze(K.create('free',2,-2,{width:24,height:20}),'atelier-prim','mirror-check'),'birds');G.init(free);free.wands.held=['push'];a.doesNotThrow(()=>G.planOob(free));
+console.log('Five reproduced rotation misses retained; blocked mirror waits, then casts only when clear; free Klein planner passed');

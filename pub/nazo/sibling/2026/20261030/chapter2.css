@@ -1,0 +1,12 @@
+/* Only the sequel loads this file; the first chapter's layout is unchanged. */
+.wrapper { overflow-wrap: anywhere; }
+.talk mjx-container:not([display="true"]),
+.note mjx-container:not([display="true"]),
+header mjx-container:not([display="true"]) {
+    position: relative;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    vertical-align: middle;
+    padding: .15em 0;
+}

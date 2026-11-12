@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="『同じ誕生日の、違う無限』第二章。第29〜43話で、全整数の符号表示、固定点階層、ΦだけのConway cut、有理数入力、Φ(1/3,√2)とΦ(√2,1/3)へ進む数学物語。">
+<title>第二章　左右の列に、Φの名前を — 同じ誕生日の、違う無限 * 湫埜と雨滴 *</title>
+<link rel="stylesheet" href="quiz.css">
+<link rel="stylesheet" href="story.css">
+<link rel="stylesheet" href="chapter2.css">
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+<main class="wrapper" id="top">
+<nav aria-label="現在位置"><a href="../../../../novels/sibling/2026sib.htm">2026年兄妹小話</a> ＞ <a href="index.htm">同じ誕生日の、違う無限</a> ＞ 第二章</nav>
+<header>
+<p class="date"><time datetime="2026-11-12">2026/11/12</time> · 兄妹小話 · 第二章・全3部15話</p>
+<h1>左右の列に、<br>Φの名前を</h1>
+<p class="subtitle">同じ誕生日の、違う無限　第二章<br>こにゃん先生の超現実数学教室</p>
+<p>「出来た」「何が？」「今度は、少しわかる」。<br>一彌と一埜は、三分の一の行の続きを開く。符号の尻尾に住所をつけて、整数から分数へ。そして√2を、二つの入口に置いてみる。</p>
+<p><a href="#ch29">第29話から読む ↓</a>　<a href="#contents">第二章の目次</a>　<a href="#glossary">記号を調べる</a></p>
+<p class="note">第一章の<a href="index.htm#extra08">補講H</a>・<a href="index.htm#extra09">補講I</a>の続きです。通常順序とsimplicity、birthday、Y/Z、Conway cutを既習として進みます。必要なら<a href="index.htm#glossary">第一章の記号帳</a>へ戻れます。</p>
+<p class="note">第一章は当時の研究段階のまま残しています。そこで「これから」とした整数入力・有理数ラベルの課題のうち、後に証明できた内容を、この続編で説明します。本文は2026年11月11日までの保存済み成果を基にした解説で、新しいLean証明の報告ではありません。</p>
+</header>
+<details class="reading-guide" id="contents" open>
+<summary>第二章・第29〜43話の目次を開く／閉じる</summary>
+<h3>第VI部　符号の尻尾に、Φの名前を</h3><p><a href="#ch29">第29話　次のページにも、同じ猫</a></p>
+<p><a href="#ch30">第30話　固定点の階段は、二種類ある</a></p>
+<p><a href="#ch31">第31話　最初のマイナスが、扉を決める</a></p>
+<p><a href="#ch32">第32話　Qという箱に、住所をつける</a></p>
+<p><a href="#ch33">第33話　三分の一の、一番目を開く</a></p>
+<p><a href="#ch34">第34話　正負の整数を、一枚の地図に</a></p>
+<h3>第VII部　分数の入口を、左右から開く</h3><p><a href="#ch35">第35話　半分へ行くには、両親を探そう</a></p>
+<p><a href="#ch36">第36話　四分の一、その先の二進分数</a></p>
+<p><a href="#ch37">第37話　三分の一には、終わらない両側がある</a></p>
+<p><a href="#ch38">第38話　第一引数の半分は、別の扉</a></p>
+<p><a href="#ch39">第39話　有理数の二つの入口を、統一する</a></p>
+<h3>第VIII部　無理数の入口と、次の余白</h3><p><a href="#ch40">第40話　√2を、第二の入口へ</a></p>
+<p><a href="#ch41">第41話　√2を、第一の入口へ</a></p>
+<p><a href="#ch42">第42話　きれいな式の下に、四枚の証拠</a></p>
+<p><a href="#ch43">第43話　まだ名前のない入口へ</a></p>
+<p><a href="#proof-sources">照合資料と証明範囲</a> ／ <a href="第二章-制作ノート.md">第二章の制作ノート</a></p>
+</details>
+<article id="novel-content" aria-label="第二章の数学物語">
+<p class="part-label">第VI部　符号の尻尾に、Φの名前を</p>
+<section class="inner_wrapper" id="ch29" aria-labelledby="title29">
+<h2 id="title29">第29話　次のページにも、同じ猫</h2>
+<p>＊十一月の夜。前のノートには「おしまい」と書いてある。その隣に、もう一冊のノート。＊</p><dl class="talk"><dt>一彌</dt><dd>「……出来た！」</dd>
+<dt>一埜</dt><dd>「何が？」</dd>
+<dt>一彌</dt><dd>「今度は、何が出来たかも少しわかるのだ！ 三分の一の行で、右へ二歩、左へ二歩。その先の整数もだ！」</dd>
+<dt>一埜</dt><dd>「前は \(\Phi(1/3,1)\) までだったね。＋を長く足した符号列として書けたんだっけ。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。まず前の名前を引き継ぎましょう。基点は \(X=\Phi(1/3,0)\)。研究ノートでDと呼んでいた値よ。sourceは、あくまで \(+--+-+-\cdots\)。）」</dd></dl><div class="formula">\[X=\Phi(1/3,0),\qquad \Omega_n=\varphi_\omega(n),\qquad
+q=\Omega_0,\ \Lambda=\Omega_1,\ \Gamma=\Omega_2.\]</div><dl class="talk"><dt>こにゃん</dt><dd>「ハァーン🐈（新しく証明できたのは、正の整数nについて、この二本の式。YとZは、前の章と同じ符号の連結よ。）」</dd></dl><div class="formula">\[\boxed{\Phi(1/3,n)=Y_X(\Omega_n),\qquad
+\Phi(1/3,-n)=Z_X(\Omega_n)\quad(n\ge1).}\]</div><div class="table-scroll" tabindex="0" role="region" aria-label="整数入力の値と符号位置型"><table><caption>整数入力の値と符号位置型</caption><thead><tr><th scope="col">入力</th><th scope="col">符号表示</th><th scope="col">birthday</th><th scope="col">P：＋位置型</th><th scope="col">M：−位置型</th></tr></thead><tbody><tr><th scope="row">−2</th><td>\(Z_X(\Gamma)\)</td><td>\(\Gamma\)</td><td>\(q\)</td><td>\(\Gamma\)</td></tr><tr><th scope="row">−1</th><td>\(Z_X(\Lambda)\)</td><td>\(\Lambda\)</td><td>\(q\)</td><td>\(\Lambda\)</td></tr><tr><th scope="row">0</th><td>\(X\)</td><td>\(q\)</td><td>\(q\)</td><td>\(q\)</td></tr><tr><th scope="row">1</th><td>\(Y_X(\Lambda)\)</td><td>\(\Lambda\)</td><td>\(\Lambda\)</td><td>\(q\)</td></tr><tr><th scope="row">2</th><td>\(Y_X(\Gamma)\)</td><td>\(\Gamma\)</td><td>\(\Gamma\)</td><td>\(q\)</td></tr></tbody></table></div><dl class="talk"><dt>一埜</dt><dd>「右と左で、長くなる符号の方だけが交代するんだね。でも、入力が−2だから、値も負になるわけじゃない。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（その通り。この行の値は正。Zは体の引き算ではないし、\(Z_X(t)=-Y_X(t)\) でもないわ。）」</dd>
+<dt>一彌</dt><dd>「そしてnが0のときは別扱いだな！ \(X=Y_X(q)\) と書いてはいけないのだ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（よく覚えていたわね。今回は、この正確な符号表示から、左右集合の各値にΦの名前を取り戻すのが目的よ。）」</dd></dl><details class="note"><summary>一埜の小問：birthdayがΓなら、その値はOrdinalのΓ？</summary><div><p>いいえ。birthdayは符号列の長さです。\(Y_X(\Gamma)\) と \(Z_X(\Gamma)\) はともにbirthday Γですが、符号も通常の数としての値も異なります。</p></div></details>
+<p class="source">照合先：OneThirdAllIntegerRowsExact.lean／OneThirdAllIntegerCanonicalSets.lean。全整数公式はn≥1。</p>
+<nav class="chapter-nav" aria-label="第29話の移動">
+<a href="index.htm#extra09">← 第一章・補講I</a>
+<a href="#contents">目次</a>
+<a href="#ch30">次の話 →</a>
+</nav></section>
+<section class="inner_wrapper" id="ch30" aria-labelledby="title30">
+<h2 id="title30">第30話　固定点の階段は、二種類ある</h2>
+<dl class="talk"><dt>一彌</dt><dd>「\(\Phi(1/3,2)\) に着くまで、どんな固定点を通るのだ？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（“通る”を、cutに使う共終なoption列の段階、という意味に限定しましょう。まず尾部の長さを並べるわ。）」</dd></dl><div class="formula">\[E_{n,k}=\varphi_{k+1}(\Omega_{n-1}+1)\quad(n\ge1,\ k\in\mathbb N),\]</div><div class="formula">\[\Omega_{n-1}&lt;E_{n,0}&lt;E_{n,1}&lt;\cdots&lt;\Omega_n,\qquad
+\sup_{k&lt;\omega}E_{n,k}=\Omega_n.\]</div><div class="table-scroll" tabindex="0" role="region" aria-label="Ordinalとしての途中駅"><table><caption>Ordinalとしての途中駅</caption><thead><tr><th scope="col">到達する入力</th><th scope="col">k=0</th><th scope="col">k=1</th><th scope="col">k=2</th><th scope="col">尾部長の上限</th></tr></thead><tbody><tr><th scope="row">1</th><td>\(\varepsilon_{q+1}\)</td><td>\(\varphi_2(q+1)\)</td><td>\(\varphi_3(q+1)\)</td><td>\(\Lambda\)</td></tr><tr><th scope="row">2</th><td>\(\varepsilon_{\Lambda+1}\)</td><td>\(\varphi_2(\Lambda+1)\)</td><td>\(\varphi_3(\Lambda+1)\)</td><td>\(\Gamma\)</td></tr><tr><th scope="row">3</th><td>\(\varepsilon_{\Gamma+1}\)</td><td>\(\varphi_2(\Gamma+1)\)</td><td>\(\varphi_3(\Gamma+1)\)</td><td>\(\varphi_\omega(3)\)</td></tr></tbody></table></div><dl class="talk"><dt>一埜</dt><dd>「kが増えると、より高い行の値になる。どの関数で固定されるの？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（Ordinalの方では、ちょうど \(\varphi_0,\ldots,\varphi_k\)。その次の行からは、厳密に大きくなるわ。）」</dd></dl><div class="formula">\[\varphi_j(E_{n,k})=E_{n,k}\ \Longleftrightarrow\ j\le k.\]</div><p>ところが、猫はその式の下に、別の二行を書いた。</p><div class="formula">\[U_{n,k}=Y_X(E_{n,k}),\qquad W_{n,k}=Z_X(E_{n,k}),\]</div><div class="formula">\[V_j(U_{n,k})=U_{n,k}\ \Longleftrightarrow\ j=0,
+\qquad V_j(W_{n,k})=W_{n,k}\ \Longleftrightarrow\ j=0.\]</div><dl class="talk"><dt>一彌</dt><dd>「えっ！ 長さの方は、固定される行がどんどん増えるのに！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（長さと、基点Xを含む数全体は、別物だからよ。Uは正側の正準左option、Wは負側の正準右option。Uは通常順序で増加し、Wは減少する。でも、どちらも符号prefixとしては延びていくの。）」</dd>
+<dt>一埜</dt><dd>「“同じ誕生日でも違う数”の次は、“長さが固定点でも、その数が同じ行の固定点とは限らない”なんだね。」</dd></dl><details class="note"><summary>一埜の小問：U列の上限とE列の上限は、同じ種類の上限？</summary><div><p>E列はOrdinalの上限です。U列から対象のSurrealを得るときに使うのはsimplicity上限。通常順序の上限だと読み替えません。また、この列は特定の共終部分族で、途中の固定点すべての列挙ではありません。</p></div></details>
+<p class="source">照合先：OmegaIntegerOrdinalFixedPointMilestones.lean／OneThirdIntegerCanonicalFixedPointMilestones.lean／OneThirdIntegerSurrealFixedPointLevels.lean。</p>
+<nav class="chapter-nav" aria-label="第30話の移動">
+<a href="#ch29">← 前の話</a>
+<a href="#contents">目次</a>
+<a href="#ch31">次の話 →</a>
+</nav></section>
+<section class="inner_wrapper" id="ch31" aria-labelledby="title31">
+<h2 id="title31">第31話　最初のマイナスが、扉を決める</h2>
+<dl class="talk"><dt>一彌</dt><dd>「oneThirdだとV₀だけ。ほかのsourceなら、もっと先まで固定されるのだ？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（sourceの最初のminusが現れる位置をρとしましょう。位置は0から数える。全plusなら \(\rho=\infty\)。）」</dd></dl><div class="formula">\[\boxed{V_j(R_s(x))=R_s(x)\quad\Longleftrightarrow\quad j&lt;\rho(s).}\]</div><div class="table-scroll" tabindex="0" role="region" aria-label="行値を固定する有限Veblen行"><table><caption>行値を固定する有限Veblen行</caption><thead><tr><th scope="col">sourceの冒頭</th><th scope="col">ρ</th><th scope="col">固定する行</th></tr></thead><tbody><tr><th scope="row">−…</th><td>0</td><td>なし</td></tr><tr><th scope="row">+−…</th><td>1</td><td>V₀</td></tr><tr><th scope="row">++−…</th><td>2</td><td>V₀, V₁</td></tr><tr><th scope="row">+++−…</th><td>3</td><td>V₀, V₁, V₂</td></tr><tr><th scope="row">全plus</th><td>∞</td><td>すべての有限Vⱼ</td></tr></tbody></table></div><dl class="talk"><dt>一埜</dt><dd>「第二入力xには依存しないんだ。最初のplusが続く間、高い値域への扉が開いている感じだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（厳密には、plus prefixから高位Veblen写像の値域所属を得る。最初のminusがmなら、行値は \(0\lt R_s(x)\lt V_m(0)\)。だからj≥mでは固定されず、\(R_s(x)\lt V_j(R_s(x))\) になるのよ。）」</dd>
+<dt>一彌</dt><dd>「では、途中のoptionもρだけで決まる？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そこに左右の違いがあるの。以下は、plusもminusも無限回現れるsourceでの定理よ。）」</dd></dl><div class="formula">\[\begin{aligned}
+V_j\!\left(Y_{X_s}(E_{n,k})\right)=Y_{X_s}(E_{n,k})
+&amp;\Longleftrightarrow j&lt;\rho(s)\ \text{かつ}\ j\le k,\\
+V_j\!\left(Z_{X_s}(E_{n,k})\right)=Z_{X_s}(E_{n,k})
+&amp;\Longleftrightarrow j&lt;\rho(s),
+\qquad X_s=R_s(0).
+\end{aligned}\]</div><dl class="talk"><dt>一埜</dt><dd>「\(++-+-+-\cdots\) でk=0なら、plus側はV₀だけ。でもminus側はV₀とV₁！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。plus伸長はOrdinalのVeblen値を使い、minus伸長は係数の左乗法を使う。その係数が尾部長に吸収される仕組みが違うの。oneThirdはρ=1だから、この差が見えなかったのね。）」</dd>
+<dt>一彌</dt><dd>「同じ長さの尻尾でも、向きによって固定点の階層が変わる。これは、長さだけでは読めない地図なのだ！」</dd></dl><details class="note"><summary>一埜の小問：全plus sourceを、直後の左右option分類へ代入してよい？</summary><div><p>この左右option分類には両符号の無限出現という仮定があります。全plusはその仮定を満たしません。一方、行値そのものの固定点分類は全source・全Surreal入力を対象とします。</p></div></details>
+<p class="source">照合先：OMEGA-SOURCE-FINITE-VEBLEN-FIXED-RANKS.mdと対応する公開定理。基点の固定点性とOrdinal係数吸収を別々に使用。</p>
+<nav class="chapter-nav" aria-label="第31話の移動">
+<a href="#ch30">← 前の話</a>
+<a href="#contents">目次</a>
+<a href="#ch32">次の話 →</a>
+</nav></section>
+<section class="inner_wrapper" id="ch32" aria-labelledby="title32">
+<h2 id="title32">第32話　Qという箱に、住所をつける</h2>
+<dl class="talk"><dt>一彌</dt><dd>「固定点の違いはわかった。では、YやZを使わず、Φだけで左右の値を書けるのだ？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そのために、有限prefixを剝がした残りの座標を調べたのよ。以前の“まだ中身のわからない箱”に、今度は有理数の住所がついたわ。）」</dd>
+<dt>一埜</dt><dd>「その箱がQ？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（\(Q_k(r)=c_{s,k}(r)\)。k文字分の外側を取り除いた残余座標。これは一般に最終行そのものとは違う値だけれど、oneThirdでは次の等式が証明できたの。）」</dd></dl><div class="formula">\[\begin{aligned}
+Q_0(r)&amp;=\Phi(1/3,r),\\
+Q_1(r)&amp;=-\Phi(8/3,-r),\\
+Q_k(r)&amp;=(-1)^{k+1}\Phi\!\left(k+\frac23,\,(-1)^{k+1}r\right)\quad(k\ge2).
+\end{aligned}\]</div><div class="table-scroll" tabindex="0" role="region" aria-label="Q₁からQ₅へ――任意のSurreal入力r"><table><caption>Q₁からQ₅へ――任意のSurreal入力r</caption><thead><tr><th scope="col">k</th><th scope="col">残余座標のΦ表示</th><th scope="col">r=0のとき</th></tr></thead><tbody><tr><th scope="row">1</th><td>\(-\Phi(8/3,-r)\)</td><td>\(-\Phi(8/3,0)\)</td></tr><tr><th scope="row">2</th><td>\(-\Phi(8/3,-r)\)</td><td>\(-\Phi(8/3,0)\)</td></tr><tr><th scope="row">3</th><td>\(\Phi(11/3,r)\)</td><td>\(\Phi(11/3,0)\)</td></tr><tr><th scope="row">4</th><td>\(-\Phi(14/3,-r)\)</td><td>\(-\Phi(14/3,0)\)</td></tr><tr><th scope="row">5</th><td>\(\Phi(17/3,r)\)</td><td>\(\Phi(17/3,0)\)</td></tr></tbody></table></div><dl class="talk"><dt>一彌</dt><dd>「Q₃は、本当に \(\Phi(11/3,0)\) だったのだな！ そしてQ₁とQ₂は同じ値？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（このsourceではそう。けれど、その外側に掛ける有限prefixが違うから、対応するcomponentまで同一ではないわ。）」</dd>
+<dt>一埜</dt><dd>「rが負なら、内側の−rも忘れちゃいけないんだね。外側だけにminusをつければ済むわけじゃない。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（大切な点よ。この式は整数だけの当て推量ではなく、任意のSurreal入力rに対する値等式。残余sourceを正規化し、その添字が本当に \(k+2/3\) になる算術同定も含めているの。）」</dd></dl><details class="note"><summary>一埜の小問：QのΦ表示が任意rで成立すれば、任意rのcutも完成？</summary><div><p>いいえ。残余値をΦで書くことと、左右にどの入力を選べばambient最簡cutになるかは別の問題です。次に、その左右族を構成します。</p></div></details>
+<p class="source">照合先：ONE-THIRD-RATIONAL-INDEXED-CUT-COMPLETE.md／ONE-THIRD-PHI-ONLY-CUT-CATALOGUE.md。oneThird_residual_allInput_rational・oneThird_residual_allInput_initial。</p>
+<nav class="chapter-nav" aria-label="第32話の移動">
+<a href="#ch31">← 前の話</a>
+<a href="#contents">目次</a>
+<a href="#ch33">次の話 →</a>
+</nav></section>
+<section class="inner_wrapper" id="ch33" aria-labelledby="title33">
+<h2 id="title33">第33話　三分の一の、一番目を開く</h2>
+<dl class="talk"><dt>こにゃん</dt><dd>「ハァーン🐈（外側の有限prefixのラベルをaₖとするわ。）」</dd></dl><div class="formula">\[a_0=0,\quad a_1=1,\quad
+a_k=\frac13+\frac{(-1)^k}{3\cdot2^{k-1}}\quad(k\ge2).\]</div><div class="formula">\[a_k:\quad0,\ 1,\ \frac12,\ \frac14,\ \frac38,\ \frac5{16},\ldots\]</div><dl class="talk"><dt>一埜</dt><dd>「一方からずっと近づく列ではないんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（sourceの有限prefixを表す列だからね。まず右へ出発するcomponentは、\(\mathcal A_k(r)=\Phi(a_k,1+Q_k(r))\)。第二入力1のcutではr=0を使うわ。）」</dd></dl><div class="formula">\[\boxed{\Phi(1/3,1)=
+\left\{\mathcal A_k(0):k&lt;\omega\ \middle|\ h_j:j&lt;\omega\right\},\quad
+h_j=\Phi\!\left(\frac13+\frac1{3\cdot2^{2j+1}},0\right).}\]</div><div class="table-scroll" tabindex="0" role="region" aria-label="Φ(1/3,1)の左右各五項（k,jは0から）"><table><caption>Φ(1/3,1)の左右各五項（k,jは0から）</caption><thead><tr><th scope="col">番号</th><th scope="col">左の値</th><th scope="col">右の値</th></tr></thead><tbody><tr><th scope="row">0</th><td>\(\Phi(0,1+\Phi(1/3,0))\)</td><td>\(\Phi(1/2,0)\)</td></tr><tr><th scope="row">1</th><td>\(\Phi(1,1-\Phi(8/3,0))\)</td><td>\(\Phi(3/8,0)\)</td></tr><tr><th scope="row">2</th><td>\(\Phi(1/2,1-\Phi(8/3,0))\)</td><td>\(\Phi(11/32,0)\)</td></tr><tr><th scope="row">3</th><td>\(\Phi(1/4,1+\Phi(11/3,0))\)</td><td>\(\Phi(43/128,0)\)</td></tr><tr><th scope="row">4</th><td>\(\Phi(3/8,1-\Phi(14/3,0))\)</td><td>\(\Phi(171/512,0)\)</td></tr></tbody></table></div><dl class="talk"><dt>一彌</dt><dd>「おおっ、YもZも、残余座標の名前も消えた！ Φの式を左右に並べられたのだ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ただし、ここに残る1＋や1−はSurrealの体の演算よ。一般に“右childはx＋1”という意味ではない。この残余座標で必要な算術表示を証明したから使えるの。）」</dd>
+<dt>一埜</dt><dd>「左右の五項は、見本なんだね。cutそのものは、どちらも無限に続く。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。各項が実際の正準optionであること、左が共終、右が共初であること、そしてSurreal全体での最簡性が証明の中身よ。“左右に挟まる”だけでは足りないわ。）」</dd></dl><details class="note"><summary>一埜の小問：この表の右側は、正準右optionを全部書いたもの？</summary><div><p>いいえ。正準右option集合の中の共初な部分族です。完全な正準集合と、同じ値を定める小さいcutは区別します。五項に切り詰めたcutが同じ値になるとも限りません。</p></div></details>
+<p class="source">照合先：OneThirdRowOneCanonicalCutExplicit.leanと有理数再添字化の成功定理。旧補講IのuₙをΦだけへ置換。</p>
+<nav class="chapter-nav" aria-label="第33話の移動">
+<a href="#ch32">← 前の話</a>
+<a href="#contents">目次</a>
+<a href="#ch34">次の話 →</a>
+</nav></section>
+<section class="inner_wrapper" id="ch34" aria-labelledby="title34">
+<h2 id="title34">第34話　正負の整数を、一枚の地図に</h2>
+<dl class="talk"><dt>一彌</dt><dd>「第二入力2でも、また最初から違う列を作るのだ？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（Qの入力を変えればいいわ。反対方向の族も用意しましょう。）」</dd></dl><div class="formula">\[\mathcal A_k(r)=\Phi(a_k,1+Q_k(r)),\qquad
+\mathcal B_k(r)=\Phi(a_k,Q_k(r)-1),\]</div><div class="formula">\[\ell_j=\Phi\!\left(\frac13-\frac1{3\cdot2^{2j+2}},0\right).\]</div><div class="formula">\[\begin{aligned}
+\Phi(1/3,0)&amp;=\{\ell_j\mid h_j\},\\
+\Phi(1/3,m+1)&amp;=\{\mathcal A_k(m)\mid h_j\},\\
+\Phi(1/3,-(m+1))&amp;=\{\ell_j\mid\mathcal B_k(-m)\}
+\qquad(m\in\mathbb N).
+\end{aligned}\]</div><dl class="talk"><dt>一埜</dt><dd>「正側では右のroot列がそのまま。負側では左のroot列がそのままなんだ。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（符号連結の正準集合でも、その違いが見えるわ。plusだけ延ばせば旧右optionsは不変。minusだけ延ばせば旧左optionsは不変なの。）」</dd></dl><div class="formula">\[\begin{aligned}
+L_{\rm can}(Y_X(t))&amp;=L_{\rm can}(X)\cup\{Y_X(\alpha):\alpha&lt;t\},\\
+R_{\rm can}(Y_X(t))&amp;=R_{\rm can}(X),\\
+L_{\rm can}(Z_X(t))&amp;=L_{\rm can}(X),\\
+R_{\rm can}(Z_X(t))&amp;=R_{\rm can}(X)\cup\{Z_X(\alpha):\alpha&lt;t\}.
+\end{aligned}\]</div><dl class="talk"><dt>一彌</dt><dd>「では、2の左列の最初は \(\Phi(0,1+\Phi(1/3,1))\)。−2の右列の最初は \(\Phi(0,\Phi(1/3,-1)-1)\) だな！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。各項には内側のΦが残るけれど、未定義の残余記号は残らない。これは正確な関数式であって、有限回の四則演算で値を計算し終える算法ではないわ。）」</dd>
+<dt>一埜</dt><dd>「“Φだけ”は、“Φを全部計算し尽くした”とは違うんだね。地図に住所がついたのであって、道がなくなったんじゃない。」</dd></dl><details class="note"><summary>一埜の小問：−nの式は、nの式全体にminusをつければ得られる？</summary><div><p>得られません。\(\Phi(1/3,-n)=-\Phi(1/3,n)\) は成立するものとして使っていません。左右のcutは、それぞれの符号方向の定理から取得しています。</p></div></details>
+<p class="source">照合先：ONE-THIRD-PHI-ONLY-CUT-CATALOGUE.md 第2〜3節・整数cut。一般符号連結の正準option分解を併記。</p>
+<nav class="chapter-nav" aria-label="第34話の移動">
+<a href="#ch33">← 前の話</a>
+<a href="#contents">目次</a>
+<a href="#ch35">次の話 →</a>
+</nav></section>
+<p class="part-label">第VII部　分数の入口を、左右から開く</p>
+<section class="inner_wrapper" id="ch35" aria-labelledby="title35">
+<h2 id="title35">第35話　半分へ行くには、両親を探そう</h2>
+<p>＊一埜が新しいページの真ん中に、大きく「1/2」と書いた。＊</p><dl class="talk"><dt>一埜</dt><dd>「整数は並べられた。では、0と1の間にある半分へは？」</dd>
+<dt>一彌</dt><dd>「\(\{\Phi(1/3,0)\mid\Phi(1/3,1)\}\) としたくなるのだ。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（行の内部での位置を知ることと、Surreal全体での最簡値を選ぶことは別よ。ここでは、二つの親の値を左右一つずつ置くだけでは済ませないわ。左の親から右へ、右の親から左へ出るcomponentを使うの。）」</dd></dl><div class="formula">\[\boxed{\Phi(1/3,1/2)=
+\{\mathcal A_k(0):k&lt;\omega\mid\mathcal B_j(1):j&lt;\omega\}.}\]</div><div class="table-scroll" tabindex="0" role="region" aria-label="Φ(1/3,1/2)の左右各五項"><table><caption>Φ(1/3,1/2)の左右各五項</caption><thead><tr><th scope="col">番号</th><th scope="col">左：0から右へ</th><th scope="col">右：1から左へ</th></tr></thead><tbody><tr><th scope="row">0</th><td>\(\Phi(0,1+\Phi(1/3,0))\)</td><td>\(\Phi(0,\Phi(1/3,1)-1)\)</td></tr><tr><th scope="row">1</th><td>\(\Phi(1,1-\Phi(8/3,0))\)</td><td>\(\Phi(1,-\Phi(8/3,-1)-1)\)</td></tr><tr><th scope="row">2</th><td>\(\Phi(1/2,1-\Phi(8/3,0))\)</td><td>\(\Phi(1/2,-\Phi(8/3,-1)-1)\)</td></tr><tr><th scope="row">3</th><td>\(\Phi(1/4,1+\Phi(11/3,0))\)</td><td>\(\Phi(1/4,\Phi(11/3,1)-1)\)</td></tr><tr><th scope="row">4</th><td>\(\Phi(3/8,1-\Phi(14/3,0))\)</td><td>\(\Phi(3/8,-\Phi(14/3,-1)-1)\)</td></tr></tbody></table></div><dl class="talk"><dt>一埜</dt><dd>「左は入力1のときと同じ列。でも右はroot列じゃなくて、入力1の残余から作った列になるんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。この二つの方向を、二進分数の左右の親に合わせるのよ。左右の添字kとjは独立。何番目同士を組にするかでcutの条件が変わるわけではないわ。）」</dd>
+<dt>一彌</dt><dd>「大事なのは、すべての左値より大きく、すべての右値より小さいこと。そして、その条件の中で最簡なことなのだな。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（その二段階を忘れなければ、分母を大きくしても道を見失わないわ。）」</dd></dl><details class="note"><summary>一埜の小問：表の右第1項にある内側の第二入力は1？ −1？</summary><div><p>−1です。\(Q_1(1)=-\Phi(8/3,-1)\) だからです。外側のminusと、内側の入力のminusの両方が必要です。</p></div></details>
+<p class="source">照合先：ONE-THIRD-PHI-ONLY-CUT-CATALOGUE.md：1/2の専用cut、任意入力のQ表示、および全Dyadic cut。</p>
+<nav class="chapter-nav" aria-label="第35話の移動">
+<a href="#ch34">← 前の話</a>
+<a href="#contents">目次</a>
+<a href="#ch36">次の話 →</a>
+</nav></section>
+<section class="inner_wrapper" id="ch36" aria-labelledby="title36">
+<h2 id="title36">第36話　四分の一、その先の二進分数</h2>
+<dl class="talk"><dt>一彌</dt><dd>「1/4なら0と1/2、3/4なら1/2と1が両親だな！」</dd>
+<dt>一埜</dt><dd>「負の数でも、左の親が小さく、右の親が大きいように選べばいい？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。非整数の二進有理数を既約に \(b=p/2^m\)、pは奇数、m≥1と書きましょう。）」</dd></dl><div class="formula">\[b^-=\frac{p-1}{2^m},\qquad b^+=\frac{p+1}{2^m},\]</div><div class="formula">\[\boxed{\Phi(1/3,b)=
+\{\mathcal A_k(b^-):k&lt;\omega\mid\mathcal B_j(b^+):j&lt;\omega\}.}\]</div><div class="table-scroll" tabindex="0" role="region" aria-label="五つの二進入力を同じ規則で"><table><caption>五つの二進入力を同じ規則で</caption><thead><tr><th scope="col">b</th><th scope="col">左の親b⁻</th><th scope="col">右の親b⁺</th><th scope="col">左族／右族</th></tr></thead><tbody><tr><th scope="row">\(1/4\)</th><td>0</td><td>\(1/2\)</td><td>\(\mathcal A_k(0)\) ／ \(\mathcal B_j(1/2)\)</td></tr><tr><th scope="row">\(3/4\)</th><td>\(1/2\)</td><td>1</td><td>\(\mathcal A_k(1/2)\) ／ \(\mathcal B_j(1)\)</td></tr><tr><th scope="row">\(-3/2\)</th><td>−2</td><td>−1</td><td>\(\mathcal A_k(-2)\) ／ \(\mathcal B_j(-1)\)</td></tr><tr><th scope="row">\(5/8\)</th><td>\(1/2\)</td><td>\(3/4\)</td><td>\(\mathcal A_k(1/2)\) ／ \(\mathcal B_j(3/4)\)</td></tr><tr><th scope="row">\(-3/8\)</th><td>\(-1/2\)</td><td>\(-1/4\)</td><td>\(\mathcal A_k(-1/2)\) ／ \(\mathcal B_j(-1/4)\)</td></tr></tbody></table></div><dl class="talk"><dt>一埜</dt><dd>「1/4の右列の先頭なら、\(\Phi(0,\Phi(1/3,1/2)-1)\)。3/4の左列の先頭なら、\(\Phi(0,1+\Phi(1/3,1/2))\)。同じ親から、反対向きへ出るんだ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（いい読み方ね。ここまでの式は、YやZを含まないΦの入れ子へ展開できる。けれど、整数と零にはそのまま二親公式を使わず、前の話の境界cutへ分岐するわ。）」</dd>
+<dt>一彌</dt><dd>「2/4と書いたままp±1を使うのは駄目なのだな。約分して1/2にする必要がある。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（その通り。“分母が2の冪”だけでは、正しい親は決まらないの。）」</dd></dl><details class="note"><summary>一埜の小問：3/8の親は1/4と1/2。それを1/3の親にも使える？</summary><div><p>使えません。1/3は有限長の二進分数ではなく、二つの有限親による同じ構成の対象外です。次の話では、左右に無限のprefix列を用意します。</p></div></details>
+<p class="source">照合先：oneThird_allDyadic_phiCut。ONE-THIRD-PHI-ONLY-CUT-CATALOGUE.md 第14〜18節。</p>
+<nav class="chapter-nav" aria-label="第36話の移動">
+<a href="#ch35">← 前の話</a>
+<a href="#contents">目次</a>
+<a href="#ch37">次の話 →</a>
+</nav></section>
+<section class="inner_wrapper" id="ch37" aria-labelledby="title37">
+<h2 id="title37">第37話　三分の一には、終わらない両側がある</h2>
+<dl class="talk"><dt>一埜</dt><dd>「では、第二入力も1/3にしてみたい！」</dd>
+<dt>一彌</dt><dd>「0.010101…と二進展開は続く。有限の親の代わりに、途中まで読んだ数を並べるのだ？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。ただし、普通の実数として近づくだけでなく、符号prefixであることまで確かめるわ。次の二列を使いましょう。）」</dd></dl><div class="formula">\[\alpha_n=\frac13-\frac1{3\cdot2^{2n+2}},\qquad
+\beta_n=\frac13+\frac1{3\cdot2^{2n+1}}.\]</div><div class="table-scroll" tabindex="0" role="region" aria-label="1/3をはさむ、実際の符号prefix"><table><caption>1/3をはさむ、実際の符号prefix</caption><thead><tr><th scope="col">n</th><th scope="col">αₙ：下側</th><th scope="col">βₙ：上側</th></tr></thead><tbody><tr><th scope="row">0</th><td>\(1/4\)</td><td>\(1/2\)</td></tr><tr><th scope="row">1</th><td>\(5/16\)</td><td>\(3/8\)</td></tr><tr><th scope="row">2</th><td>\(21/64\)</td><td>\(11/32\)</td></tr><tr><th scope="row">3</th><td>\(85/256\)</td><td>\(43/128\)</td></tr><tr><th scope="row">4</th><td>\(341/1024\)</td><td>\(171/512\)</td></tr></tbody></table></div><div class="formula">\[\boxed{\Phi(1/3,1/3)=
+\{\Phi(1/3,\alpha_n):n&lt;\omega\mid
+  \Phi(1/3,\beta_n):n&lt;\omega\}.}\]</div><dl class="talk"><dt>一埜</dt><dd>「今度は、外側の第一引数をずっと1/3のままにしておける！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（これらの入力は、1/3の符号列をそれぞれ位置2n＋3と2n＋2で切ったもの。その位置がωに共終だから、左右それぞれのsimplicity上限が1/3になるの。）」</dd>
+<dt>一彌</dt><dd>「行がそのprefix構造を保てば、出力も正準optionになるわけだな。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（さらに必要な上限保存と共終性を確かめる。左族が全正準左optionsに共終、右族が全正準右optionsに共初なら、正準cutから最簡性を運べるわ。単に関数が単調、だけではこの結論までは出ないのよ。）」</dd>
+<dt>一埜</dt><dd>「形が簡単になった理由は、第二入力の側に、両方向へ伸びる本物のprefix列があるからなんだね。」</dd></dl><details class="note"><summary>一埜の小問：α₀,…,α₄とβ₀,…,β₄だけで、無限cutを置き換えてよい？</summary><div><p>いけません。表は冒頭の五項です。共終・共初性は全自然数にわたる族について証明されています。</p></div></details>
+<p class="source">照合先：thirdInput_prefix_truncations／thirdInput_two_simplicitySuprema。RealFirstIndexThirdInputPhiCut.lean のa=1/3特殊化とも整合。</p>
+<nav class="chapter-nav" aria-label="第37話の移動">
+<a href="#ch36">← 前の話</a>
+<a href="#contents">目次</a>
+<a href="#ch38">次の話 →</a>
+</nav></section>
+<section class="inner_wrapper" id="ch38" aria-labelledby="title38">
+<h2 id="title38">第38話　第一引数の半分は、別の扉</h2>
+<dl class="talk"><dt>一彌</dt><dd>「今度は \(\Phi(3/2,1/2)\) も同じように書けるのだ？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（書けるわ。でも、第二入力1/2は有限の二進分数だったわね。前の話の無限prefix列を、そのまま流用しないこと。ここでは有限sourceの固定点反復を使うのよ。）」</dd>
+<dt>一埜</dt><dd>「第一引数3/2は、V₁とV₂の値を普通に半分に混ぜる意味ではないんだよね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。sourceの道順に対応する別の行よ。まず反復する写像と、二つの種を定義しましょう。）」</dd></dl><div class="formula">\[H(x)=\Phi(2,x),\qquad
+a=\Phi(3,0)-1,\qquad b=\Phi(3,-1)+1,\]</div><div class="formula">\[L_n=\Phi\!\left(2,-H^{[n]}(a)\right),\qquad
+R_n=\Phi\!\left(2,-H^{[n]}(b)\right),\]</div><div class="formula">\[\boxed{\Phi(3/2,1/2)=\{L_n:n&lt;\omega\mid R_n:n&lt;\omega\}.}\]</div><div class="table-scroll" tabindex="0" role="region" aria-label="固定点反復cutの最初の三段"><table><caption>固定点反復cutの最初の三段</caption><thead><tr><th scope="col">n</th><th scope="col">左</th><th scope="col">右</th></tr></thead><tbody><tr><th scope="row">0</th><td>\(\Phi(2,-(\Phi(3,0)-1))\)</td><td>\(\Phi(2,-(\Phi(3,-1)+1))\)</td></tr><tr><th scope="row">1</th><td>\(\Phi(2,-\Phi(2,\Phi(3,0)-1))\)</td><td>\(\Phi(2,-\Phi(2,\Phi(3,-1)+1))\)</td></tr><tr><th scope="row">2</th><td>\(\Phi(2,-\Phi(2,\Phi(2,\Phi(3,0)-1)))\)</td><td>\(\Phi(2,-\Phi(2,\Phi(2,\Phi(3,-1)+1)))\)</td></tr></tbody></table></div><dl class="talk"><dt>一彌</dt><dd>「三段目は、内側にΦ(2,・)が二つ！ 外側のΦもあるから、数え間違えそうなのだ。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（n=0では反復は恒等写像。でも一番外側のΦは消えない。この区別を守れば大丈夫よ。）」</dd>
+<dt>一埜</dt><dd>「内部の種の＋1、−1は体の演算。反復を無限に使って、固定点の側からcutを作るんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。これは既にambient最簡性まで証明した具体例。二進第一引数一般への拡張でも、有限sourceの構造に応じた反復族を使ったの。）」</dd></dl><details class="note"><summary>一埜の小問：H^[2](a)はH(a)の二乗？</summary><div><p>いいえ、\(H(H(a))\) という関数合成を二回行う記号です。Ordinalの冪でも、Surrealの乗算でもありません。</p></div></details>
+<p class="source">照合先：ThreeHalvesFirstIndexHalfPhiCut.lean／ALL-DYADIC-PAIR-PHI-CUTS.md。threeHalves_halfPhi_cut_explicit。</p>
+<nav class="chapter-nav" aria-label="第38話の移動">
+<a href="#ch37">← 前の話</a>
+<a href="#contents">目次</a>
+<a href="#ch39">次の話 →</a>
+</nav></section>
+<section class="inner_wrapper" id="ch39" aria-labelledby="title39">
+<h2 id="title39">第39話　有理数の二つの入口を、統一する</h2>
+<dl class="talk"><dt>一彌</dt><dd>「どちらの引数も有理数なら、もう左右の列をΦで書ける？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（全有理数ペアについて、左右のcutデータと、その最簡性を一つのLean定理にまとめられたわ。ただし、全ケースで同じ一行の左右列になるわけではないの。）」</dd></dl><div class="table-scroll" tabindex="0" role="region" aria-label="全有理数ペアを覆う三つの枝"><table><caption>全有理数ペアを覆う三つの枝</caption><thead><tr><th scope="col">第一引数a</th><th scope="col">第二入力b</th><th scope="col">左右族の作り方</th></tr></thead><tbody><tr><th scope="row">二進有理数</th><td>二進有理数</td><td>有限sourceの反復。零・整数の境界cutも分ける</td></tr><tr><th scope="row">任意の有理数</th><td>非二進有理数</td><td>二進gridのΦ像</td></tr><tr><th scope="row">非二進有理数</th><td>二進有理数</td><td>有理ラベルへ正規化した残余component</td></tr></tbody></table></div><div class="formula">\[\Phi(a,b)=\{L(a,b)\mid R(a,b)\}\qquad(a,b\in\mathbb Q).\]</div><dl class="talk"><dt>一埜</dt><dd>「L(a,b)とR(a,b)には、その分岐で作ったΦの式の族が入っているんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。非二進のbに対しては、特にこの二進gridが使えるわ。）」</dd></dl><div class="formula">\[d_n(b)=\frac{\lfloor2^n b\rfloor}{2^n},\qquad
+e_n(b)=\frac{\lfloor2^n b\rfloor+1}{2^n},\]</div><div class="formula">\[\Phi(a,b)=\{\Phi(a,d_n(b))\mid\Phi(a,e_n(b))\}
+\quad(b\in\mathbb Q\setminus\mathbb Z[1/2]).\]</div><dl class="talk"><dt>一彌</dt><dd>「非二進なら、どのnでも厳密に下と上が分かれる。でも二進なら、いつか下のgridがb自身になってしまうのだな。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（だから二進入力へ無条件に流用しない。もう一つ、左右がいつも二本の無限列とは限らない点にも注意してね。\(\Phi(0,0)=1=\{0\mid\varnothing\}\) では、右側は空よ。）」</dd>
+<dt>一埜</dt><dd>「空の側まで無理に自然数列へ埋めると、違うcutを作ってしまう。一般定理の型にも、その余地が必要なんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。二つの引数を交換する対称性も仮定していないわ。別々に証明した領域を、漏れのない分岐でつないだのが統一定理なの。）」</dd></dl><details class="note"><summary>一埜の小問：cutを満たす値は一つしかない？</summary><div><p>一般には、左右の不等式を満たす値は複数あります。一意なのは、その中の最簡実現値です。統一定理は単なる不等式より強い、この最簡性を主張しています。</p></div></details>
+<p class="source">照合先：AllRationalPairPhiCuts.lean：allRationalPair_phiCut_isSimplest・allRationalPair_phiCut_unique。成功validation all-rational-pair-phi-cuts-v3。</p>
+<nav class="chapter-nav" aria-label="第39話の移動">
+<a href="#ch38">← 前の話</a>
+<a href="#contents">目次</a>
+<a href="#ch40">次の話 →</a>
+</nav></section>
+<p class="part-label">第VIII部　無理数の入口と、次の余白</p>
+<section class="inner_wrapper" id="ch40" aria-labelledby="title40">
+<h2 id="title40">第40話　√2を、第二の入口へ</h2>
+<p>＊雨がやんだ。窓に映ったNyankoPadには、分数の代わりに根号が一つ。＊</p><dl class="talk"><dt>一彌</dt><dd>「有理数が全部なら、次は \(\Phi(1/3,\sqrt2)\) だ！」</dd>
+<dt>一埜</dt><dd>「√2も、二進分数で両側から近づけるよね。でも、普通の近似だけでよかったんだっけ？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そこを忘れなかったのは偉いわ。今回もgridが実際の符号prefixで、そのsimplicity上限が√2になるところから証明したの。）」</dd></dl><div class="formula">\[d_n=\frac{\lfloor2^n\sqrt2\rfloor}{2^n},\qquad
+e_n=\frac{\lfloor2^n\sqrt2\rfloor+1}{2^n},\]</div><div class="formula">\[\boxed{\Phi(1/3,\sqrt2)=
+\{\Phi(1/3,d_n):n&lt;\omega\mid\Phi(1/3,e_n):n&lt;\omega\}.}\]</div><div class="table-scroll" tabindex="0" role="region" aria-label="Φ(1/3,√2)の左右各五項"><table><caption>Φ(1/3,√2)の左右各五項</caption><thead><tr><th scope="col">n</th><th scope="col">左option</th><th scope="col">右option</th></tr></thead><tbody><tr><th scope="row">0</th><td>\(\Phi(1/3,1)\)</td><td>\(\Phi(1/3,2)\)</td></tr><tr><th scope="row">1</th><td>\(\Phi(1/3,1)\)</td><td>\(\Phi(1/3,3/2)\)</td></tr><tr><th scope="row">2</th><td>\(\Phi(1/3,5/4)\)</td><td>\(\Phi(1/3,3/2)\)</td></tr><tr><th scope="row">3</th><td>\(\Phi(1/3,11/8)\)</td><td>\(\Phi(1/3,3/2)\)</td></tr><tr><th scope="row">4</th><td>\(\Phi(1/3,11/8)\)</td><td>\(\Phi(1/3,23/16)\)</td></tr></tbody></table></div><dl class="talk"><dt>一彌</dt><dd>「あれ、同じ項が続いているのだ。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（問題ないわ。細かいgridへ移っても同じ分数が選ばれることがある。必要なのは各項の厳密な左右境界と、族全体の共終・共初性。毎回違う値である必要はないの。）」</dd>
+<dt>一埜</dt><dd>「五項の小数近似を丸めたんじゃない？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。\((\sqrt2)^2=2\) と有理数の厳密な大小から、floorが1,2,5,11,22であることを確認している。例えば \((11/8)^2=121/64\lt2\) と \(2\lt529/256=(23/16)^2\)。正数だから平方を比較できるのよ。）」</dd>
+<dt>一彌</dt><dd>「以前の整数の値も、今度は無理数入力の左右optionとして現れるのだな！ けれど、これで出力のbirthdayまで計算できたとは言わない。」</dd></dl><details class="note"><summary>一埜の小問：この表からΦ(1/3,√2)のbirthdayはφω(√2)と結論できる？</summary><div><p>できません。今回ここで使う成果は、Φ-only cut、正準option所属、共終・共初性、最簡性です。整数のbirthday公式を、実数入力へそのまま延長した定理ではありません。</p></div></details>
+<p class="source">照合先：RealDyadicGridPrefixSuprema.lean／OneThirdSqrtTwoDyadicPhiCut.lean。成功validation real-dyadic-grid-prefix-suprema-v2／one-third-sqrt-two-dyadic-phi-cut-v4。</p>
+<nav class="chapter-nav" aria-label="第40話の移動">
+<a href="#ch39">← 前の話</a>
+<a href="#contents">目次</a>
+<a href="#ch41">次の話 →</a>
+</nav></section>
+<section class="inner_wrapper" id="ch41" aria-labelledby="title41">
+<h2 id="title41">第41話　√2を、第一の入口へ</h2>
+<dl class="talk"><dt>一埜</dt><dd>「では、引数の場所を逆にして \(\Phi(\sqrt2,1/3)\) は？」</dd>
+<dt>一彌</dt><dd>「√2のsourceは、三分の一のような周期列ではない。今までの有理数ラベルの式は使えないのでは……。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（今回は、第一引数の具体的な周期を求めなくても進めるの。任意の実数aについて、そのSurrealへの埋め込みのbirthdayはω以下。だから有限sourceかomega sourceの添字として、構成済みの行に入るわ。）」</dd>
+<dt>一埜</dt><dd>「最初にaを固定して、その行の性質を使うんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。\(x\mapsto\Phi(a,x)\) が通常順序とsimplicityを埋め込み、必要なsimplicity上限を保つことを使う。第37話のαₙ,βₙを、今度はその行へ通しましょう。）」</dd></dl><div class="formula">\[\boxed{\Phi(a,1/3)=
+\{\Phi(a,\alpha_n):n&lt;\omega\mid
+  \Phi(a,\beta_n):n&lt;\omega\}\qquad(a\in\mathbb R).}\]</div><p>猫がaのところへ√2を入れると、左右の五項は一度に揃った。</p><div class="table-scroll" tabindex="0" role="region" aria-label="Φ(√2,1/3)の左右各五項"><table><caption>Φ(√2,1/3)の左右各五項</caption><thead><tr><th scope="col">n</th><th scope="col">左option</th><th scope="col">右option</th></tr></thead><tbody><tr><th scope="row">0</th><td>\(\Phi(\sqrt2,1/4)\)</td><td>\(\Phi(\sqrt2,1/2)\)</td></tr><tr><th scope="row">1</th><td>\(\Phi(\sqrt2,5/16)\)</td><td>\(\Phi(\sqrt2,3/8)\)</td></tr><tr><th scope="row">2</th><td>\(\Phi(\sqrt2,21/64)\)</td><td>\(\Phi(\sqrt2,11/32)\)</td></tr><tr><th scope="row">3</th><td>\(\Phi(\sqrt2,85/256)\)</td><td>\(\Phi(\sqrt2,43/128)\)</td></tr><tr><th scope="row">4</th><td>\(\Phi(\sqrt2,341/1024)\)</td><td>\(\Phi(\sqrt2,171/512)\)</td></tr></tbody></table></div><dl class="talk"><dt>一彌</dt><dd>「こんなにきれいに、第一引数が動かないまま書けるのだ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（各項が実際の正準optionであり、左右の族が共終・共初であることまで証明したわ。その結果、ambientなSurreal全体で、対象値がこのcutの最簡実現値になるの。）」</dd>
+<dt>一埜</dt><dd>「でも、√2を第一引数で近似して極限を取ったんじゃない。変化させたのは第二入力の方なんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（まさにそこよ。第一引数に関するΦの連続性は仮定していない。\(\Phi(1/3,\sqrt2)=\Phi(\sqrt2,1/3)\) という交換法則も、もちろん主張していないわ。）」</dd></dl><details class="note"><summary>一埜の小問：この一般定理の第一引数は、任意のSurrealまで含む？</summary><div><p>含みません。ここでの定理はa∈ℝです。実数埋め込みのbirthday≤ωという証拠を使っています。全Surreal第一引数の構成や、構成範囲外の定義上の既定値まで同じ性質を持つ、とは主張しません。</p></div></details>
+<p class="source">照合先：RealFirstIndexThirdInputPhiCut.lean：realFirstIndex_thirdInput_phiCut／realFirstIndex_thirdInput_options／sqrtTwoFirst_thirdInput_phiFirstFive。</p>
+<nav class="chapter-nav" aria-label="第41話の移動">
+<a href="#ch40">← 前の話</a>
+<a href="#contents">目次</a>
+<a href="#ch42">次の話 →</a>
+</nav></section>
+<section class="inner_wrapper" id="ch42" aria-labelledby="title42">
+<h2 id="title42">第42話　きれいな式の下に、四枚の証拠</h2>
+<dl class="talk"><dt>一彌</dt><dd>「左右の式がこんなに短くなると、ただ代入しただけにも見えるのだな。」</dd>
+<dt>一埜</dt><dd>「でも、短くなる前には、いろいろ確かめたんだった。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そう。NyankoPadの画面を、四つの欄に分けてみましょう。）」</dd></dl><div class="table-scroll" tabindex="0" role="region" aria-label="cut表示を支える四段階"><table><caption>cut表示を支える四段階</caption><thead><tr><th scope="col">段階</th><th scope="col">確かめる内容</th><th scope="col">それだけでは足りないもの</th></tr></thead><tbody><tr><th scope="row">① 値等式</th><td>残余座標や有限prefixを、本当のΦの値へ置換する</td><td>birthdayだけの一致</td></tr><tr><th scope="row">② option所属</th><td>左右値が対象の正しい側の符号prefixである</td><td>通常順序で挟まることだけ</td></tr><tr><th scope="row">③ 共終・共初</th><td>すべての正準optionを、小さい族が下・上から覆う</td><td>最初の五項の確認だけ</td></tr><tr><th scope="row">④ 最簡性</th><td>cutを満たす任意のSurrealに、対象値がsimplicityで先行する</td><td>行の内部だけでの最簡性</td></tr></tbody></table></div><dl class="talk"><dt>こにゃん</dt><dd>「ハァーン🐈（今回の実数第一引数の定理は、Leanで \(a:\mathbb R\) を受け取る。型の中に、有理数であるという仮定も、周期sourceという仮定もない。定理の名前より、実際の型が大切なの。）」</dd>
+<dt>一彌</dt><dd>「公理一覧だけ見ても、隠れた仮定がないかまではわからないのだな。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（その通り。型の点検、実コンパイル、公理監査、それから保存済みファイルのハッシュ照合は、役割の違う検査よ。）」</dd></dl><p>最新の対応する研究記録では、実数第一引数の追加は10公開定理・10監査。直前の√2第二入力の追加は、2ソース・14定理・2定義・16監査。いずれも新規コンパイル成功、警告0、依存公理は propext・Classical.choice・Quot.sound の範囲内と記録されている。</p><dl class="talk"><dt>一埜</dt><dd>「前の補講にあった追加公理の注意も、そのまま“今も同じ”とは読めないんだね。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（ええ。有理数ラベル同定は、追加公理に頼らない新しい証明経路で完成している。古いファイルを書き換えて成功したことにするのではなく、どの新しいendpointを使ったかを記録するのよ。）」</dd>
+<dt>一彌</dt><dd>「短縮overlayは、その検証環境を扱いやすくする道具。数学の仮定を短縮したわけではないのだ！」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そして、この第二章の制作は既存成果の説明よ。新しいLean証明や、旧Lean全体の再ビルドをしたという報告ではないわ。）」</dd></dl><details class="note"><summary>一埜の小問：保存済み証拠のSHA-256が一致したら、旧Lean全体を再ビルドしたことになる？</summary><div><p>なりません。ハッシュ一致は保存物の整合性の検査。実コンパイルはLeanを実行した検査です。短縮overlayの確認、新規ソースのコンパイル、旧全体の再ビルドも、それぞれ別に記録します。</p></div></details>
+<p class="source">照合先：LEAN-PATH-OVERLAY.md／REAL-FIRST-INDEX-THIRD-INPUT-PHI-CUT.md／ONE-THIRD-RATIONAL-INDEXED-CUT-COMPLETE.md。</p>
+<nav class="chapter-nav" aria-label="第42話の移動">
+<a href="#ch41">← 前の話</a>
+<a href="#contents">目次</a>
+<a href="#ch43">次の話 →</a>
+</nav></section>
+<section class="inner_wrapper" id="ch43" aria-labelledby="title43">
+<h2 id="title43">第43話　まだ名前のない入口へ</h2>
+<p>＊一彌は、ノートの末尾に「おしまい」と書きかけて、手を止めた。＊</p><dl class="talk"><dt>一彌</dt><dd>「次は、\(1/3+\epsilon\) を第一引数に入れてみたいのだ。」</dd>
+<dt>一埜</dt><dd>「そのεは、どの数？ 小さな正の実数？ それとも、たとえば1/ωのような無限小？」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（いい質問ね。εという文字だけでは数学的対象は決まらない。実数の微小な値と、正の無限小Surrealは別物よ。それにOrdinalのイプシロン数とも違うわ。）」</dd>
+<dt>一彌</dt><dd>「では、\(\epsilon=1/\omega\) と決めたら、今回の任意実数aの定理は使えないのだな。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（その通り。実数第一引数の証拠を流用してはいけない。添字としての構成範囲、行の埋め込み、必要なsimplicity上限保存を、改めて確認する必要があるわ。）」</dd></dl><div class="table-scroll" tabindex="0" role="region" aria-label="ここまで出来たこと／ここから別に調べること"><table><caption>ここまで出来たこと／ここから別に調べること</caption><thead><tr><th scope="col">対象</th><th scope="col">今回までの到達点</th></tr></thead><tbody><tr><th scope="row">\(\Phi(1/3,\pm n)\), n≥1</th><td>正確な符号表示・birthday・正準集合・Φ-only cut</td></tr><tr><th scope="row">\(\Phi(a,b)\), a,b∈ℚ</th><td>分岐を統合したΦ-only cutとambient最簡性</td></tr><tr><th scope="row">\(\Phi(1/3,\sqrt2)\)</th><td>二進grid cut・正準option・共終共初性・五項</td></tr><tr><th scope="row">\(\Phi(a,1/3)\), a∈ℝ</th><td>一般cut・最簡性・正準option・共終共初性</td></tr><tr><th scope="row">任意Surreal第一引数や無限小第一引数</th><td>この実数定理の範囲外。構成と仮定を個別に点検</td></tr><tr><th scope="row">非整数実数入力の正確birthday一般式</th><td>この章のcut定理からは結論しない</td></tr></tbody></table></div><dl class="talk"><dt>一埜</dt><dd>「YとZを捨てたわけじゃなかったんだね。符号で道を確かめたから、Φだけの住所も信用できる。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（そうよ。符号列は数の形を、cutは数を選ぶ条件を、Φは写像としての住所を教える。どれか一つが、残りを不要にするわけではないの。）」</dd>
+<dt>一彌</dt><dd>「出来た。」</dd>
+<dt>一埜</dt><dd>「何が？」</dd>
+<dt>一彌</dt><dd>「どこまで出来たのかを、区別して読めるようになったのだ。次の入口に、何の証明が要るのかも。」</dd>
+<dt>こにゃん</dt><dd>「ハァーン🐈（では、今夜のノートはここまで。次は、入口の名前を決めるところからね。）」</dd></dl><details class="note"><summary>一埜の小問：最後の復習：左右列、正準集合、値、birthdayは同じもの？</summary><div><p>違います。左右列はcutに使う族、正準集合は符号prefixから定まる全option集合、値はそのcutの最簡実現値、birthdayはその値の符号長です。同じ結果を異なる角度から見ていますが、置き換えてよい概念ではありません。</p></div></details>
+<p class="source">照合先：本章の適用範囲のまとめ。未証明事項を既存定理の結論へ追加していない。</p>
+<nav class="chapter-nav" aria-label="第43話の移動">
+<a href="#ch42">← 前の話</a>
+<a href="#contents">目次</a>
+<a href="#glossary">記号と証明の案内 →</a>
+</nav></section>
+<p class="ending">＊ 第二章・おしまい。次の問いには、次の証明を。 ＊</p>
+</article>
+<section class="inner_wrapper" id="glossary" aria-labelledby="glossary-title">
+<h2 id="glossary-title">第二章の記号帳</h2>
+<div class="table-scroll" tabindex="0" role="region" aria-label="第二章の記号帳"><table><caption>第二章の記号帳</caption><thead><tr><th scope="col">記号</th><th scope="col">この章での意味</th></tr></thead><tbody><tr><th scope="row">\(\Phi(a,x)\)</th><td>構成済み有限／omega sourceの行を数値添字aで参照する関数。Lean名 sourceIndexedVeblen。任意Surreal第一引数の全域理論という主張ではない。</td></tr><tr><th scope="row">\(V_j\) ／ \(\varphi_j\)</th><td>Surreal側の有限Veblen写像 ／ Ordinal側のVeblen関数。</td></tr><tr><th scope="row">\(X\)</th><td>\(\Phi(1/3,0)\)。研究ノートのD。第一章の基点と同じ値。</td></tr><tr><th scope="row">\(\Omega_n\)</th><td>\(\varphi_\omega(n)\)。q、Λ、Γはn=0,1,2。qをΓ₀と同一視しない。</td></tr><tr><th scope="row">\(Y_x(t),Z_x(t)\)</th><td>xの符号列へ、Ordinal長tのplus／minusを連結。体の加減算ではない。</td></tr><tr><th scope="row">\(b(x),P(x),M(x)\)</th><td>birthday、plus位置の順序型、minus位置の順序型（M(x)=P(−x)）。</td></tr><tr><th scope="row">\(E_{n,k}\)</th><td>n≥1。第30話のOrdinal尾部長。kは0から。</td></tr><tr><th scope="row">\(U_{n,k},W_{n,k}\)</th><td>第30話のSurreal中間option。第一章で単独のWと呼んだΦ(1/3,1)とは区別。</td></tr><tr><th scope="row">\(Q_k(r),a_k\)</th><td>第32話の残余座標と、第33話の有限prefix有理ラベル。</td></tr><tr><th scope="row">\(\mathcal A_k,\mathcal B_k\)</th><td>Φだけへ展開可能な左右component族。単独の行値の名前ではない。</td></tr><tr><th scope="row">\(\ell_j,h_j\)</th><td>第34話のSurreal root値。</td></tr><tr><th scope="row">\(\alpha_n,\beta_n\)</th><td>第37話の有理数。1/3の下側／上側prefix。root値ℓ,hとは別。</td></tr><tr><th scope="row">\(\{L\mid R\}\)</th><td>指定左右族のambient最簡実現値。通常順序の上限や、左右族の単なる集合和ではない。</td></tr><tr><th scope="row">\(\rho(s)\)</th><td>最初のminus位置。全plusなら∞。Leanでは WithTop Nat。</td></tr></tbody></table></div>
+<p>数式中のOrdinal加算・乗法と、Φの入力に現れるSurreal体の加減算を区別します。可算列の番号は0から。数式や表が画面幅を超える場合は、その枠の中を横へスクロールして読めます。</p>
+<p><a href="#contents">第二章の目次へ</a> ／ <a href="index.htm">第一章へ</a></p>
+</section>
+<footer id="proof-sources">
+<p><strong>原資料と、この第二章の範囲</strong></p>
+<p>主な原資料は、プロジェクト内の <code>ONE-THIRD-MINUS-TWO-AND-INTEGER-ROWS.md</code>、<code>ONE-THIRD-INTEGER-FIXED-POINT-LADDERS.md</code>、<code>OMEGA-SOURCE-FINITE-VEBLEN-FIXED-RANKS.md</code>、<code>ONE-THIRD-RATIONAL-INDEXED-CUT-COMPLETE.md</code>、<code>ONE-THIRD-PHI-ONLY-CUT-CATALOGUE.md</code>、<code>ALL-RATIONAL-PAIR-PHI-CUTS.md</code>、<code>ONE-THIRD-SQRT-TWO-DYADIC-CUT.md</code>、<code>REAL-FIRST-INDEX-THIRD-INPUT-PHI-CUT.md</code>。主要なLean公開型も照合しています。詳細は<a href="第二章-制作ノート.md">制作ノート</a>へ。</p>
+<p>このページの会話・小問・表は教育的な再構成です。既存の全称定理の代入例や式の展開を、新しい独立Lean定理として数えていません。新しい数学的新規性、有限停止する数値算法、一般Surreal第一引数の理論、第一引数に関する連続性は主張しません。</p>
+<p>数式はMathJaxの外部配信を利用します。未接続の場合は数式記法のまま表示されます。目次と小問はHTMLの標準機能で開閉し、JavaScriptなしでも本文を読めます。</p>
+<p><a href="#top">第二章の先頭へ ↑</a> ／ <a href="index.htm#extra09">第一章の最後の補講へ</a></p>
+</footer>
+</main>
+</body>
+</html>
+

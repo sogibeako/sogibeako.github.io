@@ -476,6 +476,9 @@ function startRound(settings = state.settings || presets[0].settings, presetId =
     hands: [[], [], [], []],
     rivers: [[], [], [], []],
     discardHistory: [[], [], [], []],
+    temporaryFuriten: [false, false, false, false],
+    drawCounts: [0, 0, 0, 0],
+    riichiFuriten: [false, false, false, false],
     melds: [[], [], [], []],
     flowers: [[], [], [], []],
     riichi: [false, false, false, false],
@@ -532,7 +535,9 @@ function refreshOracleHints(timing, playerIndex = null) {
       assignments: cpuAiConfig.oracleAssignments,
       timing
     });
-    state.oracleHints[seat] = hint;
+    if (hint.active || !state.oracleHints[seat] || state.oracleHints[seat].abilityId !== hint.abilityId) {
+      state.oracleHints[seat] = hint;
+    }
     if (hint?.active) {
       state.oracleHistory[seat] = [...(state.oracleHistory[seat] || []), {
         ...hint,
@@ -565,9 +570,17 @@ function drawIntoHand(playerIndex, markDrawn = true) {
     tile = state.wall.pop();
   }
   if (!tile) return null;
+  clearTemporaryFuritenOnDraw(playerIndex);
   state.hands[playerIndex].push(tile);
   if (markDrawn) state.drawnTileId = tile.id;
+  if (markDrawn) recordOracleDraw(playerIndex);
   return tile;
+}
+
+function recordOracleDraw(playerIndex) {
+  state.drawCounts ||= [0, 0, 0, 0];
+  state.drawCounts[playerIndex] += 1;
+  refreshOracleHints("after_draw", playerIndex);
 }
 
 function nextOpenUnitOrder() {
@@ -631,6 +644,7 @@ function revealDoraPair() {
 function drawRinshanIntoHand(playerIndex, markDrawn = true) {
   const tile = state.deadWall?.rinshan?.pop() || null;
   if (!tile) return null;
+  clearTemporaryFuritenOnDraw(playerIndex);
   const deadTileIndex = state.deadWall.tiles.findIndex((item) => item.id === tile.id);
   if (deadTileIndex >= 0) state.deadWall.tiles.splice(deadTileIndex, 1);
   const replenished = state.wall.pop();
@@ -641,6 +655,7 @@ function drawRinshanIntoHand(playerIndex, markDrawn = true) {
   state.hands[playerIndex].push(tile);
   if (markDrawn) state.drawnTileId = tile.id;
   if (playerIndex === 0 && markDrawn) state.keyboardDiscardTileId = null;
+  if (markDrawn) recordOracleDraw(playerIndex);
   return tile;
 }
 
@@ -1756,7 +1771,19 @@ function canWinIgnoringFuriten(playerIndex, win) {
   return isWinningHandWithTiles(playerIndex, tiles) && hasRequiredYaku(playerIndex, tiles, win);
 }
 
+function markRonPass(playerIndex) {
+  state.temporaryFuriten ||= [false, false, false, false];
+  state.riichiFuriten ||= [false, false, false, false];
+  state.temporaryFuriten[playerIndex] = true;
+  if (state.riichi[playerIndex]) state.riichiFuriten[playerIndex] = true;
+}
+
+function clearTemporaryFuritenOnDraw(playerIndex) {
+  if (state.temporaryFuriten) state.temporaryFuriten[playerIndex] = false;
+}
+
 function isFuriten(playerIndex) {
+  if (state.temporaryFuriten?.[playerIndex] || state.riichiFuriten?.[playerIndex]) return true;
   const discardedKeys = new Set([
     ...(state.discardHistory?.[playerIndex] || []),
     ...(state.rivers[playerIndex] || [])
@@ -1875,6 +1902,7 @@ function skipPendingWin() {
     }
     return;
   }
+  markRonPass(skipped.player);
   addLog(`${label(skipped.tile)}のロンを見逃しました。`);
   if (skipped.chankan && state.pendingAddedKan) {
     continueAddedKanRobCheck();
@@ -4699,12 +4727,17 @@ function debugOraclePanelHtml() {
     <div class="debug-oracle-panel">
       <div class="debug-oracle-head">
         <strong>オラクル覗き見</strong>
-        <button data-debug-oracle-refresh="before_discard" type="button">現在手番として再抽選</button>
+        <button data-debug-oracle-refresh="after_draw" type="button">現在のツモ回数で再抽選</button>
       </div>
       <p class="debug-note">CPU判断には、ここに出る牌スコアが ${cpuAiConfig.oracleEnabled ? "反映されています" : "反映されていません（オラクルOFF）"}。</p>
       <div class="debug-oracle-grid">
         ${players.map((player, playerIndex) => {
           const hint = state.oracleHints?.[playerIndex];
+          const inferred = cpuAiConfig.oracleEnabled ? window.MizuharaAI.oracleHintForContext({
+            state, settings: state.settings, playerIndex, oracleEnabled: true,
+            oracleHint: hint, oracleHistory: state.oracleHistory?.[playerIndex],
+            oracleAssignments: cpuAiConfig.oracleAssignments
+          }) : null;
           const ability = hint?.abilityId || cpuAiConfig.oracleAssignments?.[window.MizuharaAI.CHARACTER_IDS[playerIndex]] || "-";
           return `
             <section class="debug-oracle-card ${hint?.active ? "active" : ""}">
@@ -4718,7 +4751,11 @@ function debugOraclePanelHtml() {
                 <span>reliability: ${hint?.reliability !== undefined ? Math.round(hint.reliability * 100) + "%" : "-"}</span>
                 <span>history: ${(state.oracleHistory?.[playerIndex] || []).length}件</span>
               </div>
-              <div class="debug-oracle-signals">${oracleHintRows(hint)}</div>
+              <div class="debug-oracle-signals">${oracleHintRows(inferred)}</div>
+              <details class="debug-oracle-raw">
+                <summary>公開情報照合後の推論 JSON</summary>
+                <pre>${oracleRawJson(inferred)}</pre>
+              </details>
               <details class="debug-oracle-raw">
                 <summary>oracleHint JSON</summary>
                 <pre>${oracleRawJson(hint)}</pre>
@@ -4727,6 +4764,13 @@ function debugOraclePanelHtml() {
                 <summary>oracleHistory JSON</summary>
                 <pre>${escapeDebugHtml(JSON.stringify(state.oracleHistory?.[playerIndex] || [], null, 2))}</pre>
               </details>
+              ${(state.oracleHistory?.[playerIndex] || []).some(item => item.sequence) ? `<details class="debug-oracle-raw">
+                <summary>山順予測 JSON</summary>
+                <pre>${escapeDebugHtml(JSON.stringify(window.MizuharaAI.orderedWallHint(
+                  { state, settings: state.settings, playerIndex },
+                  state.oracleHistory[playerIndex].filter(item => item.sequence).at(-1)
+                ), null, 2))}</pre>
+              </details>` : ""}
             </section>
           `;
         }).join("")}

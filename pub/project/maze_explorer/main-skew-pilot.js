@@ -22,7 +22,7 @@
   $('sharedCoursePanel').hidden=false;$('bundlePanel').hidden=false;
   $('explorationModeStatus').textContent=isQuarter(mode)?'回転・反転接続（'+mode+'）を探索中':mode==='branch'?'柱を巡る分枝迷路を探索中':mode==='triple'?'中央穴の3トーラスを探索中':mode==='crossing'?'立体交差を探索中':mode==='biaxial'?'クラインの壺（自由接続）を探索中':mode==='klein'?'クラインの壺を探索中':enclosure?'囲いのある2トーラス（作例3）を探索中':skew?'中央穴の2トーラスを探索中':'通常の迷路を探索中';
   const target=isQuarter(mode)?quarterFrame:mode==='branch'?branchFrame:mode==='triple'?tripleFrame:mode==='crossing'?crossingFrame:mode==='biaxial'?biaxialFrame:mode==='klein'?kleinFrame:enclosure?enclosureFrame:frame;
-  if(embedded&&!target.getAttribute('src'))target.setAttribute('src',isQuarter(mode)?'quarter-turn-lab.html?embedded=1&family='+mode+'&v=565':mode==='branch'?'branch-maze.html?embedded=1&v=565':mode==='triple'?'connections-lab.html?embedded=1&space=tripleMaze&v=566':mode==='crossing'?'connections-lab.html?embedded=1&space=crossingMaze&v=566':mode==='biaxial'?'klein-biaxial.html?embedded=1&v=565':mode==='klein'?'klein-player.html?embedded=1&v=565':enclosure?'return-enclosure.html?embedded=1&v=565':'lattice-holes.html?embedded=1&v=565');
+  if(embedded&&!target.getAttribute('src'))target.setAttribute('src',isQuarter(mode)?'quarter-turn-lab.html?embedded=1&family='+mode+'&v=569':mode==='branch'?'branch-maze.html?embedded=1&v=569':mode==='triple'?'connections-lab.html?embedded=1&space=tripleMaze&v=569':mode==='crossing'?'connections-lab.html?embedded=1&space=crossingMaze&v=569':mode==='biaxial'?'klein-biaxial.html?embedded=1&v=569':mode==='klein'?'klein-player.html?embedded=1&v=569':enclosure?'return-enclosure.html?embedded=1&v=569':'lattice-holes.html?embedded=1&v=569');
   else {if(isQuarter(mode))quarterFrame.contentWindow?.QuarterExplorationAdapter?.family(mode);focusMap();}
   courseToken=currentAdapter()?.progress().token;courseStatus();
   window.dispatchEvent?.(new CustomEvent('exploration-selected',{detail:{mode}}));
@@ -44,43 +44,43 @@
 
  function lock(value){busy=value;quarterPane.inert=value;if(quarterFrame.contentDocument?.body)quarterFrame.contentDocument.body.inert=value;if(value)quarterFrame.contentWindow?.QuarterExplorationAdapter?.pause();if(branchPane)branchPane.inert=value;if(branchFrame?.contentDocument?.body)branchFrame.contentDocument.body.inert=value;if(value)branchFrame?.contentWindow?.BranchExplorationAdapter?.pause();if(triplePane)triplePane.inert=value;if(tripleFrame?.contentDocument?.body)tripleFrame.contentDocument.body.inert=value;if(value)tripleFrame?.contentWindow?.TripleExplorationAdapter?.pause();if(crossingPane)crossingPane.inert=value;if(crossingFrame?.contentDocument?.body)crossingFrame.contentDocument.body.inert=value;if(value)crossingFrame?.contentWindow?.CrossingExplorationAdapter?.pause();if(biaxialPane)biaxialPane.inert=value;if(biaxialFrame?.contentDocument?.body)biaxialFrame.contentDocument.body.inert=value;if(value)biaxialFrame?.contentWindow?.BiaxialExperiment?.pause();if(kleinPane)kleinPane.inert=value;if(kleinFrame?.contentDocument?.body)kleinFrame.contentDocument.body.inert=value;mainPane.inert=value;aside.inert=value;$('embeddedGeneration').inert=value;$('bundlePanel').inert=value;$('sharedCoursePanel').inert=value;$('mainExploreSelect').disabled=value;$('skewExploreSelect').disabled=value;$('enclosureExploreSelect').disabled=value;enclosurePane.inert=value;$('explorationSpace').disabled=value;const enclosureBody=enclosureFrame.contentDocument?.body;if(enclosureBody)enclosureBody.inert=value;const body=frame.contentDocument?.body;if(body)body.inert=value;syncCoursePlay();}
  async function adapters(includeEnclosure=false,includeKlein=false,includeBiaxial=false,includeCrossing=false,includeTriple=false,includeBranch=false,includeQuarter=false){
-  if(includeQuarter&&!quarterFrame.contentWindow?.QuarterExplorationAdapter)await new Promise((resolve,reject)=>{const finish=()=>{clearTimeout(timer);quarterFrame.removeEventListener('load',loaded);};const loaded=()=>{finish();quarterFrame.contentWindow?.QuarterExplorationAdapter?resolve():reject(Error('回転接続を読み込めませんでした。'));};const timer=setTimeout(()=>{finish();reject(Error('回転接続の読込がタイムアウトしました。'));},10000);quarterFrame.addEventListener('load',loaded);if(!quarterFrame.getAttribute('src'))quarterFrame.src='quarter-turn-lab.html?embedded=1&v=565';});
-  if(includeBranch&&!branchFrame.contentWindow?.BranchExplorationAdapter)await new Promise((resolve,reject)=>{const finish=()=>{clearTimeout(timer);branchFrame.removeEventListener('load',loaded);};const loaded=()=>{finish();branchFrame.contentWindow?.BranchExplorationAdapter?resolve():reject(Error('分枝迷路を読み込めませんでした。'));};const timer=setTimeout(()=>{finish();reject(Error('分枝迷路の読み込みがタイムアウトしました。'));},10000);branchFrame.addEventListener('load',loaded);if(!branchFrame.getAttribute('src'))branchFrame.setAttribute('src','branch-maze.html?embedded=1&v=565');});
+  if(includeQuarter&&!quarterFrame.contentWindow?.QuarterExplorationAdapter)await new Promise((resolve,reject)=>{const finish=()=>{clearTimeout(timer);quarterFrame.removeEventListener('load',loaded);};const loaded=()=>{finish();quarterFrame.contentWindow?.QuarterExplorationAdapter?resolve():reject(Error('回転接続を読み込めませんでした。'));};const timer=setTimeout(()=>{finish();reject(Error('回転接続の読込がタイムアウトしました。'));},10000);quarterFrame.addEventListener('load',loaded);if(!quarterFrame.getAttribute('src'))quarterFrame.src='quarter-turn-lab.html?embedded=1&v=569';});
+  if(includeBranch&&!branchFrame.contentWindow?.BranchExplorationAdapter)await new Promise((resolve,reject)=>{const finish=()=>{clearTimeout(timer);branchFrame.removeEventListener('load',loaded);};const loaded=()=>{finish();branchFrame.contentWindow?.BranchExplorationAdapter?resolve():reject(Error('分枝迷路を読み込めませんでした。'));};const timer=setTimeout(()=>{finish();reject(Error('分枝迷路の読み込みがタイムアウトしました。'));},10000);branchFrame.addEventListener('load',loaded);if(!branchFrame.getAttribute('src'))branchFrame.setAttribute('src','branch-maze.html?embedded=1&v=569');});
   if(includeTriple&&!tripleFrame.contentWindow?.TripleExplorationAdapter?.snapshot)await new Promise((resolve,reject)=>{
    const finish=()=>{clearTimeout(timer);tripleFrame.removeEventListener('load',loaded);};
    const loaded=()=>{finish();if(tripleFrame.contentWindow?.TripleExplorationAdapter?.snapshot)resolve();else reject(Error('3トーラスを読み込めませんでした。'));};
    const timer=setTimeout(()=>{finish();reject(Error('3トーラスの読み込みがタイムアウトしました。'));},10000);
-   tripleFrame.addEventListener('load',loaded);if(!tripleFrame.getAttribute('src'))tripleFrame.setAttribute('src','connections-lab.html?embedded=1&space=tripleMaze&v=566');
+   tripleFrame.addEventListener('load',loaded);if(!tripleFrame.getAttribute('src'))tripleFrame.setAttribute('src','connections-lab.html?embedded=1&space=tripleMaze&v=569');
   });
   if(includeCrossing&&!crossingFrame.contentWindow?.CrossingExplorationAdapter?.snapshot)await new Promise((resolve,reject)=>{
    const finish=()=>{clearTimeout(timer);crossingFrame.removeEventListener('load',loaded);};
    const loaded=()=>{finish();if(crossingFrame.contentWindow?.CrossingExplorationAdapter?.snapshot)resolve();else reject(Error('立体交差を読み込めませんでした。'));};
    const timer=setTimeout(()=>{finish();reject(Error('立体交差の読み込みがタイムアウトしました。'));},10000);
-   crossingFrame.addEventListener('load',loaded);if(!crossingFrame.getAttribute('src'))crossingFrame.setAttribute('src','connections-lab.html?embedded=1&space=crossingMaze&v=566');
+   crossingFrame.addEventListener('load',loaded);if(!crossingFrame.getAttribute('src'))crossingFrame.setAttribute('src','connections-lab.html?embedded=1&space=crossingMaze&v=569');
   });
   if(includeBiaxial&&!biaxialFrame.contentWindow?.BiaxialExplorationAdapter?.snapshot)await new Promise((resolve,reject)=>{
    const finish=()=>{clearTimeout(timer);biaxialFrame.removeEventListener('load',loaded);};
    const loaded=()=>{finish();if(biaxialFrame.contentWindow?.BiaxialExplorationAdapter?.snapshot)resolve();else reject(Error('クラインの壺（自由接続）を読み込めませんでした。'));};
    const timer=setTimeout(()=>{finish();reject(Error('クラインの壺（自由接続）の読み込みがタイムアウトしました。'));},10000);
-   biaxialFrame.addEventListener('load',loaded);if(!biaxialFrame.getAttribute('src'))biaxialFrame.setAttribute('src','klein-biaxial.html?embedded=1&v=565');
+   biaxialFrame.addEventListener('load',loaded);if(!biaxialFrame.getAttribute('src'))biaxialFrame.setAttribute('src','klein-biaxial.html?embedded=1&v=569');
   });
   if(includeKlein&&!kleinFrame.contentWindow?.KleinExplorationAdapter)await new Promise((resolve,reject)=>{
    const finish=()=>{clearTimeout(timer);kleinFrame.removeEventListener('load',loaded);};
    const loaded=()=>{finish();if(kleinFrame.contentWindow?.KleinExplorationAdapter)resolve();else reject(Error('クラインを読み込めませんでした。'));};
    const timer=setTimeout(()=>{finish();reject(Error('クラインの読み込みがタイムアウトしました。'));},10000);
-   kleinFrame.addEventListener('load',loaded);if(!kleinFrame.getAttribute('src'))kleinFrame.setAttribute('src','klein-player.html?embedded=1&v=565');
+   kleinFrame.addEventListener('load',loaded);if(!kleinFrame.getAttribute('src'))kleinFrame.setAttribute('src','klein-player.html?embedded=1&v=569');
   });
   if(!frame.contentWindow?.SkewExplorationAdapter)await new Promise((resolve,reject)=>{
    const finish=()=>{clearTimeout(timer);frame.removeEventListener('load',loaded);};
    const loaded=()=>{if(frame.contentWindow?.SkewExplorationAdapter){finish();resolve();}else{finish();reject(Error('中央穴の探索を読み込めませんでした。'));}};
    const timer=setTimeout(()=>{finish();reject(Error('中央穴の読み込みがタイムアウトしました。'));},10000);
-   frame.addEventListener('load',loaded);if(!frame.getAttribute('src'))frame.setAttribute('src','lattice-holes.html?embedded=1&v=565');
+   frame.addEventListener('load',loaded);if(!frame.getAttribute('src'))frame.setAttribute('src','lattice-holes.html?embedded=1&v=569');
   });
   if(includeEnclosure&&!enclosureFrame.contentWindow?.EnclosureExplorationAdapter)await new Promise((resolve,reject)=>{
    const finish=()=>{clearTimeout(timer);enclosureFrame.removeEventListener('load',loaded);};
    const loaded=()=>{finish();if(enclosureFrame.contentWindow?.EnclosureExplorationAdapter)resolve();else reject(Error('作例3を読み込めませんでした。'));};
    const timer=setTimeout(()=>{finish();reject(Error('作例3の読み込みがタイムアウトしました。'));},10000);
-   enclosureFrame.addEventListener('load',loaded);if(!enclosureFrame.getAttribute('src'))enclosureFrame.setAttribute('src','return-enclosure.html?embedded=1&v=565');
+   enclosureFrame.addEventListener('load',loaded);if(!enclosureFrame.getAttribute('src'))enclosureFrame.setAttribute('src','return-enclosure.html?embedded=1&v=569');
   });
   return {quarter:quarterFrame.contentWindow?.QuarterExplorationAdapter,doubleTwist:quarterFrame.contentWindow?.QuarterExplorationAdapter,quarterTwist:quarterFrame.contentWindow?.QuarterExplorationAdapter,branch:branchFrame?.contentWindow?.BranchExplorationAdapter,triple:tripleFrame?.contentWindow?.TripleExplorationAdapter,crossing:crossingFrame?.contentWindow?.CrossingExplorationAdapter,biaxial:biaxialFrame?.contentWindow?.BiaxialExplorationAdapter,preferences:{apply(p){window.ExplorationDisplayPreference.restore(p.render);window.ExplorationLearningPreference.restore(p);if(p.auto)window.ExplorationAutoPreference.restore(p.auto);}},klein:kleinFrame?.contentWindow?.KleinExplorationAdapter,main:window.MainExplorationAdapter,skew:frame.contentWindow.SkewExplorationAdapter,enclosure:enclosureFrame.contentWindow?.EnclosureExplorationAdapter};
  }
@@ -200,7 +200,7 @@
    course=next.course;lock(false);select(next.mode,true);return true;
   }catch(error){$('sharedCourseStatus').textContent='次の空間へ進めませんでした。'+error.message;$('coursePlayError').textContent=$('sharedCourseStatus').textContent;return false;}finally{lock(false);}
  }
- window.ExplorationHost={wands:()=>currentAdapter()?.wands?.(),consoleStatus:()=>currentAdapter()?.consoleStatus?.(),wallPass(){const a=currentAdapter();if(!a?.toggleWallPass)return false;a.pause?.();a.toggleWallPass();return true;},async autoAdvance(allowed){if(busy||!allowed()||!currentAdapter()?.progress().exit)return false;if(course.enabled)return crossSpace(allowed);const a=currentAdapter(),token=a.progress().token;a.autoNext?.();return a.progress().token!==token;},select,mode:()=>active,focus:focusMap,reroll(mode){if(!course.enabled||mode!==active)return false;void crossSpace(undefined,true);return true;},advance(mode){if(!course.enabled||mode!==active)return false;void crossSpace();return true;}};
+ window.ExplorationHost={progress:()=>{const a=currentAdapter(),p=a?.progress();return p?{...p,exit:!!p.exit&&!a.autoOob?.()}:null;},wands:()=>currentAdapter()?.wands?.(),consoleStatus:()=>currentAdapter()?.consoleStatus?.(),wallPass(){const a=currentAdapter();if(!a?.toggleWallPass)return false;a.pause?.();a.toggleWallPass();return true;},async autoAdvance(allowed){if(busy||!allowed()||!currentAdapter()?.progress().exit)return false;if(course.enabled)return crossSpace(allowed);const a=currentAdapter(),token=a.progress().token;a.autoNext?.();return a.progress().token!==token;},select,mode:()=>active,focus:focusMap,reroll(mode){if(!course.enabled||mode!==active)return false;void crossSpace(undefined,true);return true;},advance(mode){if(!course.enabled||mode!==active)return false;void crossSpace();return true;}};
  $('sharedCourseNext').addEventListener('click',crossSpace);$('coursePlayNext').addEventListener('click',crossSpace);
 })();
 

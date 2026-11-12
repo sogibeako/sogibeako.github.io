@@ -20,7 +20,7 @@ function actorAt(s,id){if(id===s.id)return '@';if(id===s.features.bird)return 'V
 function relocate(s,to){if(s.id===to)return;const queue=[{id:s.id,frame:s.frame,x:s.x,y:s.y}],seen=new Set([s.id]);for(const p of queue){if(p.id===to){const from=s.id;s.id=to;s.features.last={kind:'wand',from,to};s.frame=p.frame;s.x=p.x;s.y=p.y;s.last={from,to,kind:'wand',worldDirection:4,localDirection:4,changed:true};if(s.loopExperience){s.loopExperience.path=[];s.loopExperience.lastStep=s.steps;}if(s.tripleLoops){s.tripleLoops.points=new Map();}return;}for(let d=0;d<4;d++){const e=edge(s,p.id,d);if(!e||seen.has(e.to))continue;seen.add(e.to);const [dx,dy]=dirs[p.frame.indexOf(d)];queue.push({id:e.to,frame:p.frame.map(k=>e.transform[k]),x:p.x+dx,y:p.y+dy});}}throw Error('杖の移動先に接続できません。');}
 function fire(s,source,spell,d,path=[]){s.features.last={kind:'wand',from:s.id,to:s.id};const origin=source==='@'?s.id:s.features.bird;let id=origin,dir=d,reflections=0,distance=0,anchor=origin;const seen=new Set();
  for(let n=0;n<s.world.cells.length*24;n++){
-  const key=id+':'+dir+':'+reflections;if(seen.has(key))break;seen.add(key);const e=edge(s,id,dir);if(!e){const mirror=R?.face(s,id,dir);if(!mirror)break;path.push({id:mirror.id,reflection:true});log(s,'ピンクの反射壁が魔法弾を跳ね返しました。');if(++reflections>5)break;dir=(dir+2)%4;anchor=mirror.id;distance=1;}else{id=e.to;dir=e.transform[dir];distance++;path.push({id,seam:!!e.kind&&/boundary|wrap|throat|seam|stairs/.test(e.kind)});}const target=actorAt(s,id);if(!target)continue;
+  const key=id+':'+dir+':'+reflections;if(seen.has(key))break;seen.add(key);const e=edge(s,id,dir);if(!e){const mirror=R?.face(s,id,dir);if(!mirror)break;path.push({id:mirror.id,reflection:true});log(s,'ピンクの反射壁が魔法弾を跳ね返しました。');if(++reflections>5)break;dir=(dir+2)%4;anchor=mirror.id;distance=1;}else{const seam=!!O?.boundary(s,id,dir,e)||!!e.kind&&/boundary|wrap|throat|seam|branch|stairs/.test(e.kind);id=e.to;dir=e.transform[dir];distance++;path.push({id,seam});}const target=actorAt(s,id);if(!target)continue;
   if(['c','d'].includes(target)){path[path.length-1].tail=target;log(s,(target==='c'?'猫 f':'犬 d')+' が尻尾で魔法弾を跳ね返しました。');if(++reflections>5)break;dir=(dir+2)%4;anchor=id;distance=0;continue;}
   if(spell==='freeze'){const owner=target==='@'?s.wands:s.wands.bird;owner.frozen=5;owner.frozenAt=s.steps;}
   if(spell==='push'&&reflections){const e=edge(s,id,dir);if(O?.boundary(s,id,dir,e)&&(e.to===id||!actorAt(s,e.to))){O.enter(s,target,dir);return path;}}
@@ -46,7 +46,7 @@ function preview(s,spell,d,source='@'){if(source==='@'&&(!s.wands?.held.includes
 
 // Read-only hidden OOB planner. Paths are physical directions; callers convert only the next step.
 function oobProbe(s,id,d){const copy={...s,id,frame:[...s.frame],features:{...s.features},wildlife:s.wildlife?structuredClone(s.wildlife):undefined,wands:structuredClone(s.wands),loopExperience:undefined,tripleLoops:undefined};copy.wands.held=['push'];fire(copy,'@','push',d);return copy.wands.oob?.direction;}
-function planOob(s){
+function planOobNow(s){
  if(s.wands?.oob)return {done:true};if(!s.wands||!O?.supported(s))return null;
  const q=[s.id],parents=new Map([[s.id,null]]),f=s.features;
  for(const id of q)for(let d=0;d<4;d++){const e=edge(s,id,d);if(!e||e.to===f.bird)continue;const to=f.warps.get(e.to)??e.to;if(to===f.bird||parents.has(to))continue;parents.set(to,[id,d]);q.push(to);}
@@ -60,6 +60,14 @@ function planOob(s){
  if(target===undefined)return key();
  if(!held){const ds=path(item);return ds.length?{path:ds}:{wait:true};}
  const ds=path(target);return ds.length?{path:ds}:{cast:shot};
+}
+// A moving creature is a temporary obstruction, not proof that a mirror is unusable.
+function planOob(s){
+ const immediate=planOobNow(s);if(immediate||!s.wands||s.wands.oob||!O?.supported(s))return immediate;
+ const quiet={...s,features:{...s.features,bird:null},wildlife:s.wildlife?{...s.wildlife,pets:[]}:undefined};
+ const potential=planOobNow(quiet);if(!potential)return null;
+ // Never fire on the hypothetical empty corridor: re-check the actual actors first.
+ return potential.cast!==undefined?{wait:true,blocked:true}:potential;
 }
 const api={planOob,oobProbe,returnOob:s=>O.home(s,edge,relocate),after,setAnimator,flush,preview,init,supported,cast,bird,validate,spells,names};if(typeof module==='object')module.exports=api;else root.GraphWands=api;
 })(globalThis);

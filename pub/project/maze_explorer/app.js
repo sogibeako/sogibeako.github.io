@@ -437,6 +437,7 @@ $('matchEntrance').addEventListener('click',()=>{
   render();
 });
 function render() {
+  if (game?.won) MazeSession.act(game,'continue');
   updateWandVisual();
   window.dispatchEvent?.(new Event('exploration-change'));
   if (!game) return;
@@ -739,7 +740,7 @@ function announceSelfVision() {
   if (!game.won && game.inferredRecognized?.length) $('status').textContent += ` 学んだ周回を組み合わせ、${game.inferredRecognized.map(a => a === 'x' ? '横' : '縦').join('・')}方向のつながりも理解しました！`;
 }
 function step(direction) {
-  if (game.won) return;
+  if (game.won) MazeSession.act(game,'continue');
   const moved = direction === 'wait' ? MazeSession.act(game,'wait') : MazeSession.act(game,'move', game.wands?.oob?direction:MazeRotationBridge.input(game,direction,!!view));
   const id = game.eventKeyId;
   const locks = game.world.puzzle?.locks || [];

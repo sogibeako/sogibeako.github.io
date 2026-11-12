@@ -1,0 +1,58 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const path = require('node:path');
+const box = { window: {} };
+vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../ai_core.js'), 'utf8'), box);
+const ai = box.window.MizuharaAI;
+const wall = Array.from({length: 30}, (_, i) => ({suit: 'm', value: i % 9 + 1}));
+const state = {wall, turn: 3, drawCounts: [0,0,0,6]};
+const options = {state, playerIndex: 3, oracleEnabled: true, timing: 'after_draw', rng: () => 0};
+assert.equal(ai.getOracleHint({...options, timing: 'before_discard'}).active, false);
+assert.equal(ai.getOracleHint({...options, state: {...state, drawCounts: [0,0,0,5]}}).active, false);
+const hint = ai.getOracleHint(options);
+assert.equal(hint.sequence.length, 18);
+assert.equal(hint.sequence[0].key, `m${wall.at(-1).value}`);
+const context = {state, playerIndex: 3, settings: {}};
+const predicted = ai.orderedWallHint(context, hint);
+assert.deepEqual(Array.from(predicted.predictions, p => p.distance), [3,7,11,15]);
+const advanced = ai.orderedWallHint({...context, state: {...state, wall: wall.slice(0,26)}}, hint);
+assert.equal(advanced.consumed, 4);
+assert.equal(advanced.predictions[0].candidates[0], hint.sequence[7].key);
+const called = ai.orderedWallHint({...context, state: {...state, turn: 1}}, hint);
+assert.equal(called.predictions[0].distance, 1);
+const exhausted = ai.orderedWallHint({...context, state: {...state, wall: wall.slice(0,10)}}, hint);
+assert.equal(exhausted.predictions.length, 0);
+const changedHiddenTiles = ai.orderedWallHint({...context, state: {...state, wall: wall.map(() => ({suit:'z', value:5}))}}, hint);
+assert.equal(JSON.stringify(changedHiddenTiles.scoreByKey), JSON.stringify(predicted.scoreByKey));
+assert.equal(ai.getOracleHint({...options, oracleEnabled:false}).active, false);
+console.log('Ordered oracle: trigger, order, consumption, calls, expiry and no hidden reread passed.');
+
+const observation = { active: true, reliability: 0.55, wallCount: 30,
+  sequence: [3,7,11].map(offset => ({offset, key:'z5'})) };
+const white = id => ({id, suit:'z', value:5});
+const publicState = { ...state, rivers: [[white(1)],[],[],[]],
+  melds: [[],[{tiles:[white(2),white(3)]}],[],[]], hands: [[],[],[],[]], dora: [] };
+const limited = ai.orderedWallHint({...context, state: publicState}, observation);
+assert.equal(limited.evidence.z5.available, 1);
+assert.equal(limited.evidence.z5.factor, 1/3);
+assert.ok(limited.predictions[0].confidence < 0.55);
+const exhaustedCopies = ai.orderedWallHint({...context, state:{...publicState, dora:[white(4)]}}, observation);
+assert.equal(exhaustedCopies.scoreByKey.z5, 0);
+assert.equal(exhaustedCopies.predictions[0].candidates.length, 0);
+const ownCopy = ai.orderedWallHint({...context, state:{...publicState, hands:[[],[],[],[white(4)]]}}, observation);
+assert.equal(ownCopy.scoreByKey.z5, 0);
+const extraWhite = ai.orderedWallHint({...context, settings:{whiteCount:12}, state:publicState}, observation);
+assert.equal(extraWhite.evidence.z5.factor, 1);
+const duplicate = ai.orderedWallHint({...context, state:{...publicState, dora:[white(1)]}}, observation);
+assert.equal(duplicate.evidence.z5.known, 3);
+const hiddenHands = ai.orderedWallHint({...context, state:{...publicState, hands:[[white(4)],[],[],[]]}}, observation);
+assert.equal(hiddenHands.scoreByKey.z5, limited.scoreByKey.z5);
+const partial = ai.orderedWallHint({...context, state:{...publicState,dora:[white(4)]}},
+  {...observation, sequence:[{offset:3,suit:'z'}]});
+assert.ok(!partial.predictions[0].candidates.includes('z5'));
+assert.ok(partial.predictions[0].candidates.includes('z6'));
+const consumedObservation = ai.orderedWallHint({...context, state:{...publicState,wall:wall.slice(0,22)}}, observation);
+assert.equal(consumedObservation.evidence.z5.observed, 1);
+assert.equal(consumedObservation.evidence.z5.factor, 1);
+console.log('Oracle evidence: rivers, melds, dora, own hand, white count, duplicates, partial noise and hidden-hand isolation passed.');

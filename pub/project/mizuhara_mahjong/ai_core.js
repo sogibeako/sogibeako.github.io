@@ -145,8 +145,8 @@
 
   const ORACLE_ABILITIES = {
     kazuya_initial_hands: { timing: "round_start", reliability: 0.5 },
-    ichino_wall_and_hands: { timing: "before_discard", reliability: 0.55 },
-    nanayo_leader_hand: { timing: "before_discard", reliability: 0.6 },
+    ichino_wall_and_hands: { timing: "after_draw", reliability: 0.55 },
+    nanayo_leader_hand: { timing: "after_draw", reliability: 0.6 },
     mayoi_wall_order: { timing: "sixth_draw", reliability: 0.55 }
   };
 
@@ -345,9 +345,10 @@
     const ability = ORACLE_ABILITIES[abilityId] || ORACLE_ABILITIES.kazuya_initial_hands;
     if (ability.timing === "round_start") return timing === "round_start";
     if (ability.timing === "before_discard") return timing === "before_discard";
+    if (ability.timing === "after_draw") return timing === "after_draw";
     if (ability.timing === "sixth_draw") {
-      const draws = Number(state?.discardCounts?.[playerIndex] || 0);
-      return timing === "before_discard" && draws > 0 && draws % 6 === 0;
+      const draws = Number(state?.drawCounts?.[playerIndex] || 0);
+      return timing === "after_draw" && draws > 0 && draws % 6 === 0;
     }
     return false;
   }
@@ -357,54 +358,6 @@
     if (roll < 1 / 3) return "blank";
     if (roll < 2 / 3) return "wrong";
     return "noise";
-  }
-
-  function noisyValueForKey(key, truthByKey, rng) {
-    const suit = key[0];
-    const value = key.slice(1);
-    const related = Object.entries(truthByKey)
-      .filter(([otherKey]) => otherKey[0] === suit || otherKey.slice(1) === value)
-      .map(([, value]) => value);
-    if (!related.length) return 0;
-    const avg = related.reduce((sum, item) => sum + item, 0) / related.length;
-    return avg * (0.25 + rng() * 0.45);
-  }
-
-  function wrongValue(rng) {
-    return (rng() * 5 - 2.5);
-  }
-
-  function truthSignalsForOracle(abilityId, state, playerIndex, settings = {}) {
-    const wall = state?.wall || [];
-    const hands = state?.hands || [[], [], [], []];
-    const opponents = hands.flatMap((hand, index) => index === playerIndex ? [] : hand);
-    const leaderIndex = leaderSeat(state);
-    const leaderHand = hands[leaderIndex] || [];
-    const truth = Object.fromEntries(allTileKeys(settings).map((key) => [key, 0]));
-    if (abilityId === "ichino_wall_and_hands") {
-      const nearWall = countMapByKey(wall.slice(-18));
-      const oppCounts = countMapByKey(opponents);
-      Object.keys(truth).forEach((key) => {
-        truth[key] = -((nearWall[key] || 0) * 0.7 + (oppCounts[key] || 0) * 0.18);
-      });
-    } else if (abilityId === "nanayo_leader_hand") {
-      const leaderCounts = countMapByKey(leaderHand);
-      Object.keys(truth).forEach((key) => {
-        truth[key] = -((leaderCounts[key] || 0) * 0.72);
-      });
-    } else if (abilityId === "mayoi_wall_order") {
-      const nextDraws = countMapByKey(wall.slice(-6));
-      const soonDraws = countMapByKey(wall.slice(-18));
-      Object.keys(truth).forEach((key) => {
-        truth[key] = -((nextDraws[key] || 0) * 1.1 + (soonDraws[key] || 0) * 0.35);
-      });
-    } else {
-      const oppCounts = countMapByKey(opponents);
-      Object.keys(truth).forEach((key) => {
-        truth[key] = (oppCounts[key] || 0) >= 2 ? 0.45 : 0;
-      });
-    }
-    return truth;
   }
 
   function getOracleHint(options = {}) {
@@ -419,30 +372,118 @@
     if (!options.oracleEnabled || !oracleShouldTrigger(abilityId, timing, options.state, playerIndex)) {
       return { active: false, characterId, abilityId, timing, reliability: ability.reliability, scoreByKey: {}, observations: {} };
     }
-    const truth = truthSignalsForOracle(abilityId, options.state, playerIndex, settings);
-    const observations = {};
-    const scoreByKey = {};
-    Object.keys(truth).forEach((key) => {
-      if (rng() < ability.reliability) {
-        observations[key] = { symptom: "truth", value: truth[key] };
-        scoreByKey[key] = truth[key];
-        return;
-      }
+    if (abilityId === "mayoi_wall_order") {
+      const keys = allTileKeys(settings).filter(key => key[0] !== "f");
+      const sequence = (options.state?.wall || []).slice(-18).reverse().map((tile, offset) => {
+        const key = keyOf(tile);
+        if (rng() < ability.reliability) return { offset, key };
+        const symptom = randomSymptom(rng);
+        if (symptom === "blank") return { offset, key: null };
+        if (symptom === "wrong") return { offset, key: keys[Math.floor(rng() * keys.length)] };
+        return rng() < 0.5 ? { offset, suit: tile.suit } : { offset, value: tile.value };
+      });
+      return { active: true, characterId, abilityId, timing, reliability: ability.reliability,
+        wallCount: options.state?.wall?.length || 0, drawCount: options.state?.drawCounts?.[playerIndex] || 0,
+        sequence, scoreByKey: {}, observations: {} };
+    }
+    const state = options.state || {};
+    const opponents = [0, 1, 2, 3].filter(seat => seat !== playerIndex);
+    const targetSeat = opponents.slice().sort((a, b) =>
+      (state.players?.[b]?.score || 0) - (state.players?.[a]?.score || 0))[0];
+    const seats = abilityId === "nanayo_leader_hand" ? [targetSeat] : opponents;
+    const sources = seats.map(seat => ({ source: "hand", seat,
+      observations: observeOracleTiles(state.hands?.[seat] || [], ability.reliability, settings, rng) }));
+    if (abilityId === "ichino_wall_and_hands") sources.push({ source: "wall",
+      observations: observeOracleTiles(state.wall || [], ability.reliability, settings, rng) });
+    const hint = { active: true, characterId, abilityId, timing, reliability: ability.reliability,
+      wallCount: state.wall?.length || 0, drawCount: state.drawCounts?.[playerIndex] || 0,
+      sources, targetSeat: abilityId === "nanayo_leader_hand" ? targetSeat : null,
+      publicCounts: oraclePublicCounts(state), scoreByKey: {}, observations: {} };
+    if (abilityId === "kazuya_initial_hands") {
+      const own = countMapByKey(state.hands?.[playerIndex] || []);
+      const seen = oracleObservedCounts(sources, settings);
+      const ranks = ["m", "p", "s"].map(suit => ({ suit, value: allTileKeys(settings)
+        .filter(key => key[0] === suit).reduce((sum, key) => sum +
+          (own[key] || 0) * 2 + Math.max(0, maxCopiesForKey(key, settings) - (own[key] || 0) - (seen[key] || 0)) * 0.15, 0) }));
+      ranks.sort((a, b) => b.value - a.value);
+      hint.initialPlan = { suit: ranks[0].suit, kind: "suit_affinity", scores: ranks };
+    }
+    return hint;
+  }
+
+  function observeOracleTiles(tiles, reliability, settings, rng) {
+    const keys = allTileKeys(settings);
+    const observations = tiles.map(tile => {
+      if (rng() < reliability) return { key: keyOf(tile) };
       const symptom = randomSymptom(rng);
-      if (symptom === "blank") {
-        observations[key] = { symptom, value: 0 };
-        scoreByKey[key] = 0;
-      } else if (symptom === "wrong") {
-        const value = wrongValue(rng);
-        observations[key] = { symptom, value };
-        scoreByKey[key] = value;
-      } else {
-        const value = noisyValueForKey(key, truth, rng);
-        observations[key] = { symptom, value };
-        scoreByKey[key] = value;
-      }
+      if (symptom === "blank") return { key: null };
+      if (symptom === "wrong") return { key: keys[Math.floor(rng() * keys.length)] };
+      return rng() < 0.5 ? { suit: tile.suit } : { value: tile.value };
     });
-    return { active: true, characterId, abilityId, timing, reliability: ability.reliability, scoreByKey, observations };
+    // These abilities see counts, not hidden hand order or wall order (unlike Mayoi).
+    return observations.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+  }
+
+  function oraclePublicCounts(state) {
+    const seen = new Set();
+    const tiles = [...(state?.rivers || []).flat(), ...(state?.melds || [])
+      .flatMap(melds => melds.flatMap(meld => meld.tiles || [])), ...(state?.dora || [])];
+    return countMapByKey(tiles.filter(tile => {
+      if (tile.id == null) return true;
+      if (seen.has(tile.id)) return false;
+      seen.add(tile.id);
+      return true;
+    }));
+  }
+
+  function oracleObservedCounts(sources, settings) {
+    const counts = {};
+    const keys = allTileKeys(settings);
+    sources.forEach(source => source.observations.forEach(observation => {
+      const candidates = observation.key ? [observation.key] : keys.filter(key =>
+        (observation.suit && key[0] === observation.suit) ||
+        (observation.value !== undefined && Number(key.slice(1)) === observation.value));
+      candidates.forEach(key => { counts[key] = (counts[key] || 0) + 1 / candidates.length; });
+    }));
+    return counts;
+  }
+
+  function countOracleHint(context, snapshot) {
+    const settings = context.settings || context.state?.settings || {};
+    const publicCounts = oraclePublicCounts(context.state);
+    const own = countMapByKey(context.hand || context.state?.hands?.[context.playerIndex] || []);
+    const hands = oracleObservedCounts(snapshot.sources.filter(source => source.source === "hand"), settings);
+    const wall = oracleObservedCounts(snapshot.sources.filter(source => source.source === "wall"), settings);
+    const evidence = {}, scoreByKey = {}, availabilityByKey = {}, dangerByKey = {}, spillByKey = {};
+    const age = Math.max(0.15, Math.min(1, (context.state?.wall?.length ?? snapshot.wallCount) / Math.max(1, snapshot.wallCount)));
+    allTileKeys(settings).forEach(key => {
+      const available = Math.max(0, maxCopiesForKey(key, settings) - (publicCounts[key] || 0) - (own[key] || 0));
+      const newlyPublic = Math.max(0, (publicCounts[key] || 0) - (snapshot.publicCounts?.[key] || 0));
+      const observed = (hands[key] || 0) + (wall[key] || 0);
+      const factor = Math.min(1, available / Math.max(1, observed));
+      const remainingObserved = Math.max(0, observed - newlyPublic);
+      const publicFactor = observed ? remainingObserved / observed : 1;
+      const confidence = snapshot.reliability * factor * publicFactor * age;
+      const opponentCount = (hands[key] || 0) * confidence;
+      const supply = snapshot.abilityId === "ichino_wall_and_hands"
+        ? (wall[key] || 0) * confidence
+        : Math.max(0, available - opponentCount) * snapshot.reliability * age * 0.35;
+      availabilityByKey[key] = supply;
+      dangerByKey[key] = Math.min(2, opponentCount * 0.35);
+      // Isolated observed leader tiles are plausible future discards, not certain discards.
+      const numeric = ["m", "p", "s"].includes(key[0]);
+      const value = Number(key.slice(1));
+      const nearby = numeric && [-2, -1, 1, 2].some(delta => {
+        const next = settings.cosmic ? wrappedNumber(value + delta) : value + delta;
+        return (hands[`${key[0]}${next}`] || 0) >= 0.75;
+      });
+      spillByKey[key] = snapshot.abilityId === "nanayo_leader_hand" && numeric &&
+        (hands[key] || 0) > 0 && hands[key] < 1.5 && !nearby ? confidence * 0.7 : 0;
+      const affinity = snapshot.initialPlan?.suit === key[0] && available > 0 ? 0.2 * age : 0;
+      scoreByKey[key] = -Math.min(3, supply * 0.55 + spillByKey[key] + affinity);
+      evidence[key] = { available, observed, newlyPublic, confidence, factor, publicFactor };
+    });
+    return { ...snapshot, evidence, scoreByKey, availabilityByKey, dangerByKey, spillByKey };
   }
 
   function oracleFeature(context, discardedTile) {
@@ -453,6 +494,7 @@
   }
 
   function oracleHintForContext(context) {
+    if (!context.oracleEnabled) return { active: false, scoreByKey: {} };
     const current = context.oracleHint || getOracleHint({
       state: context.state,
       settings: context.settings,
@@ -461,7 +503,85 @@
       assignments: context.oracleAssignments,
       timing: context.oracleTiming || "before_discard"
     });
-    return combineOracleHistory(current, context.oracleHistory);
+    const countSnapshots = [...(context.oracleHistory || []), current].filter(hint => hint?.active && hint.sources &&
+      (!current?.abilityId || hint.abilityId === current.abilityId));
+    if (countSnapshots.length) {
+      const unique = countSnapshots.filter((hint, index, list) => index === list.findIndex(other =>
+        other.abilityId === hint.abilityId && other.drawCount === hint.drawCount && other.wallCount === hint.wallCount));
+      const latest = unique.at(-1);
+      const matching = unique.filter(hint => hint.abilityId === latest.abilityId && hint.targetSeat === latest.targetSeat);
+      const inferred = matching.map(hint => countOracleHint(context, hint));
+      const result = { ...inferred.at(-1), historyCount: inferred.length };
+      for (const field of ["scoreByKey", "availabilityByKey", "dangerByKey", "spillByKey"]) {
+        const totalWeight = inferred.reduce((sum, _, i) => sum + Math.pow(0.72, inferred.length - 1 - i), 0);
+        result[field] = Object.fromEntries(allTileKeys(context.settings || {}).map(key => [key,
+          inferred.reduce((sum, hint, i) => sum + (hint[field][key] || 0) * Math.pow(0.72, inferred.length - 1 - i), 0) / totalWeight]));
+      }
+      return result;
+    }
+    const combined = combineOracleHistory(current, context.oracleHistory);
+    if (combined?.abilityId === "mayoi_wall_order") {
+      const snapshots = [...(context.oracleHistory || []), current].filter(hint => hint?.active && hint.sequence);
+      const latest = snapshots.at(-1);
+      if (latest) return orderedWallHint(context, latest);
+    }
+    return combined;
+  }
+
+  function orderedWallHint(context, snapshot) {
+    const consumed = Math.max(0, snapshot.wallCount - (context.state?.wall?.length ?? snapshot.wallCount));
+    const scoreByKey = {};
+    const predictions = [];
+    const settings = context.settings || context.state?.settings || {};
+    const keys = allTileKeys(settings);
+    const remainingObservations = snapshot.sequence.filter(item => item.offset >= consumed);
+    const observedCounts = countMapByKey(remainingObservations.filter(item => item.key).map(item => ({
+      suit: item.key[0], value: Number(item.key.slice(1))
+    })));
+    const ownHand = context.hand || context.state?.hands?.[context.playerIndex] || [];
+    const publicTiles = [
+      ...(context.state?.rivers || []).flat(),
+      ...(context.state?.melds || []).flatMap(melds => melds.flatMap(meld => meld.tiles || [])),
+      ...(context.state?.dora || [])
+    ];
+    // A called discard may briefly exist in both UI collections; count its physical ID once.
+    const seenIds = new Set();
+    const knownCounts = countMapByKey([...publicTiles, ...ownHand].filter(tile => {
+      if (tile.id == null) return true;
+      if (seenIds.has(tile.id)) return false;
+      seenIds.add(tile.id);
+      return true;
+    }));
+    const evidence = {};
+    const confidenceFor = key => {
+      const maximum = maxCopiesForKey(key, settings);
+      const known = knownCounts[key] || 0;
+      const available = Math.max(0, maximum - known);
+      const observed = observedCounts[key] || 0;
+      const factor = Math.min(1, available / Math.max(1, observed));
+      evidence[key] = { maximum, known, available, observed, factor,
+        reason: available === 0 ? "all_copies_known" : factor < 1 ? "observations_exceed_available" : "consistent" };
+      return factor;
+    };
+    // Inference reads saved observations, public tiles and our own hand, never opponents' hands.
+    for (const observation of snapshot.sequence) {
+      const distance = observation.offset - consumed;
+      if (distance < 0) continue;
+      const seat = ((context.state?.turn ?? context.playerIndex) + 3 * (distance + 1)) % 4;
+      if (seat !== context.playerIndex) continue;
+      const candidates = observation.key ? [observation.key] : keys.filter(key =>
+        (observation.suit && key[0] === observation.suit) ||
+        (observation.value !== undefined && Number(key.slice(1)) === observation.value));
+      const weight = 2.4 / (1 + distance / 4) / Math.max(1, candidates.length);
+      const candidateConfidence = candidates.map(key => ({ key, factor: confidenceFor(key) }));
+      candidateConfidence.forEach(({ key, factor }) => {
+        scoreByKey[key] = (scoreByKey[key] || 0) - weight * factor;
+      });
+      predictions.push({ distance, seat, candidates: candidates.filter(key => evidence[key].factor > 0),
+        candidateConfidence, confidence: Number(snapshot.reliability || 0.55) *
+          candidateConfidence.reduce((sum, item) => sum + item.factor, 0) / Math.max(1, candidates.length) });
+    }
+    return { ...snapshot, scoreByKey, predictions, consumed, evidence };
   }
 
   function combineOracleHistory(current, history = []) {
@@ -549,13 +669,16 @@
     if (!hint?.active) return { oracleUkeire: 0, oracleTempo: 0, oracleDanger: 0 };
     const useful = usefulTileKeys(remaining, context.settings || context.state?.settings || {});
     if (!useful.length) return { oracleUkeire: 0, oracleTempo: 0, oracleDanger: 0 };
-    const usefulSignals = useful.map((key) => -riverAdjustedOracleSignal(context, hint, key));
+    const usefulSignals = useful.map((key) => hint.availabilityByKey
+      ? (hint.availabilityByKey[key] || 0) + (hint.spillByKey?.[key] || 0)
+      : -riverAdjustedOracleSignal(context, hint, key));
     const positiveUseful = usefulSignals.filter((value) => value > 0);
     const oracleUkeire = Math.min(4, positiveUseful.reduce((sum, value) => sum + value, 0) / Math.max(3, useful.length));
     const oracleTempo = Math.min(3, Math.max(0, ...usefulSignals));
     const dangerStage = (context.state?.wall?.length || 70) < 30 ? 1 : 0;
     const discardSignal = riverAdjustedOracleSignal(context, hint, keyOf(context.discardedTile));
-    const dangerPressure = discardSignal < 0 ? Math.abs(discardSignal) : Math.abs(discardSignal) * 0.55;
+    const dangerPressure = hint.dangerByKey ? (hint.dangerByKey[keyOf(context.discardedTile)] || 0)
+      : discardSignal < 0 ? Math.abs(discardSignal) : Math.abs(discardSignal) * 0.55;
     const oracleDanger = dangerStage ? -Math.min(3, dangerPressure) : 0;
     return { oracleUkeire, oracleTempo, oracleDanger };
   }
@@ -623,15 +746,43 @@
     return FEATURE_KEYS.reduce((sum, key) => sum + (weights[key] || 0) * (features[key] || 0), 0);
   }
 
+  function mayoiStrategy(context) {
+    const playerIndex = context.playerIndex;
+    const scores = context.state?.players?.map((player) => player.score) || [];
+    const ownScore = scores[playerIndex];
+    const deficit = Number.isFinite(ownScore) ? Math.max(0, Math.max(...scores) - ownScore) : 0;
+    const comeback = Math.min(1, Math.max(0, (deficit - 4000) / 12000));
+    const hand = context.hand || [...(context.remainingTiles || []), context.discardedTile].filter(Boolean);
+    const meldTiles = (context.state?.melds?.[playerIndex] || []).flatMap((meld) => meld.tiles || []);
+    const flush = dominantSuitInfo(hand, meldTiles);
+    const compatible = meldTiles.every((tile) => tile.suit === "z" || tile.suit === flush.dominantSuit);
+    // Use the pre-discard hand so every candidate shares the same strategic weights.
+    const concentration = flush.dominantCount + Math.min(3, flush.honorCount);
+    const flushCommitment = compatible && flush.dominantCount >= 7
+      ? Math.min(1, Math.max(0, (concentration - 7) / 4)) : 0;
+    return { comeback, flushCommitment };
+  }
+
   function scoreDiscard(context) {
     const characterId = CHARACTER_IDS[context.playerIndex] || "kazuya";
     const key = context.ruleKey || ruleKey(context.settings || context.state?.settings || {}, !!context.oracleEnabled, context.oracleAssignments);
-    const weights = mergedWeights(context.learningData, key, characterId, context.useLearning);
+    const weights = { ...mergedWeights(context.learningData, key, characterId, context.useLearning) };
+    const strategy = characterId === "mayoi" ? mayoiStrategy(context) : null;
+    if (strategy) {
+      const ambition = Math.max(strategy.comeback, strategy.flushCommitment);
+      weights.fastTenpai *= 1 - ambition * 0.6;
+      weights.highValueRoute += ambition * 1.5;
+      weights.keepsDora += strategy.comeback * 0.8;
+      weights.discardOffSuitForFlush += strategy.flushCommitment * 2;
+      weights.keepsFlushSuit += strategy.flushCommitment * 2;
+    }
     const features = extractFeatures(context);
     const strength = Math.max(1, Math.min(5, Number(context.strength || 3)));
     const score = dot(weights, features) * (0.45 + strength * 0.22);
     const tags = thinkingTags(features, characterId, context.oracleEnabled);
-    return { score, features, tags, weights };
+    if (strategy?.flushCommitment >= 0.5) tags.unshift("committed_flush");
+    else if (strategy?.comeback >= 0.5) tags.unshift("comeback_value");
+    return { score, features, tags, weights, strategy };
   }
 
   function thinkingTags(features, characterId, oracleEnabled) {
@@ -680,6 +831,8 @@
         oracle_noise: "一位の手、少しだけ輪郭が見えたかも。"
       },
       mayoi: {
+        committed_flush: "ここまで色が集まったなら、大きく仕上げたいね。",
+        comeback_value: "この点差なら、速さだけでなく打点も育てたい。",
         shaping: "序盤なら、速度を少し優先したいかな。",
         flush_route: "点になるなら、寄せる価値はあるね。",
         rare_yaku_route: "高いけど遠い。点棒状況次第だね。",
@@ -773,23 +926,32 @@
     for (let step = 0; step < iterations; step += 1) {
       const bag = shuffle(randomTileBag(settings));
       const hand = bag.slice(0, 14);
+      const playerIndex = CHARACTER_IDS.indexOf(characterId);
+      let offset = 14;
+      const hands = CHARACTER_IDS.map((_, seat) => {
+        if (seat === playerIndex) return hand;
+        const otherHand = bag.slice(offset, offset + 13);
+        offset += 13;
+        return otherHand;
+      });
       const mockState = {
         settings,
-        rivers: [bag.slice(14, 18), bag.slice(18, 22), bag.slice(22, 26), bag.slice(26, 30)],
+        rivers: [bag.slice(53, 57), bag.slice(57, 61), bag.slice(61, 65), bag.slice(65, 69)],
         melds: [[], [], [], []],
-        dora: [bag[30]],
-        wall: bag.slice(31),
-        hands: [hand, bag.slice(31, 44), bag.slice(44, 57), bag.slice(57, 70)],
+        dora: [bag[69]],
+        wall: bag.slice(70),
+        hands,
+        turn: playerIndex,
+        drawCounts: [6, 6, 6, 6],
         players: CHARACTER_NAMES.map((name, index) => ({ name, score: 25000 + (index === 2 ? 1000 : 0) }))
       };
-      const playerIndex = CHARACTER_IDS.indexOf(characterId);
       const oracleHint = getOracleHint({
         state: mockState,
         settings,
         playerIndex,
         characterId,
         oracleEnabled,
-        timing: "before_discard",
+        timing: oracleAbilityFor(characterId, oracleAssignments) === "kazuya_initial_hands" ? "round_start" : "after_draw",
         assignments: oracleAssignments
       });
       const candidates = hand.map((tile, index) => {
@@ -836,6 +998,9 @@
     mergedWeights,
     extractFeatures,
     getOracleHint,
+    orderedWallHint,
+    countOracleHint,
+    oracleHintForContext,
     scoreDiscard,
     thoughtLine,
     loadLearningData,
